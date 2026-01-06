@@ -17,7 +17,16 @@ export class Store {
             const mergedTech = [...new Set([...existingTech, ...newTech])].join(', ');
 
             existing.focus_area = mergedTech;
-            // return existing
+
+            // Phase 2: Merge Scores and Tags
+            if ((partialCompany.exhibition_score || 0) > (existing.exhibition_score || 0)) {
+                existing.exhibition_score = partialCompany.exhibition_score;
+            }
+            if (partialCompany.tags && partialCompany.tags.length > 0) {
+                const existingTags = existing.tags || [];
+                existing.tags = [...new Set([...existingTags, ...partialCompany.tags])];
+            }
+
             return existing;
         } else {
             this.companies.push(partialCompany);

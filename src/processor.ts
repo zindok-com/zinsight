@@ -1,88 +1,109 @@
 import { NaverNewsItem } from './collector';
 import { Company, CompanyNews, Category } from './types';
-// Removed unused uuid import
+import { CONFIG } from './config';
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
 export class DataProcessor {
 
-    // Basic text cleaning (HTML tags removal)
     private cleanText(text: string): string {
         return text.replace(/<[^>]*>?/gm, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
     }
 
-    // Heuristic to extract company name from title
-    // Example: "Samsung, new LED released" -> "Samsung"
-    // Example: "[Exclusive] LG Display..." -> "LG Display"
-    private extractCompanyName(title: string): string {
-        let clean = this.cleanText(title);
+    // Phase 2: "Candidate String" Extraction (Loose Matching)
+    // Capture subject markers: 은, 는, 이, 가, 사, 기업, 업체
+    // Strategy: Look for the noun phrase immediately preceding a subject marker at the start of the title or description.
+    private extractCandidateString(text: string): string {
+        let clean = this.cleanText(text);
+        clean = clean.replace(/^\[.*?\]\s*/, ''); // Remove header tags like [News]
 
-        // Remove common prefixes like [News], [Photo], etc.
-        clean = clean.replace(/^\[.*?\]\s*/, '');
+        // Regex to find potential company names ending with subject markers
+        // Match: (Word)+(Subject Marker)
+        // Markers: 은/는/이/가/사/업체/기업 등
+        // Limit the candidate length to avoid capturing long sentences (e.g., 2-15 chars)
+        const subjectRegex = /([가-힣a-zA-Z0-9\s&]{2,15})(?:은|는|이|가|사|업체|기업)\s/;
 
-        // Split by common separators used in news titles (comma, quote, colon, verbs)
-        // This is a naive implementation for PoC
-        const separators = [',', ':', '"', "'", ' '];
-        // Heuristic: The first word or two before a verb or separator is often the company.
-        // For this PoC, we will check known patterns or just take the first meaningful noun phrase.
-        // Simplifying: Take the first word if it looks like a proper noun, or first 2 words if they look connected.
-
-        // Let's try splitting by space and taking the first token, or first two if the second is not a verb.
-        // A better approach for Korean news: Look for subject markers (은/는/이/가 - hard without NLP lib)
-        // or just split by special chars.
-
-        const parts = clean.split(/,|\s|:|’|“/);
-        if (parts.length > 0) {
-            // Very basic: just return the first token for now, or the first two tokens combined.
-            // Refinement: if the first token is very short, take two.
-            const first = parts[0];
-            // Check if first exists and is a string (strict null check)
-            if (first && first.length < 2 && parts.length > 1) {
-                return first + ' ' + (parts[1] || '');
-            }
-            return first || "Unknown";
+        const match = clean.match(subjectRegex);
+        if (match && match[1]) {
+            return match[1].trim();
         }
+
+        // Fallback: If title starts with "OOO, ..."
+        const commaSplit = clean.split(',');
+        if (commaSplit.length > 1 && commaSplit[0] && commaSplit[0].length < 15) {
+            return commaSplit[0].trim();
+        }
+
         return "Unknown";
     }
 
     private extractTechKeywords(text: string): string {
-        const keywords = ['LED', 'OLED', 'MicroLED', 'UV', 'Smart Lighting', 'IoT', 'AI', 'Sensor', 'Display', 'Chip'];
+        const keywords = ['LED', 'OLED', 'MicroLED', 'UV', 'Smart Lighting', 'IoT', 'AI', 'Sensor', 'Display', 'Chip', 'Lighting', 'Driver', 'Lens'];
         const found = keywords.filter(k => text.includes(k) || text.toLowerCase().includes(k.toLowerCase()));
         return [...new Set(found)].join(', ');
     }
 
-    // Convert raw news item to Company and CompanyNews entities
-    public processItem(item: NaverNewsItem, categoryId: string, sizeKeyword: string): { company: Company, news: CompanyNews } {
+    // Phase 2: Exhibition Suitability Scoring
+    private calculateExhibitionScore(text: string): number {
+        let score = 0;
+        const lowerText = text.toLowerCase();
+
+        // Check for validation keywords (Exhibition related)
+        CONFIG.VALIDATION_KEYWORDS.forEach(keyword => {
+            if (lowerText.includes(keyword)) {
+                score += 10; // High value for direct exhibition intent
+            }
+        });
+
+        // Check for role clarity keywords (development, supply, launch)
+        const roleKeywords = ['개발', '출시', '공급', '공개', '선보여', '개최'];
+        roleKeywords.forEach(keyword => {
+            if (lowerText.includes(keyword)) {
+                score += 2;
+            }
+        });
+
+        return score;
+    }
+
+    public processItem(item: NaverNewsItem, categoryId: string, searchKeyword: string): { company: Company, news: CompanyNews } {
         const rawTitle = item.title;
         const rawDesc = item.description;
 
         const cleanBoxTitle = this.cleanText(rawTitle);
         const cleanBoxDesc = this.cleanText(rawDesc);
 
-        const companyName = this.extractCompanyName(cleanBoxTitle);
+        // Extract Candidate String instead of strict Company Name
+        const candidateName = this.extractCandidateString(cleanBoxTitle);
         const techKeywords = this.extractTechKeywords(cleanBoxTitle + " " + cleanBoxDesc);
 
-        const companyId = generateId(); // In reality, we would check if company exists first.
+        // Calculate Score
+        const combinedText = cleanBoxTitle + " " + cleanBoxDesc;
+        const exScore = this.calculateExhibitionScore(combinedText);
 
-        // Map size keyword to enum-like string
-        let size = "기타";
-        if (sizeKeyword.includes("중소기업")) size = "중소기업";
-        else if (sizeKeyword.includes("강소기업")) size = "강소기업";
-        else if (sizeKeyword.includes("벤처기업")) size = "벤처기업";
+        const companyId = generateId();
+
+        // Infre Tags
+        const tags: string[] = [];
+        if (techKeywords) tags.push(...techKeywords.split(', '));
+        if (exScore > 5) tags.push("Exhibition_Potential");
+        if (searchKeyword) tags.push(searchKeyword); // Add the search query as a tag context
 
         const company: Company = {
             id: companyId,
-            name: companyName, // This will be deduplicated in the Store or Orchestrator
+            name: candidateName,
             category_id: categoryId,
-            company_size: size,
+            company_size: "Unknown", // No longer inferring size strictly from keyword
             focus_area: techKeywords,
-            description: cleanBoxDesc.substring(0, 100) + "...", // Short summary
+            description: cleanBoxDesc.substring(0, 100) + "...",
+            exhibition_score: exScore,
+            tags: tags,
             created_at: new Date()
         };
 
         const news: CompanyNews = {
             id: generateId(),
-            company_id: companyId, // Link to company
+            company_id: companyId,
             title: cleanBoxTitle,
             summary: cleanBoxDesc,
             publication_date: item.pubDate,

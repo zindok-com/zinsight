@@ -16,11 +16,11 @@ async function main() {
 
     // 2. Process Data
     for (const [key, items] of rawDataMap.entries()) {
-        const sizeKeyword = CONFIG.KEYWORDS[key as keyof typeof CONFIG.KEYWORDS];
-        console.log(`Processing ${items.length} items for ${sizeKeyword}...`);
+        const searchKeyword = CONFIG.KEYWORDS[key as keyof typeof CONFIG.KEYWORDS];
+        console.log(`Processing ${items.length} items for ${searchKeyword}...`);
 
         for (const item of items) {
-            const { company, news } = processor.processItem(item, "CAT_LED", sizeKeyword);
+            const { company, news } = processor.processItem(item, "CAT_LED", searchKeyword);
 
             // Filter out invalid or generic matches if needed (basic check)
             if (company.name !== "Unknown" && company.name.length > 1) {
@@ -58,10 +58,13 @@ async function main() {
 
     // 4. Output Results
     console.log("\n\n=== [Sample Output] Promising Participating Company List ===");
+    // Sort by Score
+    store.companies.sort((a, b) => (b.exhibition_score || 0) - (a.exhibition_score || 0));
+
     store.companies.forEach(c => {
-        console.log(`\n[Company] ${c.name}`);
-        console.log(` - Size: ${c.company_size}`);
-        console.log(` - Tech: ${c.focus_area}`);
+        console.log(`\n[Candidate] ${c.name} (Score: ${c.exhibition_score})`);
+        console.log(` - Tags: ${c.tags.join(', ')}`);
+        console.log(` - Keywords: ${c.focus_area}`);
         console.log(` - Description: ${c.description}`);
     });
 

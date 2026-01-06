@@ -7,11 +7,14 @@ export interface Category {
 
 export interface Company {
     id: string;
-    name: string;
+    name: string; // Candidate String
     category_id: string;
-    company_size: string; // "중소기업" | "강소기업" | "벤처기업" | "기타"
-    focus_area: string; // Summary of technical keywords
-    description: string; // Summary based on news
+    company_size: string; // Kept for legacy, but mostly inferred
+    focus_area: string;
+    description: string;
+    // Phase 2 New Fields
+    exhibition_score: number; // Suitability Score
+    tags: string[]; // [Size, Tech, Exhibition]
     created_at: Date;
 }
 

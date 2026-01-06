@@ -26,10 +26,10 @@ async function runCollection() {
 
     // 2. Process Data
     for (const [key, items] of rawDataMap.entries()) {
-        const sizeKeyword = CONFIG.KEYWORDS[key as keyof typeof CONFIG.KEYWORDS];
+        const searchKeyword = CONFIG.KEYWORDS[key as keyof typeof CONFIG.KEYWORDS];
 
         for (const item of items) {
-            const { company, news } = processor.processItem(item, "CAT_LED", sizeKeyword);
+            const { company, news } = processor.processItem(item, "CAT_LED", searchKeyword);
 
             if (company.name !== "Unknown" && company.name.length > 1) {
                 const savedCompany = store.upsertCompany(company);
