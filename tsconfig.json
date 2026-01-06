@@ -8,7 +8,7 @@
     // See also https://aka.ms/tsconfig/module
     "module": "commonjs",
     "target": "es2020",
-    "types": [],
+    // "types": [],  <-- Removed to allow @types/node to be found
     // For nodejs:
     // "lib": ["esnext"],
     // "types": ["node"],
