@@ -1,0 +1,32 @@
+{
+  "name": "mice_scout",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soha-com/Mice_Scout.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/soha-com/Mice_Scout/issues"
+  },
+  "homepage": "https://github.com/soha-com/Mice_Scout#readme",
+  "devDependencies": {
+    "@types/axios": "^0.9.36",
+    "@types/node": "^25.0.3",
+    "axios": "^1.13.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.6",
+    "express": "^5.2.1"
+  }
+}

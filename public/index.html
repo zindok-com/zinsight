@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MICE Scout - PoC Dashboard</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f4f6f8; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { background: #0047AB; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1, h2 { margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background-color: #f8f9fa; font-weight: 600; }
+        tr:hover { background-color: #f1f3f5; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #e9ecef; color: #495057; }
+        .badge-size { background: #e3f2fd; color: #0d47a1; }
+        .trend-box { background: #e8f5e9; padding: 15px; border-left: 5px solid #4caf50; }
+        .refresh-btn { background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; float: right; }
+        .refresh-btn:hover { background: #45a049; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MICE Scout PoC Dashboard</h1>
+            <p>Participants Scouting Agent for LED Exhibition</p>
+        </header>
+
+        <div class="section">
+            <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+            <h2>📊 Market Trend</h2>
+            <div id="trend" class="trend-box">
+                Loading trend...
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏢 Promising Companies List</h2>
+            <table id="companyTable">
+                <thead>
+                    <tr>
+                        <th>Company Name</th>
+                        <th>Size</th>
+                        <th>Focus Area</th>
+                        <th>Description Strategy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4">Loading data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            try {
+                const response = await fetch('/api/data');
+                const data = await response.json();
+                
+                // Render Trend
+                const trendDiv = document.getElementById('trend');
+                if (data.trends.length > 0) {
+                    const latest = data.trends[data.trends.length - 1];
+                    trendDiv.innerHTML = `<strong>${latest.trend_summary}</strong><br><small>${latest.evidence}</small>`;
+                } else {
+                    trendDiv.innerHTML = "No trend data generated yet.";
+                }
+
+                // Render Companies
+                const tbody = document.querySelector('#companyTable tbody');
+                tbody.innerHTML = '';
+                data.companies.forEach(company => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${company.name}</strong></td>
+                        <td><span class="badge badge-size">${company.company_size}</span></td>
+                        <td>${company.focus_area}</td>
+                        <td title="${company.description}">${company.description}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (error) {
+                console.error("Error loading data:", error);
+            }
+        }
+
+        async function refreshData() {
+            if(confirm("Refresh data from Naver API?")) {
+                await fetch('/api/refresh');
+                loadData();
+            }
+        }
+
+        // Initial load
+        loadData();
+    </script>
+</body>
+</html>
