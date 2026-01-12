@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MICE Scout - PoC Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -13,76 +14,19 @@
             background-color: #f4f6f8;
         }
 
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* ... existing styles ... */
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
 
-        header {
-            background: #0047AB;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .section {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-        }
-
-        h1,
-        h2 {
-            margin-top: 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th,
-        td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        tr:hover {
-            background-color: #f1f3f5;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-            background: #e9ecef;
-            color: #495057;
-        }
-
-        .badge-size {
-            background: #e3f2fd;
-            color: #0d47a1;
-        }
-
-        .trend-box {
-            background: #e8f5e9;
-            padding: 15px;
-            border-left: 5px solid #4caf50;
-        }
-
+        /* ... */
         .refresh-btn {
             background: #4caf50;
             color: white;
@@ -91,23 +35,38 @@
             border-radius: 4px;
             cursor: pointer;
             float: right;
+            margin-left: 10px;
         }
 
-        .refresh-btn:hover {
-            background: #45a049;
+        .pdf-btn {
+            background: #FF5722;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            float: right;
         }
+
+        .pdf-btn:hover {
+            background: #E64A19;
+        }
+
+        /* ... */
     </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="container" id="dashboard-content">
         <header>
             <h1>MICE Scout PoC Dashboard</h1>
             <p>Participants Scouting Agent for LED Exhibition</p>
         </header>
 
         <div class="section">
-            <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+            <button class="refresh-btn no-print" onclick="refreshData()">Refresh Data</button>
+            <button class="pdf-btn no-print" onclick="downloadPDF()">📄 Save as PDF</button>
+            <h2>📊 Market Trend</h2>
             <h2>📊 Market Trend</h2>
             <div id="trend" class="trend-box">
                 Loading trend...
@@ -158,12 +117,12 @@
 
                 data.companies.forEach(company => {
                     const tr = document.createElement('tr');
-                    
+
                     // Score & Type Badge
                     const score = company.exhibition_score || 0;
                     const scoreColor = score >= 10 ? '#4caf50' : (score > 0 ? '#ff9800' : '#9e9e9e');
                     const scoreBadge = `<div class="badge" style="background:${scoreColor}; color:white; margin-bottom: 4px;">Score: ${score}</div>`;
-                    
+
                     const typeColorMap = {
                         'SME': '#E3F2FD', // Blue
                         'Public': '#E8F5E9', // Green
@@ -176,7 +135,7 @@
 
                     // Tags
                     const tags = (company.category_tags || []).slice(0, 5).map(t => `<span class="badge" style="margin-right:2px">${t}</span>`).join('');
-                    
+
                     // Source Link Logic
                     let sourceLink = '-';
                     if (company.source_articles && company.source_articles.length > 0) {
@@ -223,6 +182,26 @@
                 await fetch('/api/refresh');
                 loadData();
             }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('dashboard-content');
+            const opt = {
+                margin: 10,
+                filename: 'MICE_Scout_Report.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+            };
+
+            // Temporarily hide buttons manually if CSS media query fails in canvas
+            const buttons = document.querySelectorAll('.no-print');
+            buttons.forEach(b => b.style.display = 'none');
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore buttons
+                buttons.forEach(b => b.style.display = 'block');
+            });
         }
 
         // Initial load
