@@ -27,12 +27,15 @@ export class NewsCollector {
                     'X-Naver-Client-Id': CONFIG.NAVER_CLIENT_ID,
                     'X-Naver-Client-Secret': CONFIG.NAVER_CLIENT_SECRET,
                 },
+                httpsAgent: new (require('https').Agent)({
+                    rejectUnauthorized: false
+                }),
                 params: {
                     query: keyword,
-                    display: 20, // Fetching 20 items per keyword for sample
-                    sort: 'date'
+                    display: 30, // Fetching 30 items per keyword for sample
+                    sort: 'sim'
                 }
-            });
+            } as any);
             return response.data;
         } catch (error) {
             console.error(`Error fetching news for keyword: ${keyword}`, error);

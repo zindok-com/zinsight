@@ -8,13 +8,25 @@ export interface Category {
 export interface Company {
     id: string;
     name: string; // Candidate String
-    category_id: string;
-    company_size: string; // Kept for legacy, but mostly inferred
+    // Phase 3 Extensions
+    entity_type: string; // 'Public', 'Association', 'SME', 'Large', 'Other'
+    primary_category: string; // 'OLED', 'Smart Lighting', 'IoT', 'Convergence', 'Other'
+    category_tags: string[]; // Accumulated tags
+    keywords: string[]; // Extracted keywords from articles
+    
+    // Legacy fields (kept for compatibility but logic updated)
+    category_id: string; 
+    company_size: string; 
     focus_area: string;
     description: string;
-    // Phase 2 New Fields
+    
     exhibition_score: number; // Suitability Score
-    tags: string[]; // [Size, Tech, Exhibition]
+    tags: string[]; // General purpose tags
+    
+    // Source Tracking
+    source_query: string; // The query that found this entity
+    source_articles: string[]; // List of Article IDs
+    
     created_at: Date;
 }
 

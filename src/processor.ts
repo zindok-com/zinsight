@@ -37,13 +37,39 @@ export class DataProcessor {
         return "Unknown";
     }
 
-    private extractTechKeywords(text: string): string {
-        const keywords = ['LED', 'OLED', 'MicroLED', 'UV', 'Smart Lighting', 'IoT', 'AI', 'Sensor', 'Display', 'Chip', 'Lighting', 'Driver', 'Lens'];
-        const found = keywords.filter(k => text.includes(k) || text.toLowerCase().includes(k.toLowerCase()));
-        return [...new Set(found)].join(', ');
+    private determineEntityType(text: string, searchKeyword: string): string {
+        // 1. Default based on Search Query
+        let type = 'Other';
+        if (searchKeyword.includes('중소기업')) type = 'SME';
+        else if (searchKeyword.includes('공공기관')) type = 'Public';
+
+        // 2. Refine based on Article Content
+        if (text.includes('협회') || text.includes('조합')) return 'Association';
+        if (text.includes('연구원') || text.includes('진흥원') || text.includes('센터')) return 'Public';
+        if (text.includes('대기업') || text.includes('계열사')) return 'Large';
+        if (text.includes('스타트업') || text.includes('벤처')) return 'SME';
+
+        return type;
     }
 
-    // Phase 2: Exhibition Suitability Scoring
+    private determinePrimaryCategory(text: string): string {
+        const t = text.toLowerCase();
+        if (t.includes('oled') || t.includes('유기발광')) return 'OLED';
+        if (t.includes('smart') || t.includes('스마트') || t.includes('제어')) return 'Smart Lighting';
+        if (t.includes('iot') || t.includes('사물인터넷') || t.includes('통신')) return 'IoT';
+        if (t.includes('융합') || t.includes('복합')) return 'Convergence';
+
+        return 'Other';
+    }
+
+    private extractKeywords(text: string): string[] {
+        // Extract tech keywords + business keywords
+        const targetWords = ['LED', 'OLED', 'IoT', 'AI', '센서', '드라이버', '렌즈', '모듈', '디스플레이', '사이니지', '플랫폼', '관제', '시스템', '검사', '장비'];
+        const found = targetWords.filter(word => text.includes(word) || text.toLowerCase().includes(word.toLowerCase()));
+        return [...new Set(found)];
+    }
+
+    // Phase 2: Exhibition Suitability Scoring (Kept for compatibility)
     private calculateExhibitionScore(text: string): number {
         let score = 0;
         const lowerText = text.toLowerCase();
@@ -72,37 +98,57 @@ export class DataProcessor {
 
         const cleanBoxTitle = this.cleanText(rawTitle);
         const cleanBoxDesc = this.cleanText(rawDesc);
+        const combinedText = cleanBoxTitle + " " + cleanBoxDesc;
 
         // Extract Candidate String instead of strict Company Name
         const candidateName = this.extractCandidateString(cleanBoxTitle);
-        const techKeywords = this.extractTechKeywords(cleanBoxTitle + " " + cleanBoxDesc);
+
+        // New Entity Logic
+        const entityType = this.determineEntityType(combinedText, searchKeyword);
+        const primaryCategory = this.determinePrimaryCategory(combinedText);
+        const keywords = this.extractKeywords(combinedText);
 
         // Calculate Score
-        const combinedText = cleanBoxTitle + " " + cleanBoxDesc;
         const exScore = this.calculateExhibitionScore(combinedText);
 
         const companyId = generateId();
+        const newsId = generateId();
 
-        // Infre Tags
+        // Infer Tags
         const tags: string[] = [];
-        if (techKeywords) tags.push(...techKeywords.split(', '));
+        tags.push(...keywords);
         if (exScore > 5) tags.push("Exhibition_Potential");
-        if (searchKeyword) tags.push(searchKeyword); // Add the search query as a tag context
+        tags.push(primaryCategory);
+        tags.push(entityType);
+
+        // Dedup tags
+        const uniqueTags = [...new Set(tags)];
 
         const company: Company = {
             id: companyId,
             name: candidateName,
+
+            // New Fields
+            entity_type: entityType,
+            primary_category: primaryCategory,
+            category_tags: uniqueTags,
+            keywords: keywords,
+            source_query: searchKeyword,
+            source_articles: [newsId],
+
+            // Legacy
             category_id: categoryId,
-            company_size: "Unknown", // No longer inferring size strictly from keyword
-            focus_area: techKeywords,
+            company_size: entityType, // Map type to size slot for legacy
+            focus_area: keywords.join(', '),
             description: cleanBoxDesc.substring(0, 100) + "...",
             exhibition_score: exScore,
-            tags: tags,
+            tags: uniqueTags,
+
             created_at: new Date()
         };
 
         const news: CompanyNews = {
-            id: generateId(),
+            id: newsId,
             company_id: companyId,
             title: cleanBoxTitle,
             summary: cleanBoxDesc,

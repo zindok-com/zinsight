@@ -10,15 +10,33 @@ export class Store {
     public upsertCompany(partialCompany: Company): Company {
         const existing = this.companies.find(c => c.name === partialCompany.name);
         if (existing) {
-            // Merge logic: Update focus_area if new ones found
-            const parseTech = (s: string) => s.split(', ').filter(Boolean);
-            const existingTech = parseTech(existing.focus_area);
-            const newTech = parseTech(partialCompany.focus_area);
-            const mergedTech = [...new Set([...existingTech, ...newTech])].join(', ');
+            // Merge logic: Update focus_area / keywords
+            if (partialCompany.keywords && partialCompany.keywords.length > 0) {
+                const existingKeywords = existing.keywords || [];
+                existing.keywords = [...new Set([...existingKeywords, ...partialCompany.keywords])];
+                // Sync focus_area with keywords for legacy support
+                existing.focus_area = existing.keywords.slice(0, 5).join(', ');
+            }
 
-            existing.focus_area = mergedTech;
+            // Merge Category Tags
+            if (partialCompany.category_tags && partialCompany.category_tags.length > 0) {
+                const existingTags = existing.category_tags || [];
+                existing.category_tags = [...new Set([...existingTags, ...partialCompany.category_tags])];
+            }
 
-            // Phase 2: Merge Scores and Tags
+            // Merge Source Articles
+            if (partialCompany.source_articles && partialCompany.source_articles.length > 0) {
+                const existingArticles = existing.source_articles || [];
+                existing.source_articles = [...new Set([...existingArticles, ...partialCompany.source_articles])];
+            }
+
+            // Update Entity Type if new one is present and existing is generic (optional logic, keeping simple for now)
+            // If existing is 'Unknown' or empty, and new is specific, take new.
+            if ((!existing.entity_type || existing.entity_type === 'Unknown') && partialCompany.entity_type) {
+                existing.entity_type = partialCompany.entity_type;
+            }
+
+            // Phase 2: Merge Scores and Tags (Legacy Tags)
             if ((partialCompany.exhibition_score || 0) > (existing.exhibition_score || 0)) {
                 existing.exhibition_score = partialCompany.exhibition_score;
             }
