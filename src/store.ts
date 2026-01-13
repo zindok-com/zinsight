@@ -1,4 +1,4 @@
-import { Category, Company, CompanyNews, Trend } from './types';
+import { Category, Company, CompanyNews, Trend, CandidateStatus, Signals } from './types';
 
 export class Store {
     public categories: Category[] = [];
@@ -6,49 +6,72 @@ export class Store {
     public news: CompanyNews[] = [];
     public trends: Trend[] = [];
 
-    // Upsert company: If name exists, return existing ID and merge data if needed
-    public upsertCompany(partialCompany: Company): Company {
-        const existing = this.companies.find(c => c.name === partialCompany.name);
+    // Prioritize Status: CONFIRMED > PENDING > EXCLUDED
+    private getStatusPriority(status: CandidateStatus): number {
+        if (status === 'CONFIRMED') return 3;
+        if (status === 'PENDING') return 2;
+        return 1;
+    }
+
+    private mergeSignals(s1: Signals, s2: Signals): Signals {
+        return {
+            product_launch: s1.product_launch || s2.product_launch,
+            manufacturing: s1.manufacturing || s2.manufacturing,
+            certification: s1.certification || s2.certification,
+            government_support: s1.government_support || s2.government_support,
+            procurement_ready: s1.procurement_ready || s2.procurement_ready
+        };
+    }
+
+    public upsertCompany(partial: Company): Company {
+        const existing = this.companies.find(c => c.name === partial.name);
         if (existing) {
-            // Merge logic: Update focus_area / keywords
-            if (partialCompany.keywords && partialCompany.keywords.length > 0) {
-                const existingKeywords = existing.keywords || [];
-                existing.keywords = [...new Set([...existingKeywords, ...partialCompany.keywords])];
-                // Sync focus_area with keywords for legacy support
-                existing.focus_area = existing.keywords.slice(0, 5).join(', ');
+            // Merge Signals
+            existing.signals = this.mergeSignals(existing.signals, partial.signals);
+
+            // Merge Keyword Counts
+            Object.entries(partial.keyword_counts).forEach(([k, v]) => {
+                existing.keyword_counts[k] = (existing.keyword_counts[k] || 0) + v;
+            });
+            existing.keywords = Object.keys(existing.keyword_counts);
+
+            // Upgrade Status if new is higher
+            const existingP = this.getStatusPriority(existing.candidate_status);
+            const newP = this.getStatusPriority(partial.candidate_status);
+
+            if (newP > existingP) {
+                existing.candidate_status = partial.candidate_status;
+                existing.recommendation_reason = partial.recommendation_reason; // Update reason to match better status
+                existing.exhibition_participation_type = partial.exhibition_participation_type;
+                existing.fit_score = partial.fit_score;
+            } else if (newP === existingP) {
+                // Same priority, maybe update score if higher
+                if (partial.fit_score > existing.fit_score) {
+                    existing.fit_score = partial.fit_score;
+                    existing.recommendation_reason = partial.recommendation_reason;
+                }
             }
 
-            // Merge Category Tags
-            if (partialCompany.category_tags && partialCompany.category_tags.length > 0) {
-                const existingTags = existing.category_tags || [];
-                existing.category_tags = [...new Set([...existingTags, ...partialCompany.category_tags])];
+            // Market Target: strict > loose?
+            if (partial.market_target !== 'PRIVATE') {
+                if (existing.market_target === 'PRIVATE') existing.market_target = partial.market_target;
+                else if (existing.market_target !== partial.market_target) existing.market_target = 'BOTH';
             }
 
-            // Merge Source Articles
-            if (partialCompany.source_articles && partialCompany.source_articles.length > 0) {
-                const existingArticles = existing.source_articles || [];
-                existing.source_articles = [...new Set([...existingArticles, ...partialCompany.source_articles])];
-            }
+            // Merge Articles
+            existing.source_articles = [...new Set([...existing.source_articles, ...partial.source_articles])];
 
-            // Update Entity Type if new one is present and existing is generic (optional logic, keeping simple for now)
-            // If existing is 'Unknown' or empty, and new is specific, take new.
-            if ((!existing.entity_type || existing.entity_type === 'Unknown') && partialCompany.entity_type) {
-                existing.entity_type = partialCompany.entity_type;
-            }
+            // Merge Tags
+            existing.category_tags = [...new Set([...existing.category_tags, ...partial.category_tags])];
 
-            // Phase 2: Merge Scores and Tags (Legacy Tags)
-            if ((partialCompany.exhibition_score || 0) > (existing.exhibition_score || 0)) {
-                existing.exhibition_score = partialCompany.exhibition_score;
-            }
-            if (partialCompany.tags && partialCompany.tags.length > 0) {
-                const existingTags = existing.tags || [];
-                existing.tags = [...new Set([...existingTags, ...partialCompany.tags])];
-            }
+            // Update legacy fields
+            existing.focus_area = existing.keywords.slice(0, 5).join(', ');
+            existing.exhibition_score = existing.fit_score;
 
             return existing;
         } else {
-            this.companies.push(partialCompany);
-            return partialCompany;
+            this.companies.push(partial);
+            return partial;
         }
     }
 

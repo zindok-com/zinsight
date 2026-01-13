@@ -62,10 +62,12 @@ async function main() {
     store.companies.sort((a, b) => (b.exhibition_score || 0) - (a.exhibition_score || 0));
 
     store.companies.forEach(c => {
-        console.log(`\n[Candidate] ${c.name} (Score: ${c.exhibition_score})`);
-        console.log(` - Tags: ${c.tags.join(', ')}`);
-        console.log(` - Keywords: ${c.focus_area}`);
-        console.log(` - Description: ${c.description}`);
+        console.log(`\n[${c.candidate_status}] ${c.name} (Score: ${c.fit_score})`);
+        console.log(` - Type: ${c.exhibition_participation_type}`);
+        console.log(` - Reason: ${c.recommendation_reason}`);
+        console.log(` - Keywords: ${c.keywords.join(', ')}`);
+        console.log(` - Tags: ${c.category_tags.join(', ')}`);
+        // console.log(` - Description: ${c.description}`);
     });
 
     console.log("\n\n=== [Organizer Review] Trend Summary ===");

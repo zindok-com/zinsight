@@ -5,28 +5,64 @@ export interface Category {
     created_at: Date;
 }
 
+export type EntityType = 'COMPANY' | 'INSTITUTION' | 'ASSOCIATION' | 'UNKNOWN';
+export type CompanyScale = 'SME' | 'LARGE' | 'PUBLIC' | 'OTHER';
+export type MarketTarget = 'PUBLIC' | 'PRIVATE' | 'BOTH';
+export type ExhibitionParticipationType =
+    | 'PRODUCT_LAUNCH'
+    | 'MANUFACTURING_READY'
+    | 'SOLUTION_PARTNER'
+    | 'MIXED'
+    | 'UNKNOWN';
+
+export type PrimaryCategory =
+    | 'LIGHTING'
+    | 'OLED'
+    | 'SMART_LIGHTING'
+    | 'IOT'
+    | 'CONVERGENCE'
+    | 'OTHER';
+
+export type CandidateStatus = 'CONFIRMED' | 'PENDING' | 'EXCLUDED';
+
+export interface Signals {
+    product_launch: boolean;
+    manufacturing: boolean;
+    certification: boolean;
+    government_support: boolean;
+    procurement_ready: boolean;
+}
+
 export interface Company {
     id: string;
-    name: string; // Candidate String
-    // Phase 3 Extensions
-    entity_type: string; // 'Public', 'Association', 'SME', 'Large', 'Other'
-    primary_category: string; // 'OLED', 'Smart Lighting', 'IoT', 'Convergence', 'Other'
-    category_tags: string[]; // Accumulated tags
-    keywords: string[]; // Extracted keywords from articles
-    
-    // Legacy fields (kept for compatibility but logic updated)
-    category_id: string; 
-    company_size: string; 
-    focus_area: string;
+    name: string; // Common key (entity_name in spec)
+
+    // New Fields
+    entity_type: EntityType;
+    company_scale: CompanyScale;
+    market_target: MarketTarget;
+    exhibition_participation_type: ExhibitionParticipationType;
+    primary_category: PrimaryCategory;
+
+    signals: Signals;
+    fit_score: number;
+    recommendation_reason: string;
+    candidate_status: CandidateStatus;
+
+    category_tags: string[];
+    keyword_counts: Record<string, number>; // { keyword: count }
+
+    // Legacy / Convenience
+    keywords: string[]; // List of keys from keyword_counts
     description: string;
-    
-    exhibition_score: number; // Suitability Score
-    tags: string[]; // General purpose tags
-    
-    // Source Tracking
-    source_query: string; // The query that found this entity
-    source_articles: string[]; // List of Article IDs
-    
+    source_query: string;
+    source_articles: string[]; // List of Article IDs (evidence_articles)
+
+    // Deprecated but kept for safety
+    focus_area: string;
+    exhibition_score: number; // mapped to fit_score
+    tags: string[];
+
     created_at: Date;
 }
 
@@ -37,7 +73,7 @@ export interface CompanyNews {
     summary: string;
     publication_date: string;
     source_url: string;
-    raw_json: any; // Preserving raw data for debugging
+    raw_json: any;
     created_at: Date;
 }
 
