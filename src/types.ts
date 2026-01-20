@@ -25,6 +25,8 @@ export type PrimaryCategory =
 
 export type CandidateStatus = 'CONFIRMED' | 'PENDING' | 'EXCLUDED';
 
+export type ReviewStatus = 'AUTO_CONFIRMED' | 'NEEDS_REVIEW' | 'HUMAN_CONFIRMED' | 'REJECTED';
+
 export interface Signals {
     product_launch: boolean;
     manufacturing: boolean;
@@ -33,46 +35,76 @@ export interface Signals {
     procurement_ready: boolean;
 }
 
-export interface Company {
-    id: string;
-    name: string; // Common key (entity_name in spec)
+export interface EntityArticleMatch {
+    article_id: string;
+    match_confidence: number;
+    match_method: 'RULE' | 'LLM' | 'HYBRID';
+    match_excerpt?: string;
+}
 
-    // New Fields
+export interface Company {
+    id: string; // entity_id
+    name: string; // entity_name
+    normalized_name?: string;
+
+    // Classification
     entity_type: EntityType;
     company_scale: CompanyScale;
     market_target: MarketTarget;
     exhibition_participation_type: ExhibitionParticipationType;
     primary_category: PrimaryCategory;
 
+    // Analysis
     signals: Signals;
     fit_score: number;
     recommendation_reason: string;
-    candidate_status: CandidateStatus;
+    candidate_status: CandidateStatus; // Legacy, keep for now or sync with review_status
 
-    category_tags: string[];
+    // Metadata / Tags
+    category_tags: string[]; // List of strings
     keyword_counts: Record<string, number>; // { keyword: count }
+    keywords: string[]; // Keys of keyword_counts
+
+    // Review Process
+    review_status: ReviewStatus;
+    review_reason_codes?: string[]; // stored as JSON in DB, array here
+    review_notes?: string;
+    reviewed_by?: string;
+    reviewed_at?: Date;
+
+    // De-duplication
+    dedupe_group_id?: string;
+    merged_into_entity_id?: string;
+
+    // Articles / Evidence
+    source_query: string;
+    source_articles: EntityArticleMatch[]; // Updated from string[]
 
     // Legacy / Convenience
-    keywords: string[]; // List of keys from keyword_counts
     description: string;
-    source_query: string;
-    source_articles: string[]; // List of Article IDs (evidence_articles)
-
-    // Deprecated but kept for safety
     focus_area: string;
-    exhibition_score: number; // mapped to fit_score
+    exhibition_score: number;
     tags: string[];
 
     created_at: Date;
+    updated_at?: Date;
 }
+
+export type SourceType = 'NAVER_NEWS' | 'OTHER';
 
 export interface CompanyNews {
     id: string;
-    company_id: string;
+    company_id: string; // mapped entity
     title: string;
     summary: string;
     publication_date: string;
     source_url: string;
+
+    // Source traceability
+    source_type: SourceType;
+    source_query: string;
+    original_link_hash?: string;
+
     raw_json: any;
     created_at: Date;
 }
@@ -84,3 +116,4 @@ export interface Trend {
     evidence: string;
     created_at: Date;
 }
+

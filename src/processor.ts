@@ -1,7 +1,7 @@
 import { NaverNewsItem } from './collector';
 import {
     Company, CompanyNews,
-    EntityType, CompanyScale, MarketTarget, ExhibitionParticipationType, PrimaryCategory, CandidateStatus, Signals
+    EntityType, CompanyScale, MarketTarget, ExhibitionParticipationType, PrimaryCategory, CandidateStatus, Signals, ReviewStatus
 } from './types';
 import { CONFIG } from './config';
 
@@ -123,7 +123,6 @@ export class DataProcessor {
         // Determine Market Target
         let marketTarget: MarketTarget = 'PRIVATE';
         if (signals.procurement_ready || companyScale === 'PUBLIC') marketTarget = 'PUBLIC';
-        // Note: 'BOTH' logic would require more context, defaulting to PRIVATE or PUBLIC based on signal
 
         // Determine Exhibition Participation Type
         let participationType: ExhibitionParticipationType = 'UNKNOWN';
@@ -135,36 +134,42 @@ export class DataProcessor {
             participationType = 'MIXED'; // Simplification
         }
 
-        // Determine Status & Recommendation Reason
+        // Determine Status & Rule-based Review Status
         let status: CandidateStatus = 'EXCLUDED';
+        let reviewStatus: ReviewStatus = 'NEEDS_REVIEW';
         let reason = '';
         let score = 0;
 
         if (entityType === 'COMPANY') {
             if (participationType === 'PRODUCT_LAUNCH') {
                 status = 'CONFIRMED';
+                reviewStatus = 'AUTO_CONFIRMED';
                 reason = '신제품/기술 출시 정황(Product Launch) 포착';
                 score = 80;
             } else if (participationType === 'MANUFACTURING_READY') {
                 status = 'CONFIRMED';
+                reviewStatus = 'AUTO_CONFIRMED';
                 reason = '제조/양산 인프라 및 인증(Manufacturing) 보유';
                 score = 70;
             } else if (participationType === 'SOLUTION_PARTNER') {
-                status = 'PENDING'; // Spec doesn't explicitly confirm partner, but maybe pending
+                status = 'PENDING';
+                reviewStatus = 'NEEDS_REVIEW';
                 reason = '조달/솔루션 파트너 가능성';
                 score = 50;
             } else {
                 status = 'PENDING';
+                reviewStatus = 'NEEDS_REVIEW'; // Keep defaults
                 reason = '전시 참가 시그널 미약, 지속 관찰 필요';
                 score = 30;
             }
         } else {
             status = 'EXCLUDED';
+            reviewStatus = 'NEEDS_REVIEW'; // Maybe REJECTED? But spec says NEEDS_REVIEW logic primarily
             reason = '비기업(단순 홍보/기관/협회)';
         }
 
-        // Spec: "Exhibition Participation Type" -> mandatory in output
-        if (participationType === 'UNKNOWN') participationType = 'MIXED'; // Default for safety if pending
+        // Default participation type if UNKNOWN but confusing
+        if (participationType === 'UNKNOWN') participationType = 'MIXED';
 
         const companyId = generateId();
         const newsId = generateId();
@@ -175,6 +180,7 @@ export class DataProcessor {
         const company: Company = {
             id: companyId,
             name: candidateName,
+            normalized_name: candidateName, // Simplification
             entity_type: entityType,
             company_scale: companyScale,
             market_target: marketTarget,
@@ -184,12 +190,18 @@ export class DataProcessor {
             fit_score: score,
             recommendation_reason: reason,
             candidate_status: status,
+            review_status: reviewStatus,
             category_tags: [...tags, ...keywords],
             keyword_counts: keywordCounts,
             keywords: keywords,
             description: cleanDesc,
             source_query: searchKeyword,
-            source_articles: [newsId],
+            source_articles: [{
+                article_id: newsId,
+                match_confidence: 100,
+                match_method: 'RULE',
+                match_excerpt: cleanTitle
+            }],
             focus_area: keywords.join(', '),
             exhibition_score: score,
             tags: tags,
@@ -202,11 +214,17 @@ export class DataProcessor {
             title: cleanTitle,
             summary: cleanDesc,
             publication_date: item.pubDate,
-            source_url: item.originallink || item.link,
+            source_url: newsId, // This might need original link if avail
+            source_type: 'NAVER_NEWS',
+            source_query: searchKeyword,
             raw_json: item,
             created_at: new Date()
         };
+        // Fix source_url
+        if (item.originallink) news.source_url = item.originallink;
+        else if (item.link) news.source_url = item.link;
 
         return { company, news };
     }
 }
+

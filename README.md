@@ -49,3 +49,34 @@ npx ts-node src/index.ts
 * `src/store.ts`: 인메모리 데이터 저장소
 * `src/server.ts`: 웹 서버 및 API 엔드포인트
 * `public/index.html`: 웹 대시보드 UI
+
+## 📋 데이터 검수 및 Export (검수 루프)
+
+추출된 데이터를 CSV로 내려받아 엑셀에서 검수하고, 승인/거절 결과를 시스템에 다시 반영할 수 있습니다.
+
+### 1. CSV Export (내보내기)
+전체 엔티티 리스트를 CSV 파일로 다운로드합니다.
+* **URL**: `http://localhost:3000/exports/entities.csv`
+* **필터 옵션** (Query Params):
+    * `review_status`: `NEEDS_REVIEW` | `HUMAN_CONFIRMED` | `REJECTED` ...
+    * `company_scale`: `SME` | `LARGE` ...
+    * `exhibition_participation_type`: `PRODUCT_LAUNCH` | `MANUFACTURING_READY` ...
+* **예시**:
+  ```
+  http://localhost:3000/exports/entities.csv?review_status=NEEDS_REVIEW
+  ```
+
+### 2. 검수 수행 (Excel)
+다운로드한 CSV 파일에서 다음 컬럼을 수정합니다.
+1. `review_status`: `HUMAN_CONFIRMED` (승인) 또는 `REJECTED` (탈락) 등으로 변경
+2. `review_notes`: 검토 의견 작성
+3. `reviewed_by`: 검토자 이름 (선택)
+
+### 3. CSV Import (반영하기)
+수정된 CSV 파일을 업로드하여 검수 결과를 반영합니다.
+* **URL**: `POST http://localhost:3000/imports/entity-reviews`
+* **Body**: `multipart/form-data`, key=`file`
+* **Curl 예시**:
+  ```bash
+  curl -X POST -F "file=@reviewed_data.csv" http://localhost:3000/imports/entity-reviews
+  ```

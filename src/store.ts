@@ -1,4 +1,4 @@
-import { Category, Company, CompanyNews, Trend, CandidateStatus, Signals } from './types';
+import { Category, Company, CompanyNews, Trend, CandidateStatus, Signals, ReviewStatus, EntityArticleMatch } from './types';
 
 export class Store {
     public categories: Category[] = [];
@@ -11,6 +11,17 @@ export class Store {
         if (status === 'CONFIRMED') return 3;
         if (status === 'PENDING') return 2;
         return 1;
+    }
+
+    // Status Priority for Review: HUMAN_* or REJECTED are finalized, don't auto-update.
+    // NEEDS_REVIEW < AUTO_CONFIRMED (if confident)
+    private shouldUpdateReviewStatus(current: ReviewStatus, incoming: ReviewStatus): boolean {
+        if (current === 'HUMAN_CONFIRMED' || current === 'REJECTED') return false;
+        if (current === 'AUTO_CONFIRMED' && incoming === 'NEEDS_REVIEW') return false; // Downgrade protection?
+        // Actually if incoming is just default NEEDS_REVIEW, we shouldn't overwrite AUTO_CONFIRMED.
+        // But if incoming is AUTO_CONFIRMED, we can overwrite NEEDS_REVIEW.
+        if (current === 'NEEDS_REVIEW' && incoming === 'AUTO_CONFIRMED') return true;
+        return false;
     }
 
     private mergeSignals(s1: Signals, s2: Signals): Signals {
@@ -41,15 +52,19 @@ export class Store {
 
             if (newP > existingP) {
                 existing.candidate_status = partial.candidate_status;
-                existing.recommendation_reason = partial.recommendation_reason; // Update reason to match better status
+                existing.recommendation_reason = partial.recommendation_reason;
                 existing.exhibition_participation_type = partial.exhibition_participation_type;
                 existing.fit_score = partial.fit_score;
             } else if (newP === existingP) {
-                // Same priority, maybe update score if higher
                 if (partial.fit_score > existing.fit_score) {
                     existing.fit_score = partial.fit_score;
                     existing.recommendation_reason = partial.recommendation_reason;
                 }
+            }
+
+            // Merge Review Status
+            if (this.shouldUpdateReviewStatus(existing.review_status, partial.review_status)) {
+                existing.review_status = partial.review_status;
             }
 
             // Market Target: strict > loose?
@@ -58,8 +73,15 @@ export class Store {
                 else if (existing.market_target !== partial.market_target) existing.market_target = 'BOTH';
             }
 
-            // Merge Articles
-            existing.source_articles = [...new Set([...existing.source_articles, ...partial.source_articles])];
+            // Merge Articles (EntityArticleMatch[])
+            // Filter duplicates by article_id
+            const existingIds = new Set(existing.source_articles.map(a => a.article_id));
+            partial.source_articles.forEach(article => {
+                if (!existingIds.has(article.article_id)) {
+                    existing.source_articles.push(article);
+                    existingIds.add(article.article_id);
+                }
+            });
 
             // Merge Tags
             existing.category_tags = [...new Set([...existing.category_tags, ...partial.category_tags])];
@@ -67,6 +89,8 @@ export class Store {
             // Update legacy fields
             existing.focus_area = existing.keywords.slice(0, 5).join(', ');
             existing.exhibition_score = existing.fit_score;
+
+            existing.updated_at = new Date();
 
             return existing;
         } else {

@@ -22,13 +22,18 @@
   "homepage": "https://github.com/soha-com/Mice_Scout#readme",
   "devDependencies": {
     "@types/axios": "^0.9.36",
+    "@types/multer": "^2.0.0",
     "@types/node": "^25.0.3",
     "axios": "^1.13.2",
+    "form-data": "^4.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@types/express": "^5.0.6",
-    "express": "^5.2.1"
+    "csv-parse": "^6.1.0",
+    "csv-stringify": "^6.6.0",
+    "express": "^5.2.1",
+    "multer": "^2.0.2"
   }
 }
