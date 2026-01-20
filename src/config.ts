@@ -1,6 +1,23 @@
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Load .env from root
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
+
+if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error("Missing required environment variables: NAVER_CLIENT_ID or NAVER_CLIENT_SECRET");
+    } else {
+        console.warn("WARNING: Missing NAVER_CLIENT_ID or NAVER_CLIENT_SECRET. Naver API calls will fail.");
+    }
+}
+
 export const CONFIG = {
-    NAVER_CLIENT_ID: 'ADBH2Ktmsf5d4F5ztwmO',
-    NAVER_CLIENT_SECRET: 'GytvqOK7dR',
+    NAVER_CLIENT_ID: NAVER_CLIENT_ID || '',
+    NAVER_CLIENT_SECRET: NAVER_CLIENT_SECRET || '',
     NAVER_API_URL: 'https://openapi.naver.com/v1/search/news.json',
     KEYWORDS: {
         QUERY_SME: 'LED 스마트 중소기업',
@@ -9,3 +26,4 @@ export const CONFIG = {
     // Keywords for validation/scoring (not for search)
     VALIDATION_KEYWORDS: ['전시', '전시회', '출품', '부스', '시연', '신제품 공개']
 };
+

@@ -44,8 +44,12 @@ export interface EntityArticleMatch {
 
 export interface Company {
     id: string; // entity_id
-    name: string; // entity_name
-    normalized_name?: string;
+
+    // Naming & Identification
+    name: string; // This might be used as "representative name" or "display name" initially
+    entity_name_display: string; // Preserves the original extracted name with (Corp) markers for display
+    normalized_name: string; // REQUIRED: Merge key (e.g., "와이비즈")
+    entity_aliases: string[]; // List of all variations found (JSON storage)
 
     // Classification
     entity_type: EntityType;
@@ -58,7 +62,7 @@ export interface Company {
     signals: Signals;
     fit_score: number;
     recommendation_reason: string;
-    candidate_status: CandidateStatus; // Legacy, keep for now or sync with review_status
+    candidate_status: CandidateStatus;
 
     // Metadata / Tags
     category_tags: string[]; // List of strings
@@ -78,7 +82,7 @@ export interface Company {
 
     // Articles / Evidence
     source_query: string;
-    source_articles: EntityArticleMatch[]; // Updated from string[]
+    source_articles: EntityArticleMatch[];
 
     // Legacy / Convenience
     description: string;
@@ -103,7 +107,7 @@ export interface CompanyNews {
     // Source traceability
     source_type: SourceType;
     source_query: string;
-    original_link_hash?: string;
+    original_link_hash?: string; // For deduplication of articles
 
     raw_json: any;
     created_at: Date;
@@ -116,4 +120,3 @@ export interface Trend {
     evidence: string;
     created_at: Date;
 }
-

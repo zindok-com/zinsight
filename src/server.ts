@@ -108,7 +108,7 @@ app.get('/exports/entities.csv', (req: Request, res: Response) => {
 
     // Column Mapping
     const columns = [
-        'entity_id', 'entity_name', 'normalized_name', 'review_status',
+        'entity_id', 'entity_name', 'normalized_name', 'entity_aliases', 'review_status',
         'review_reason_codes', 'review_notes', 'reviewed_by', 'reviewed_at',
         'entity_type', 'company_scale', 'market_target', 'exhibition_participation_type',
         'primary_category', 'category_tags', 'fit_score', 'recommendation_reason',
@@ -130,10 +130,14 @@ app.get('/exports/entities.csv', (req: Request, res: Response) => {
         const evidenceArticles = c.source_articles.map(match => store.news.find(n => n.id === match.article_id)).filter(Boolean);
         const top3Articles = evidenceArticles.slice(0, 3);
 
+        // Aggregate source queries
+        const sourceQueries = [...new Set(evidenceArticles.map(n => n?.source_query).filter(Boolean))].join('|');
+
         const row = [
             c.id,
             c.name,
             c.normalized_name || '',
+            (c.entity_aliases || []).join('|'),
             c.review_status,
             (c.review_reason_codes || []).join('|'),
             c.review_notes || '',
@@ -157,7 +161,7 @@ app.get('/exports/entities.csv', (req: Request, res: Response) => {
             c.source_articles.length,
             top3Articles.map(n => n?.title).join('||'),
             top3Articles.map(n => n?.source_url).join('||'),
-            c.source_query, // Just one field in schema, but technically could be multiple if merged. Schema has source_query as string.
+            sourceQueries,
             c.dedupe_group_id || '',
             c.merged_into_entity_id || ''
         ];

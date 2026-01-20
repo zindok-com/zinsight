@@ -21,7 +21,15 @@
 * Node.js (v18 이상 권장)
 * npm
 
-### 2. 설치
+### 2. 환경변수 설정
+프로젝트 루트에 `.env` 파일을 생성하고 네이버 API 키를 입력합니다.
+`env.example` 파일을 참고하세요.
+```bash
+cp .env.example .env
+# .env 파일 편집
+```
+
+### 3. 설치
 프로젝트 루트에서 의존성을 설치합니다.
 ```bash
 npm install

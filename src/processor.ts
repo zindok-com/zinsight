@@ -4,6 +4,7 @@ import {
     EntityType, CompanyScale, MarketTarget, ExhibitionParticipationType, PrimaryCategory, CandidateStatus, Signals, ReviewStatus
 } from './types';
 import { CONFIG } from './config';
+import crypto from 'crypto';
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
@@ -17,21 +18,63 @@ export class DataProcessor {
             .replace(/&gt;/g, '>');
     }
 
-    // 2.2 Candidate Name Extraction
+    // New: Normalize Entity Name
+    private normalizeEntityName(name: string): string {
+        let normalized = name.trim();
+
+        // 1. Remove Legal Entity Markers
+        normalized = normalized
+            .replace(/\(주\)/g, '')
+            .replace(/㈜/g, '')
+            .replace(/주식회사/g, '')
+            .replace(/\(유\)/g, '')
+            .replace(/유한회사/g, '');
+
+        // 2. Remove Special Characters & Spaces
+        // Keep English, Korean, Numbers
+        normalized = normalized.replace(/[^a-zA-Z0-9가-힣]/g, '');
+
+        return normalized.toUpperCase(); // Case insensitive
+    }
+
+    // 2.2 Candidate Name Extraction (Improved)
     private extractCandidateName(text: string): string {
         let clean = this.cleanText(text);
         clean = clean.replace(/^\[.*?\]\s*/, '');
 
-        // Identifiers from spec: ㈜, 주식회사, 공사, 공단, 협회, 테크노파크 + generic (사, 기업, 업체)
-        // Regex to capture noun phrase before these markers
-        const pattern = /([가-힣a-zA-Z0-9\s&]{2,15})(?:은|는|이|가|사|업체|기업|㈜|주식회사|공사|공단|협회|테크노파크)\s/;
+        // 1. Priority: Legal Entity Markers
+        // Look for pattern like "Word (Ju)" or "Ju) Word" or "Jushikhoesa Word"
+        // Note: Regex needs to capture the Name part reliably.
 
+        // Pattern A: Post-fix markers (Word ㈜, Word (주), Word 주식회사)
+        // Capture preceding noun phrase
+        const postfixPattern = /([가-힣a-zA-Z0-9]+)\s?(?:㈜|\(주\)|주식회사|유한회사|\(유\))/;
+        const postMatch = clean.match(postfixPattern);
+        if (postMatch && postMatch[1]) {
+            // Reconstruct full display name for alias
+            // Actually extractCandidateName usually returns the "Display Name".
+            // We can return the full matched string or the name part.
+            // Let's return the full string found (e.g. "와이비즈(주)") to allow normalization later.
+            // But the regex only captures the name "와이비즈".
+            // Let's grab the full match.
+            return postMatch[0];
+        }
+
+        // Pattern B: Pre-fix markers (㈜Word, (주)Word, 주식회사 Word)
+        const prefixPattern = /(?:㈜|\(주\)|주식회사|유한회사|\(유\))\s?([가-힣a-zA-Z0-9]+)/;
+        const preMatch = clean.match(prefixPattern);
+        if (preMatch && preMatch[1]) {
+            return preMatch[0];
+        }
+
+        // 2. Fallback: Existing identifiers
+        const pattern = /([가-힣a-zA-Z0-9\s&]{2,15})(?:은|는|이|가|사|업체|기업|공사|공단|협회|테크노파크)\s/;
         const match = clean.match(pattern);
         if (match && match[1]) {
             return match[1].trim();
         }
 
-        // Fallback: Comma split
+        // 3. Fallback: Comma split
         const commaSplit = clean.split(',');
         if (commaSplit.length > 1 && commaSplit[0] && commaSplit[0].length < 15) {
             return commaSplit[0].trim();
@@ -102,8 +145,7 @@ export class DataProcessor {
 
     // Keyword Extraction
     private extractKeywords(text: string): string[] {
-        const targetWords = ['LED', 'OLED', 'IoT', 'AI', '센서', '드라이버', '렌즈', '모듈', '디스플레이', '사이니지', '플랫폼', '관제', '시스템', '검사', '장비']; // From Spec 2.5
-        // Penalize/Remove: Policy, Person, Event names (Not implemented strictly, but purely tech keywords are kept)
+        const targetWords = ['LED', 'OLED', 'IoT', 'AI', '센서', '드라이버', '렌즈', '모듈', '디스플레이', '사이니지', '플랫폼', '관제', '시스템', '검사', '장비'];
 
         return targetWords.filter(word => text.toLowerCase().includes(word.toLowerCase()));
     }
@@ -113,7 +155,11 @@ export class DataProcessor {
         const cleanDesc = this.cleanText(item.description);
         const combinedText = cleanTitle + " " + cleanDesc;
 
+        // 1. Extract Name (Display Name)
         const candidateName = this.extractCandidateName(cleanTitle);
+
+        // 2. Normalize Name
+        const normalizedName = this.normalizeEntityName(candidateName);
 
         const { type: entityType, scale: companyScale } = this.determineEntityProfile(candidateName, combinedText, searchKeyword);
         const { primary, tags } = this.determineCategory(combinedText);
@@ -140,7 +186,12 @@ export class DataProcessor {
         let reason = '';
         let score = 0;
 
-        if (entityType === 'COMPANY') {
+        // Filter Invalid Normalized Names
+        if (normalizedName.length < 2 || normalizedName === 'UNKNOWN') {
+            status = 'EXCLUDED';
+            reviewStatus = 'REJECTED';
+            reason = '유효하지 않은 기업명';
+        } else if (entityType === 'COMPANY') {
             if (participationType === 'PRODUCT_LAUNCH') {
                 status = 'CONFIRMED';
                 reviewStatus = 'AUTO_CONFIRMED';
@@ -164,11 +215,10 @@ export class DataProcessor {
             }
         } else {
             status = 'EXCLUDED';
-            reviewStatus = 'NEEDS_REVIEW'; // Maybe REJECTED? But spec says NEEDS_REVIEW logic primarily
+            reviewStatus = 'NEEDS_REVIEW';
             reason = '비기업(단순 홍보/기관/협회)';
         }
 
-        // Default participation type if UNKNOWN but confusing
         if (participationType === 'UNKNOWN') participationType = 'MIXED';
 
         const companyId = generateId();
@@ -179,8 +229,10 @@ export class DataProcessor {
 
         const company: Company = {
             id: companyId,
-            name: candidateName,
-            normalized_name: candidateName, // Simplification
+            name: candidateName, // Use display name for name
+            entity_name_display: candidateName,
+            normalized_name: normalizedName,
+            entity_aliases: [candidateName], // Init with extracted name
             entity_type: entityType,
             company_scale: companyScale,
             market_target: marketTarget,
@@ -208,21 +260,22 @@ export class DataProcessor {
             created_at: new Date()
         };
 
+        // Generate Link Hash
+        const linkHash = crypto.createHash('md5').update(item.originallink || item.link).digest('hex');
+
         const news: CompanyNews = {
             id: newsId,
             company_id: companyId,
             title: cleanTitle,
             summary: cleanDesc,
             publication_date: item.pubDate,
-            source_url: newsId, // This might need original link if avail
+            source_url: item.originallink || item.link,
             source_type: 'NAVER_NEWS',
             source_query: searchKeyword,
+            original_link_hash: linkHash,
             raw_json: item,
             created_at: new Date()
         };
-        // Fix source_url
-        if (item.originallink) news.source_url = item.originallink;
-        else if (item.link) news.source_url = item.link;
 
         return { company, news };
     }

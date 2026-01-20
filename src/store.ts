@@ -35,10 +35,35 @@ export class Store {
     }
 
     public upsertCompany(partial: Company): Company {
-        const existing = this.companies.find(c => c.name === partial.name);
+        // 1. Find by Normalized Name (Merge Key)
+        const existing = this.companies.find(c => c.normalized_name === partial.normalized_name);
+
         if (existing) {
-            // Merge Signals
-            existing.signals = this.mergeSignals(existing.signals, partial.signals);
+            // Merge Signals (Accumulate Evidence)
+            const mergedSignals = this.mergeSignals(existing.signals, partial.signals);
+            existing.signals = mergedSignals;
+
+            // Recalculate Score based on Merged Signals
+            // Use simple logic: Product Launch > Manufacturing > Procurement > Base
+            if (mergedSignals.product_launch) {
+                if (existing.fit_score < 80) {
+                    existing.fit_score = 80;
+                    existing.recommendation_reason = '신제품/기술 출시 정황(Product Launch) 포착 [병합됨]';
+                    existing.candidate_status = 'CONFIRMED';
+                    if (this.shouldUpdateReviewStatus(existing.review_status, 'AUTO_CONFIRMED')) {
+                        existing.review_status = 'AUTO_CONFIRMED';
+                    }
+                }
+            } else if (mergedSignals.manufacturing) {
+                if (existing.fit_score < 70) {
+                    existing.fit_score = 70;
+                    existing.recommendation_reason = '제조/양산 인프라 및 인증(Manufacturing) 보유 [병합됨]';
+                    existing.candidate_status = 'CONFIRMED';
+                    if (this.shouldUpdateReviewStatus(existing.review_status, 'AUTO_CONFIRMED')) {
+                        existing.review_status = 'AUTO_CONFIRMED';
+                    }
+                }
+            }
 
             // Merge Keyword Counts
             Object.entries(partial.keyword_counts).forEach(([k, v]) => {
@@ -46,25 +71,12 @@ export class Store {
             });
             existing.keywords = Object.keys(existing.keyword_counts);
 
-            // Upgrade Status if new is higher
-            const existingP = this.getStatusPriority(existing.candidate_status);
-            const newP = this.getStatusPriority(partial.candidate_status);
-
-            if (newP > existingP) {
-                existing.candidate_status = partial.candidate_status;
-                existing.recommendation_reason = partial.recommendation_reason;
-                existing.exhibition_participation_type = partial.exhibition_participation_type;
-                existing.fit_score = partial.fit_score;
-            } else if (newP === existingP) {
-                if (partial.fit_score > existing.fit_score) {
-                    existing.fit_score = partial.fit_score;
-                    existing.recommendation_reason = partial.recommendation_reason;
-                }
-            }
-
-            // Merge Review Status
-            if (this.shouldUpdateReviewStatus(existing.review_status, partial.review_status)) {
-                existing.review_status = partial.review_status;
+            // Merge Aliases (Unique)
+            if (!existing.entity_aliases) existing.entity_aliases = [existing.name];
+            if (partial.entity_aliases) {
+                existing.entity_aliases = [...new Set([...existing.entity_aliases, ...partial.entity_aliases])];
+            } else {
+                if (!existing.entity_aliases.includes(partial.name)) existing.entity_aliases.push(partial.name);
             }
 
             // Market Target: strict > loose?
@@ -94,6 +106,10 @@ export class Store {
 
             return existing;
         } else {
+            // New Entry
+            // Ensure aliases initialized
+            if (!partial.entity_aliases) partial.entity_aliases = [partial.name];
+
             this.companies.push(partial);
             return partial;
         }

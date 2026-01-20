@@ -33,6 +33,7 @@
     "@types/express": "^5.0.6",
     "csv-parse": "^6.1.0",
     "csv-stringify": "^6.6.0",
+    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "multer": "^2.0.2"
   }
