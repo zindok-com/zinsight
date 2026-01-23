@@ -2,6 +2,7 @@ import { DataService } from '@/services/data-service';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArticleActions } from "@/components/articles/article-actions";
+import { CollectNewsButton } from "@/components/articles/collect-button";
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +12,10 @@ export default async function ArticlesPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold tracking-tight">Articles</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold tracking-tight">Articles</h1>
+                <CollectNewsButton />
+            </div>
 
             <div className="grid gap-4">
                 {news.map((item, i) => (
