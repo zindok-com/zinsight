@@ -54,7 +54,6 @@ export async function collectNews(): Promise<CollectionResult> {
     let totalNewItems = 0;
     const service = DataService.getInstance();
     const existingNews = await service.getNews();
-    const existingLinks = new Set(existingNews.map(n => n.original_link_hash || n.source_url));
 
     try {
         for (const [key, keyword] of Object.entries(KEYWORDS)) {
@@ -82,13 +81,10 @@ export async function collectNews(): Promise<CollectionResult> {
                     const filepath = path.join(RAW_DIR, filename);
                     await fs.writeFile(filepath, JSON.stringify(data, null, 2), 'utf-8');
 
-                    // 2. Process and Merge
+                    // 2. Process ALL items (no deduplication)
                     const newItems: CompanyNews[] = [];
 
                     for (const item of data.items) {
-                        // Basic deduplication check using link
-                        if (existingLinks.has(item.originallink || item.link)) continue;
-
                         const newsItem: CompanyNews = {
                             id: uuidv4(),
                             company_id: 'UNKNOWN', // Needs linking logic later
@@ -104,13 +100,12 @@ export async function collectNews(): Promise<CollectionResult> {
                         };
 
                         newItems.push(newsItem);
-                        existingLinks.add(newsItem.source_url);
                     }
 
                     if (newItems.length > 0) {
                         const updatedNews = [...existingNews, ...newItems];
                         await service.saveNews(updatedNews);
-                        // Update local reference so next keyword doesn't add duplicates if any overlap
+                        // Update local reference so next keyword can append
                         existingNews.push(...newItems);
                         totalNewItems += newItems.length;
                     }
