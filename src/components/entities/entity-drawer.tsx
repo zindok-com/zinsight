@@ -80,13 +80,13 @@ export function EntityDrawer({ entity, open, onOpenChange, onSaved }: EntityDraw
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="norm_name" className="text-right">
-                            Normalized
+                        <Label htmlFor="aliases" className="text-right">
+                            Aliases
                         </Label>
                         <Input
-                            id="norm_name"
-                            value={formData.normalized_name || ''}
-                            onChange={(e) => setFormData({ ...formData, normalized_name: e.target.value })}
+                            id="aliases"
+                            value={formData.entity_aliases?.join(', ') || ''}
+                            onChange={(e) => setFormData({ ...formData, entity_aliases: e.target.value.split(',').map(s => s.trim()) })}
                             className="col-span-3"
                         />
                     </div>
@@ -122,16 +122,35 @@ export function EntityDrawer({ entity, open, onOpenChange, onSaved }: EntityDraw
                     </div>
 
                     <div className="border-t my-4 pt-4">
-                        <h4 className="font-medium mb-3">Evidence</h4>
-                        <div className="space-y-2 text-sm">
+                        <h4 className="font-medium mb-3 text-sm">Evidence (Articles)</h4>
+                        <div className="space-y-3">
                             {entity.source_articles?.map((article, i) => (
-                                <div key={i} className="p-2 bg-slate-50 border rounded">
-                                    <div className="font-medium">Article ID: {article.article_id}</div>
-                                    <div className="text-xs text-muted-foreground">Confidence: {article.match_confidence}</div>
+                                <div key={i} className="p-3 bg-slate-50 border rounded-lg space-y-2">
+                                    {article.title && (
+                                        <div className="font-semibold text-sm leading-snug line-clamp-2">
+                                            {article.title}
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between items-center text-[11px]">
+                                        <span className="text-muted-foreground font-medium">
+                                            {article.publication_date ? new Date(article.publication_date).toLocaleDateString() : 'Date Unknown'}
+                                        </span>
+                                        {article.source_url && (
+                                            <a
+                                                href={article.source_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-primary hover:underline font-bold"
+                                            >
+                                                VIEW SOURCE
+                                            </a>
+                                        )}
+                                    </div>
+                                    {!article.title && <div className="text-[10px] text-muted-foreground break-all">ID: {article.article_id}</div>}
                                 </div>
                             ))}
                             {(!entity.source_articles || entity.source_articles.length === 0) && (
-                                <div className="text-muted-foreground italic">No linked articles</div>
+                                <div className="text-muted-foreground italic text-sm">No linked articles</div>
                             )}
                         </div>
                     </div>

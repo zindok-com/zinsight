@@ -6,7 +6,6 @@ export interface Category {
 }
 
 export type EntityType = 'COMPANY' | 'INSTITUTION' | 'ASSOCIATION' | 'UNKNOWN';
-export type CompanyScale = 'SME' | 'LARGE' | 'PUBLIC' | 'OTHER';
 export type MarketTarget = 'PUBLIC' | 'PRIVATE' | 'BOTH';
 export type ExhibitionParticipationType =
     | 'PRODUCT_LAUNCH'
@@ -15,30 +14,27 @@ export type ExhibitionParticipationType =
     | 'MIXED'
     | 'UNKNOWN';
 
-export type PrimaryCategory =
-    | 'LIGHTING'
-    | 'OLED'
-    | 'SMART_LIGHTING'
-    | 'IOT'
-    | 'CONVERGENCE'
-    | 'OTHER';
-
 export type CandidateStatus = 'CONFIRMED' | 'PENDING' | 'EXCLUDED';
 
 export type ReviewStatus = 'AUTO_CONFIRMED' | 'NEEDS_REVIEW' | 'HUMAN_CONFIRMED' | 'REJECTED';
 
 export interface Signals {
-    product_launch: boolean;
-    manufacturing: boolean;
+    led: boolean;
     certification: boolean;
-    government_support: boolean;
-    procurement_ready: boolean;
+    procurement: boolean;
+    product_launch: boolean;
+    award: boolean;
+    exhibition: boolean;
+    smart: boolean;
 }
 
 export interface EntityArticleMatch {
     article_id: string;
-    match_confidence: number;
-    match_method: 'RULE' | 'LLM' | 'HYBRID';
+    title?: string;
+    publication_date?: string;
+    source_url?: string;
+    match_confidence?: number;
+    match_method?: 'RULE' | 'LLM' | 'HYBRID';
     match_excerpt?: string;
 }
 
@@ -48,15 +44,12 @@ export interface Company {
     // Naming & Identification
     name: string; // "representative name"
     entity_name_display: string; // Original extracted name with markers
-    normalized_name: string; // REQUIRED: Merge key
     entity_aliases: string[]; // List of variations
 
     // Classification
     entity_type: EntityType;
-    company_scale: CompanyScale;
     market_target: MarketTarget;
     exhibition_participation_type: ExhibitionParticipationType;
-    primary_category: PrimaryCategory;
 
     // Analysis
     signals: Signals;

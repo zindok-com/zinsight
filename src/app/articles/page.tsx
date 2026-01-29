@@ -1,8 +1,9 @@
+
 import { DataService } from '@/services/data-service';
+import { groupArticlesByBatch } from "@/lib/batch-utils";
 import { CollectNewsButton } from "@/components/articles/collect-button";
 import { CollectionBatchesTable } from "@/components/articles/collection-batches-table";
 import { batchColumns } from "@/components/articles/batch-columns";
-import { groupArticlesByBatch } from "@/lib/batch-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -13,6 +14,8 @@ export default async function ArticlesPage() {
     // 아티클들을 배치별로 그룹화
     const batches = groupArticlesByBatch(news);
 
+
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -22,7 +25,9 @@ export default async function ArticlesPage() {
                         검색어별로 수집된 뉴스 기사 묶음을 확인하세요
                     </p>
                 </div>
-                <CollectNewsButton />
+                <div className="flex gap-2">
+                    <CollectNewsButton />
+                </div>
             </div>
 
             {batches.length === 0 ? (

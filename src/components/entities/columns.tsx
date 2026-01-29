@@ -28,7 +28,7 @@ export const columns: ColumnDef<Company>[] = [
         enableHiding: false,
     },
     {
-        accessorKey: "normalized_name",
+        accessorKey: "name",
         header: ({ column }) => {
             return (
                 <Button
@@ -40,7 +40,7 @@ export const columns: ColumnDef<Company>[] = [
                 </Button>
             )
         },
-        cell: ({ row }) => <div className="font-medium">{row.getValue("normalized_name")}</div>,
+        cell: ({ row }) => <div className="font-medium">{row.getValue("name")}</div>,
     },
     {
         accessorKey: "review_status",
@@ -75,18 +75,18 @@ export const columns: ColumnDef<Company>[] = [
         }
     },
     {
-        accessorKey: "primary_category",
-        header: "Category",
-    },
-    {
         accessorKey: "signals",
         header: "Signals",
         cell: ({ row }) => {
             const signals = row.original.signals;
             const activeSignals = [];
-            if (signals.product_launch) activeSignals.push("Launch");
-            if (signals.manufacturing) activeSignals.push("Mfg");
+            if (signals.led) activeSignals.push("LED");
             if (signals.certification) activeSignals.push("Cert");
+            if (signals.procurement) activeSignals.push("Proc");
+            if (signals.product_launch) activeSignals.push("Launch");
+            if (signals.award) activeSignals.push("Award");
+            if (signals.exhibition) activeSignals.push("Exh");
+            if (signals.smart) activeSignals.push("Smart");
 
             return (
                 <div className="flex gap-1 flex-wrap">

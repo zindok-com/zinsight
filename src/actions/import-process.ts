@@ -25,50 +25,71 @@ export async function parseAndImportFile(formData: FormData) {
             data = XLSX.utils.sheet_to_json(ws);
         } else if (file.name.endsWith('.json')) {
             const text = new TextDecoder().decode(buffer);
-            data = JSON.parse(text);
+            const jsonData = JSON.parse(text);
+
+            // Handle Golden Set Schema
+            if (jsonData.schema === 'MICE_SCOUT_PARSED_ENTITY_V1') {
+                data = jsonData.parsed_entities || [];
+            } else if (Array.isArray(jsonData)) {
+                data = jsonData;
+            } else {
+                data = [jsonData];
+            }
         } else {
             return { success: false, error: 'Unsupported format' };
         }
 
-        // Map to Company type (Simple mapping for MVP)
-        // In a real app, we would have a mapping step in UI passing the mapping config
+        // Map to Company type
         const mappedEntities: Company[] = data.map((row: any, index) => {
-            // Basic auto-mapping
-            const name = row['Name'] || row['name'] || row['Company'] || `Unknown-${index}`;
-            const normalized = row['NormalizedName'] || row['normalized_name'] || name;
+            // Check if it's Golden Set format or generic
+            const isGoldenSet = !!row.entity_id;
+
+            const name = isGoldenSet ? row.entity_name : (row['Name'] || row['name'] || row['Company'] || `Unknown-${index}`);
 
             return {
-                id: row['ID'] || row['id'] || `new-${Date.now()}-${index}`,
+                id: row.entity_id || row.id || `new-${Date.now()}-${index}`,
                 name: name,
-                entity_name_display: row['EntityNameDisplay'] || name,
-                normalized_name: normalized,
-                review_status: (row['Status'] as ReviewStatus) || 'NEEDS_REVIEW',
-
-                // Defaults
-                entity_aliases: [name],
+                entity_name_display: row.entity_name || name,
+                review_status: row.review_status || 'NEEDS_REVIEW',
+                entity_aliases: row.name_variants || [name],
                 entity_type: 'COMPANY',
-                company_scale: 'SME',
                 market_target: 'BOTH',
-                exhibition_participation_type: 'UNKNOWN',
-                primary_category: 'OTHER',
-                signals: {
-                    product_launch: false,
-                    manufacturing: false,
+                exhibition_participation_type: row.exhibition_participation_type || 'UNKNOWN',
+                signals: isGoldenSet ? {
+                    led: !!row.signals?.led,
+                    certification: !!row.signals?.certification,
+                    procurement: !!row.signals?.procurement,
+                    product_launch: !!row.signals?.product_launch,
+                    award: !!row.signals?.award,
+                    exhibition: !!row.signals?.exhibition,
+                    smart: !!row.signals?.smart
+                } : {
+                    led: false,
                     certification: false,
-                    government_support: false,
-                    procurement_ready: false
+                    procurement: false,
+                    product_launch: false,
+                    award: false,
+                    exhibition: false,
+                    smart: false
                 },
-                fit_score: 0,
-                recommendation_reason: '',
-                candidate_status: 'PENDING',
+                fit_score: row.fitness_score || row.fit_score || 0,
+                recommendation_reason: isGoldenSet ? 'Golden Set Import' : '',
+                candidate_status: isGoldenSet ? 'CONFIRMED' : 'PENDING',
                 category_tags: [],
                 keyword_counts: {},
                 keywords: [],
-                source_articles: [],
-                source_query: 'import',
-                description: '',
+                source_articles: (row.evidence_articles || []).map((art: any) => ({
+                    article_id: art.article_id,
+                    title: art.title,
+                    publication_date: art.publication_date,
+                    source_url: art.source_url,
+                    match_confidence: 100,
+                    match_method: 'RULE'
+                })),
+                source_query: row.source_query || 'import',
+                description: row.description || '',
                 focus_area: '',
-                exhibition_score: 0,
+                exhibition_score: row.fitness_score || 0,
                 tags: [],
                 created_at: new Date().toISOString()
             } as Company;

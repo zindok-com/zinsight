@@ -37,60 +37,63 @@ export class DataService {
 
     // Logic from legacy Store.upsertCompany
     public async upsertCompany(partial: Company, entities: Company[]): Promise<Company[]> {
-        // 1. Find by Normalized Name (Merge Key)
-        let existingIndex = entities.findIndex(c => c.normalized_name === partial.normalized_name);
+        // 1. Find by Name (Normalized for comparison)
+        const normalize = (s: string) => s.replace(/\s+/g, '').toLowerCase();
+        const searchName = normalize(partial.name);
+        let existingIndex = entities.findIndex(c => normalize(c.name) === searchName);
 
         if (existingIndex >= 0) {
             const existing = entities[existingIndex];
 
-            // Merge Logic (Simplified for now, need to port full logic if needed)
+            // Merge Logic
             const merged = { ...existing };
 
             // Merge Signals
             merged.signals = {
-                product_launch: existing.signals.product_launch || partial.signals.product_launch,
-                manufacturing: existing.signals.manufacturing || partial.signals.manufacturing,
+                led: existing.signals.led || partial.signals.led,
                 certification: existing.signals.certification || partial.signals.certification,
-                government_support: existing.signals.government_support || partial.signals.government_support,
-                procurement_ready: existing.signals.procurement_ready || partial.signals.procurement_ready
+                procurement: existing.signals.procurement || partial.signals.procurement,
+                product_launch: existing.signals.product_launch || partial.signals.product_launch,
+                award: existing.signals.award || partial.signals.award,
+                exhibition: existing.signals.exhibition || partial.signals.exhibition,
+                smart: existing.signals.smart || partial.signals.smart
             };
 
-            // Recalculate Score logic - ported from legacy
-            if (merged.signals.product_launch) {
-                if (merged.fit_score < 80) {
-                    merged.fit_score = 80;
-                    merged.recommendation_reason = '신제품/기술 출시 정황(Product Launch) 포착 [병합됨]';
-                    merged.candidate_status = 'CONFIRMED';
-                    if (this.shouldUpdateReviewStatus(merged.review_status, 'AUTO_CONFIRMED')) {
-                        merged.review_status = 'AUTO_CONFIRMED';
-                    }
-                }
-            } else if (merged.signals.manufacturing) {
-                if (merged.fit_score < 70) {
-                    merged.fit_score = 70;
-                    merged.recommendation_reason = '제조/양산 인프라 및 인증(Manufacturing) 보유 [병합됨]';
-                    merged.candidate_status = 'CONFIRMED';
-                    if (this.shouldUpdateReviewStatus(merged.review_status, 'AUTO_CONFIRMED')) {
-                        merged.review_status = 'AUTO_CONFIRMED';
-                    }
-                }
+            // Recalculate Score logic - ported from legacy and adapted
+            // If it's confirmed from golden set or has strong signals
+            if (partial.candidate_status === 'CONFIRMED') {
+                merged.candidate_status = 'CONFIRMED';
+                merged.fit_score = Math.max(merged.fit_score, partial.fit_score);
             }
 
             // Merge Keyword Counts
             merged.keyword_counts = { ...existing.keyword_counts };
-            Object.entries(partial.keyword_counts).forEach(([k, v]) => {
-                merged.keyword_counts[k] = (merged.keyword_counts[k] || 0) + v;
-            });
+            if (partial.keyword_counts) {
+                Object.entries(partial.keyword_counts).forEach(([k, v]) => {
+                    merged.keyword_counts[k] = (merged.keyword_counts[k] || 0) + v;
+                });
+            }
             merged.keywords = Object.keys(merged.keyword_counts);
 
             // Merge Aliases
             const newAliases = partial.entity_aliases || [partial.name];
             merged.entity_aliases = [...new Set([...(existing.entity_aliases || []), ...newAliases])];
 
-            // Merge Articles
-            const existingIds = new Set(existing.source_articles.map(a => a.article_id));
-            const newArticles = partial.source_articles.filter(a => !existingIds.has(a.article_id));
-            merged.source_articles = [...existing.source_articles, ...newArticles];
+            // Merge Articles (Update metadata if already exists, otherwise add)
+            const articleMap = new Map(existing.source_articles.map(a => [a.article_id, a]));
+            partial.source_articles.forEach(art => {
+                const existingArt = articleMap.get(art.article_id);
+                if (existingArt) {
+                    // Update existing with new metadata if available
+                    articleMap.set(art.article_id, {
+                        ...existingArt,
+                        ...art
+                    });
+                } else {
+                    articleMap.set(art.article_id, art);
+                }
+            });
+            merged.source_articles = Array.from(articleMap.values());
 
             merged.updated_at = new Date().toISOString();
 
