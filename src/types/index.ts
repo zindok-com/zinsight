@@ -16,7 +16,7 @@ export type ExhibitionParticipationType =
 
 export type CandidateStatus = 'CONFIRMED' | 'PENDING' | 'EXCLUDED';
 
-export type ReviewStatus = 'AUTO_CONFIRMED' | 'NEEDS_REVIEW' | 'HUMAN_CONFIRMED' | 'REJECTED';
+export type ReviewStatus = 'AUTO_CONFIRMED' | 'NEEDS_REVIEW' | 'HUMAN_CONFIRMED' | 'REJECTED' | 'GOLDENSET_CONFIRMED';
 
 export interface Signals {
     led: boolean;

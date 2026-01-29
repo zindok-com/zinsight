@@ -48,12 +48,26 @@ export const columns: ColumnDef<Company>[] = [
         cell: ({ row }) => {
             const status = row.getValue("review_status") as string;
             let color = "bg-slate-500";
-            if (status === 'NEEDS_REVIEW') color = "bg-orange-500";
-            if (status === 'HUMAN_CONFIRMED') color = "bg-green-600";
-            if (status === 'AUTO_CONFIRMED') color = "bg-green-400";
-            if (status === 'REJECTED') color = "bg-red-500";
+            let label = status;
 
-            return <Badge className={color}>{status}</Badge>
+            if (status === 'NEEDS_REVIEW') {
+                color = "bg-orange-500";
+                label = "Needs Review";
+            } else if (status === 'HUMAN_CONFIRMED') {
+                color = "bg-green-600";
+                label = "Confirmed";
+            } else if (status === 'AUTO_CONFIRMED') {
+                color = "bg-green-400";
+                label = "Auto Confirmed";
+            } else if (status === 'REJECTED') {
+                color = "bg-red-500";
+                label = "Rejected";
+            } else if (status === 'GOLDENSET_CONFIRMED') {
+                color = "bg-indigo-600";
+                label = "GOLDEN SET";
+            }
+
+            return <Badge className={color}>{label}</Badge>
         }
     },
     {

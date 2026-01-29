@@ -102,6 +102,7 @@ export function EntityDrawer({ entity, open, onOpenChange, onSaved }: EntityDraw
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="NEEDS_REVIEW">Needs Review</SelectItem>
+                                <SelectItem value="GOLDENSET_CONFIRMED">Golden Set</SelectItem>
                                 <SelectItem value="HUMAN_CONFIRMED">Confirmed</SelectItem>
                                 <SelectItem value="REJECTED">Rejected</SelectItem>
                             </SelectContent>

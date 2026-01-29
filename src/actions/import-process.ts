@@ -50,7 +50,9 @@ export async function parseAndImportFile(formData: FormData) {
                 id: row.entity_id || row.id || `new-${Date.now()}-${index}`,
                 name: name,
                 entity_name_display: row.entity_name || name,
-                review_status: row.review_status || 'NEEDS_REVIEW',
+                review_status: isGoldenSet
+                    ? (row.review_status === 'REJECTED' ? 'REJECTED' : 'GOLDENSET_CONFIRMED')
+                    : (row.review_status || 'NEEDS_REVIEW'),
                 entity_aliases: row.name_variants || [name],
                 entity_type: 'COMPANY',
                 market_target: 'BOTH',

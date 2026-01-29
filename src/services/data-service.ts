@@ -66,6 +66,11 @@ export class DataService {
                 merged.fit_score = Math.max(merged.fit_score, partial.fit_score);
             }
 
+            // Sync Review Status - GoldenSet takes priority or updates
+            if (this.shouldUpdateReviewStatus(merged.review_status, partial.review_status)) {
+                merged.review_status = partial.review_status;
+            }
+
             // Merge Keyword Counts
             merged.keyword_counts = { ...existing.keyword_counts };
             if (partial.keyword_counts) {
@@ -108,9 +113,28 @@ export class DataService {
     }
 
     private shouldUpdateReviewStatus(current: ReviewStatus, incoming: ReviewStatus): boolean {
-        if (current === 'HUMAN_CONFIRMED' || current === 'REJECTED') return false;
-        if (current === 'AUTO_CONFIRMED' && incoming === 'NEEDS_REVIEW') return false;
-        if (current === 'NEEDS_REVIEW' && incoming === 'AUTO_CONFIRMED') return true;
+        if (current === incoming) return false;
+
+        // Manual/Final states should not be changed by automated processes
+        if (current === 'REJECTED' || current === 'HUMAN_CONFIRMED') {
+            return false;
+        }
+
+        // GOLDENSET_CONFIRMED is high priority but can be overridden by manual decision or explicit REJECT in source
+        if (current === 'GOLDENSET_CONFIRMED') {
+            return incoming === 'REJECTED' || incoming === 'HUMAN_CONFIRMED';
+        }
+
+        // AUTO_CONFIRMED can be upgraded to GOLDENSET or manual decisions
+        if (current === 'AUTO_CONFIRMED') {
+            return incoming === 'GOLDENSET_CONFIRMED' || incoming === 'HUMAN_CONFIRMED' || incoming === 'REJECTED';
+        }
+
+        // NEEDS_REVIEW can be upgraded to anything
+        if (current === 'NEEDS_REVIEW') {
+            return incoming !== 'NEEDS_REVIEW';
+        }
+
         return false;
     }
 }

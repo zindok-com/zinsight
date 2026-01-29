@@ -3,7 +3,7 @@
     "id": "f6c5a5ef-9d5e-5fc7-b080-414e8745ccfa",
     "name": "와이비즈",
     "entity_name_display": "와이비즈",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "와이비즈"
     ],
@@ -138,13 +138,13 @@
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
     "reviewed_at": "2026-01-29T09:49:23.575Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "97329e88-7489-5b92-b9df-959c88abd206",
     "name": "에스알테크",
     "entity_name_display": "에스알테크",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "에스알테크"
     ],
@@ -190,13 +190,13 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "11e9284f-e877-556e-b45f-94a250283124",
     "name": "에이투",
     "entity_name_display": "에이투",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "에이투"
     ],
@@ -234,13 +234,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "1d8a23aa-d3c6-50f5-a5a4-ff4192b0adaa",
     "name": "포유디지탈",
     "entity_name_display": "포유디지탈",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "포유디지탈"
     ],
@@ -278,13 +278,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "15273fbe-dc3e-5fcf-ac53-b5eeace399cd",
     "name": "금호전기",
     "entity_name_display": "금호전기",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "금호전기"
     ],
@@ -330,13 +330,13 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "f86184db-40c1-5d28-bf67-814634af38fa",
     "name": "탐투스",
     "entity_name_display": "탐투스",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "탐투스"
     ],
@@ -374,13 +374,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "05302fb6-d6fc-5364-ad45-df54c8f71e95",
     "name": "새움",
     "entity_name_display": "새움",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "새움"
     ],
@@ -418,13 +418,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "0e51c1d3-5947-5735-95c9-90a42fa89e33",
     "name": "네오스텍",
     "entity_name_display": "네오스텍",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "네오스텍"
     ],
@@ -462,13 +462,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "84f3db62-f34b-5f9d-a036-9993cdb022ff",
     "name": "애즈원",
     "entity_name_display": "애즈원",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "애즈원"
     ],
@@ -514,13 +514,13 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "cda839d3-1e78-53ea-b36e-2553904e3975",
     "name": "케이시스",
     "entity_name_display": "케이시스",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "케이시스"
     ],
@@ -574,13 +574,13 @@
     "exhibition_score": 30,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "f0bbc015-1e23-5011-a2fe-1992c784ea5c",
     "name": "에프앤티홀딩스",
     "entity_name_display": "에프앤티홀딩스",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "에프앤티홀딩스"
     ],
@@ -626,13 +626,13 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "d54bfeec-06e2-5f32-b836-c0859b3d4aad",
     "name": "하나네트웍스",
     "entity_name_display": "하나네트웍스",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "하나네트웍스"
     ],
@@ -678,13 +678,13 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "375e35b1-add9-5e11-beff-ab4e9a959cba",
     "name": "알에프세미",
     "entity_name_display": "알에프세미",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "알에프세미"
     ],
@@ -722,13 +722,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "5aff8ff1-4567-531c-9569-8797bbd5b0fc",
     "name": "디플럭스",
     "entity_name_display": "디플럭스",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "디플럭스"
     ],
@@ -774,13 +774,13 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "e401c88e-ba87-5969-80f5-8d626b7b509a",
     "name": "백산라이팅",
     "entity_name_display": "백산라이팅",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "백산라이팅"
     ],
@@ -818,13 +818,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "1056d023-cec8-5f78-9d0f-f51853a4e9a1",
     "name": "에코란트",
     "entity_name_display": "에코란트",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "에코란트"
     ],
@@ -862,13 +862,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "0d42554f-8177-56c7-950d-b6699adb7b30",
     "name": "누리콘",
     "entity_name_display": "누리콘",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "누리콘"
     ],
@@ -906,13 +906,13 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "962d4db5-e335-5e72-8dc1-4b004f2116bc",
     "name": "리산테크",
     "entity_name_display": "리산테크",
-    "review_status": "NEEDS_REVIEW",
+    "review_status": "GOLDENSET_CONFIRMED",
     "entity_aliases": [
       "리산테크"
     ],
@@ -950,7 +950,7 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "fa97344f-9647-5993-942d-09b105580068",
@@ -994,7 +994,7 @@
     "exhibition_score": 10,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "a7323cae-0a7b-5ec7-a4ed-8ee12d87d420",
@@ -1046,7 +1046,7 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   },
   {
     "id": "b41e1a69-d0aa-57e0-9fc1-81714192c4e9",
@@ -1098,6 +1098,6 @@
     "exhibition_score": 20,
     "tags": [],
     "created_at": "2026-01-29T09:43:53.288Z",
-    "updated_at": "2026-01-29T11:42:30.053Z"
+    "updated_at": "2026-01-29T20:48:41.822Z"
   }
 ]
