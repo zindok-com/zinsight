@@ -1,4 +1,5 @@
 import { CompanyNews } from "@/types";
+import { logger } from "./logger";
 
 export interface CollectionBatch {
     id: string;
@@ -48,7 +49,7 @@ function decodeBatchId(batchId: string): { time: string; query: string } | null 
         const json = Buffer.from(padded, 'base64').toString('utf8');
         return JSON.parse(json);
     } catch (e) {
-        console.error('Failed to decode batchId:', batchId, e);
+        logger.error('Failed to decode batchId:', batchId, e);
         return null;
     }
 }
@@ -105,7 +106,7 @@ export function getArticlesByBatchId(news: CompanyNews[], batchId: string): Comp
     const decoded = decodeBatchId(batchId);
 
     if (!decoded) {
-        console.error('Failed to decode batch ID:', batchId);
+        logger.error('Failed to decode batch ID:', batchId);
         return [];
     }
 

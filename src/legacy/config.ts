@@ -1,8 +1,8 @@
-import dotenv from 'dotenv';
 import path from 'path';
+import { logger } from '../lib/logger';
 
-// Load .env from root
-dotenv.config({ path: path.join(__dirname, '../.env') });
+// Next.js handles .env automatically, but for standalone scripts:
+// dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
@@ -11,7 +11,7 @@ if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
     if (process.env.NODE_ENV === 'production') {
         throw new Error("Missing required environment variables: NAVER_CLIENT_ID or NAVER_CLIENT_SECRET");
     } else {
-        console.warn("WARNING: Missing NAVER_CLIENT_ID or NAVER_CLIENT_SECRET. Naver API calls will fail.");
+        logger.warn("Missing NAVER_CLIENT_ID or NAVER_CLIENT_SECRET. Naver API calls will fail.");
     }
 }
 

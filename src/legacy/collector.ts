@@ -2,6 +2,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
 import { CONFIG } from './config';
+import { logger } from '../lib/logger';
 
 export interface NaverNewsItem {
     title: string;
@@ -38,7 +39,7 @@ export class NewsCollector {
             } as any);
             return response.data;
         } catch (error) {
-            console.error(`Error fetching news for keyword: ${keyword}`, error);
+            logger.error(`Error fetching news for keyword: ${keyword}`, error);
             return null;
         }
     }
@@ -54,7 +55,7 @@ export class NewsCollector {
 
         const filepath = path.join(dir, filename);
         fs.writeFileSync(filepath, JSON.stringify(data, null, 2), 'utf-8');
-        console.log(`[LOG] Saved raw data to ${filepath}`);
+        logger.info(`Saved raw data to ${filepath}`);
     }
 
     public async collectAll(): Promise<Map<string, NaverNewsItem[]>> {
@@ -62,14 +63,14 @@ export class NewsCollector {
 
         // Iterate over keywords defined in CONFIG
         for (const [key, keyword] of Object.entries(CONFIG.KEYWORDS)) {
-            console.log(`Collecting news for: ${keyword} (${key})`);
+            logger.info(`Collecting news for: ${keyword} (${key})`);
             const data = await this.fetchNews(keyword);
             if (data && data.items) {
                 // Save raw data immediately
                 this.saveRawData(keyword, data);
 
                 results.set(key, data.items);
-                console.log(`[DEBUG] Raw items count for ${keyword}: ${data.items.length}`);
+                logger.debug(`Raw items count for ${keyword}: ${data.items.length}`);
             }
         }
 

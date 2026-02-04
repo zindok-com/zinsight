@@ -5,6 +5,7 @@ import { Company, ReviewStatus } from '@/types';
 import * as XLSX from 'xlsx';
 import Papa from 'papaparse';
 import { revalidatePath } from 'next/cache';
+import { logger } from '@/lib/logger';
 
 export async function parseAndImportFile(formData: FormData) {
     const file = formData.get('file') as File;
@@ -113,7 +114,7 @@ export async function parseAndImportFile(formData: FormData) {
 
         return { success: true, count: mappedEntities.length };
     } catch (error) {
-        console.error("Import error:", error);
+        logger.error("Import error:", error);
         return { success: false, error: 'Failed to process file' };
     }
 }

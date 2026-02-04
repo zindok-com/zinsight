@@ -3,6 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { DATA_DIR, RAW_DIR, PARSED_DIR, EXPORTS_DIR, LOGS_DIR } from '@/lib/file-system';
+import { logger } from '@/lib/logger';
 
 export type FileSystemItem = {
     name: string;
@@ -30,6 +31,19 @@ export async function listDataFiles(relativePath: string = ''): Promise<FileSyst
             throw new Error("Access denied");
         }
 
+        // Check if directory exists
+        try {
+            const stats = await fs.stat(targetPath);
+            if (!stats.isDirectory()) {
+                return [];
+            }
+        } catch (e: any) {
+            if (e.code === 'ENOENT') {
+                return []; // Directory doesn't exist yet, return empty list
+            }
+            throw e;
+        }
+
         const entries = await fs.readdir(targetPath, { withFileTypes: true });
 
         const items: FileSystemItem[] = await Promise.all(entries.map(async (entry) => {
@@ -53,7 +67,7 @@ export async function listDataFiles(relativePath: string = ''): Promise<FileSyst
 
         return items;
     } catch (error) {
-        console.error("Error listing files:", error);
+        logger.error("Error listing files:", error);
         return [];
     }
 }

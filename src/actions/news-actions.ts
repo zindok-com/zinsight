@@ -7,7 +7,8 @@ import { revalidatePath } from 'next/cache';
 import { DataService } from '@/services/data-service';
 import { RAW_DIR, ensureDataDirs } from '@/lib/file-system';
 import { CompanyNews } from '@/types';
-import { v4 as uuidv4 } from 'uuid'; // We might need to handle ID generation if not present
+import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
@@ -112,7 +113,7 @@ export async function collectNews(): Promise<CollectionResult> {
                 }
 
             } catch (error) {
-                console.error(`Error fetching news for ${keyword}:`, error);
+                logger.error(`Error fetching news for ${keyword}:`, error);
                 // Continue to next keyword
             }
         }
@@ -127,7 +128,7 @@ export async function collectNews(): Promise<CollectionResult> {
         };
 
     } catch (error) {
-        console.error("Critical error in collectNews:", error);
+        logger.error("Critical error in collectNews:", error);
         return {
             success: false,
             collectedCount: 0,
