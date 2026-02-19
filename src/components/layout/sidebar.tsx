@@ -5,27 +5,21 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
     LayoutDashboard,
-    Upload,
-    Database,
-    FileText,
-    FolderOpen,
+    Building2,
+    Tags,
+    Newspaper,
     Download,
-    Settings,
-    Activity,
     Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
 const MENU_ITEMS = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Import', href: '/import', icon: Upload },
-    { name: 'Entities', href: '/entities', icon: Database },
-    { name: 'Articles', href: '/articles', icon: FileText },
-    { name: 'Data Explorer', href: '/data', icon: FolderOpen },
-    { name: 'Export', href: '/export', icon: Download },
-    { name: 'Settings', href: '/settings', icon: Settings },
-    { name: 'Logs', href: '/logs', icon: Activity },
+    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Exhibitions', href: '/admin/exhibitions', icon: Building2 },
+    { name: 'Keywords', href: '/admin/keywords', icon: Tags },
+    { name: 'Articles', href: '/admin/articles', icon: Newspaper },
+    { name: 'Export', href: '/admin/export', icon: Download },
 ];
 
 export function Sidebar() {
@@ -54,7 +48,7 @@ export function Sidebar() {
 
                 <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
                     {MENU_ITEMS.map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
                         return (
                             <Link
                                 key={item.href}
@@ -75,7 +69,7 @@ export function Sidebar() {
                 </nav>
 
                 <div className="p-4 border-t border-slate-700 text-xs text-slate-500 text-center">
-                    v2.0.0 (Next.js)
+                    v3.0.0 (DB Edition)
                 </div>
             </aside>
 

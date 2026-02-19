@@ -1,27 +1,22 @@
 'use server';
 
-import { DataService } from '@/services/data-service';
+import { prisma } from '@/lib/db';
 
 export async function getDashboardStats() {
-    const service = DataService.getInstance();
-    const entities = await service.getEntities();
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Calculate stats
-    const totalEntities = entities.length;
-
-    const needsReview = entities.filter(e => e.review_status === 'NEEDS_REVIEW').length;
-    const confirmed = entities.filter(e => e.review_status === 'HUMAN_CONFIRMED' || e.review_status === 'AUTO_CONFIRMED').length;
-    const rejected = entities.filter(e => e.review_status === 'REJECTED').length;
-
-    // We don't have article count easily accessible without reading news.json
-    // But let's assume we can get it or just count connected articles
-    const uniqueArticles = new Set(entities.flatMap(e => e.source_articles.map(a => a.article_id))).size;
+    const [exhibitionCount, keywordCount, articleCount, thisMonthCount] = await Promise.all([
+        prisma.exhibition.count({ where: { deleted_at: null } }),
+        prisma.searchKeyword.count({ where: { deleted_at: null, is_active: true } }),
+        prisma.article.count(),
+        prisma.article.count({ where: { created_at: { gte: startOfMonth } } }),
+    ]);
 
     return {
-        totalEntities,
-        needsReview,
-        confirmed,
-        rejected,
-        uniqueArticles
+        exhibitionCount,
+        keywordCount,
+        articleCount,
+        thisMonthCount,
     };
 }

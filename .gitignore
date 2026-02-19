@@ -7,3 +7,5 @@ npm-debug.log
 data/raw/
 .env
 .next/
+
+/src/generated/prisma

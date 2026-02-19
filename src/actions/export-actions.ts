@@ -1,64 +1,129 @@
 'use server';
 
-import { DataService } from '@/services/data-service';
-import * as XLSX from 'xlsx';
-import path from 'path';
 import fs from 'fs/promises';
-import { EXPORTS_DIR } from '@/lib/file-system';
-import { Company } from '@/types';
+import path from 'path';
+import { prisma } from '@/lib/db';
+import { getArticlesForExport } from './article-actions';
 
-interface ExportOptions {
-    format: 'xlsx' | 'csv' | 'json';
-    statusFilter?: string[];
-    minScore?: number;
+const SNAPSHOTS_DIR = path.join(process.cwd(), 'data', 'snapshots');
+
+function pad(n: number) { return String(n).padStart(2, '0'); }
+
+function formatMonth(date: Date): string {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
 }
 
-export async function generateExport(options: ExportOptions) {
-    const service = DataService.getInstance();
-    let entities = await service.getEntities();
+function formatDate(date: Date): string {
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
 
-    // Filter
-    if (options.statusFilter && options.statusFilter.length > 0) {
-        entities = entities.filter(e => options.statusFilter?.includes(e.review_status));
-    }
-    if (options.minScore) {
-        entities = entities.filter(e => e.fit_score >= (options.minScore || 0));
-    }
-
-    // Flatten for export
-    const exportData = entities.map(e => ({
-        ID: e.id,
-        Name: e.entity_name_display,
-        NormalizedName: e.normalized_name,
-        Status: e.review_status,
-        Score: e.fit_score,
-        Category: e.primary_category,
-        ParticipationType: e.exhibition_participation_type,
-        Signals: Object.entries(e.signals).filter(([k, v]) => v).map(([k]) => k).join(', '),
-        Keywords: e.keywords.slice(0, 5).join(', '),
-        ReviewNotes: e.review_notes || '',
-    }));
-
-    // Create Workbook
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    XLSX.utils.book_append_sheet(wb, ws, "Entities");
-
-    // File name
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `export_${timestamp}.${options.format}`;
-    const filePath = path.join(EXPORTS_DIR, filename);
-
-    // Write file
-    if (options.format === 'csv') {
-        const csv = XLSX.utils.sheet_to_csv(ws);
-        await fs.writeFile(filePath, csv);
-    } else if (options.format === 'json') {
-        await fs.writeFile(filePath, JSON.stringify(exportData, null, 2));
-    } else {
-        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-        await fs.writeFile(filePath, buffer);
+export async function generateMonthlySnapshot(exhibitionId: number, month: string): Promise<{
+    success: boolean;
+    filename?: string;
+    articleCount?: number;
+    message: string;
+}> {
+    const exhibition = await prisma.exhibition.findUnique({ where: { id: exhibitionId } });
+    if (!exhibition) {
+        return { success: false, message: '전시회를 찾을 수 없습니다.' };
     }
 
-    return { success: true, filename, filePath }; // filePath shouldn't be exposed usually but strictly internal tool
+    const articles = await getArticlesForExport(exhibitionId, month);
+    const now = new Date();
+    const todayStr = formatDate(now);
+    const filename = `snapshot_${exhibition.slug}_${month}_generated_${todayStr}_${now.getTime()}.json`;
+    const filepath = path.join(SNAPSHOTS_DIR, filename);
+
+    const snapshot = {
+        exhibition: { id: exhibition.id, name: exhibition.name, slug: exhibition.slug },
+        month,
+        generated_at: now.toISOString(),
+        filters: {
+            exhibition_id: exhibitionId,
+            month,
+            source_field: 'created_at',
+        },
+        article_count: articles.length,
+        articles: articles.map(a => ({
+            id: a.id,
+            canonical_link: a.canonical_link,
+            link: a.link,
+            originallink: a.originallink,
+            title: a.title,
+            description: a.description,
+            pub_date: a.pub_date,
+            source: a.source,
+            created_at: a.created_at,
+            updated_at: a.updated_at,
+            ingestions: a.ingestions.map(i => ({
+                keyword_id: i.keyword_id,
+                keyword_text: i.keyword.keyword_text,
+                keyword_type: i.keyword.keyword_type,
+                fetched_at: i.fetched_at,
+                is_duplicate: i.is_duplicate,
+            })),
+        })),
+    };
+
+    await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
+    await fs.writeFile(filepath, JSON.stringify(snapshot, null, 2), 'utf-8');
+
+    return {
+        success: true,
+        filename,
+        articleCount: articles.length,
+        message: `Snapshot 생성 완료: ${filename} (기사 ${articles.length}건)`,
+    };
+}
+
+export interface SnapshotInfo {
+    filename: string;
+    exhibitionSlug: string;
+    month: string;
+    generatedAt: string;        // date part from filename
+    sizeBytes: number;
+    isLatest?: boolean;
+}
+
+export async function listSnapshots(exhibitionSlug?: string, month?: string): Promise<SnapshotInfo[]> {
+    await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
+    const files = await fs.readdir(SNAPSHOTS_DIR);
+
+    const snapshots: SnapshotInfo[] = [];
+
+    for (const filename of files) {
+        if (!filename.endsWith('.json')) continue;
+
+        // Pattern: snapshot_{slug}_{YYYY-MM}_generated_{YYYY-MM-DD}_{ts}.json
+        const match = filename.match(/^snapshot_(.+?)_(\d{4}-\d{2})_generated_(\d{4}-\d{2}-\d{2})_\d+\.json$/);
+        if (!match) continue;
+
+        const [, slug, mon, genDate] = match;
+        if (exhibitionSlug && slug !== exhibitionSlug) continue;
+        if (month && mon !== month) continue;
+
+        const stat = await fs.stat(path.join(SNAPSHOTS_DIR, filename));
+        snapshots.push({
+            filename,
+            exhibitionSlug: slug,
+            month: mon,
+            generatedAt: genDate,
+            sizeBytes: stat.size,
+        });
+    }
+
+    // Sort descending by filename (which includes timestamp)
+    snapshots.sort((a, b) => b.filename.localeCompare(a.filename));
+
+    // Mark latest per (exhibitionSlug, month) group
+    const seen = new Set<string>();
+    for (const s of snapshots) {
+        const key = `${s.exhibitionSlug}_${s.month}`;
+        if (!seen.has(key)) {
+            s.isLatest = true;
+            seen.add(key);
+        }
+    }
+
+    return snapshots;
 }
