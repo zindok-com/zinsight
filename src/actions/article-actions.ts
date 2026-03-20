@@ -5,14 +5,24 @@ import { prisma } from '@/lib/db';
 export interface ArticleFilter {
     exhibitionId: number;
     keywordId?: number;
-    fromDate?: Date;
-    toDate?: Date;
+    /** YYYY-MM 형식, 수집일(created_at) 월 필터 */
+    createdMonth?: string;
+    /** YYYY-MM 형식, 갱신일(updated_at) 월 필터 */
+    updatedMonth?: string;
     page?: number;
     pageSize?: number;
 }
 
+/** YYYY-MM 문자열을 해당 월의 시작~끝 Date 범위로 변환 */
+function monthRange(ym: string): { gte: Date; lte: Date } {
+    const [year, mon] = ym.split('-').map(Number);
+    const gte = new Date(year, mon - 1, 1);
+    const lte = new Date(year, mon, 0, 23, 59, 59, 999);
+    return { gte, lte };
+}
+
 export async function getArticles(filter: ArticleFilter) {
-    const { exhibitionId, keywordId, fromDate, toDate, page = 1, pageSize = 50 } = filter;
+    const { exhibitionId, keywordId, createdMonth, updatedMonth, page = 1, pageSize = 50 } = filter;
 
     const where = {
         ingestions: {
@@ -21,12 +31,8 @@ export async function getArticles(filter: ArticleFilter) {
                 ...(keywordId ? { keyword_id: keywordId } : {}),
             }
         },
-        ...(fromDate || toDate ? {
-            created_at: {
-                ...(fromDate ? { gte: fromDate } : {}),
-                ...(toDate ? { lte: toDate } : {}),
-            }
-        } : {})
+        ...(createdMonth ? { created_at: monthRange(createdMonth) } : {}),
+        ...(updatedMonth ? { updated_at: monthRange(updatedMonth) } : {}),
     };
 
     const [articles, total] = await Promise.all([

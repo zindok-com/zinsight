@@ -220,8 +220,8 @@ export default function ArticlesByExhibitionPage() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [keywords, setKeywords] = useState<Keyword[]>([]);
     const [selectedKeywordId, setSelectedKeywordId] = useState<number | ''>('');
-    const [fromDate, setFromDate] = useState('');
-    const [toDate, setToDate] = useState('');
+    const [createdMonth, setCreatedMonth] = useState('');
+    const [updatedMonth, setUpdatedMonth] = useState('');
     const [articleData, setArticleData] = useState<ArticlePage | null>(null);
     const [page, setPage] = useState(1);
     const [ingestLoading, setIngestLoading] = useState(false);
@@ -258,8 +258,8 @@ export default function ArticlesByExhibitionPage() {
             const data = await getArticles({
                 exhibitionId: exhibition.id,
                 keywordId: selectedKeywordId ? Number(selectedKeywordId) : undefined,
-                fromDate: fromDate ? new Date(fromDate) : undefined,
-                toDate: toDate ? new Date(toDate + 'T23:59:59') : undefined,
+                createdMonth: createdMonth || undefined,
+                updatedMonth: updatedMonth || undefined,
                 page: p,
                 pageSize: 50,
             });
@@ -271,7 +271,7 @@ export default function ArticlesByExhibitionPage() {
         } finally {
             setLoadingArticles(false);
         }
-    }, [exhibition, selectedKeywordId, fromDate, toDate]);
+    }, [exhibition, selectedKeywordId, createdMonth, updatedMonth]);
 
     useEffect(() => {
         if (exhibition) loadArticles(1);
@@ -308,7 +308,7 @@ export default function ArticlesByExhibitionPage() {
         const payload = {
             export_at: new Date().toISOString(),
             exhibition: exhibition?.name,
-            filters: { keyword_id: selectedKeywordId, fromDate, toDate },
+            filters: { keyword_id: selectedKeywordId, createdMonth, updatedMonth },
             count: articleData.total,
             articles: articleData.articles.map((a: ArticleItem) => ({
                 id: a.id,
@@ -389,21 +389,21 @@ export default function ArticlesByExhibitionPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">수집일 시작</label>
+                                <label className="text-xs font-medium text-muted-foreground">수집일</label>
                                 <input
-                                    type="date"
+                                    type="month"
                                     className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                    value={fromDate}
-                                    onChange={e => setFromDate(e.target.value)}
+                                    value={createdMonth}
+                                    onChange={e => setCreatedMonth(e.target.value)}
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">수집일 종료</label>
+                                <label className="text-xs font-medium text-muted-foreground">갱신일</label>
                                 <input
-                                    type="date"
+                                    type="month"
                                     className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                    value={toDate}
-                                    onChange={e => setToDate(e.target.value)}
+                                    value={updatedMonth}
+                                    onChange={e => setUpdatedMonth(e.target.value)}
                                 />
                             </div>
                         </div>
