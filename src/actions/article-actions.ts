@@ -7,8 +7,8 @@ export interface ArticleFilter {
     keywordId?: number;
     /** YYYY-MM 형식, 수집일(created_at) 월 필터 */
     createdMonth?: string;
-    /** YYYY-MM 형식, 갱신일(updated_at) 월 필터 */
-    updatedMonth?: string;
+    /** YYYY-MM 형식, 발행일(pub_date) 월 필터 */
+    pubMonth?: string;
     page?: number;
     pageSize?: number;
 }
@@ -22,7 +22,7 @@ function monthRange(ym: string): { gte: Date; lte: Date } {
 }
 
 export async function getArticles(filter: ArticleFilter) {
-    const { industryId, keywordId, createdMonth, updatedMonth, page = 1, pageSize = 50 } = filter;
+    const { industryId, keywordId, createdMonth, pubMonth, page = 1, pageSize = 50 } = filter;
 
     const where = {
         ingestions: {
@@ -32,7 +32,7 @@ export async function getArticles(filter: ArticleFilter) {
             }
         },
         ...(createdMonth ? { created_at: monthRange(createdMonth) } : {}),
-        ...(updatedMonth ? { updated_at: monthRange(updatedMonth) } : {}),
+        ...(pubMonth ? { pub_date: monthRange(pubMonth) } : {}),
     };
 
     const [articles, total] = await Promise.all([
@@ -65,7 +65,7 @@ export async function getArticlesForExport(industryId: number, month: string) {
 
     return prisma.article.findMany({
         where: {
-            created_at: { gte: fromDate, lte: toDate },
+            pub_date: { gte: fromDate, lte: toDate },
             ingestions: { some: { industry_id: industryId } }
         },
         include: {
@@ -76,6 +76,6 @@ export async function getArticlesForExport(industryId: number, month: string) {
                 }
             }
         },
-        orderBy: { created_at: 'desc' },
+        orderBy: { pub_date: 'desc' },
     });
 }

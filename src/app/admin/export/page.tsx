@@ -105,7 +105,7 @@ export default function ExportPage() {
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium">기준 월 (created_at)</label>
+                            <label className="text-sm font-medium">기준 월 (pub_date)</label>
                             <select
                                 className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
                                 value={selectedMonth}

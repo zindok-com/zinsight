@@ -41,7 +41,7 @@ export async function generateMonthlySnapshot(industryId: number, month: string)
         filters: {
             industry_id: industryId,
             month,
-            source_field: 'created_at',
+            source_field: 'pub_date',
         },
         article_count: articles.length,
         articles: articles.map(a => ({
@@ -55,13 +55,7 @@ export async function generateMonthlySnapshot(industryId: number, month: string)
             source: a.source,
             created_at: a.created_at,
             updated_at: a.updated_at,
-            ingestions: a.ingestions.map(i => ({
-                keyword_id: i.keyword_id,
-                keyword_text: i.keyword.keyword_text,
-                keyword_type: i.keyword.keyword_type,
-                fetched_at: i.fetched_at,
-                is_duplicate: i.is_duplicate,
-            })),
+            keyword_id: a.ingestions[0]?.keyword_id,
         })),
     };
 

@@ -10,6 +10,7 @@ import { ingestByIndustry, ingestByKeyword, type IngestReport } from '@/actions/
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
     RefreshCw, Download, ArrowLeft, Loader2,
     CheckCircle, AlertTriangle, ExternalLink, X, FileJson
@@ -221,13 +222,15 @@ export default function ArticlesByIndustryPage() {
     const [keywords, setKeywords] = useState<Keyword[]>([]);
     const [selectedKeywordId, setSelectedKeywordId] = useState<number | ''>('');
     const [createdMonth, setCreatedMonth] = useState('');
-    const [updatedMonth, setUpdatedMonth] = useState('');
+    const [pubMonth, setPubMonth] = useState('');
     const [articleData, setArticleData] = useState<ArticlePage | null>(null);
     const [page, setPage] = useState(1);
     const [ingestLoading, setIngestLoading] = useState(false);
     const [ingestReport, setIngestReport] = useState<IngestReport | null>(null);
     const [loadingArticles, setLoadingArticles] = useState(false);
     const [drawerArticle, setDrawerArticle] = useState<ArticleItem | null>(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [confirmType, setConfirmType] = useState<'industry' | 'keyword'>('industry');
 
     useEffect(() => {
         if (!industryId || isNaN(industryId)) {
@@ -259,7 +262,7 @@ export default function ArticlesByIndustryPage() {
                 industryId: industry.id,
                 keywordId: selectedKeywordId ? Number(selectedKeywordId) : undefined,
                 createdMonth: createdMonth || undefined,
-                updatedMonth: updatedMonth || undefined,
+                pubMonth: pubMonth || undefined,
                 page: p,
                 pageSize: 50,
             });
@@ -271,11 +274,29 @@ export default function ArticlesByIndustryPage() {
         } finally {
             setLoadingArticles(false);
         }
-    }, [industry, selectedKeywordId, createdMonth, updatedMonth]);
+    }, [industry, selectedKeywordId, createdMonth, pubMonth]);
 
     useEffect(() => {
         if (industry) loadArticles(1);
     }, [industry, loadArticles]);
+
+    function openConfirmModal(type: 'industry' | 'keyword') {
+        if (type === 'keyword' && !selectedKeywordId) {
+            toast.error('키워드를 선택하세요.');
+            return;
+        }
+        setConfirmType(type);
+        setIsConfirmOpen(true);
+    }
+
+    async function executeIngest() {
+        setIsConfirmOpen(false);
+        if (confirmType === 'industry') {
+            await handleIngestIndustry();
+        } else {
+            await handleIngestKeyword();
+        }
+    }
 
     async function handleIngestIndustry() {
         if (!industry) return;
@@ -308,7 +329,7 @@ export default function ArticlesByIndustryPage() {
         const payload = {
             export_at: new Date().toISOString(),
             industry: industry?.name,
-            filters: { keyword_id: selectedKeywordId, createdMonth, updatedMonth },
+            filters: { keyword_id: selectedKeywordId, createdMonth, pubMonth },
             count: articleData.total,
             articles: articleData.articles.map((a: ArticleItem) => ({
                 id: a.id,
@@ -319,7 +340,7 @@ export default function ArticlesByIndustryPage() {
                 created_at: a.created_at,
                 updated_at: a.updated_at,
                 is_duplicate: a.ingestions[0]?.is_duplicate,
-                keyword: a.ingestions[0]?.keyword?.keyword_text,
+                keyword_id: a.ingestions[0]?.keyword_id,
             })),
         };
         const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -398,12 +419,12 @@ export default function ArticlesByIndustryPage() {
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">갱신일</label>
+                                <label className="text-xs font-medium text-muted-foreground">발행일</label>
                                 <input
                                     type="month"
                                     className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                    value={updatedMonth}
-                                    onChange={e => setUpdatedMonth(e.target.value)}
+                                    value={pubMonth}
+                                    onChange={e => setPubMonth(e.target.value)}
                                 />
                             </div>
                         </div>
@@ -412,11 +433,11 @@ export default function ArticlesByIndustryPage() {
                                 <RefreshCw className={`h-4 w-4 mr-1 ${loadingArticles ? 'animate-spin' : ''}`} />
                                 조회
                             </Button>
-                            <Button onClick={handleIngestIndustry} disabled={ingestLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            <Button onClick={() => openConfirmModal('industry')} disabled={ingestLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
                                 {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
                                 산업 단위 수집
                             </Button>
-                            <Button onClick={handleIngestKeyword} disabled={ingestLoading || !selectedKeywordId} variant="outline">
+                            <Button onClick={() => openConfirmModal('keyword')} disabled={ingestLoading || !selectedKeywordId} variant="outline">
                                 {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
                                 키워드 단위 수집
                             </Button>
@@ -470,7 +491,7 @@ export default function ArticlesByIndustryPage() {
                                             <th className="text-left py-2 pr-3 font-medium">제목</th>
                                             <th className="text-left py-2 pr-3 font-medium">키워드</th>
                                             <th className="text-left py-2 pr-3 font-medium">수집일</th>
-                                            <th className="text-left py-2 pr-3 font-medium">갱신일</th>
+                                            <th className="text-left py-2 pr-3 font-medium">발행일</th>
                                             <th className="text-center py-2 font-medium">중복</th>
                                         </tr>
                                     </thead>
@@ -500,9 +521,9 @@ export default function ArticlesByIndustryPage() {
                                                 <td className="py-2 pr-3 text-xs text-muted-foreground whitespace-nowrap">
                                                     {new Date(a.created_at).toLocaleDateString('ko-KR')}
                                                 </td>
-                                                {/* 갱신일 */}
+                                                {/* 발행일 */}
                                                 <td className="py-2 pr-3 text-xs text-muted-foreground whitespace-nowrap">
-                                                    {new Date(a.updated_at).toLocaleDateString('ko-KR')}
+                                                    {a.pub_date ? new Date(a.pub_date).toLocaleDateString('ko-KR') : '-'}
                                                 </td>
                                                 {/* 중복 */}
                                                 <td className="py-2 text-center">
@@ -536,6 +557,25 @@ export default function ArticlesByIndustryPage() {
                     onClose={() => setDrawerArticle(null)}
                 />
             )}
+
+            <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>새 기사 수집</DialogTitle>
+                        <DialogDescription>
+                            {confirmType === 'industry'
+                                ? '모든 활성 키워드를 대상으로 네이버 뉴스 API를 호출하여 기사를 수집하시겠습니까? (API 호출량이 많을 수 있습니다)'
+                                : '선택한 키워드에 대해 네이버 뉴스 API를 호출하여 기사를 수집하시겠습니까?'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>취소</Button>
+                        <Button onClick={executeIngest} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            수집 실행
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }
