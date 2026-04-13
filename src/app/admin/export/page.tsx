@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { getExhibitions } from '@/actions/exhibition-actions';
+import { getIndustries } from '@/actions/industry-actions';
 import { generateMonthlySnapshot, listSnapshots, type SnapshotInfo } from '@/actions/export-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Download, FileJson, Loader2, Star } from 'lucide-react';
 
-type Exhibition = Awaited<ReturnType<typeof getExhibitions>>[number];
+type Industry = Awaited<ReturnType<typeof getIndustries>>[number];
 
 function monthOptions() {
     const opts = [];
@@ -23,8 +23,8 @@ function monthOptions() {
 }
 
 export default function ExportPage() {
-    const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
-    const [selectedExhibitionId, setSelectedExhibitionId] = useState<number | ''>('');
+    const [industries, setIndustries] = useState<Industry[]>([]);
+    const [selectedIndustryId, setSelectedIndustryId] = useState<number | ''>('');
     const [selectedMonth, setSelectedMonth] = useState(monthOptions()[0].value);
     const [generating, setGenerating] = useState(false);
     const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
@@ -32,31 +32,31 @@ export default function ExportPage() {
     const months = monthOptions();
 
     useEffect(() => {
-        getExhibitions(false).then(data => {
-            setExhibitions(data);
-            if (data.length > 0) setSelectedExhibitionId(data[0].id);
+        getIndustries(false).then(data => {
+            setIndustries(data);
+            if (data.length > 0) setSelectedIndustryId(data[0].id);
         });
     }, []);
 
-    const selectedExhibition = exhibitions.find(e => e.id === Number(selectedExhibitionId));
+    const selectedIndustry = industries.find(e => e.id === Number(selectedIndustryId));
 
     async function loadSnapshots() {
-        if (!selectedExhibition) return;
+        if (!selectedIndustry) return;
         setSnapshotLoading(true);
-        const list = await listSnapshots(selectedExhibition.slug);
+        const list = await listSnapshots(selectedIndustry.slug);
         setSnapshots(list);
         setSnapshotLoading(false);
     }
 
     useEffect(() => {
-        if (selectedExhibition) loadSnapshots();
-    }, [selectedExhibition]); // eslint-disable-line
+        if (selectedIndustry) loadSnapshots();
+    }, [selectedIndustry]); // eslint-disable-line
 
     async function handleGenerate() {
-        if (!selectedExhibitionId) { toast.error('전시회를 선택하세요.'); return; }
+        if (!selectedIndustryId) { toast.error('산업를 선택하세요.'); return; }
         setGenerating(true);
         toast.info('Snapshot 생성 중...');
-        const result = await generateMonthlySnapshot(Number(selectedExhibitionId), selectedMonth);
+        const result = await generateMonthlySnapshot(Number(selectedIndustryId), selectedMonth);
         setGenerating(false);
         if (result.success) {
             toast.success(result.message);
@@ -92,14 +92,14 @@ export default function ExportPage() {
                 <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="text-sm font-medium">전시회</label>
+                            <label className="text-sm font-medium">산업</label>
                             <select
                                 className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                value={selectedExhibitionId}
-                                onChange={e => setSelectedExhibitionId(e.target.value ? Number(e.target.value) : '')}
+                                value={selectedIndustryId}
+                                onChange={e => setSelectedIndustryId(e.target.value ? Number(e.target.value) : '')}
                             >
                                 <option value="">선택하세요</option>
-                                {exhibitions.map(ex => (
+                                {industries.map(ex => (
                                     <option key={ex.id} value={ex.id}>{ex.name}</option>
                                 ))}
                             </select>
@@ -118,23 +118,23 @@ export default function ExportPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-3">
-                        <Button onClick={handleGenerate} disabled={generating || !selectedExhibitionId}>
+                        <Button onClick={handleGenerate} disabled={generating || !selectedIndustryId}>
                             {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileJson className="h-4 w-4 mr-2" />}
                             Snapshot 생성
                         </Button>
                         <p className="text-xs text-muted-foreground">
-                            같은 전시회+월 조합으로 여러 Snapshot을 생성할 수 있습니다 (히스토리 유지).
+                            같은 산업+월 조합으로 여러 Snapshot을 생성할 수 있습니다 (히스토리 유지).
                         </p>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Snapshot History for selected exhibition */}
-            {selectedExhibition && (
+            {/* Snapshot History for selected industry */}
+            {selectedIndustry && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="text-base flex items-center justify-between">
-                            <span>Snapshot 히스토리 — {selectedExhibition.name}</span>
+                            <span>Snapshot 히스토리 — {selectedIndustry.name}</span>
                             <span className="text-xs font-normal text-muted-foreground">{allSnapshots.length}개</span>
                         </CardTitle>
                     </CardHeader>

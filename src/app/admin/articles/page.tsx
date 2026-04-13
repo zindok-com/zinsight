@@ -2,21 +2,21 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getExhibitions } from '@/actions/exhibition-actions';
+import { getIndustries } from '@/actions/industry-actions';
 import { Newspaper, AlertTriangle } from 'lucide-react';
 
-type Exhibition = Awaited<ReturnType<typeof getExhibitions>>[number];
+type Industry = Awaited<ReturnType<typeof getIndustries>>[number];
 
 export default function ArticlesIndexPage() {
     const router = useRouter();
-    const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+    const [industries, setIndustries] = useState<Industry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getExhibitions(false)
-            .then(data => setExhibitions(data))
-            .catch(() => setError('전시회 목록을 불러오는 중 오류가 발생했습니다.'))
+        getIndustries(false)
+            .then(data => setIndustries(data))
+            .catch(() => setError('산업 목록을 불러오는 중 오류가 발생했습니다.'))
             .finally(() => setLoading(false));
     }, []);
 
@@ -40,10 +40,10 @@ export default function ArticlesIndexPage() {
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                     <Newspaper className="h-8 w-8" /> Articles
                 </h1>
-                <p className="text-muted-foreground mt-1">전시회를 선택하여 기사를 수집하고 조회하세요.</p>
+                <p className="text-muted-foreground mt-1">산업를 선택하여 기사를 수집하고 조회하세요.</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {exhibitions.map(ex => (
+                {industries.map(ex => (
                     <button
                         key={ex.id}
                         onClick={() => router.push(`/admin/articles/${ex.id}`)}
@@ -61,9 +61,9 @@ export default function ArticlesIndexPage() {
                         </p>
                     </button>
                 ))}
-                {exhibitions.length === 0 && (
+                {industries.length === 0 && (
                     <p className="col-span-full text-center py-12 text-muted-foreground">
-                        등록된 전시회가 없습니다. 먼저 <strong>Exhibitions</strong>에서 전시회를 등록하세요.
+                        등록된 산업가 없습니다. 먼저 <strong>Industries</strong>에서 산업를 등록하세요.
                     </p>
                 )}
             </div>

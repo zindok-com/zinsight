@@ -10,11 +10,11 @@ function slugify(text: string): string {
         .replace(/[\s_]+/g, '-')
         .replace(/[^\w\-가-힣]+/g, '')
         .replace(/--+/g, '-')
-        .replace(/^-+|-+$/g, '') || `exhibition-${Date.now()}`;
+        .replace(/^-+|-+$/g, '') || `industry-${Date.now()}`;
 }
 
-export async function getExhibitions(includeDeleted = false) {
-    return prisma.exhibition.findMany({
+export async function getIndustries(includeDeleted = false) {
+    return prisma.industry.findMany({
         where: includeDeleted ? {} : { deleted_at: null },
         include: {
             _count: { select: { keywords: { where: { deleted_at: null } }, ingestions: true } }
@@ -23,8 +23,8 @@ export async function getExhibitions(includeDeleted = false) {
     });
 }
 
-export async function getExhibitionBySlug(slug: string) {
-    return prisma.exhibition.findFirst({
+export async function getIndustryBySlug(slug: string) {
+    return prisma.industry.findFirst({
         where: { slug, deleted_at: null },
         include: {
             keywords: { where: { deleted_at: null }, orderBy: { created_at: 'asc' } }
@@ -32,8 +32,8 @@ export async function getExhibitionBySlug(slug: string) {
     });
 }
 
-export async function getExhibitionById(id: number) {
-    return prisma.exhibition.findUnique({
+export async function getIndustryById(id: number) {
+    return prisma.industry.findUnique({
         where: { id },
         include: {
             keywords: { where: { deleted_at: null }, orderBy: { created_at: 'asc' } }
@@ -41,17 +41,17 @@ export async function getExhibitionById(id: number) {
     });
 }
 
-export async function createExhibition(data: {
+export async function createIndustry(data: {
     name: string;
     description?: string;
     is_active?: boolean;
 }) {
     const slug = slugify(data.name);
     // Ensure uniqueness
-    const existing = await prisma.exhibition.findFirst({ where: { slug } });
+    const existing = await prisma.industry.findFirst({ where: { slug } });
     const finalSlug = existing ? `${slug}-${Date.now()}` : slug;
 
-    const exhibition = await prisma.exhibition.create({
+    const industry = await prisma.industry.create({
         data: {
             name: data.name,
             slug: finalSlug,
@@ -59,38 +59,38 @@ export async function createExhibition(data: {
             is_active: data.is_active ?? true,
         }
     });
-    revalidatePath('/exhibitions');
-    return exhibition;
+    revalidatePath('/industries');
+    return industry;
 }
 
-export async function updateExhibition(id: number, data: {
+export async function updateIndustry(id: number, data: {
     name?: string;
     description?: string;
     is_active?: boolean;
 }) {
-    const exhibition = await prisma.exhibition.update({
+    const industry = await prisma.industry.update({
         where: { id },
         data: {
             ...data,
             ...(data.name ? { slug: slugify(data.name) } : {}),
         }
     });
-    revalidatePath('/exhibitions');
-    return exhibition;
+    revalidatePath('/industries');
+    return industry;
 }
 
-export async function softDeleteExhibition(id: number) {
-    await prisma.exhibition.update({
+export async function softDeleteIndustry(id: number) {
+    await prisma.industry.update({
         where: { id },
         data: { deleted_at: new Date(), is_active: false }
     });
-    revalidatePath('/exhibitions');
+    revalidatePath('/industries');
 }
 
-export async function restoreExhibition(id: number) {
-    await prisma.exhibition.update({
+export async function restoreIndustry(id: number) {
+    await prisma.industry.update({
         where: { id },
         data: { deleted_at: null, is_active: true }
     });
-    revalidatePath('/exhibitions');
+    revalidatePath('/industries');
 }

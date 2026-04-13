@@ -7,7 +7,7 @@ export interface Category {
 
 export type EntityType = 'COMPANY' | 'INSTITUTION' | 'ASSOCIATION' | 'UNKNOWN';
 export type MarketTarget = 'PUBLIC' | 'PRIVATE' | 'BOTH';
-export type ExhibitionParticipationType =
+export type IndustryParticipationType =
     | 'PRODUCT_LAUNCH'
     | 'MANUFACTURING_READY'
     | 'SOLUTION_PARTNER'
@@ -24,7 +24,7 @@ export interface Signals {
     procurement: boolean;
     product_launch: boolean;
     award: boolean;
-    exhibition: boolean;
+    industry: boolean;
     smart: boolean;
 }
 
@@ -49,7 +49,7 @@ export interface Company {
     // Classification
     entity_type: EntityType;
     market_target: MarketTarget;
-    exhibition_participation_type: ExhibitionParticipationType;
+    industry_participation_type: IndustryParticipationType;
 
     // Analysis
     signals: Signals;
@@ -80,7 +80,7 @@ export interface Company {
     // Legacy / Convenience
     description: string;
     focus_area: string;
-    exhibition_score: number;
+    industry_score: number;
     tags: string[];
 
     created_at: Date | string;

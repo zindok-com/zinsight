@@ -17,12 +17,12 @@ export default async function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">전시회</CardTitle>
+                        <CardTitle className="text-sm font-medium">산업</CardTitle>
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.exhibitionCount}</div>
-                        <p className="text-xs text-muted-foreground">활성 전시회 수</p>
+                        <div className="text-2xl font-bold">{stats.industryCount}</div>
+                        <p className="text-xs text-muted-foreground">활성 산업 수</p>
                     </CardContent>
                 </Card>
 
@@ -68,15 +68,15 @@ export default async function Home() {
                     <CardContent className="space-y-3 text-sm text-muted-foreground">
                         <div className="flex items-start gap-2">
                             <span className="bg-slate-200 text-slate-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">1</span>
-                            <span><strong>Exhibitions</strong>에서 전시회를 등록하세요.</span>
+                            <span><strong>Industries</strong>에서 산업를 등록하세요.</span>
                         </div>
                         <div className="flex items-start gap-2">
                             <span className="bg-slate-200 text-slate-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">2</span>
-                            <span><strong>Keywords</strong>에서 전시회별 검색 키워드를 추가하세요.</span>
+                            <span><strong>Keywords</strong>에서 산업별 검색 키워드를 추가하세요.</span>
                         </div>
                         <div className="flex items-start gap-2">
                             <span className="bg-slate-200 text-slate-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">3</span>
-                            <span><strong>Articles</strong>에서 전시회를 선택하고 기사를 수집하세요.</span>
+                            <span><strong>Articles</strong>에서 산업를 선택하고 기사를 수집하세요.</span>
                         </div>
                         <div className="flex items-start gap-2">
                             <span className="bg-slate-200 text-slate-700 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">4</span>

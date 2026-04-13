@@ -99,7 +99,7 @@ export const columns: ColumnDef<Company>[] = [
             if (signals.procurement) activeSignals.push("Proc");
             if (signals.product_launch) activeSignals.push("Launch");
             if (signals.award) activeSignals.push("Award");
-            if (signals.exhibition) activeSignals.push("Exh");
+            if (signals.industry) activeSignals.push("Exh");
             if (signals.smart) activeSignals.push("Smart");
 
             return (

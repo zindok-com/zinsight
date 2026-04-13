@@ -55,7 +55,7 @@ export class DataService {
                 procurement: existing.signals.procurement || partial.signals.procurement,
                 product_launch: existing.signals.product_launch || partial.signals.product_launch,
                 award: existing.signals.award || partial.signals.award,
-                exhibition: existing.signals.exhibition || partial.signals.exhibition,
+                industry: existing.signals.industry || partial.signals.industry,
                 smart: existing.signals.smart || partial.signals.smart
             };
 

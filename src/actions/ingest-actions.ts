@@ -39,7 +39,15 @@ export interface IngestReport {
 }
 
 function stripHtml(html: string): string {
-    return html.replace(/<[^>]+>/g, '').trim();
+    return html
+        .replace(/<[^>]+>/g, '')
+        .replace(/&quot;/g, '"')
+        .replace(/&apos;/g, "'")
+        .replace(/&#039;/g, "'")
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .trim();
 }
 
 async function fetchNaverNews(keyword: string): Promise<NaverNewsItem[]> {
@@ -59,7 +67,7 @@ async function fetchNaverNews(keyword: string): Promise<NaverNewsItem[]> {
 
 async function ingestItems(
     items: NaverNewsItem[],
-    exhibitionId: number,
+    industryId: number,
     keywordId: number
 ): Promise<{ newCount: number; dupCount: number; failCount: number }> {
     let newCount = 0;
@@ -101,7 +109,7 @@ async function ingestItems(
                     await prisma.articleIngestion.create({
                         data: {
                             article_id: article.id,
-                            exhibition_id: exhibitionId,
+                            industry_id: industryId,
                             keyword_id: keywordId,
                             fetched_at: now,
                             is_duplicate: false,
@@ -129,7 +137,7 @@ async function ingestItems(
                     await prisma.articleIngestion.create({
                         data: {
                             article_id: existing.id,
-                            exhibition_id: exhibitionId,
+                            industry_id: industryId,
                             keyword_id: keywordId,
                             fetched_at: now,
                             is_duplicate: true,
@@ -169,7 +177,7 @@ export async function ingestByKeyword(keywordId: number): Promise<IngestReport> 
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: `Naver API error: ${err}` };
     }
 
-    const { newCount, dupCount, failCount } = await ingestItems(items, keyword.exhibition_id, keyword.id);
+    const { newCount, dupCount, failCount } = await ingestItems(items, keyword.industry_id, keyword.id);
 
     await prisma.searchKeyword.update({ where: { id: keywordId }, data: { last_fetched_at: new Date() } });
 
@@ -185,13 +193,13 @@ export async function ingestByKeyword(keywordId: number): Promise<IngestReport> 
     };
 }
 
-export async function ingestByExhibition(exhibitionId: number): Promise<IngestReport> {
+export async function ingestByIndustry(industryId: number): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
 
     const keywords = await prisma.searchKeyword.findMany({
-        where: { exhibition_id: exhibitionId, is_active: true, deleted_at: null }
+        where: { industry_id: industryId, is_active: true, deleted_at: null }
     });
 
     if (keywords.length === 0) {
@@ -205,7 +213,7 @@ export async function ingestByExhibition(exhibitionId: number): Promise<IngestRe
     for (const kw of keywords) {
         try {
             const items = await fetchNaverNews(kw.keyword_text);
-            const { newCount, dupCount, failCount } = await ingestItems(items, exhibitionId, kw.id);
+            const { newCount, dupCount, failCount } = await ingestItems(items, industryId, kw.id);
             await prisma.searchKeyword.update({ where: { id: kw.id }, data: { last_fetched_at: now } });
             totalNew += newCount;
             totalDup += dupCount;
@@ -226,6 +234,6 @@ export async function ingestByExhibition(exhibitionId: number): Promise<IngestRe
         dupCount: totalDup,
         failCount: totalFail,
         perKeyword,
-        message: `전시회 단위 수집 완료: 신규 ${totalNew}, 중복 ${totalDup}, 실패 ${totalFail}`
+        message: `산업 단위 수집 완료: 신규 ${totalNew}, 중복 ${totalDup}, 실패 ${totalFail}`
     };
 }

@@ -6,15 +6,15 @@ export async function getDashboardStats() {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [exhibitionCount, keywordCount, articleCount, thisMonthCount] = await Promise.all([
-        prisma.exhibition.count({ where: { deleted_at: null } }),
+    const [industryCount, keywordCount, articleCount, thisMonthCount] = await Promise.all([
+        prisma.industry.count({ where: { deleted_at: null } }),
         prisma.searchKeyword.count({ where: { deleted_at: null, is_active: true } }),
         prisma.article.count(),
         prisma.article.count({ where: { created_at: { gte: startOfMonth } } }),
     ]);
 
     return {
-        exhibitionCount,
+        industryCount,
         keywordCount,
         articleCount,
         thisMonthCount,

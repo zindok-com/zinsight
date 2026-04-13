@@ -17,29 +17,29 @@ function formatDate(date: Date): string {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-export async function generateMonthlySnapshot(exhibitionId: number, month: string): Promise<{
+export async function generateMonthlySnapshot(industryId: number, month: string): Promise<{
     success: boolean;
     filename?: string;
     articleCount?: number;
     message: string;
 }> {
-    const exhibition = await prisma.exhibition.findUnique({ where: { id: exhibitionId } });
-    if (!exhibition) {
-        return { success: false, message: '전시회를 찾을 수 없습니다.' };
+    const industry = await prisma.industry.findUnique({ where: { id: industryId } });
+    if (!industry) {
+        return { success: false, message: '산업를 찾을 수 없습니다.' };
     }
 
-    const articles = await getArticlesForExport(exhibitionId, month);
+    const articles = await getArticlesForExport(industryId, month);
     const now = new Date();
     const todayStr = formatDate(now);
-    const filename = `snapshot_${exhibition.slug}_${month}_generated_${todayStr}_${now.getTime()}.json`;
+    const filename = `snapshot_${industry.slug}_${month}_generated_${todayStr}_${now.getTime()}.json`;
     const filepath = path.join(SNAPSHOTS_DIR, filename);
 
     const snapshot = {
-        exhibition: { id: exhibition.id, name: exhibition.name, slug: exhibition.slug },
+        industry: { id: industry.id, name: industry.name, slug: industry.slug },
         month,
         generated_at: now.toISOString(),
         filters: {
-            exhibition_id: exhibitionId,
+            industry_id: industryId,
             month,
             source_field: 'created_at',
         },
@@ -78,14 +78,14 @@ export async function generateMonthlySnapshot(exhibitionId: number, month: strin
 
 export interface SnapshotInfo {
     filename: string;
-    exhibitionSlug: string;
+    industrySlug: string;
     month: string;
     generatedAt: string;        // date part from filename
     sizeBytes: number;
     isLatest?: boolean;
 }
 
-export async function listSnapshots(exhibitionSlug?: string, month?: string): Promise<SnapshotInfo[]> {
+export async function listSnapshots(industrySlug?: string, month?: string): Promise<SnapshotInfo[]> {
     await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
     const files = await fs.readdir(SNAPSHOTS_DIR);
 
@@ -99,13 +99,13 @@ export async function listSnapshots(exhibitionSlug?: string, month?: string): Pr
         if (!match) continue;
 
         const [, slug, mon, genDate] = match;
-        if (exhibitionSlug && slug !== exhibitionSlug) continue;
+        if (industrySlug && slug !== industrySlug) continue;
         if (month && mon !== month) continue;
 
         const stat = await fs.stat(path.join(SNAPSHOTS_DIR, filename));
         snapshots.push({
             filename,
-            exhibitionSlug: slug,
+            industrySlug: slug,
             month: mon,
             generatedAt: genDate,
             sizeBytes: stat.size,
@@ -115,10 +115,10 @@ export async function listSnapshots(exhibitionSlug?: string, month?: string): Pr
     // Sort descending by filename (which includes timestamp)
     snapshots.sort((a, b) => b.filename.localeCompare(a.filename));
 
-    // Mark latest per (exhibitionSlug, month) group
+    // Mark latest per (industrySlug, month) group
     const seen = new Set<string>();
     for (const s of snapshots) {
-        const key = `${s.exhibitionSlug}_${s.month}`;
+        const key = `${s.industrySlug}_${s.month}`;
         if (!seen.has(key)) {
             s.isLatest = true;
             seen.add(key);

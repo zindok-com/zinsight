@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import {
-    getExhibitions,
-    createExhibition,
-    updateExhibition,
-    softDeleteExhibition,
-    restoreExhibition,
-} from '@/actions/exhibition-actions';
+    getIndustries,
+    createIndustry,
+    updateIndustry,
+    softDeleteIndustry,
+    restoreIndustry,
+} from '@/actions/industry-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,14 +21,14 @@ import {
 } from '@/components/ui/dialog';
 import { Building2, Plus, Pencil, Trash2, RotateCcw, Eye, EyeOff } from 'lucide-react';
 
-type Exhibition = Awaited<ReturnType<typeof getExhibitions>>[number];
+type Industry = Awaited<ReturnType<typeof getIndustries>>[number];
 
-function ExhibitionForm({
+function IndustryForm({
     initial,
     onSubmit,
     onCancel,
 }: {
-    initial?: Partial<Exhibition>;
+    initial?: Partial<Industry>;
     onSubmit: (data: { name: string; description?: string; is_active: boolean }) => Promise<void>;
     onCancel: () => void;
 }) {
@@ -39,7 +39,7 @@ function ExhibitionForm({
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!name.trim()) { toast.error('전시회명을 입력하세요.'); return; }
+        if (!name.trim()) { toast.error('산업명을 입력하세요.'); return; }
         setLoading(true);
         await onSubmit({ name: name.trim(), description: description.trim() || undefined, is_active: isActive });
         setLoading(false);
@@ -48,12 +48,12 @@ function ExhibitionForm({
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="text-sm font-medium">전시회명 *</label>
+                <label className="text-sm font-medium">산업명 *</label>
                 <input
                     className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    placeholder="예: 국제광융합(LED)전시회"
+                    placeholder="예: 국제광융합(LED)산업"
                     required
                 />
             </div>
@@ -63,7 +63,7 @@ function ExhibitionForm({
                     className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400 min-h-[80px]"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
-                    placeholder="전시회에 대한 설명"
+                    placeholder="산업에 대한 설명"
                 />
             </div>
             <div className="flex items-center gap-2">
@@ -84,17 +84,17 @@ function ExhibitionForm({
     );
 }
 
-export default function ExhibitionsPage() {
-    const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+export default function IndustriesPage() {
+    const [industries, setIndustries] = useState<Industry[]>([]);
     const [showDeleted, setShowDeleted] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
-    const [editTarget, setEditTarget] = useState<Exhibition | null>(null);
+    const [editTarget, setEditTarget] = useState<Industry | null>(null);
     const [loading, setLoading] = useState(true);
 
     async function reload() {
         setLoading(true);
-        const data = await getExhibitions(showDeleted);
-        setExhibitions(data);
+        const data = await getIndustries(showDeleted);
+        setIndustries(data);
         setLoading(false);
     }
 
@@ -102,8 +102,8 @@ export default function ExhibitionsPage() {
 
     async function handleCreate(data: { name: string; description?: string; is_active: boolean }) {
         try {
-            await createExhibition(data);
-            toast.success('전시회가 생성되었습니다.');
+            await createIndustry(data);
+            toast.success('산업가 생성되었습니다.');
             setDialogOpen(false);
             reload();
         } catch (e) {
@@ -114,8 +114,8 @@ export default function ExhibitionsPage() {
     async function handleUpdate(data: { name: string; description?: string; is_active: boolean }) {
         if (!editTarget) return;
         try {
-            await updateExhibition(editTarget.id, data);
-            toast.success('전시회가 수정되었습니다.');
+            await updateIndustry(editTarget.id, data);
+            toast.success('산업가 수정되었습니다.');
             setDialogOpen(false);
             setEditTarget(null);
             reload();
@@ -125,36 +125,36 @@ export default function ExhibitionsPage() {
     }
 
     async function handleSoftDelete(id: number) {
-        if (!confirm('전시회를 삭제(비활성화)하시겠습니까? 복구 가능합니다.')) return;
-        await softDeleteExhibition(id);
-        toast.success('전시회가 삭제(비활성화)되었습니다.');
+        if (!confirm('산업를 삭제(비활성화)하시겠습니까? 복구 가능합니다.')) return;
+        await softDeleteIndustry(id);
+        toast.success('산업가 삭제(비활성화)되었습니다.');
         reload();
     }
 
     async function handleRestore(id: number) {
-        await restoreExhibition(id);
-        toast.success('전시회가 복구되었습니다.');
+        await restoreIndustry(id);
+        toast.success('산업가 복구되었습니다.');
         reload();
     }
 
-    const active = exhibitions.filter(e => !e.deleted_at);
-    const deleted = exhibitions.filter(e => e.deleted_at);
+    const active = industries.filter(e => !e.deleted_at);
+    const deleted = industries.filter(e => e.deleted_at);
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                        <Building2 className="h-8 w-8" /> Exhibitions
+                        <Building2 className="h-8 w-8" /> Industries
                     </h1>
-                    <p className="text-muted-foreground mt-1">전시회 관리 (등록/수정/soft 삭제/복구)</p>
+                    <p className="text-muted-foreground mt-1">산업 관리 (등록/수정/soft 삭제/복구)</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setShowDeleted(v => !v)}>
                         {showDeleted ? <><EyeOff className="h-4 w-4 mr-1" /> 삭제 항목 숨기기</> : <><Eye className="h-4 w-4 mr-1" /> 삭제 항목 보기</>}
                     </Button>
                     <Button onClick={() => { setEditTarget(null); setDialogOpen(true); }}>
-                        <Plus className="h-4 w-4 mr-1" /> 전시회 추가
+                        <Plus className="h-4 w-4 mr-1" /> 산업 추가
                     </Button>
                 </div>
             </div>
@@ -198,14 +198,14 @@ export default function ExhibitionsPage() {
                         ))}
                         {active.length === 0 && (
                             <div className="col-span-full text-center py-12 text-muted-foreground">
-                                등록된 전시회가 없습니다. &ldquo;전시회 추가&rdquo; 버튼을 눌러 시작하세요.
+                                등록된 산업가 없습니다. &ldquo;산업 추가&rdquo; 버튼을 눌러 시작하세요.
                             </div>
                         )}
                     </div>
 
                     {showDeleted && deleted.length > 0 && (
                         <div className="space-y-4">
-                            <h2 className="text-lg font-semibold text-muted-foreground">삭제된 전시회</h2>
+                            <h2 className="text-lg font-semibold text-muted-foreground">삭제된 산업</h2>
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                 {deleted.map(ex => (
                                     <Card key={ex.id} className="opacity-60 border-dashed">
@@ -229,9 +229,9 @@ export default function ExhibitionsPage() {
             <Dialog open={dialogOpen} onOpenChange={open => { if (!open) { setDialogOpen(false); setEditTarget(null); } }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{editTarget ? '전시회 수정' : '전시회 추가'}</DialogTitle>
+                        <DialogTitle>{editTarget ? '산업 수정' : '산업 추가'}</DialogTitle>
                     </DialogHeader>
-                    <ExhibitionForm
+                    <IndustryForm
                         initial={editTarget ?? undefined}
                         onSubmit={editTarget ? handleUpdate : handleCreate}
                         onCancel={() => { setDialogOpen(false); setEditTarget(null); }}

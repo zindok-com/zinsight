@@ -3,7 +3,7 @@
 import { prisma } from '@/lib/db';
 
 export interface ArticleFilter {
-    exhibitionId: number;
+    industryId: number;
     keywordId?: number;
     /** YYYY-MM 형식, 수집일(created_at) 월 필터 */
     createdMonth?: string;
@@ -22,12 +22,12 @@ function monthRange(ym: string): { gte: Date; lte: Date } {
 }
 
 export async function getArticles(filter: ArticleFilter) {
-    const { exhibitionId, keywordId, createdMonth, updatedMonth, page = 1, pageSize = 50 } = filter;
+    const { industryId, keywordId, createdMonth, updatedMonth, page = 1, pageSize = 50 } = filter;
 
     const where = {
         ingestions: {
             some: {
-                exhibition_id: exhibitionId,
+                industry_id: industryId,
                 ...(keywordId ? { keyword_id: keywordId } : {}),
             }
         },
@@ -41,7 +41,7 @@ export async function getArticles(filter: ArticleFilter) {
             include: {
                 ingestions: {
                     where: {
-                        exhibition_id: exhibitionId,
+                        industry_id: industryId,
                         ...(keywordId ? { keyword_id: keywordId } : {}),
                     },
                     include: { keyword: { select: { id: true, keyword_text: true } } },
@@ -58,7 +58,7 @@ export async function getArticles(filter: ArticleFilter) {
     return { articles, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
-export async function getArticlesForExport(exhibitionId: number, month: string) {
+export async function getArticlesForExport(industryId: number, month: string) {
     const [year, mon] = month.split('-').map(Number);
     const fromDate = new Date(year, mon - 1, 1);
     const toDate = new Date(year, mon, 0, 23, 59, 59);
@@ -66,11 +66,11 @@ export async function getArticlesForExport(exhibitionId: number, month: string) 
     return prisma.article.findMany({
         where: {
             created_at: { gte: fromDate, lte: toDate },
-            ingestions: { some: { exhibition_id: exhibitionId } }
+            ingestions: { some: { industry_id: industryId } }
         },
         include: {
             ingestions: {
-                where: { exhibition_id: exhibitionId },
+                where: { industry_id: industryId },
                 include: {
                     keyword: { select: { id: true, keyword_text: true, keyword_type: true } }
                 }

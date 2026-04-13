@@ -3,32 +3,32 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-export async function getKeywords(exhibitionId: number, includeDeleted = false) {
+export async function getKeywords(industryId: number, includeDeleted = false) {
     return prisma.searchKeyword.findMany({
         where: {
-            exhibition_id: exhibitionId,
+            industry_id: industryId,
             ...(includeDeleted ? {} : { deleted_at: null }),
         },
         orderBy: { created_at: 'asc' },
     });
 }
 
-export async function getActiveKeywordsForExhibition(exhibitionId: number) {
+export async function getActiveKeywordsForIndustry(industryId: number) {
     return prisma.searchKeyword.findMany({
-        where: { exhibition_id: exhibitionId, is_active: true, deleted_at: null },
+        where: { industry_id: industryId, is_active: true, deleted_at: null },
         orderBy: { created_at: 'asc' },
     });
 }
 
 export async function createKeyword(data: {
-    exhibition_id: number;
+    industry_id: number;
     keyword_text: string;
     keyword_type?: string;
     is_active?: boolean;
 }) {
     const keyword = await prisma.searchKeyword.create({
         data: {
-            exhibition_id: data.exhibition_id,
+            industry_id: data.industry_id,
             keyword_text: data.keyword_text,
             keyword_type: data.keyword_type,
             is_active: data.is_active ?? true,

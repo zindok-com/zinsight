@@ -16,7 +16,7 @@ import { useState } from 'react';
 
 const MENU_ITEMS = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Exhibitions', href: '/admin/exhibitions', icon: Building2 },
+    { name: 'Industries', href: '/admin/industries', icon: Building2 },
     { name: 'Keywords', href: '/admin/keywords', icon: Tags },
     { name: 'Articles', href: '/admin/articles', icon: Newspaper },
     { name: 'Export', href: '/admin/export', icon: Download },

@@ -3,10 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { getExhibitionById } from '@/actions/exhibition-actions';
+import { getIndustryById } from '@/actions/industry-actions';
 import { getKeywords } from '@/actions/keyword-actions';
 import { getArticles } from '@/actions/article-actions';
-import { ingestByExhibition, ingestByKeyword, type IngestReport } from '@/actions/ingest-actions';
+import { ingestByIndustry, ingestByKeyword, type IngestReport } from '@/actions/ingest-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +15,7 @@ import {
     CheckCircle, AlertTriangle, ExternalLink, X, FileJson
 } from 'lucide-react';
 
-type Exhibition = NonNullable<Awaited<ReturnType<typeof getExhibitionById>>>;
+type Industry = NonNullable<Awaited<ReturnType<typeof getIndustryById>>>;
 type Keyword = Awaited<ReturnType<typeof getKeywords>>[number];
 type ArticlePage = Awaited<ReturnType<typeof getArticles>>;
 type ArticleItem = ArticlePage['articles'][number];
@@ -210,12 +210,12 @@ function ArticleDrawer({ article, onClose }: { article: ArticleItem; onClose: ()
 }
 
 // ─── 메인 페이지 ──────────────────────────────────────────────────────────────
-export default function ArticlesByExhibitionPage() {
+export default function ArticlesByIndustryPage() {
     const params = useParams();
     const router = useRouter();
-    const exhibitionId = Number(params.exhibitionId);
+    const industryId = Number(params.industryId);
 
-    const [exhibition, setExhibition] = useState<Exhibition | null>(null);
+    const [industry, setIndustry] = useState<Industry | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [initialLoading, setInitialLoading] = useState(true);
     const [keywords, setKeywords] = useState<Keyword[]>([]);
@@ -230,33 +230,33 @@ export default function ArticlesByExhibitionPage() {
     const [drawerArticle, setDrawerArticle] = useState<ArticleItem | null>(null);
 
     useEffect(() => {
-        if (!exhibitionId || isNaN(exhibitionId)) {
-            setLoadError('잘못된 전시회 ID입니다.');
+        if (!industryId || isNaN(industryId)) {
+            setLoadError('잘못된 산업 ID입니다.');
             setInitialLoading(false);
             return;
         }
-        getExhibitionById(exhibitionId)
+        getIndustryById(industryId)
             .then(ex => {
                 if (!ex) {
-                    setLoadError(`전시회(ID: ${exhibitionId})를 찾을 수 없습니다.`);
+                    setLoadError(`산업(ID: ${industryId})를 찾을 수 없습니다.`);
                 } else {
-                    setExhibition(ex);
+                    setIndustry(ex);
                     return getKeywords(ex.id, false).then(setKeywords);
                 }
             })
             .catch(err => {
                 console.error(err);
-                setLoadError('전시회 정보를 불러오는 중 오류가 발생했습니다.');
+                setLoadError('산업 정보를 불러오는 중 오류가 발생했습니다.');
             })
             .finally(() => setInitialLoading(false));
-    }, [exhibitionId]);
+    }, [industryId]);
 
     const loadArticles = useCallback(async (p = 1) => {
-        if (!exhibition) return;
+        if (!industry) return;
         setLoadingArticles(true);
         try {
             const data = await getArticles({
-                exhibitionId: exhibition.id,
+                industryId: industry.id,
                 keywordId: selectedKeywordId ? Number(selectedKeywordId) : undefined,
                 createdMonth: createdMonth || undefined,
                 updatedMonth: updatedMonth || undefined,
@@ -271,18 +271,18 @@ export default function ArticlesByExhibitionPage() {
         } finally {
             setLoadingArticles(false);
         }
-    }, [exhibition, selectedKeywordId, createdMonth, updatedMonth]);
+    }, [industry, selectedKeywordId, createdMonth, updatedMonth]);
 
     useEffect(() => {
-        if (exhibition) loadArticles(1);
-    }, [exhibition, loadArticles]);
+        if (industry) loadArticles(1);
+    }, [industry, loadArticles]);
 
-    async function handleIngestExhibition() {
-        if (!exhibition) return;
+    async function handleIngestIndustry() {
+        if (!industry) return;
         setIngestLoading(true);
         setIngestReport(null);
-        toast.info('전시회 단위 수집 중...');
-        const report = await ingestByExhibition(exhibition.id);
+        toast.info('산업 단위 수집 중...');
+        const report = await ingestByIndustry(industry.id);
         setIngestReport(report);
         setIngestLoading(false);
         if (report.success) toast.success(report.message);
@@ -307,7 +307,7 @@ export default function ArticlesByExhibitionPage() {
         if (!articleData || articleData.articles.length === 0) { toast.error('내보낼 기사가 없습니다.'); return; }
         const payload = {
             export_at: new Date().toISOString(),
-            exhibition: exhibition?.name,
+            industry: industry?.name,
             filters: { keyword_id: selectedKeywordId, createdMonth, updatedMonth },
             count: articleData.total,
             articles: articleData.articles.map((a: ArticleItem) => ({
@@ -326,7 +326,7 @@ export default function ArticlesByExhibitionPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `articles_ex${exhibitionId}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `articles_ex${industryId}_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         toast.success('JSON 내보내기 완료');
@@ -337,16 +337,16 @@ export default function ArticlesByExhibitionPage() {
         return (
             <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <span>전시회 정보 불러오는 중...</span>
+                <span>산업 정보 불러오는 중...</span>
             </div>
         );
     }
 
-    if (loadError || !exhibition) {
+    if (loadError || !industry) {
         return (
             <div className="py-20 flex flex-col items-center gap-4">
                 <AlertTriangle className="h-10 w-10 text-red-400" />
-                <p className="text-muted-foreground">{loadError ?? '전시회를 찾을 수 없습니다.'}</p>
+                <p className="text-muted-foreground">{loadError ?? '산업를 찾을 수 없습니다.'}</p>
                 <Button variant="outline" onClick={() => router.push('/admin/articles')}>
                     <ArrowLeft className="h-4 w-4 mr-2" /> 목록으로
                 </Button>
@@ -363,8 +363,8 @@ export default function ArticlesByExhibitionPage() {
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{exhibition.name}</h1>
-                        <p className="text-xs text-muted-foreground">ID: {exhibition.id} · slug: {exhibition.slug}</p>
+                        <h1 className="text-2xl font-bold tracking-tight">{industry.name}</h1>
+                        <p className="text-xs text-muted-foreground">ID: {industry.id} · slug: {industry.slug}</p>
                     </div>
                 </div>
 
@@ -412,9 +412,9 @@ export default function ArticlesByExhibitionPage() {
                                 <RefreshCw className={`h-4 w-4 mr-1 ${loadingArticles ? 'animate-spin' : ''}`} />
                                 조회
                             </Button>
-                            <Button onClick={handleIngestExhibition} disabled={ingestLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            <Button onClick={handleIngestIndustry} disabled={ingestLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
                                 {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-                                전시회 단위 수집
+                                산업 단위 수집
                             </Button>
                             <Button onClick={handleIngestKeyword} disabled={ingestLoading || !selectedKeywordId} variant="outline">
                                 {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
@@ -459,11 +459,11 @@ export default function ArticlesByExhibitionPage() {
                                 {/* table-fixed + 명시적 컬럼 비율 */}
                                 <table className="w-full text-sm table-fixed">
                                     <colgroup>
-                                        <col style={{ width: '60%' }} />   {/* 제목 */}
-                                        <col style={{ width: '13%' }} />   {/* 키워드 */}
-                                        <col style={{ width: '10%' }} />   {/* 수집일 */}
-                                        <col style={{ width: '10%' }} />   {/* 갱신일 */}
-                                        <col style={{ width: '7%' }} />    {/* 중복 */}
+                                        <col style={{ width: '60%' }} />
+                                        <col style={{ width: '13%' }} />
+                                        <col style={{ width: '10%' }} />
+                                        <col style={{ width: '10%' }} />
+                                        <col style={{ width: '7%' }} />
                                     </colgroup>
                                     <thead>
                                         <tr className="border-b text-xs text-muted-foreground">

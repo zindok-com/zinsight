@@ -57,14 +57,14 @@ export async function parseAndImportFile(formData: FormData) {
                 entity_aliases: row.name_variants || [name],
                 entity_type: 'COMPANY',
                 market_target: 'BOTH',
-                exhibition_participation_type: row.exhibition_participation_type || 'UNKNOWN',
+                industry_participation_type: row.industry_participation_type || 'UNKNOWN',
                 signals: isGoldenSet ? {
                     led: !!row.signals?.led,
                     certification: !!row.signals?.certification,
                     procurement: !!row.signals?.procurement,
                     product_launch: !!row.signals?.product_launch,
                     award: !!row.signals?.award,
-                    exhibition: !!row.signals?.exhibition,
+                    industry: !!row.signals?.industry,
                     smart: !!row.signals?.smart
                 } : {
                     led: false,
@@ -72,7 +72,7 @@ export async function parseAndImportFile(formData: FormData) {
                     procurement: false,
                     product_launch: false,
                     award: false,
-                    exhibition: false,
+                    industry: false,
                     smart: false
                 },
                 fit_score: row.fitness_score || row.fit_score || 0,
@@ -92,7 +92,7 @@ export async function parseAndImportFile(formData: FormData) {
                 source_query: row.source_query || 'import',
                 description: row.description || '',
                 focus_area: '',
-                exhibition_score: row.fitness_score || 0,
+                industry_score: row.fitness_score || 0,
                 tags: [],
                 created_at: new Date().toISOString()
             } as Company;
