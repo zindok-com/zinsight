@@ -18,6 +18,7 @@ model Industry {
 
   keywords    SearchKeyword[]
   ingestions  ArticleIngestion[]
+  companies   Company[]
 
   @@index([slug, deleted_at])
   @@map("industries")
@@ -54,7 +55,8 @@ model Article {
   created_at     DateTime           @default(now())
   updated_at     DateTime           @updatedAt
 
-  ingestions  ArticleIngestion[]
+  ingestions       ArticleIngestion[]
+  company_articles CompanyArticle[]
 
   @@index([created_at])
   @@index([pub_date])
@@ -77,4 +79,38 @@ model ArticleIngestion {
   @@index([industry_id])
   @@index([keyword_id])
   @@map("article_ingestions")
+}
+
+model Company {
+  id               Int      @id @default(autoincrement())
+  industry_id      Int
+  company_name     String   @db.VarChar(255)
+  company_url      String?  @db.VarChar(255)
+  business_summary String?  @db.Text
+  core_keywords    Json?    
+  recent_status    String?  @db.Text
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  industry         Industry         @relation(fields: [industry_id], references: [id])
+  company_articles CompanyArticle[]
+
+  @@unique([industry_id, company_name])
+  @@index([industry_id])
+  @@map("companies")
+}
+
+model CompanyArticle {
+  id         Int      @id @default(autoincrement())
+  company_id Int
+  article_id Int
+  created_at DateTime @default(now())
+
+  company    Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  article    Article @relation(fields: [article_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, article_id])
+  @@index([article_id])
+  @@index([company_id])
+  @@map("company_articles")
 }

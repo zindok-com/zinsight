@@ -6,8 +6,9 @@ export function middleware(request: NextRequest) {
     const isLoginPage = request.nextUrl.pathname === '/login';
     const isApiAuth = request.nextUrl.pathname.startsWith('/api/auth');
     const isApiSnapshot = request.nextUrl.pathname.startsWith('/api/snapshots');
+    const isApiCompanies = request.nextUrl.pathname.startsWith('/api/companies');
 
-    if (!authToken && !isLoginPage && !isApiAuth && !isApiSnapshot) {
+    if (!authToken && !isLoginPage && !isApiAuth && !isApiSnapshot && !isApiCompanies) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 

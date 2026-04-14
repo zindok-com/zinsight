@@ -10,6 +10,7 @@ import {
     Newspaper,
     Download,
     Menu,
+    Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -17,6 +18,7 @@ import { useState } from 'react';
 const MENU_ITEMS = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Industries', href: '/admin/industries', icon: Building2 },
+    { name: 'Companies', href: '/admin/companies', icon: Briefcase },
     { name: 'Keywords', href: '/admin/keywords', icon: Tags },
     { name: 'Articles', href: '/admin/articles', icon: Newspaper },
     { name: 'Export', href: '/admin/export', icon: Download },
