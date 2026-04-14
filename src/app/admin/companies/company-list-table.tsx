@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -42,6 +45,8 @@ function ExpandableText({ text }: { text: string | null }) {
 
 export function CompanyListTable({ companies }: { companies: any[] }) {
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedIndustry, setSelectedIndustry] = useState('all');
 
   const parseKeywords = (keywordsStr: any) => {
     if (!keywordsStr) return null;
@@ -55,9 +60,65 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
     }
   };
 
+  // 고유한 산업군 목록 추출
+  const industries = useMemo(() => {
+    const map = new Map();
+    companies.forEach(company => {
+      if (company.industry) {
+        map.set(company.industry.id, company.industry);
+      }
+    });
+    return Array.from(map.values());
+  }, [companies]);
+
+  // 필터링 적용된 기업 목록
+  const filteredCompanies = useMemo(() => {
+    return companies.filter(company => {
+      // 산업군 필터
+      const matchIndustry = selectedIndustry === 'all' || String(company.industry_id) === selectedIndustry;
+      
+      // 검색어 필터 (회사명, 요약 등에서 검색)
+      const term = searchTerm.trim().toLowerCase();
+      const matchSearch = term === '' || 
+        company.company_name?.toLowerCase().includes(term) ||
+        company.business_summary?.toLowerCase().includes(term) || 
+        company.recent_status?.toLowerCase().includes(term);
+
+      return matchIndustry && matchSearch;
+    });
+  }, [companies, selectedIndustry, searchTerm]);
+
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="기업명 또는 요약 키워드 검색..."
+            className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="w-full sm:w-[200px]">
+          <Select value={selectedIndustry} onValueChange={setSelectedIndustry}>
+            <SelectTrigger>
+              <SelectValue placeholder="산업군 전체" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">산업군 전체</SelectItem>
+              {industries.map((ind: any) => (
+                <SelectItem key={ind.id} value={String(ind.id)}>
+                  {ind.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="overflow-x-auto border rounded-md">
         <Table>
           <TableHeader>
             <TableRow>
@@ -69,35 +130,43 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {companies.map((company) => (
-              <TableRow
-                key={company.id}
-                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                onClick={() => setSelectedCompany(company)}
-              >
-                <TableCell className="font-medium text-blue-600 dark:text-blue-400">
-                  {company.company_name}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline">{company.industry?.name || '알 수 없음'}</Badge>
-                </TableCell>
-                <TableCell>
-                  {company.company_url ? (
-                    <span className="text-muted-foreground underline decoration-dotted">
-                      {new URL(company.company_url).hostname || company.company_url}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Badge>{company.company_articles?.length || 0}건</Badge>
-                </TableCell>
-                <TableCell className="max-w-xs truncate" title={company.business_summary || ''}>
-                  {company.business_summary || '-'}
+            {filteredCompanies.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  검색 결과가 없습니다.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredCompanies.map((company) => (
+                <TableRow
+                  key={company.id}
+                  className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  onClick={() => setSelectedCompany(company)}
+                >
+                  <TableCell className="font-medium text-blue-600 dark:text-blue-400">
+                    {company.company_name}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{company.industry?.name || '알 수 없음'}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {company.company_url ? (
+                      <span className="text-muted-foreground underline decoration-dotted">
+                        {new URL(company.company_url).hostname || company.company_url}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge>{company.company_articles?.length || 0}건</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate" title={company.business_summary || ''}>
+                    {company.business_summary || '-'}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
