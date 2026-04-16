@@ -231,6 +231,8 @@ export default function ArticlesByIndustryPage() {
     const [drawerArticle, setDrawerArticle] = useState<ArticleItem | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmType, setConfirmType] = useState<'industry' | 'keyword'>('industry');
+    const [ingestDisplay, setIngestDisplay] = useState<number>(20);
+    const [ingestSort, setIngestSort] = useState<'sim' | 'date'>('sim');
 
     useEffect(() => {
         if (!industryId || isNaN(industryId)) {
@@ -303,7 +305,7 @@ export default function ArticlesByIndustryPage() {
         setIngestLoading(true);
         setIngestReport(null);
         toast.info('산업 단위 수집 중...');
-        const report = await ingestByIndustry(industry.id);
+        const report = await ingestByIndustry(industry.id, ingestDisplay, ingestSort);
         setIngestReport(report);
         setIngestLoading(false);
         if (report.success) toast.success(report.message);
@@ -316,7 +318,7 @@ export default function ArticlesByIndustryPage() {
         setIngestLoading(true);
         setIngestReport(null);
         toast.info('키워드 단위 수집 중...');
-        const report = await ingestByKeyword(Number(selectedKeywordId));
+        const report = await ingestByKeyword(Number(selectedKeywordId), ingestDisplay, ingestSort);
         setIngestReport(report);
         setIngestLoading(false);
         if (report.success) toast.success(report.message);
@@ -568,6 +570,34 @@ export default function ArticlesByIndustryPage() {
                                 : '선택한 키워드에 대해 네이버 뉴스 API를 호출하여 기사를 수집하시겠습니까?'}
                         </DialogDescription>
                     </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm">수집 기사 수</label>
+                            <select 
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                value={ingestDisplay} 
+                                onChange={e => setIngestDisplay(Number(e.target.value))}
+                            >
+                                <option value={10}>10개</option>
+                                <option value={20}>20개</option>
+                                <option value={30}>30개</option>
+                                <option value={40}>40개</option>
+                                <option value={50}>50개</option>
+                                <option value={100}>100개</option>
+                            </select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm">정렬 기준</label>
+                            <select 
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                value={ingestSort} 
+                                onChange={e => setIngestSort(e.target.value as 'sim' | 'date')}
+                            >
+                                <option value="sim">관련도순 (sim)</option>
+                                <option value="date">최신순 (date)</option>
+                            </select>
+                        </div>
+                    </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>취소</Button>
                         <Button onClick={executeIngest} className="bg-blue-600 hover:bg-blue-700 text-white">

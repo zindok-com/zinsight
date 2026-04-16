@@ -50,7 +50,7 @@ function stripHtml(html: string): string {
         .trim();
 }
 
-async function fetchNaverNews(keyword: string): Promise<NaverNewsItem[]> {
+async function fetchNaverNews(keyword: string, display: number = 20, sort: 'sim' | 'date' = 'sim'): Promise<NaverNewsItem[]> {
     const response = await axios.get<NaverApiResponse>(NAVER_API_URL, {
         headers: {
             'X-Naver-Client-Id': NAVER_CLIENT_ID,
@@ -58,8 +58,8 @@ async function fetchNaverNews(keyword: string): Promise<NaverNewsItem[]> {
         },
         params: {
             query: keyword,
-            display: 20, // Fixed: always 20
-            sort: 'date', // Fixed: always date
+            display,
+            sort,
         },
     });
     return response.data?.items ?? [];
@@ -160,7 +160,7 @@ async function ingestItems(
     return { newCount, dupCount, failCount };
 }
 
-export async function ingestByKeyword(keywordId: number): Promise<IngestReport> {
+export async function ingestByKeyword(keywordId: number, display: number = 20, sort: 'sim' | 'date' = 'sim'): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
@@ -172,7 +172,7 @@ export async function ingestByKeyword(keywordId: number): Promise<IngestReport> 
 
     let items: NaverNewsItem[] = [];
     try {
-        items = await fetchNaverNews(keyword.keyword_text);
+        items = await fetchNaverNews(keyword.keyword_text, display, sort);
     } catch (err) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: `Naver API error: ${err}` };
     }
@@ -193,7 +193,7 @@ export async function ingestByKeyword(keywordId: number): Promise<IngestReport> 
     };
 }
 
-export async function ingestByIndustry(industryId: number): Promise<IngestReport> {
+export async function ingestByIndustry(industryId: number, display: number = 20, sort: 'sim' | 'date' = 'sim'): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
@@ -212,7 +212,7 @@ export async function ingestByIndustry(industryId: number): Promise<IngestReport
 
     for (const kw of keywords) {
         try {
-            const items = await fetchNaverNews(kw.keyword_text);
+            const items = await fetchNaverNews(kw.keyword_text, display, sort);
             const { newCount, dupCount, failCount } = await ingestItems(items, industryId, kw.id);
             await prisma.searchKeyword.update({ where: { id: kw.id }, data: { last_fetched_at: now } });
             totalNew += newCount;
