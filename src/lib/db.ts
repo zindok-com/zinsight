@@ -7,7 +7,7 @@ function createPrismaClient() {
         port: Number(process.env.DB_PORT ?? 3306),
         user: process.env.DB_USER ?? 'root',
         password: process.env.DB_PASSWORD ?? '',
-        database: process.env.DB_NAME ?? 'mice_scout',
+        database: process.env.DB_NAME ?? 'zinsight',
     });
 
     return new PrismaClient({

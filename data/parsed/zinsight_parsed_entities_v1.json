@@ -1,5 +1,5 @@
 {
-  "schema": "MICE_SCOUT_PARSED_ENTITY_V1",
+  "schema": "ZINSIGHT_PARSED_ENTITY_V1",
   "generated_at": "2026-01-29T16:24:15.644199+09:00",
   "source_raw_file": "news.json",
   "entity_count": 21,

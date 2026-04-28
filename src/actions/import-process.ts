@@ -29,7 +29,7 @@ export async function parseAndImportFile(formData: FormData) {
             const jsonData = JSON.parse(text);
 
             // Handle Golden Set Schema
-            if (jsonData.schema === 'MICE_SCOUT_PARSED_ENTITY_V1') {
+            if (jsonData.schema === 'ZINSIGHT_PARSED_ENTITY_V1') {
                 data = jsonData.parsed_entities || [];
             } else if (Array.isArray(jsonData)) {
                 data = jsonData;

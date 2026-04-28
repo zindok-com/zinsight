@@ -21,7 +21,7 @@ pnpm dlx shadcn@latest init
 ```
 
 ### 3단계: Shared Core 및 Admin 기능 마이그레이션
-기존 `MICE Scout` 폴더에서 `zinsight` 폴더로 주요 자산을 복사합니다.
+기존 레거시 폴더에서 `zinsight` 폴더로 주요 자산을 복사합니다.
 
 1. **DB 스키마 복사:** 기존 `prisma/schema.prisma`를 새 프로젝트의 `prisma/` 경로에 그대로 덮어씁니다.
 2. **공통 모듈 복사:** 기존 `src/lib/` 디렉터리(db.ts, utils 등)를 복사합니다.
@@ -42,7 +42,7 @@ zinsight/
 ├── .env                  # 로컬 환경 변수 (git ignore)
 ├── .env.example          # 환경 변수 템플릿 파일
 ├── prisma/
-│   └── schema.prisma     # [복사됨] 기존 MICE Scout DB 스키마 구조 유지
+│   └── schema.prisma     # [복사됨] 기존 DB 스키마 구조 유지
 ├── src/
 │   ├── actions/          # Server Actions
 │   │   ├── admin/        # 관리자 전용 권한이 필요한 쓰기/수정/삭제 액션

@@ -18,7 +18,7 @@ import { useState } from 'react';
 const MENU_ITEMS = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Industries', href: '/admin/industries', icon: Building2 },
-    { name: 'Companies', href: '/admin/companies', icon: Briefcase },
+    { name: 'Organizations', href: '/admin/companies', icon: Briefcase },
     { name: 'Keywords', href: '/admin/keywords', icon: Tags },
     { name: 'Articles', href: '/admin/articles', icon: Newspaper },
     { name: 'Export', href: '/admin/export', icon: Download },
@@ -32,7 +32,7 @@ export function Sidebar() {
         <>
             {/* Mobile Menu Button */}
             <div className="md:hidden p-4 border-b flex items-center justify-between">
-                <div className="font-bold text-lg">MICE Scout</div>
+                <div className="font-bold text-lg">zinsight</div>
                 <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                     <Menu />
                 </Button>
@@ -44,7 +44,7 @@ export function Sidebar() {
                 mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-6 border-b border-slate-700">
-                    <h1 className="text-2xl font-bold tracking-tight">MICE Scout</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">zinsight</h1>
                     <p className="text-xs text-slate-400 mt-1">Admin Dashboard</p>
                 </div>
 

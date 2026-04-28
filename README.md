@@ -1,7 +1,7 @@
-# MICE Scout (Prisma & MySQL Refactor)
+# zinsight (Insight Radar & Magazine)
 
-**MICE Scout**은 전시회 오거나이저를 위해 참가 유망 기업 및 기관을 발굴하고 관리하는 **데이터 인텔리전스 대시보드**입니다.
-Next.js (App Router)와 Prisma ORM을 기반으로 리팩토링되어, 안정적인 데이터 관리와 직관적인 관리자 경험을 제공합니다.
+**zinsight**는 산업별 인사이트를 발굴하고 기업 동향을 분석하는 **데이터 인텔리전스 플랫폼**입니다.
+Next.js (App Router)와 Prisma ORM을 기반으로 리팩토링되어, 안정적인 데이터 관리와 직관적인 인사이트 레이더(Insight Radar) 및 매거진 서비스를 제공합니다.
 
 ## 🚀 주요 기능
 
