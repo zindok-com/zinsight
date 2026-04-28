@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useTransition } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, Edit2, Save, X, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { updateCompany } from '@/actions/company-actions';
 import {
   Sheet,
   SheetContent,
@@ -47,6 +52,50 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIndustry, setSelectedIndustry] = useState('all');
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<any>({});
+  const [isPending, startTransition] = useTransition();
+
+  const handleEditClick = () => {
+    const kw = parseKeywords(selectedCompany.core_keywords) || {};
+    setEditForm({
+      company_name: selectedCompany.company_name || '',
+      company_url: selectedCompany.company_url || '',
+      business_summary: selectedCompany.business_summary || '',
+      recent_status: selectedCompany.recent_status || '',
+      kw_products: kw.products?.join(', ') || '',
+      kw_technology: kw.technology?.join(', ') || '',
+      kw_target_market: kw.target_market?.join(', ') || '',
+    });
+    setIsEditing(true);
+  };
+
+  const handleSave = () => {
+    startTransition(async () => {
+      const core_keywords = {
+        products: editForm.kw_products.split(',').map((s: string) => s.trim()).filter(Boolean),
+        technology: editForm.kw_technology.split(',').map((s: string) => s.trim()).filter(Boolean),
+        target_market: editForm.kw_target_market.split(',').map((s: string) => s.trim()).filter(Boolean),
+      };
+
+      const res = await updateCompany(selectedCompany.id, {
+        company_name: editForm.company_name,
+        company_url: editForm.company_url,
+        business_summary: editForm.business_summary,
+        recent_status: editForm.recent_status,
+        core_keywords,
+      });
+
+      if (res.success) {
+        toast.success('기업 정보가 수정되었습니다.');
+        setSelectedCompany({ ...selectedCompany, ...res.company });
+        setIsEditing(false);
+      } else {
+        toast.error('수정에 실패했습니다.');
+      }
+    });
+  };
 
   const parseKeywords = (keywordsStr: any) => {
     if (!keywordsStr) return null;
@@ -126,13 +175,12 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
               <TableHead>산업군</TableHead>
               <TableHead>홈페이지 URL</TableHead>
               <TableHead>연관 기사수</TableHead>
-              <TableHead>간략 요약</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredCompanies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                   검색 결과가 없습니다.
                 </TableCell>
               </TableRow>
@@ -161,9 +209,6 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   <TableCell>
                     <Badge>{company.company_articles?.length || 0}건</Badge>
                   </TableCell>
-                  <TableCell className="max-w-xs truncate" title={company.business_summary || ''}>
-                    {company.business_summary || '-'}
-                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -171,26 +216,64 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
         </Table>
       </div>
 
-      <Sheet open={!!selectedCompany} onOpenChange={(open) => !open && setSelectedCompany(null)}>
+      <Sheet open={!!selectedCompany} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedCompany(null);
+          setIsEditing(false);
+        }
+      }}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           {selectedCompany && (
             <>
               <SheetHeader className="mb-6">
-                <div className="flex items-center gap-3">
-                  <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
-                  <Badge variant="secondary">{selectedCompany.industry?.name}</Badge>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    {isEditing ? (
+                      <Input
+                        value={editForm.company_name}
+                        onChange={(e) => setEditForm({...editForm, company_name: e.target.value})}
+                        className="text-xl font-bold w-[300px]"
+                      />
+                    ) : (
+                      <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
+                    )}
+                    <Badge variant="secondary">{selectedCompany.industry?.name}</Badge>
+                  </div>
+                  {!isEditing ? (
+                    <Button variant="outline" size="sm" onClick={handleEditClick}>
+                      <Edit2 className="w-4 h-4 mr-2" /> 수정
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isPending}>
+                        <X className="w-4 h-4 mr-2" /> 취소
+                      </Button>
+                      <Button size="sm" onClick={handleSave} disabled={isPending}>
+                        {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} 저장
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {selectedCompany.company_url && (
-                  <SheetDescription>
-                    <a
-                      href={selectedCompany.company_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-500 hover:underline inline-flex items-center gap-1"
-                    >
-                      {selectedCompany.company_url}
-                    </a>
-                  </SheetDescription>
+                {isEditing ? (
+                  <Input
+                    placeholder="https://example.com"
+                    value={editForm.company_url}
+                    onChange={(e) => setEditForm({...editForm, company_url: e.target.value})}
+                    className="mt-2"
+                  />
+                ) : (
+                  selectedCompany.company_url && (
+                    <SheetDescription>
+                      <a
+                        href={selectedCompany.company_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-500 hover:underline inline-flex items-center gap-1"
+                      >
+                        {selectedCompany.company_url}
+                      </a>
+                    </SheetDescription>
+                  )
                 )}
               </SheetHeader>
 
@@ -200,9 +283,17 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
                     비즈니스 요약
                   </h3>
-                  <div className="text-sm leading-relaxed p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                    <ExpandableText text={selectedCompany.business_summary} />
-                  </div>
+                  {isEditing ? (
+                    <Textarea 
+                      value={editForm.business_summary}
+                      onChange={(e) => setEditForm({...editForm, business_summary: e.target.value})}
+                      rows={4}
+                    />
+                  ) : (
+                    <div className="text-sm leading-relaxed p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                      <ExpandableText text={selectedCompany.business_summary} />
+                    </div>
+                  )}
                 </section>
 
                 {/* 2. 핵심 키워드 */}
@@ -210,53 +301,80 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
                     핵심 키워드
                   </h3>
-                  <div className="space-y-4">
-                    {(() => {
-                      const kw = parseKeywords(selectedCompany.core_keywords);
-                      if (!kw) return <div className="text-sm text-muted-foreground">정보 없음</div>;
+                  {isEditing ? (
+                    <div className="space-y-4 p-4 border rounded-lg">
+                      <div>
+                        <Label>주요 제품 (쉼표로 구분)</Label>
+                        <Input 
+                          value={editForm.kw_products}
+                          onChange={(e) => setEditForm({...editForm, kw_products: e.target.value})}
+                          placeholder="예: LED 조명, 산업용 조명"
+                        />
+                      </div>
+                      <div>
+                        <Label>핵심 기술 (쉼표로 구분)</Label>
+                        <Input 
+                          value={editForm.kw_technology}
+                          onChange={(e) => setEditForm({...editForm, kw_technology: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>타겟 시장 (쉼표로 구분)</Label>
+                        <Input 
+                          value={editForm.kw_target_market}
+                          onChange={(e) => setEditForm({...editForm, kw_target_market: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {(() => {
+                        const kw = parseKeywords(selectedCompany.core_keywords);
+                        if (!kw) return <div className="text-sm text-muted-foreground">정보 없음</div>;
 
-                      return (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {kw.products && kw.products.length > 0 && (
-                            <div className="p-4 border rounded-lg">
-                              <h4 className="text-xs font-semibold mb-2">주요 제품</h4>
-                              <div className="flex flex-wrap gap-1.5">
-                                {kw.products.map((p: string, i: number) => (
-                                  <Badge key={i} variant="outline" className="text-xs font-normal bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
-                                    {p}
-                                  </Badge>
-                                ))}
+                        return (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {kw.products && kw.products.length > 0 && (
+                              <div className="p-4 border rounded-lg">
+                                <h4 className="text-xs font-semibold mb-2">주요 제품</h4>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {kw.products.map((p: string, i: number) => (
+                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                                      {p}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {kw.technology && kw.technology.length > 0 && (
-                            <div className="p-4 border rounded-lg">
-                              <h4 className="text-xs font-semibold mb-2">핵심 기술</h4>
-                              <div className="flex flex-wrap gap-1.5">
-                                {kw.technology.map((t: string, i: number) => (
-                                  <Badge key={i} variant="outline" className="text-xs font-normal bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800">
-                                    {t}
-                                  </Badge>
-                                ))}
+                            )}
+                            {kw.technology && kw.technology.length > 0 && (
+                              <div className="p-4 border rounded-lg">
+                                <h4 className="text-xs font-semibold mb-2">핵심 기술</h4>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {kw.technology.map((t: string, i: number) => (
+                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800">
+                                      {t}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {kw.target_market && kw.target_market.length > 0 && (
-                            <div className="p-4 border rounded-lg md:col-span-2">
-                              <h4 className="text-xs font-semibold mb-2">타겟 시장</h4>
-                              <div className="flex flex-wrap gap-1.5">
-                                {kw.target_market.map((m: string, i: number) => (
-                                  <Badge key={i} variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
-                                    {m}
-                                  </Badge>
-                                ))}
+                            )}
+                            {kw.target_market && kw.target_market.length > 0 && (
+                              <div className="p-4 border rounded-lg md:col-span-2">
+                                <h4 className="text-xs font-semibold mb-2">타겟 시장</h4>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {kw.target_market.map((m: string, i: number) => (
+                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
+                                      {m}
+                                    </Badge>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-                  </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </section>
 
                 {/* 3. 최근 동향 */}
@@ -264,9 +382,17 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
                     최근 동향
                   </h3>
-                  <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                    <ExpandableText text={selectedCompany.recent_status} />
-                  </div>
+                  {isEditing ? (
+                    <Textarea 
+                      value={editForm.recent_status}
+                      onChange={(e) => setEditForm({...editForm, recent_status: e.target.value})}
+                      rows={5}
+                    />
+                  ) : (
+                    <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                      <ExpandableText text={selectedCompany.recent_status} />
+                    </div>
+                  )}
                 </section>
 
                 {/* 4. 연관 기사 */}
