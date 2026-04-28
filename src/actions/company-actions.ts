@@ -7,6 +7,7 @@ export async function updateCompany(
   id: number,
   data: {
     company_name: string;
+    entity_type?: string;
     company_url?: string;
     business_summary?: string;
     recent_status?: string;

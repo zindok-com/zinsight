@@ -79,3 +79,30 @@ export async function getArticlesForExport(industryId: number, month: string) {
         orderBy: { pub_date: 'desc' },
     });
 }
+
+export async function getConsolidatedArticlesForExport(industryIds: number[], month: string, filterType: 'pub_date' | 'created_at') {
+    const [year, mon] = month.split('-').map(Number);
+    const fromDate = new Date(year, mon - 1, 1);
+    const toDate = new Date(year, mon, 0, 23, 59, 59);
+
+    const dateFilter = filterType === 'pub_date' 
+        ? { pub_date: { gte: fromDate, lte: toDate } }
+        : { created_at: { gte: fromDate, lte: toDate } };
+
+    return prisma.article.findMany({
+        where: {
+            ...dateFilter,
+            ingestions: { some: { industry_id: { in: industryIds } } }
+        },
+        include: {
+            ingestions: {
+                where: { industry_id: { in: industryIds } },
+                include: {
+                    keyword: { select: { id: true, keyword_text: true, keyword_type: true } },
+                    industry: { select: { id: true, name: true, slug: true } }
+                }
+            }
+        },
+        orderBy: filterType === 'pub_date' ? { pub_date: 'desc' } : { created_at: 'desc' },
+    });
+}

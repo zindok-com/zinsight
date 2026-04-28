@@ -3,7 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '@/lib/db';
-import { getArticlesForExport } from './article-actions';
+import { getArticlesForExport, getConsolidatedArticlesForExport } from './article-actions';
 
 const SNAPSHOTS_DIR = path.join(process.cwd(), 'data', 'snapshots');
 
@@ -70,6 +70,72 @@ export async function generateMonthlySnapshot(industryId: number, month: string)
     };
 }
 
+export async function generateConsolidatedSnapshot(industryIds: number[], month: string, filterType: 'pub_date' | 'created_at'): Promise<{
+    success: boolean;
+    filename?: string;
+    articleCount?: number;
+    message: string;
+}> {
+    if (industryIds.length === 0) {
+        return { success: false, message: '하나 이상의 산업을 선택해야 합니다.' };
+    }
+
+    const industries = await prisma.industry.findMany({ where: { id: { in: industryIds } } });
+    const articles = await getConsolidatedArticlesForExport(industryIds, month, filterType);
+    
+    const now = new Date();
+    const todayStr = formatDate(now);
+    const filename = `snapshot_consolidated_${month}_generated_${todayStr}_${now.getTime()}.json`;
+    const filepath = path.join(SNAPSHOTS_DIR, filename);
+
+    const snapshot = {
+        type: 'consolidated',
+        month,
+        generated_at: now.toISOString(),
+        filters: {
+            industry_ids: industryIds,
+            month,
+            source_field: filterType,
+        },
+        total_article_count: articles.length,
+        industries: industries.map(ind => {
+            const industryArticles = articles.filter(a => 
+                a.ingestions.some(ing => ing.industry_id === ind.id)
+            );
+            
+            return {
+                id: ind.id,
+                name: ind.name,
+                slug: ind.slug,
+                article_count: industryArticles.length,
+                articles: industryArticles.map(a => ({
+                    id: a.id,
+                    canonical_link: a.canonical_link,
+                    link: a.link,
+                    originallink: a.originallink,
+                    title: a.title,
+                    description: a.description,
+                    pub_date: a.pub_date,
+                    source: a.source,
+                    created_at: a.created_at,
+                    updated_at: a.updated_at,
+                    keyword_id: a.ingestions.find(ing => ing.industry_id === ind.id)?.keyword_id,
+                })),
+            };
+        }),
+    };
+
+    await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
+    await fs.writeFile(filepath, JSON.stringify(snapshot, null, 2), 'utf-8');
+
+    return {
+        success: true,
+        filename,
+        articleCount: articles.length,
+        message: `통합 Snapshot 생성 완료: ${filename} (기사 ${articles.length}건)`,
+    };
+}
+
 export interface SnapshotInfo {
     filename: string;
     industrySlug: string;
@@ -93,7 +159,13 @@ export async function listSnapshots(industrySlug?: string, month?: string): Prom
         if (!match) continue;
 
         const [, slug, mon, genDate] = match;
-        if (industrySlug && slug !== industrySlug) continue;
+        
+        // Handle consolidated vs specific industry filtering
+        if (industrySlug) {
+            if (industrySlug === 'consolidated' && slug !== 'consolidated') continue;
+            if (industrySlug !== 'consolidated' && slug !== industrySlug) continue;
+        }
+
         if (month && mon !== month) continue;
 
         const stat = await fs.stat(path.join(SNAPSHOTS_DIR, filename));

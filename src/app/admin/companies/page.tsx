@@ -24,23 +24,23 @@ export default async function CompaniesPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Companies</h1>
-          <p className="text-muted-foreground">Manage companies and import radar reports.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Organizations</h1>
+          <p className="text-muted-foreground">Manage companies, institutions, and centers, and import radar reports.</p>
         </div>
         <ImportButton />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Company List</CardTitle>
+          <CardTitle>Organization List</CardTitle>
           <CardDescription>
-            Showing {companies.length} companies from the database.
+            Showing {companies.length} organizations from the database.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {companies.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
-              No companies found. Import a JSON file to get started.
+              No organizations found. Import a JSON file to get started.
             </div>
           ) : (
             <CompanyListTable companies={companies} />

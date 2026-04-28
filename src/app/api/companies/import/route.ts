@@ -38,6 +38,7 @@ export async function POST(request: Request) {
             industry_id,
             company_name: lead.company_name,
             company_url: lead.company_url || null,
+            entity_type: lead.entity_type || '기업',
             business_summary: lead.business_summary || null,
             core_keywords: lead.core_keywords || null,
             recent_status: lead.recent_status || null,

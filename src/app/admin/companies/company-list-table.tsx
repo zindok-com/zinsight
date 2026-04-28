@@ -61,6 +61,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
     const kw = parseKeywords(selectedCompany.core_keywords) || {};
     setEditForm({
       company_name: selectedCompany.company_name || '',
+      entity_type: selectedCompany.entity_type || '기업',
       company_url: selectedCompany.company_url || '',
       business_summary: selectedCompany.business_summary || '',
       recent_status: selectedCompany.recent_status || '',
@@ -81,6 +82,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
 
       const res = await updateCompany(selectedCompany.id, {
         company_name: editForm.company_name,
+        entity_type: editForm.entity_type,
         company_url: editForm.company_url,
         business_summary: editForm.business_summary,
         recent_status: editForm.recent_status,
@@ -144,7 +146,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="기업명 또는 요약 키워드 검색..."
+            placeholder="기관/기업명 또는 요약 키워드 검색..."
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -171,7 +173,8 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>회사명</TableHead>
+              <TableHead>기관/기업명</TableHead>
+              <TableHead>구분</TableHead>
               <TableHead>산업군</TableHead>
               <TableHead>홈페이지 URL</TableHead>
               <TableHead>연관 기사수</TableHead>
@@ -180,7 +183,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
           <TableBody>
             {filteredCompanies.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                   검색 결과가 없습니다.
                 </TableCell>
               </TableRow>
@@ -193,6 +196,9 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                 >
                   <TableCell className="font-medium text-blue-600 dark:text-blue-400">
                     {company.company_name}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{company.entity_type || '기업'}</Badge>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{company.industry?.name || '알 수 없음'}</Badge>
@@ -226,33 +232,46 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
           {selectedCompany && (
             <>
               <SheetHeader className="mb-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between pr-8">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     {isEditing ? (
-                      <Input
-                        value={editForm.company_name}
-                        onChange={(e) => setEditForm({...editForm, company_name: e.target.value})}
-                        className="text-xl font-bold w-[300px]"
-                      />
+                      <div className="flex gap-2">
+                        <Input
+                          value={editForm.company_name}
+                          onChange={(e) => setEditForm({...editForm, company_name: e.target.value})}
+                          className="text-xl font-bold w-[250px]"
+                        />
+                        <Input
+                          value={editForm.entity_type}
+                          onChange={(e) => setEditForm({...editForm, entity_type: e.target.value})}
+                          className="w-[100px]"
+                          placeholder="구분 (기업, 기관 등)"
+                        />
+                      </div>
                     ) : (
-                      <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
+                      <div className="flex items-center gap-2">
+                        <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
+                        <Badge variant="secondary">{selectedCompany.entity_type || '기업'}</Badge>
+                      </div>
                     )}
-                    <Badge variant="secondary">{selectedCompany.industry?.name}</Badge>
+                    <Badge variant="outline">{selectedCompany.industry?.name}</Badge>
                   </div>
-                  {!isEditing ? (
-                    <Button variant="outline" size="sm" onClick={handleEditClick}>
-                      <Edit2 className="w-4 h-4 mr-2" /> 수정
-                    </Button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isPending}>
-                        <X className="w-4 h-4 mr-2" /> 취소
+                  <div className="mt-2 sm:mt-0">
+                    {!isEditing ? (
+                      <Button variant="outline" size="sm" onClick={handleEditClick}>
+                        <Edit2 className="w-4 h-4 mr-2" /> 수정
                       </Button>
-                      <Button size="sm" onClick={handleSave} disabled={isPending}>
-                        {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} 저장
-                      </Button>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isPending}>
+                          <X className="w-4 h-4 mr-2" /> 취소
+                        </Button>
+                        <Button size="sm" onClick={handleSave} disabled={isPending}>
+                          {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} 저장
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {isEditing ? (
                   <Input
