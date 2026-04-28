@@ -3,13 +3,15 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
-import { Sidebar } from "@/components/layout/sidebar";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-    title: "MICE Scout Admin",
-    description: "Internal dashboard for MICE Scout",
+    title: {
+        template: "%s | zinsight",
+        default: "zinsight — 당신의 시간을 지킵니다",
+    },
+    description: "산업별 기업 동향과 최신 뉴스를 한눈에. zinsight Insight Radar.",
 };
 
 export default function RootLayout({
@@ -20,12 +22,7 @@ export default function RootLayout({
     return (
         <html lang="ko" suppressHydrationWarning>
             <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
-                <div className="flex min-h-screen flex-col md:flex-row">
-                    <Sidebar />
-                    <main className="flex-1 p-6 overflow-auto">
-                        {children}
-                    </main>
-                </div>
+                {children}
                 <Toaster />
             </body>
         </html>
