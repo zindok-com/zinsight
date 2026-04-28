@@ -53,15 +53,15 @@ Next.js (App Router)와 Prisma ORM을 기반으로 리팩토링되어, 안정적
 
 ### 2. 설치
 ```bash
-npm install
+pnpm install
 ```
 
 ### 3. 데이터베이스 설정
 1. `.env` 파일에 데이터베이스 연결 정보를 설정합니다.
 2. Prisma schema를 적용합니다.
 ```bash
-npx prisma generate
-npx prisma db push
+pnpm prisma generate
+pnpm prisma db push
 ```
 
 ### 4. 환경 변수 설정 (.env)
@@ -79,7 +79,7 @@ NAVER_CLIENT_SECRET=your_client_secret
 
 ### 5. 개발 서버 실행
 ```bash
-npm run dev
+pnpm dev
 ```
 
 ---

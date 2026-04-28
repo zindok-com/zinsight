@@ -13,11 +13,11 @@ cd zinsight
 데이터베이스 및 UI 컴포넌트 등 필수 의존성을 설치합니다.
 ```bash
 # Prisma 설치 및 초기화
-npm install prisma @prisma/client
-npx prisma init
+pnpm add prisma @prisma/client
+pnpm prisma init
 
 # (필요시) 기존 사용하던 shadcn/ui 컴포넌트 라이브러리 초기화
-npx shadcn@latest init
+pnpm dlx shadcn@latest init
 ```
 
 ### 3단계: Shared Core 및 Admin 기능 마이그레이션
