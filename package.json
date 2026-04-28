@@ -1,7 +1,7 @@
 {
   "name": "zinsight",
   "version": "1.0.0",
-  "description": "",
+  "description": "AI-powered B2B Enterprise Profiling & Hybrid Media Platform",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",
@@ -12,15 +12,15 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/soha-com/Mice_Scout.git"
+    "url": "git+https://github.com/soha-com/zinsight.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/soha-com/Mice_Scout/issues"
+    "url": "https://github.com/soha-com/zinsight/issues"
   },
-  "homepage": "https://github.com/soha-com/Mice_Scout#readme",
+  "homepage": "https://github.com/soha-com/zinsight#readme",
   "devDependencies": {
     "@types/axios": "^0.9.36",
     "@types/file-saver": "^2.0.7",
