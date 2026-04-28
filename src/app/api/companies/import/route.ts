@@ -4,11 +4,33 @@ import { prisma } from '@/lib/db';
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const industry_id = data.industry_id;
-    const leads = data.leads;
+    const top_industry_id = data.industry_id;
+    
+    let allLeads: any[] = [];
 
-    if (!industry_id || !leads || !Array.isArray(leads)) {
-      return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
+    // 1. 그룹형 구조 처리 (여러 산업군 통합)
+    if (data.industries && Array.isArray(data.industries)) {
+      for (const ind of data.industries) {
+        if (ind.leads && Array.isArray(ind.leads)) {
+          for (const lead of ind.leads) {
+            // 개별 lead에 industry_id가 없으면 상위 그룹의 industry_id 사용
+            lead.industry_id = lead.industry_id || ind.industry_id;
+            allLeads.push(lead);
+          }
+        }
+      }
+    }
+
+    // 2. 평면형 구조 처리 (기존 단일 배열 형태)
+    if (data.leads && Array.isArray(data.leads)) {
+      for (const lead of data.leads) {
+        lead.industry_id = lead.industry_id || top_industry_id;
+        allLeads.push(lead);
+      }
+    }
+
+    if (allLeads.length === 0) {
+      return NextResponse.json({ error: 'Invalid data format: leads array or industries array is required' }, { status: 400 });
     }
 
     const results = {
@@ -17,7 +39,14 @@ export async function POST(request: Request) {
       addedArticles: 0,
     };
 
-    for (const lead of leads) {
+    for (const lead of allLeads) {
+      const industry_id = lead.industry_id;
+      
+      if (!industry_id) {
+        console.warn(`Skipping lead ${lead.company_name}: No industry_id provided.`);
+        continue;
+      }
+
       const company_name = lead.company_name;
       const articleIds = lead.related_articles?.map((a: any) => a.id) || [];
 

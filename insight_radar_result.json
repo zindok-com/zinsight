@@ -4,6 +4,7 @@
     "industry_id": 1,
     "leads": [
         {
+            "industry_id": 1,
             "company_name": "대한광통신",
             "entity_type": "기업",
             "company_url": "https://www.taihanfiber.com",
@@ -40,6 +41,7 @@
             ]
         },
         {
+            "industry_id": 1,
             "company_name": "아이엘",
             "entity_type": "기업",
             "company_url": "https://il.co.kr",
@@ -82,6 +84,7 @@
             ]
         },
         {
+            "industry_id": 1,
             "company_name": "케이시스",
             "entity_type": "기업",
             "company_url": "https://www.ksys.co.kr",
@@ -124,6 +127,7 @@
             ]
         },
         {
+            "industry_id": 1,
             "company_name": "금호전기",
             "entity_type": "기업",
             "company_url": "https://www.khe.co.kr",
@@ -189,6 +193,7 @@
             ]
         },
         {
+            "industry_id": 1,
             "company_name": "엘이디온",
             "entity_type": "기업",
             "company_url": "https://www.ledon.kr",
@@ -231,6 +236,7 @@
             ]
         },
         {
+            "industry_id": 1,
             "company_name": "아이엠로지텍",
             "entity_type": "기업",
             "company_url": "",
