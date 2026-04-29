@@ -1,10 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const newsreader = Newsreader({
+    subsets: ["latin"],
+    style: ["normal", "italic"],
+    weight: ["400", "600"],
+    variable: "--font-serif",
+});
 
 export const metadata: Metadata = {
     title: {
@@ -21,7 +27,13 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="ko" suppressHydrationWarning>
-            <body className={cn("min-h-screen bg-background font-sans antialiased", inter.variable)}>
+            <body
+                className={cn(
+                    "min-h-screen bg-zi-surface font-sans antialiased text-zi-on-surface",
+                    inter.variable,
+                    newsreader.variable
+                )}
+            >
                 {children}
                 <Toaster />
             </body>

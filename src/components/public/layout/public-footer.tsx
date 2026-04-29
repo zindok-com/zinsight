@@ -1,20 +1,51 @@
 import Link from 'next/link';
-import { Zap } from 'lucide-react';
 
 export function PublicFooter() {
+    const currentYear = new Date().getFullYear();
+
     return (
-        <footer className="border-t border-border/40 bg-muted/30">
-            <div className="container mx-auto max-w-screen-xl px-6 py-8">
-                <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="flex h-5 w-5 items-center justify-center rounded bg-primary text-primary-foreground">
-                            <Zap className="h-3 w-3" />
-                        </span>
-                        <span className="font-semibold text-foreground">zinsight</span>
-                        <span>— 당신의 시간을 지킵니다</span>
+        <footer className="border-t border-zi-divider bg-white mt-20">
+            <div className="mx-auto max-w-zi-container px-6 py-12">
+                <div className="flex flex-col items-start justify-between gap-12 md:flex-row">
+                    {/* 브랜드 블록 */}
+                    <div className="max-w-xs">
+                        <span className="mb-4 block text-lg font-bold text-zi-navy">Zinsight</span>
+                        <p className="mb-6 text-zi-body-md text-slate-500">
+                            우리는 복잡한 데이터를 명료한 인사이트로 전환하여 비즈니스의 미래를 제시합니다.
+                        </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                        © {new Date().getFullYear()} zindok. All rights reserved.
+
+                    {/* 링크 그리드 */}
+                    <div className="grid grid-cols-2 gap-12 md:grid-cols-3">
+                        <div className="flex flex-col gap-4">
+                            <span className="text-zi-label font-bold uppercase text-zi-navy tracking-wider">탐색</span>
+                            <Link href="/insight-radar" className="text-zi-body-md text-slate-500 hover:underline decoration-1">인사이트 레이더</Link>
+                            <Link href="/magazine" className="text-zi-body-md text-slate-500 hover:underline decoration-1">매거진 아카이브</Link>
+                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">연구 보고서</Link>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            <span className="text-zi-label font-bold uppercase text-zi-navy tracking-wider">정보</span>
+                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">Zinsight 소개</Link>
+                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">채용 정보</Link>
+                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">문의하기</Link>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            <span className="text-zi-label font-bold uppercase text-zi-navy tracking-wider">법령</span>
+                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">이용약관</Link>
+                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">개인정보처리방침</Link>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 하단 저작권 바 */}
+            <div className="border-t border-zi-divider">
+                <div className="mx-auto flex max-w-zi-container flex-col items-center justify-between gap-4 px-6 py-6 md:flex-row">
+                    <p className="text-xs font-medium tracking-wide text-slate-400">
+                        © {currentYear} Zinsight. All rights reserved.
+                    </p>
+                    <p className="text-xs font-medium tracking-wide text-slate-400">
+                        Designed for Intelligent Decision Making.
                     </p>
                 </div>
             </div>

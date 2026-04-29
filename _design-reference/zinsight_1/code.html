@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#004788",
+                        "surface": "#fcf9f8",
+                        "outline-variant": "#c4c6cf",
+                        "primary-fixed": "#d4e3ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-container": "#838789",
+                        "surface-container-highest": "#e5e2e1",
+                        "secondary": "#005eb2",
+                        "inverse-primary": "#afc8f0",
+                        "tertiary-fixed-dim": "#c4c7c9",
+                        "secondary-fixed": "#d5e3ff",
+                        "on-tertiary-fixed": "#181c1e",
+                        "on-surface": "#1c1b1b",
+                        "on-background": "#1c1b1b",
+                        "surface-bright": "#fcf9f8",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#030607",
+                        "on-primary": "#ffffff",
+                        "inverse-on-surface": "#f3f0ef",
+                        "background": "#fcf9f8",
+                        "on-primary-fixed": "#001c3a",
+                        "on-secondary-container": "#002e5d",
+                        "tertiary-fixed": "#e0e3e5",
+                        "on-surface-variant": "#43474e",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#e5e2e1",
+                        "on-secondary": "#ffffff",
+                        "surface-tint": "#476083",
+                        "secondary-fixed-dim": "#a7c8ff",
+                        "secondary-container": "#4597fe",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#2f486a",
+                        "outline": "#74777f",
+                        "surface-dim": "#dcd9d9",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-container": "#6f88ad",
+                        "on-error": "#ffffff",
+                        "surface-container": "#f0eded",
+                        "primary-fixed-dim": "#afc8f0",
+                        "surface-container-high": "#eae7e7",
+                        "primary-container": "#001f3f",
+                        "surface-container-low": "#f6f3f2",
+                        "on-tertiary-fixed-variant": "#434749",
+                        "inverse-surface": "#313030",
+                        "primary": "#000613",
+                        "tertiary-container": "#1b1f21",
+                        "on-secondary-fixed": "#001b3b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-max": "1280px",
+                        "stack-sm": "8px",
+                        "stack-lg": "32px",
+                        "unit": "4px",
+                        "gutter": "24px",
+                        "margin-edge": "40px",
+                        "stack-md": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Newsreader"],
+                        "caption": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-xl": ["Newsreader"],
+                        "label-sm": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "caption": ["12px", {"lineHeight": "1.4", "fontWeight": "400"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.7", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "display-xl": ["48px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "label-sm": ["13px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #fcf9f8;
+            color: #1c1b1b;
+        }
+        .article-border-t {
+            border-top: 1px solid #E1E4E8;
+        }
+        .article-border-b {
+            border-bottom: 1px solid #E1E4E8;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-white dark:bg-slate-950 border-b border-[#E1E4E8] dark:border-slate-800 sticky top-0 z-50">
+<div class="max-w-[1280px] mx-auto px-6 flex justify-between items-center h-20">
+<div class="flex items-center gap-10">
+<a class="text-2xl font-black tracking-tight text-[#001F3F] dark:text-slate-100" href="#">Zinsight</a>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-slate-500 dark:text-slate-400 hover:text-[#001F3F] dark:hover:text-blue-400 transition-colors duration-200 font-label-sm text-label-sm" href="#">인사이트 레이더</a>
+<a class="text-[#001F3F] dark:text-blue-400 border-b-2 border-[#001F3F] dark:border-blue-400 pb-1 font-label-sm text-label-sm" href="#">매거진</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-[#001F3F] dark:hover:text-blue-400 transition-colors duration-200 font-label-sm text-label-sm" href="#">소개</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-slate-100 rounded-full transition-colors active:scale-95 duration-100 ease-in-out">
+<span class="material-symbols-outlined text-on-surface" data-icon="search">search</span>
+</button>
+<button class="hidden md:block bg-primary-container text-on-primary font-label-sm text-label-sm px-4 py-2 uppercase tracking-widest">
+                    Subscribe
+                </button>
+</div>
+</div>
+</header>
+<main class="max-w-[1280px] mx-auto px-6 py-stack-lg">
+<!-- Magazine Header -->
+<div class="mb-stack-lg border-b border-[#E1E4E8] pb-stack-md flex justify-between items-end">
+<div>
+<span class="font-label-sm text-label-sm text-secondary mb-2 block">SEPTEMBER 2024 EDITION</span>
+<h1 class="font-display-xl text-display-xl text-primary leading-none">The Intelligence Hub</h1>
+</div>
+<div class="hidden md:block text-right">
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xs">현대 비즈니스와 마케팅의 본질을 꿰뚫는 데이터 기반의 깊이 있는 시선.</p>
+</div>
+</div>
+<!-- Featured Story (Hero) -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter mb-16">
+<div class="lg:col-span-8">
+<div class="relative aspect-[16/9] overflow-hidden mb-6">
+<img alt="Market analysis visualization" class="w-full h-full object-cover" data-alt="Modern high-tech office with large glass windows and holographic data projections on screens, soft atmospheric blue lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAEvxvsTCo6RRsu6TeDbuivMKnDgjM7_Uk7glKyYU8WyKCT-IDEwqwVcZQkiiNXs5a-EBcbiX3Li4Doe7WLw2ON2D5oOAsnI4kYnbfFQgmOnMcdr-KVMtk0PE5Zs195HZtA23sRsVF0cc0YArzoF85r7G0o5fXQHMEh7LWNYRD7vcYFcqHcE9em94iI9P1nC1GUaXPWWZbumDHxBG86q10eQhyzGa3At5wXTRtrra6AFPt_oY5hIgX-S-bS4AkUpzGOaZ1VoYUn_wv"/>
+</div>
+<div class="max-w-3xl">
+<span class="inline-block px-3 py-1 bg-primary text-on-primary font-label-sm text-label-sm mb-4">COVER STORY</span>
+<h2 class="font-headline-lg text-headline-lg mb-4 text-primary">
+                        데이터 주권 시대의 마케팅: 개인화의 한계와 새로운 윤리적 표준
+                    </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-6">
+                        쿠키리스 시대의 도래와 함께 마케팅 기술 지형이 급변하고 있습니다. 단순한 추적을 넘어 소비자와의 진정한 신뢰 관계를 구축하기 위한 글로벌 선두 기업들의 전략적 전환을 심층 분석합니다.
+                    </p>
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden">
+<img alt="Author" class="w-full h-full object-cover" data-alt="Professional portrait of a male industry analyst in a suit, minimal white background, soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeWa048N-WKlDmHtSv_G8rnjr5FCeA2EbNlkqMlz-0oyw0uEW359Uhy8-PFKcw2HxMpk1loSHSDKM-8WJqATTBxd6UlRM94FF7NfQ16-dIUmIsseKHrJbmIguP_ROauyydGIPtPWxfzkG5RbX87xGfsTe5gzb6HTpfO7vb6XyJjWN7h5nfP9wZXkpP72jZkrfEDH_qjy7eQBcyMuTSj3W9t8RLc2-ZMKl147RlzMj-zIP88rFsUW3mCWeG5OFdfI5T1xxgBsHfxva_"/>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-primary">김진욱 수석 연구원</p>
+<p class="font-caption text-caption text-on-surface-variant">Strategic Analysis Unit</p>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 flex flex-col gap-8">
+<div class="article-border-t pt-6">
+<span class="font-label-sm text-label-sm text-secondary mb-2 block">OPINION</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">생성형 AI가 마케터의 창의성을 '대체'하는 것이 아닌 '해방'하는 방법</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">반복적인 작업에서 벗어나 고차원적 전략 구상에 집중할 수 있는 AI 협업의 미래 모델을 제시합니다.</p>
+</div>
+<div class="article-border-t pt-6">
+<span class="font-label-sm text-label-sm text-secondary mb-2 block">TRENDS</span>
+<h3 class="font-headline-md text-headline-md text-primary mb-2">Z세대의 '콰이어트 럭셔리' 소비 트렌드 분석</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">로고리스 디자인과 지속 가능성을 중시하는 새로운 명품 소비 패턴의 배경을 탐구합니다.</p>
+</div>
+<div class="article-border-t pt-6 bg-surface-container-low p-6">
+<span class="font-label-sm text-label-sm text-primary mb-4 block">NEWSLETTER</span>
+<p class="font-body-md text-body-md mb-4">매주 월요일 아침, 가장 예리한 마켓 인사이트를 편지함으로 보내드립니다.</p>
+<div class="flex flex-col gap-2">
+<input class="bg-white border-none focus:ring-1 focus:ring-primary text-body-md p-3" placeholder="이메일 주소" type="email"/>
+<button class="bg-primary text-on-primary font-label-sm text-label-sm py-3 uppercase tracking-widest">Subscribe Now</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Divider -->
+<hr class="border-[#E1E4E8] mb-16"/>
+<!-- Secondary Grid: In-depth Interviews & Professional Opinions -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+<!-- Article 1 -->
+<article class="flex flex-col">
+<div class="aspect-square mb-6 overflow-hidden">
+<img alt="Interview subject" class="w-full h-full object-cover" data-alt="Modern professional woman in a grey blazer looking confidently into camera, minimalist interior design background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVHmqxIOKwnCgvnjiQLBfClf9HzwHOG_ofpNZgL_l1ugyr0ROzafzNqH61dk0lVLnxs6T9e-NGX7bxCJMVwXr9elTbVM82Pr7oBzkCK-F678HMR7pL6Sp_psCRAVkFdiqMA1HxLUV7VUHXIC4yRoPIqM_Y3Vc6EI5CcS_1U1AkzdWqegeTGmBJXnVe8LOS26KZewawyQCKCbrdmu13mz9s1htyJatETpgGKdc5ZTlo7YHTr8gzsL2aUiXjv2I5sG_ZStpTVZPMpD_w"/>
+</div>
+<div class="flex-1">
+<span class="font-label-sm text-label-sm text-secondary mb-3 block uppercase tracking-wider">Interview</span>
+<h4 class="font-headline-md text-headline-md text-primary mb-4">"데이터는 숫자가 아니라 고객의 언어입니다"</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">글로벌 커머스 플랫폼 'A사'의 CMO가 밝히는 데이터 기반 스토리텔링의 정수.</p>
+<div class="mt-auto pt-4 article-border-t flex justify-between items-center">
+<span class="font-caption text-caption text-on-surface-variant">READING TIME: 8 MIN</span>
+<span class="material-symbols-outlined text-primary" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Article 2 -->
+<article class="flex flex-col">
+<div class="aspect-square mb-6 overflow-hidden">
+<img alt="Financial analysis" class="w-full h-full object-cover" data-alt="Minimalist desktop with a high-end smartphone displaying complex financial charts and graphs, dark aesthetics" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUuZQ2g14X5x3TZHfK00aJkr-eT4PA63Gp9JdEC6XvxD2W9ilK93JIX9YYVzptm9LXPAPBOtLihn6f7tVkUbdDC1KFiHm6L-rgtJ5lM3APxY1YsuO2HaFUM2GcjXr87F8wzltQd73m3LZDbMjRfphCDWIxPuGQaFan-neQ4Wdw4084dPnAZRsDqyZbDtz6LF0q6bhp_ngaVdLeiIxNbnXwvIErMEuB_re-NqSQdhSiZ0AhiiQRPdF0m1E3R20QJZQJ701LocEFHpPv"/>
+</div>
+<div class="flex-1">
+<span class="font-label-sm text-label-sm text-secondary mb-3 block uppercase tracking-wider">Analysis</span>
+<h4 class="font-headline-md text-headline-md text-primary mb-4">핀테크의 다음 장: 임베디드 금융의 폭발적 성장</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">비금융 플랫폼에 금융 서비스가 녹아드는 '내재화' 트렌드가 가져올 결제 시장의 재편.</p>
+<div class="mt-auto pt-4 article-border-t flex justify-between items-center">
+<span class="font-caption text-caption text-on-surface-variant">READING TIME: 12 MIN</span>
+<span class="material-symbols-outlined text-primary" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</article>
+<!-- Article 3 -->
+<article class="flex flex-col">
+<div class="aspect-square mb-6 overflow-hidden">
+<img alt="Office environment" class="w-full h-full object-cover" data-alt="Quiet minimalist corporate lobby with marble floors and soft directional lighting, very professional atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2tUf0oe3Mow2oQ_4zgeMSzienoE6WDD45kc81rvXeET-VSmmmE736i5gTjQbtpHER7-1Z01-kkWwDxM_wYz9fmSxfibnQ9L2kZ6h7L9lNyTLSLulNKBPm5IeUVGjHVR6SoSNPzs_z36WmcNkB-uE3Cj9U9a769oNg1YUKHfmhbWWiHS4EJmaWk7p-9mXBUU85LlLddsq4-CcjWr_WSpl2aaOM-nwTv5n8sgAUcNm1hdN9M1QZAMw0A2DnMkD1i6HUKNYWuYtKyuVB"/>
+</div>
+<div class="flex-1">
+<span class="font-label-sm text-label-sm text-secondary mb-3 block uppercase tracking-wider">Culture</span>
+<h4 class="font-headline-md text-headline-md text-primary mb-4">하이브리드 워크가 기업의 브랜드 정체성에 미치는 영향</h4>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">물리적 공간이 사라진 시대, 어떻게 조직의 문화를 유지하고 강력한 브랜딩을 실현할 것인가.</p>
+<div class="mt-auto pt-4 article-border-t flex justify-between items-center">
+<span class="font-caption text-caption text-on-surface-variant">READING TIME: 6 MIN</span>
+<span class="material-symbols-outlined text-primary" data-icon="arrow_forward">arrow_forward</span>
+</div>
+</div>
+</article>
+</section>
+<!-- Insights Radar (Bento Grid Style) -->
+<section class="mt-20">
+<div class="mb-8 flex items-center justify-between">
+<h3 class="font-headline-lg text-headline-lg text-primary">Insight Radar</h3>
+<a class="font-label-sm text-label-sm text-secondary hover:underline" href="#">모든 인사이트 보기</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+<div class="md:col-span-2 md:row-span-2 bg-primary-container p-8 text-on-primary flex flex-col justify-between aspect-square md:aspect-auto">
+<div>
+<span class="font-label-sm text-label-sm text-on-primary-container mb-4 block">INDUSTRY UPDATE</span>
+<h4 class="font-headline-lg text-headline-lg text-white mb-4 leading-tight">이커머스 시장의 '초저가 공습', 장기적인 생존 전략은 무엇인가?</h4>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-label-sm text-label-sm">REPORT DOWNLOAD</span>
+<span class="material-symbols-outlined" data-icon="download">download</span>
+</div>
+</div>
+<div class="bg-white p-6 article-border-t border-l border-r border-b border-[#E1E4E8]">
+<span class="text-error font-label-sm text-label-sm mb-2 block">ALERT</span>
+<h5 class="font-headline-md text-headline-md text-primary mb-2 text-lg">구글의 서드파티 쿠키 중단 재연기 소식</h5>
+<p class="font-caption text-caption text-on-surface-variant">마케팅 자동화 도구들의 대응 현황 요약.</p>
+</div>
+<div class="bg-white p-6 border border-[#E1E4E8]">
+<span class="text-secondary font-label-sm text-label-sm mb-2 block">DATA</span>
+<h5 class="font-headline-md text-headline-md text-primary mb-2 text-lg">2024년 2분기 모바일 앱 사용량 통계</h5>
+<p class="font-caption text-caption text-on-surface-variant">숏폼 플랫폼의 압도적 우위 지속.</p>
+</div>
+<div class="md:col-span-2 bg-surface-container-high p-6 border border-[#E1E4E8] flex justify-between items-center">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant mb-1 block">UPCOMING WEBINAR</span>
+<h5 class="font-headline-md text-headline-md text-primary">AI 네이티브 마케팅 조직 구축법</h5>
+</div>
+<button class="border border-primary text-primary px-4 py-2 font-label-sm text-label-sm hover:bg-primary hover:text-on-primary transition-colors">신청하기</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-slate-950 border-t border-[#E1E4E8] dark:border-slate-800 mt-20">
+<div class="max-w-[1280px] mx-auto py-12 px-6 flex flex-col md:flex-row justify-between items-start gap-12">
+<div class="max-w-sm">
+<span class="text-lg font-bold text-[#001F3F] block mb-4">Zinsight</span>
+<p class="font-body-md text-body-md text-slate-500 mb-6">우리는 복잡한 데이터를 명료한 인사이트로 전환하여 비즈니스의 미래를 제시합니다.</p>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors" data-icon="share">share</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors" data-icon="mail">mail</span>
+</div>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-3 gap-12">
+<div class="flex flex-col gap-4">
+<span class="font-label-sm text-label-sm text-primary uppercase">탐색</span>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">인사이트 레이더</a>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">매거진 아카이브</a>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">연구 보고서</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-label-sm text-label-sm text-primary uppercase">정보</span>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">Zinsight 소개</a>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">채용 정보</a>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">문의하기</a>
+</div>
+<div class="flex flex-col gap-4">
+<span class="font-label-sm text-label-sm text-primary uppercase">법령</span>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">이용약관</a>
+<a class="text-slate-500 font-body-md text-body-md hover:underline decoration-1" href="#">개인정보처리방침</a>
+</div>
+</div>
+</div>
+<div class="max-w-[1280px] mx-auto py-6 px-6 border-t border-[#E1E4E8] dark:border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+<p class="text-xs font-medium tracking-wide text-slate-400">© 2024 Zinsight. All rights reserved.</p>
+<p class="text-xs font-medium tracking-wide text-slate-400">Designed for Intelligent Decision Making.</p>
+</div>
+</footer>
+</body></html>

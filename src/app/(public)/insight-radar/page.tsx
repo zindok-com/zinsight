@@ -1,25 +1,18 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
-import { Building2, Newspaper, Layers, Tag, Radar } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
+import { ArrowRight, Building2, Newspaper, Layers, Tag } from 'lucide-react';
 import {
     getRadarIndustries,
     getRadarTotalStats,
     getRadarCompanies,
     getRadarLatestArticles,
-    getRadarTrendingKeywords,
 } from '@/actions/insight-radar-actions';
-import { RadarFilterBar } from '@/components/public/insight-radar/radar-filter-bar';
-import { RadarCompanyGrid } from '@/components/public/insight-radar/radar-company-grid';
-import { RadarArticleFeed } from '@/components/public/insight-radar/radar-article-feed';
-import { RadarTrendingKeywords } from '@/components/public/insight-radar/radar-trending-keywords';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
     title: 'Insight Radar',
-    description: '산업별 기업 동향과 최신 뉴스를 한눈에 확인하세요. zinsight Insight Radar.',
+    description: 'Zinsight의 AI 분석 엔진이 식별한 전략 산업군별 핵심 기업과 인사이트를 실시간으로 모니터링합니다.',
 };
 
 interface InsightRadarPageProps {
@@ -40,153 +33,247 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
     const searchQuery = params.q;
     const currentPage = params.page ? Number(params.page) : 1;
 
-    const filter = {
-        industryId: selectedIndustryId,
-        entityType: selectedEntityType,
-        searchQuery,
-    };
+    const filter = { industryId: selectedIndustryId, entityType: selectedEntityType, searchQuery };
 
-    // 병렬 데이터 조회 (Server Action)
-    const [industries, totalStats, { companies, total, totalPages }, latestArticles, trendingKeywords] =
+    // 데이터 병렬 조회
+    const [industries, totalStats, { companies, total, totalPages }, latestArticles] =
         await Promise.all([
             getRadarIndustries(),
             getRadarTotalStats(),
             getRadarCompanies(filter, currentPage, 12),
-            getRadarLatestArticles(filter, 10),
-            getRadarTrendingKeywords(selectedIndustryId, 20),
+            getRadarLatestArticles(filter, 3),
         ]);
 
     return (
-        <div className="min-h-screen bg-background">
-            {/* ──────────────────────────────────────────── */}
-            {/* Hero 섹션 */}
-            {/* ──────────────────────────────────────────── */}
-            <section className="border-b border-border/40 bg-muted/20 px-6 py-10">
-                <div className="container mx-auto max-w-screen-xl">
-                    <div className="flex items-center gap-3 mb-3">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                            <Radar className="h-5 w-5" />
-                        </span>
-                        <h1 className="text-2xl font-bold tracking-tight">Insight Radar</h1>
-                    </div>
-                    <p className="text-muted-foreground text-sm max-w-xl">
-                        산업별 기업·기관 동향과 최신 뉴스를 한눈에. 필터를 활용해 원하는 분야를
-                        빠르게 탐색하세요.
+        <div className="min-h-screen bg-zi-surface text-zi-on-surface">
+            {/* ─────────────────────────────── */}
+            {/* 페이지 헤더 */}
+            {/* ─────────────────────────────── */}
+            <div className="mx-auto max-w-zi-container px-6 py-12">
+                <div className="mb-zi-stack-lg">
+                    <h1 className="mb-2 text-zi-headline-lg font-semibold text-zi-navy">
+                        인사이트 레이더
+                    </h1>
+                    <p className="max-w-2xl text-zi-body-md text-zi-on-surface-variant">
+                        Zinsight의 AI 분석 엔진이 식별한 전략 산업군 및 비즈니스 카테고리별 핵심 기업과
+                        기술 인사이트를 실시간으로 모니터링합니다.
                     </p>
+                </div>
 
-                    {/* 전체 통계 수치 */}
-                    <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                        <StatCard
-                            icon={<Building2 className="h-4 w-4" />}
-                            label="분석 조직"
-                            value={totalStats.totalCompanies}
-                            unit="개"
+                {/* 통계 바 */}
+                <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <StatBadge icon={<Building2 className="h-4 w-4" />} label="분석 조직" value={totalStats.totalCompanies} unit="개" />
+                    <StatBadge icon={<Newspaper className="h-4 w-4" />} label="수집 기사" value={totalStats.totalArticles} unit="건" />
+                    <StatBadge icon={<Layers className="h-4 w-4" />} label="산업 분야" value={totalStats.totalIndustries} unit="개" />
+                    <StatBadge icon={<Tag className="h-4 w-4" />} label="추적 키워드" value={totalStats.totalKeywords} unit="개" />
+                </div>
+
+                {/* ── 필터: 산업 탭 ── */}
+                <div className="mb-zi-stack-lg flex flex-col gap-6 items-start">
+                    {/* 탭 바 */}
+                    <div className="w-full flex border-b border-zi-outline-variant overflow-x-auto no-scrollbar">
+                        <IndustryTab
+                            label="전체보기"
+                            href={buildHref(params, undefined)}
+                            isActive={!selectedIndustryId}
                         />
-                        <StatCard
-                            icon={<Newspaper className="h-4 w-4" />}
-                            label="수집 기사"
-                            value={totalStats.totalArticles}
-                            unit="건"
-                        />
-                        <StatCard
-                            icon={<Layers className="h-4 w-4" />}
-                            label="산업 분야"
-                            value={totalStats.totalIndustries}
-                            unit="개"
-                        />
-                        <StatCard
-                            icon={<Tag className="h-4 w-4" />}
-                            label="추적 키워드"
-                            value={totalStats.totalKeywords}
-                            unit="개"
-                        />
+                        {industries.map((ind) => (
+                            <IndustryTab
+                                key={ind.id}
+                                label={ind.name}
+                                href={buildHref(params, ind.id)}
+                                isActive={selectedIndustryId === ind.id}
+                            />
+                        ))}
+                    </div>
+
+                    {/* 엔티티 유형 필터 칩 */}
+                    <div className="flex flex-wrap gap-2">
+                        <span className="py-2 mr-2 text-zi-label font-semibold text-zi-navy">유형 필터:</span>
+                        {ENTITY_TYPES.map((et) => {
+                            const isActive = selectedEntityType === et.value || (!selectedEntityType && et.value === '');
+                            return (
+                                <Link
+                                    key={et.value}
+                                    href={buildEntityTypeHref(params, et.value || undefined)}
+                                    className={`px-3 py-1 text-zi-label font-semibold transition-colors ${
+                                        isActive
+                                            ? 'bg-zi-navy text-white'
+                                            : 'bg-zi-surface-high text-zi-navy hover:bg-zi-outline-variant'
+                                    }`}
+                                >
+                                    {et.label}
+                                </Link>
+                            );
+                        })}
                     </div>
                 </div>
-            </section>
 
-            {/* ──────────────────────────────────────────── */}
-            {/* 메인 콘텐츠 영역 */}
-            {/* ──────────────────────────────────────────── */}
-            <section className="container mx-auto max-w-screen-xl px-6 py-8">
-                <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
-                    {/* ───────────────────────── */}
-                    {/* 좌측 사이드바: 필터 + 트렌딩 키워드 */}
-                    {/* ───────────────────────── */}
-                    <aside className="space-y-6">
-                        <Card>
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-sm font-semibold">필터</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <Suspense>
-                                    <RadarFilterBar
-                                        industries={industries}
-                                        selectedIndustryId={selectedIndustryId}
-                                        selectedEntityType={selectedEntityType}
-                                        searchQuery={searchQuery}
-                                    />
-                                </Suspense>
-                            </CardContent>
-                        </Card>
+                {/* ── 조직 목록 테이블 ── */}
+                <div className="border border-zi-divider bg-white">
+                    <div className="overflow-x-auto">
+                        <table className="w-full border-collapse text-left">
+                            <thead>
+                                <tr className="border-b border-zi-divider bg-zi-surface-low">
+                                    <th className="px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                        기업명 / 기관
+                                    </th>
+                                    <th className="px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                        유형
+                                    </th>
+                                    <th className="px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                        AI 인사이트 분석
+                                    </th>
+                                    <th className="hidden px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant md:table-cell">
+                                        최신 기사
+                                    </th>
+                                    <th className="px-6 py-4 text-right text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                        상세보기
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-zi-divider">
+                                {companies.length > 0 ? (
+                                    companies.map((company) => (
+                                        <tr
+                                            key={company.id}
+                                            className="group transition-colors hover:bg-zi-surface-low"
+                                        >
+                                            {/* 기업명 */}
+                                            <td className="px-6 py-6 align-top">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center bg-zi-surface-high">
+                                                        <Building2 className="h-4 w-4 text-zi-navy" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-zi-body-md font-semibold text-zi-navy">
+                                                            {company.company_name}
+                                                        </div>
+                                                        {company.industry && (
+                                                            <div className="text-zi-caption text-zi-on-surface-variant">
+                                                                {company.industry.name}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </td>
 
-                        <Card>
-                            <CardContent className="pt-5">
-                                <RadarTrendingKeywords keywords={trendingKeywords} />
-                            </CardContent>
-                        </Card>
-                    </aside>
+                                            {/* 유형 */}
+                                            <td className="px-6 py-6 align-top">
+                                                <span className="bg-zi-surface-container px-2 py-0.5 text-zi-label text-zi-navy">
+                                                    {company.entity_type ?? '기업'}
+                                                </span>
+                                            </td>
 
-                    {/* ───────────────────────── */}
-                    {/* 우측 메인: 기업 카드 + 최신 기사 */}
-                    {/* ───────────────────────── */}
-                    <div className="space-y-8">
-                        {/* 기업/조직 카드 그리드 */}
-                        <section aria-labelledby="companies-heading">
-                            <h2
-                                id="companies-heading"
-                                className="mb-4 text-base font-semibold"
+                                            {/* AI 인사이트 */}
+                                            <td className="max-w-md px-6 py-6 align-top">
+                                                <p className="text-zi-body-md leading-snug text-zi-on-surface">
+                                                    {company.business_summary
+                                                        ? company.business_summary.slice(0, 100) +
+                                                          (company.business_summary.length > 100 ? '…' : '')
+                                                        : '분석 정보 준비 중입니다.'}
+                                                </p>
+                                            </td>
+
+                                            {/* 최신 기사 수 */}
+                                            <td className="hidden px-6 py-6 align-top md:table-cell">
+                                                <span className="text-zi-label font-semibold text-zi-blue">
+                                                    {company.articleCount}건
+                                                </span>
+                                                {company.latestArticleDate && (
+                                                    <div className="mt-1 text-zi-caption text-zi-on-surface-variant">
+                                                        {new Date(company.latestArticleDate).toLocaleDateString('ko-KR')}
+                                                    </div>
+                                                )}
+                                            </td>
+
+                                            {/* 상세보기 링크 */}
+                                            <td className="px-6 py-6 align-top text-right">
+                                                <Link
+                                                    href={`/insight-radar/${company.id}`}
+                                                    className="inline-flex items-center text-zi-outline transition-colors hover:text-zi-navy"
+                                                    aria-label={`${company.company_name} 상세보기`}
+                                                >
+                                                    <ArrowRight className="h-5 w-5" />
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={5} className="px-6 py-16 text-center text-zi-body-md text-zi-on-surface-variant">
+                                            해당 조건에 맞는 조직이 없습니다.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* 페이지네이션 */}
+                    <div className="flex items-center justify-center gap-4 border-t border-zi-divider p-6">
+                        {currentPage > 1 && (
+                            <Link
+                                href={buildPageHref(params, currentPage - 1)}
+                                className="border border-zi-divider px-4 py-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-navy"
                             >
-                                조직 목록
-                            </h2>
-                            <RadarCompanyGrid companies={companies} total={total} />
-
-                            {/* 페이지네이션 (단순 링크 방식, SSR 친화적) */}
-                            {totalPages > 1 && (
-                                <div className="mt-6 flex items-center justify-center gap-2">
-                                    {currentPage > 1 && (
-                                        <PaginationLink
-                                            href={buildHref(params, currentPage - 1)}
-                                            label="이전"
-                                        />
-                                    )}
-                                    <span className="text-sm text-muted-foreground">
-                                        {currentPage} / {totalPages}
-                                    </span>
-                                    {currentPage < totalPages && (
-                                        <PaginationLink
-                                            href={buildHref(params, currentPage + 1)}
-                                            label="다음"
-                                        />
-                                    )}
-                                </div>
-                            )}
-                        </section>
-
-                        <Separator />
-
-                        {/* 최신 기사 피드 */}
-                        <section aria-labelledby="articles-heading">
-                            <h2
-                                id="articles-heading"
-                                className="mb-4 text-base font-semibold"
+                                이전
+                            </Link>
+                        )}
+                        <span className="text-zi-body-md text-zi-on-surface-variant">
+                            {currentPage} / {Math.max(totalPages, 1)}
+                        </span>
+                        {currentPage < totalPages && (
+                            <Link
+                                href={buildPageHref(params, currentPage + 1)}
+                                className="flex items-center gap-2 border border-zi-divider px-4 py-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-navy"
                             >
-                                최신 기사
-                            </h2>
-                            <RadarArticleFeed articles={latestArticles} />
-                        </section>
+                                데이터 더보기
+                                <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        )}
                     </div>
                 </div>
-            </section>
+
+                {/* ── 피처드 인사이트 배너 (벤토 스타일) ── */}
+                {latestArticles.length > 0 && (
+                    <div className="mt-zi-stack-lg grid grid-cols-1 gap-zi-gutter md:grid-cols-3">
+                        {/* 메인 피처 카드 */}
+                        <div className="relative col-span-2 h-64 overflow-hidden border border-zi-divider">
+                            <div className="absolute inset-0 bg-zi-surface-high" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-zi-navy/90 to-transparent" />
+                            <div className="absolute bottom-0 left-0 p-8">
+                                <span className="mb-4 inline-block bg-zi-blue px-3 py-1 text-zi-caption font-bold text-white">
+                                    스페셜 리포트
+                                </span>
+                                <h2 className="max-w-lg text-zi-headline-md font-bold leading-tight text-white">
+                                    {latestArticles[0]?.title ?? '2024 최신 시장 인사이트 리포트'}
+                                </h2>
+                            </div>
+                        </div>
+
+                        {/* 사이드 트렌드 카드 */}
+                        <div className="flex flex-col justify-between bg-zi-navy p-8">
+                            <div>
+                                <h3 className="mb-2 text-zi-label font-semibold uppercase tracking-widest text-zi-blue-bright">
+                                    Global Trend
+                                </h3>
+                                <p className="text-zi-headline-md font-bold leading-tight text-white">
+                                    {latestArticles[1]?.title ?? '클린테크 분야 해외 투자 유입 전년 대비 124% 증가'}
+                                </p>
+                            </div>
+                            <Link
+                                href={latestArticles[1]?.url ?? '/insight-radar'}
+                                className="mt-4 border-b border-white pb-1 text-zi-label font-semibold text-white transition-opacity hover:opacity-80"
+                                target={latestArticles[1]?.url ? '_blank' : undefined}
+                                rel="noopener noreferrer"
+                            >
+                                리포트 전문 읽기
+                            </Link>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -195,53 +282,74 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
 // 내부 헬퍼 컴포넌트
 // ─────────────────────────────────────────────
 
-function StatCard({
-    icon,
-    label,
-    value,
-    unit,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value: number;
-    unit: string;
-}) {
+function StatBadge({ icon, label, value, unit }: { icon: React.ReactNode; label: string; value: number; unit: string }) {
     return (
-        <div className="rounded-lg border border-border/60 bg-card px-4 py-3">
-            <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1">
+        <div className="border border-zi-divider bg-white px-4 py-3">
+            <div className="mb-1 flex items-center gap-2 text-zi-on-surface-variant">
                 {icon}
-                {label}
+                <span className="text-zi-caption">{label}</span>
             </div>
-            <p className="text-2xl font-bold tabular-nums">
+            <p className="tabular-nums text-2xl font-bold text-zi-navy">
                 {value.toLocaleString()}
-                <span className="ml-0.5 text-sm font-normal text-muted-foreground">{unit}</span>
+                <span className="ml-0.5 text-sm font-normal text-zi-on-surface-variant">{unit}</span>
             </p>
         </div>
     );
 }
 
-function PaginationLink({ href, label }: { href: string; label: string }) {
+function IndustryTab({ label, href, isActive }: { label: string; href: string; isActive: boolean }) {
     return (
-        <a
+        <Link
             href={href}
-            className="rounded-md border border-border px-3 py-1.5 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+            className={`whitespace-nowrap px-6 py-3 text-zi-label font-semibold border-b-2 transition-colors ${
+                isActive
+                    ? 'border-zi-navy text-zi-navy'
+                    : 'border-transparent text-zi-on-surface-variant hover:text-zi-navy'
+            }`}
         >
             {label}
-        </a>
+        </Link>
     );
 }
 
-/**
- * 현재 쿼리 파라미터를 유지한 채 page 값만 변경한 URL을 생성합니다.
- */
-function buildHref(
-    params: Record<string, string | undefined>,
-    page: number
-): string {
-    const searchParams = new URLSearchParams();
-    if (params.industryId) searchParams.set('industryId', params.industryId);
-    if (params.entityType) searchParams.set('entityType', params.entityType);
-    if (params.q) searchParams.set('q', params.q);
-    searchParams.set('page', String(page));
-    return `/insight-radar?${searchParams.toString()}`;
+// ─────────────────────────────────────────────
+// 상수 및 헬퍼 함수
+// ─────────────────────────────────────────────
+
+const ENTITY_TYPES = [
+    { label: '전체', value: '' },
+    { label: '스타트업', value: '스타트업' },
+    { label: '대기업', value: '대기업' },
+    { label: '연구소', value: '연구소' },
+    { label: 'MICE', value: 'MICE' },
+    { label: '기타', value: '기타' },
+];
+
+type PageParams = Record<string, string | undefined>;
+
+function buildHref(params: PageParams, industryId: number | undefined): string {
+    const sp = new URLSearchParams();
+    if (industryId) sp.set('industryId', String(industryId));
+    if (params.entityType) sp.set('entityType', params.entityType);
+    if (params.q) sp.set('q', params.q);
+    const str = sp.toString();
+    return `/insight-radar${str ? '?' + str : ''}`;
+}
+
+function buildEntityTypeHref(params: PageParams, entityType: string | undefined): string {
+    const sp = new URLSearchParams();
+    if (params.industryId) sp.set('industryId', params.industryId);
+    if (entityType) sp.set('entityType', entityType);
+    if (params.q) sp.set('q', params.q);
+    const str = sp.toString();
+    return `/insight-radar${str ? '?' + str : ''}`;
+}
+
+function buildPageHref(params: PageParams, page: number): string {
+    const sp = new URLSearchParams();
+    if (params.industryId) sp.set('industryId', params.industryId);
+    if (params.entityType) sp.set('entityType', params.entityType);
+    if (params.q) sp.set('q', params.q);
+    sp.set('page', String(page));
+    return `/insight-radar?${sp.toString()}`;
 }
