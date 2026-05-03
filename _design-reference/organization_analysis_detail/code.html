@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zinsight - Organization Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&amp;family=Pretendard:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-background": "#1a1c1f",
+                        "surface-container-highest": "#e3e2e7",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed": "#001b3d",
+                        "inverse-surface": "#2f3034",
+                        "background": "#faf9fe",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#faf9fe",
+                        "primary-container": "#002b5b",
+                        "inverse-on-surface": "#f1f0f5",
+                        "tertiary-container": "#4f1c02",
+                        "on-primary-fixed-variant": "#264778",
+                        "on-tertiary-fixed-variant": "#713619",
+                        "surface-container-low": "#f4f3f8",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#2f0c00",
+                        "secondary-fixed": "#8df5e4",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed-dim": "#ffb596",
+                        "inverse-primary": "#a9c7ff",
+                        "primary-fixed": "#d6e3ff",
+                        "outline-variant": "#c4c6d0",
+                        "on-primary-container": "#7594ca",
+                        "tertiary-fixed": "#ffdbcd",
+                        "surface-dim": "#dad9de",
+                        "surface-tint": "#405f91",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e8e7ec",
+                        "surface-container": "#eeedf2",
+                        "on-secondary-fixed": "#00201c",
+                        "primary": "#001736",
+                        "outline": "#747780",
+                        "on-tertiary-fixed": "#360f00",
+                        "on-tertiary-container": "#cd805d",
+                        "surface-bright": "#faf9fe",
+                        "on-secondary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#70d8c8",
+                        "secondary": "#006b5f",
+                        "secondary-container": "#8df5e4",
+                        "on-secondary-container": "#007165",
+                        "on-surface": "#1a1c1f",
+                        "on-secondary-fixed-variant": "#005048",
+                        "on-surface-variant": "#43474f",
+                        "primary-fixed-dim": "#a9c7ff",
+                        "surface-variant": "#e3e2e7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "xl": "80px",
+                        "grid_columns": "12",
+                        "xs": "4px",
+                        "grid_margin": "auto",
+                        "sm": "12px",
+                        "md": "24px",
+                        "grid_gutter": "24px",
+                        "lg": "48px"
+                    },
+                    "fontFamily": {
+                        "h2": ["Noto Serif KR"],
+                        "ui-label": ["Pretendard"],
+                        "h3": ["Noto Serif KR"],
+                        "body-lg": ["Pretendard"],
+                        "h1": ["Noto Serif KR"],
+                        "body-md": ["Pretendard"],
+                        "data-num": ["Pretendard"]
+                    },
+                    "fontSize": {
+                        "h2": ["32px", { "lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "ui-label": ["14px", { "lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500" }],
+                        "h3": ["24px", { "lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "1.8", "letterSpacing": "-0.01em", "fontWeight": "400" }],
+                        "h1": ["40px", { "lineHeight": "1.4", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "data-num": ["14px", { "lineHeight": "1", "letterSpacing": "0", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .shadow-ambient {
+            box-shadow: 0 8px 24px rgba(0, 43, 91, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<nav class="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 w-full z-50 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center h-16 px-6 max-w-[1280px] mx-auto">
+<div class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">
+                Zinsight
+            </div>
+<div class="hidden md:flex gap-6 font-serif text-sm tracking-tight">
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 duration-150 p-2 rounded" href="#">Home</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 duration-150 p-2 rounded" href="#">Industry Radar</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 duration-150 p-2 rounded" href="#">Magazine</a>
+<a class="text-blue-900 dark:text-blue-400 border-b-2 border-blue-900 dark:border-blue-400 pb-1 font-semibold hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 duration-150 p-2 rounded" href="#">Analysis</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-95 duration-150 p-2 rounded" href="#">Intelligence</a>
+</div>
+<div class="flex items-center gap-4 text-blue-900 dark:text-blue-400">
+<button class="active:scale-95 duration-150 p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-900">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="active:scale-95 duration-150 p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-900">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Main Content Layout -->
+<div class="flex-grow flex max-w-[1280px] mx-auto w-full">
+<!-- SideNavBar -->
+<aside class="hidden lg:flex flex-col h-[calc(100vh-4rem)] sticky top-16 p-4 gap-2 bg-slate-50 dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 w-64 flex-shrink-0 font-serif text-xs uppercase tracking-widest font-medium text-blue-900 dark:text-blue-400">
+<div class="mb-6 px-2">
+<div class="text-lg font-black text-blue-900 dark:text-blue-100 mb-1">Zinsight Intelligence</div>
+<div class="text-slate-500 dark:text-slate-400">Premium Terminal Access</div>
+</div>
+<button class="mb-6 w-full py-2 bg-blue-900 text-white rounded-lg shadow-sm hover:bg-blue-800 transition-colors">New Analysis</button>
+<nav class="flex-grow flex flex-col gap-1">
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-900 dark:hover:text-blue-300 transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-900 dark:hover:text-blue-300 transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">query_stats</span>
+                    Market Insights
+                </a>
+<a class="flex items-center gap-3 bg-white dark:bg-slate-800 text-blue-900 dark:text-blue-400 rounded-lg px-4 py-2 shadow-sm border border-slate-200 dark:border-slate-700 cursor-pointer transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">description</span>
+                    Strategic Reports
+                </a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-900 dark:hover:text-blue-300 transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+                    Editorial
+                </a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-900 dark:hover:text-blue-300 transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">bookmark</span>
+                    Bookmarks
+                </a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 border-t border-slate-200 dark:border-slate-800 pt-4">
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-900 dark:hover:text-blue-300 transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+<a class="flex items-center gap-3 text-slate-500 dark:text-slate-400 px-4 py-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-900 dark:hover:text-blue-300 transition-all cursor-pointer rounded-lg" href="#">
+<span class="material-symbols-outlined">help</span>
+                    Support
+                </a>
+</div>
+</aside>
+<!-- Canvas -->
+<main class="flex-grow p-6 lg:p-12 w-full">
+<!-- Header -->
+<header class="mb-12 border-b border-surface-variant pb-8">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-6">
+<div class="w-20 h-20 bg-surface-container-low border border-surface-variant rounded-lg flex items-center justify-center">
+<img alt="TechNova Logo" class="w-16 h-16 object-contain rounded" data-alt="minimalist corporate logo of a geometric stylized N in deep blue on white background, premium quality, sharp focus" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi4ZNgVTxGhyntctfXokBXWcDSTMITeysxzDqk9YdE7D20dvo97f_-4IdPCPT6ZFS-JxZuoU0GEhAuw-qrFBDoGjdEbUqGfaFHIDC8oBN2dpzx85aoeVD9UxuUEHvFYzby2i4K8D37XAAgFs0lw6a_JRk01keFtNjLDNV80FhjQJRgbcRte1sjh_rEVZjXVP9Vi8yboJfMQZE_pOmTmLdJlxHvIks6b-69n7eLCI7f9kpnq_1CzcvfBez5PvMH60PPE9xpmhakeV0"/>
+</div>
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h1 class="font-h1 text-h1 text-on-surface">TechNova Industries</h1>
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-ui-label text-ui-label text-xs">Active Coverage</span>
+</div>
+<div class="flex gap-4 font-ui-label text-ui-label text-on-surface-variant">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">calendar_month</span> Oct 2023 Analysis</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">domain</span> Advanced Robotics</span>
+</div>
+</div>
+</div>
+<button class="bg-primary text-on-primary font-ui-label text-ui-label px-6 py-3 rounded hover:bg-on-primary-fixed-variant transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm">open_in_new</span>
+                        Homepage
+                    </button>
+</div>
+</header>
+<!-- Dashboard Modules -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<!-- 주력 제품 -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 hover:shadow-ambient transition-shadow duration-300">
+<h3 class="font-h3 text-h3 text-on-surface mb-4 border-b border-surface-variant pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-surface-tint">inventory_2</span>
+                        주력 제품
+                    </h3>
+<ul class="space-y-3 font-body-md text-body-md text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>NovaArm-X (산업용 초정밀 로봇팔)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>SenseBot Series (물류 자동화 AGV)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>AeroDrone Pro (시설 점검용 드론)</span>
+</li>
+</ul>
+</div>
+<!-- 보유 기술 -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 hover:shadow-ambient transition-shadow duration-300">
+<h3 class="font-h3 text-h3 text-on-surface mb-4 border-b border-surface-variant pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-surface-tint">science</span>
+                        보유 기술
+                    </h3>
+<ul class="space-y-3 font-body-md text-body-md text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>AI 기반 자율 주행 및 장애물 회피 알고리즘</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>초저지연 5G 원격 제어 기술 특허 (US-2023)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>에너지 효율화 배터리 관리 시스템 (BMS)</span>
+</li>
+</ul>
+</div>
+<!-- 타깃 시장 -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-6 hover:shadow-ambient transition-shadow duration-300">
+<h3 class="font-h3 text-h3 text-on-surface mb-4 border-b border-surface-variant pb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-surface-tint">public</span>
+                        타깃 시장
+                    </h3>
+<ul class="space-y-3 font-body-md text-body-md text-on-surface-variant">
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>스마트 팩토리 및 자동차 제조 라인 (Tier 1)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>대규모 E-commerce 물류 센터 (APAC 지역 중심)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="w-2 h-2 mt-2 rounded-full bg-secondary flex-shrink-0"></span>
+<span>에너지 인프라 및 위험 지역 모니터링 공공 사업</span>
+</li>
+</ul>
+</div>
+</section>
+<!-- Bottom Content: Timeline & Zinsight's Pick -->
+<div class="flex flex-col lg:flex-row gap-8">
+<!-- Activity Timeline (70%) -->
+<section class="lg:w-[70%]">
+<h2 class="font-h2 text-h2 text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-surface-tint text-3xl">history</span>
+                        최근 동향 및 관련 기사
+                    </h2>
+<div class="relative pl-6 border-l-2 border-surface-variant space-y-8">
+<!-- Item 1 -->
+<div class="relative">
+<span class="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-surface-container-lowest border-2 border-surface-tint"></span>
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 hover:shadow-ambient transition-shadow duration-200">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-ui-label text-ui-label text-on-surface text-lg font-bold">TechNova, 유럽 물류 자동화 기업 'AutoBot' 인수 타진</h4>
+<span class="font-data-num text-data-num text-on-surface-variant text-sm bg-surface p-1 rounded">2023.10.15</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">유럽 시장 진출 가속화를 위해 독일 소재 물류 로봇 스타트업 인수를 검토 중. 5G 원격 제어 기술과 AutoBot의 하드웨어 기술 시너지 기대.</p>
+<a class="font-ui-label text-ui-label text-secondary font-medium hover:underline flex items-center gap-1" href="#">
+                                    기사 원문 보기 <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="relative">
+<span class="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-surface-container-lowest border-2 border-surface-variant"></span>
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 hover:shadow-ambient transition-shadow duration-200">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-ui-label text-ui-label text-on-surface text-lg font-bold">자율주행 기술 고도화를 위한 R&amp;D 센터 확장 이전</h4>
+<span class="font-data-num text-data-num text-on-surface-variant text-sm bg-surface p-1 rounded">2023.09.02</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">판교 테크노밸리에 위치한 R&amp;D 센터를 기존 대비 2배 규모로 확장 이전. AI 알고리즘 개발 및 시뮬레이션 환경 구축에 집중 투자 예정.</p>
+<a class="font-ui-label text-ui-label text-secondary font-medium hover:underline flex items-center gap-1" href="#">
+                                    기사 원문 보기 <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="relative">
+<span class="absolute -left-[35px] top-1 w-4 h-4 rounded-full bg-surface-container-lowest border-2 border-surface-variant"></span>
+<div class="bg-surface-container-lowest border border-surface-variant rounded-lg p-5 hover:shadow-ambient transition-shadow duration-200">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-ui-label text-ui-label text-on-surface text-lg font-bold">2분기 매출 전년 동기 대비 25% 증가, 영업이익 흑자 전환</h4>
+<span class="font-data-num text-data-num text-on-surface-variant text-sm bg-surface p-1 rounded">2023.08.10</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">NovaArm-X의 북미 지역 판매 호조와 원가 절감 노력에 힘입어 영업이익 흑자 전환 성공. 하반기 신규 수주 잔고도 긍정적 전망.</p>
+<a class="font-ui-label text-ui-label text-secondary font-medium hover:underline flex items-center gap-1" href="#">
+                                    기사 원문 보기 <span class="material-symbols-outlined text-xs">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+<!-- Zinsight's Pick (30%) -->
+<aside class="lg:w-[30%]">
+<div class="sticky top-24">
+<div class="bg-surface-container border border-surface-variant rounded-lg overflow-hidden shadow-ambient relative">
+<!-- Accent Border -->
+<div class="absolute left-0 top-0 bottom-0 w-2 bg-secondary"></div>
+<div class="p-6 pl-8">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary">lightbulb</span>
+<h3 class="font-h3 text-h3 text-primary-container font-bold uppercase tracking-wide">Zinsight's Pick</h3>
+</div>
+<h4 class="font-h2 text-h2 text-on-surface text-xl mb-4 leading-tight">유럽 진출 및 5G 기술 연계를 통한 밸류에이션 리레이팅 기대</h4>
+<div class="space-y-4 font-body-md text-body-md text-on-surface-variant">
+<p>TechNova의 최근 AutoBot 인수 타진은 단순한 지리적 확장을 넘어, <strong>하드웨어와 소프트웨어의 수직 계열화</strong>를 완성하려는 전략적 움직임으로 분석됩니다.</p>
+<p>특히 회사가 보유한 '초저지연 5G 원격 제어 특허'가 유럽 물류 인프라에 적용될 경우, 기존 경쟁사 대비 도입 비용을 15% 이상 절감할 수 있는 <strong>강력한 세일즈 포인트</strong>가 될 것입니다.</p>
+<div class="bg-surface-container-low p-4 rounded mt-4 border border-surface-variant/50">
+<p class="font-ui-label text-ui-label text-sm text-on-surface font-semibold mb-2">Key Action Item</p>
+<p class="text-sm">AutoBot 인수 확정 여부 및 3분기 유럽 수주 파이프라인 모니터링 요망.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</div>
+<!-- Footer -->
+<footer class="bg-white dark:bg-slate-950 text-blue-900 dark:text-blue-400 font-serif text-xs text-slate-500 w-full py-8 mt-12 border-t border-slate-200 dark:border-slate-800">
+<div class="max-w-[1280px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="font-bold text-blue-900">
+                © 2024 Zinsight Intelligence Hub. All rights reserved.
+            </div>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200" href="#">Privacy Policy</a>
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200" href="#">Terms of Service</a>
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200" href="#">Data Methodology</a>
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200" href="#">Contact Research</a>
+</div>
+</div>
+</footer>
+</body></html>

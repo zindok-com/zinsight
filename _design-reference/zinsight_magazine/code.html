@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zinsight - Magazine</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&amp;family=Pretendard:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-background": "#1a1c1f",
+                            "surface-container-highest": "#e3e2e7",
+                            "on-error": "#ffffff",
+                            "on-primary-fixed": "#001b3d",
+                            "inverse-surface": "#2f3034",
+                            "background": "#faf9fe",
+                            "on-tertiary": "#ffffff",
+                            "surface": "#faf9fe",
+                            "primary-container": "#002b5b",
+                            "inverse-on-surface": "#f1f0f5",
+                            "tertiary-container": "#4f1c02",
+                            "on-primary-fixed-variant": "#264778",
+                            "on-tertiary-fixed-variant": "#713619",
+                            "surface-container-low": "#f4f3f8",
+                            "error-container": "#ffdad6",
+                            "on-error-container": "#93000a",
+                            "tertiary": "#2f0c00",
+                            "secondary-fixed": "#8df5e4",
+                            "error": "#ba1a1a",
+                            "tertiary-fixed-dim": "#ffb596",
+                            "inverse-primary": "#a9c7ff",
+                            "primary-fixed": "#d6e3ff",
+                            "outline-variant": "#c4c6d0",
+                            "on-primary-container": "#7594ca",
+                            "tertiary-fixed": "#ffdbcd",
+                            "surface-dim": "#dad9de",
+                            "surface-tint": "#405f91",
+                            "surface-container-lowest": "#ffffff",
+                            "surface-container-high": "#e8e7ec",
+                            "surface-container": "#eeedf2",
+                            "on-secondary-fixed": "#00201c",
+                            "primary": "#001736",
+                            "outline": "#747780",
+                            "on-tertiary-fixed": "#360f00",
+                            "on-tertiary-container": "#cd805d",
+                            "surface-bright": "#faf9fe",
+                            "on-secondary": "#ffffff",
+                            "on-primary": "#ffffff",
+                            "secondary-fixed-dim": "#70d8c8",
+                            "secondary": "#006b5f",
+                            "secondary-container": "#8df5e4",
+                            "on-secondary-container": "#007165",
+                            "on-surface": "#1a1c1f",
+                            "on-secondary-fixed-variant": "#005048",
+                            "on-surface-variant": "#43474f",
+                            "primary-fixed-dim": "#a9c7ff",
+                            "surface-variant": "#e3e2e7"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "base": "8px",
+                            "xl": "80px",
+                            "grid_columns": "12",
+                            "xs": "4px",
+                            "grid_margin": "auto",
+                            "sm": "12px",
+                            "md": "24px",
+                            "grid_gutter": "24px",
+                            "lg": "48px"
+                    },
+                    "fontFamily": {
+                            "h2": ["Noto Serif KR"],
+                            "ui-label": ["Pretendard"],
+                            "h3": ["Noto Serif KR"],
+                            "body-lg": ["Pretendard"],
+                            "h1": ["Noto Serif KR"],
+                            "body-md": ["Pretendard"],
+                            "data-num": ["Pretendard"]
+                    },
+                    "fontSize": {
+                            "h2": ["32px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                            "ui-label": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                            "h3": ["24px", {"lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "600"}],
+                            "body-lg": ["18px", {"lineHeight": "1.8", "letterSpacing": "-0.01em", "fontWeight": "400"}],
+                            "h1": ["40px", {"lineHeight": "1.4", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                            "body-md": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                            "data-num": ["14px", {"lineHeight": "1", "letterSpacing": "0", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased">
+<!-- TopAppBar -->
+<header class="sticky top-0 w-full z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md shadow-sm dark:shadow-none font-serif text-sm tracking-tight text-blue-900 dark:text-blue-400">
+<div class="flex justify-between items-center h-16 px-6 max-w-[1280px] mx-auto">
+<div class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100">Zinsight</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 duration-150 px-2 py-1 rounded" href="#">Home</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 duration-150 px-2 py-1 rounded" href="#">Industry Radar</a>
+<a class="text-blue-900 dark:text-blue-400 border-b-2 border-blue-900 dark:border-blue-400 pb-1 font-semibold hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 duration-150 px-2 py-1" href="#">Magazine</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 duration-150 px-2 py-1 rounded" href="#">Analysis</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 duration-150 px-2 py-1 rounded" href="#">Intelligence</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 duration-150 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-slate-50 dark:hover:bg-slate-900 transition-all active:scale-95 duration-150 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="max-w-[1280px] mx-auto px-6 py-12">
+<!-- Hero Article -->
+<article class="grid grid-cols-1 lg:grid-cols-12 gap-xl mb-24 items-center">
+<div class="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
+<div class="mb-4">
+<span class="font-ui-label text-ui-label text-primary-container bg-primary-fixed px-3 py-1 rounded-full uppercase tracking-widest text-[10px]">Deep Dive</span>
+</div>
+<h1 class="font-h1 text-h1 text-on-surface mb-6">글로벌 공급망 재편과 아시아 테크 허브의 부상</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8">지정학적 긴장이 고조되는 가운데, 반도체 및 첨단 기술 산업의 무게 중심이 어떻게 이동하고 있는지 심층 분석합니다.</p>
+<div class="flex items-center gap-4 text-outline font-ui-label text-ui-label border-t border-surface-variant pt-4">
+<span class="text-on-surface font-semibold">By 이석준 수석연구원</span>
+<span>•</span>
+<span>12 Min Read</span>
+</div>
+</div>
+<div class="lg:col-span-6 h-[500px] w-full order-1 lg:order-2">
+<img class="w-full h-full object-cover rounded-DEFAULT shadow-sm" data-alt="Microchip macro photography showing intricate golden circuits and futuristic blue lighting, high tech aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAcMdHG0jYj0kjB8QAEWezQ3KxhgwO7GwHDKW_pdHScGvZebwkLy5zKi1PywyAQmLRiYdojhz8PAkXHpfXoHbNyNAfEE_jjCjTwpeXIcVjXILZSJRCTlKDk3zpP6PfZUuMk4r9CypfmRLHBcL8c6LgQNZzSX_JF4Ji65jIN5L-IO4-q76KOigRYUq8ZF9KGE1H4dCuJgOs4ClvPWy0nL-3OnUBsannEr0HRds2TgPzVYN1lV2TrVAQtSS_mm2CJkW1vWgFXWp1-U8I"/>
+</div>
+</article>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-slate-950 text-blue-900 dark:text-blue-400 font-serif text-xs text-slate-500 w-full py-8 mt-12 border-t border-slate-200 dark:border-slate-800">
+<div class="max-w-[1280px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="font-bold text-blue-900">
+                © 2024 Zinsight Intelligence Hub. All rights reserved.
+            </div>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-emerald-600 transition-colors duration-200" href="#">Privacy Policy</a>
+<a class="text-slate-400 hover:text-emerald-600 transition-colors duration-200" href="#">Terms of Service</a>
+<a class="text-slate-400 hover:text-emerald-600 transition-colors duration-200" href="#">Data Methodology</a>
+<a class="text-slate-400 hover:text-emerald-600 transition-colors duration-200" href="#">Contact Research</a>
+</div>
+</div>
+</footer>
+</body></html>

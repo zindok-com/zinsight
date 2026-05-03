@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zinsight - Intelligence Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&amp;family=Pretendard:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-background": "#1a1c1f",
+                    "surface-container-highest": "#e3e2e7",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed": "#001b3d",
+                    "inverse-surface": "#2f3034",
+                    "background": "#faf9fe",
+                    "on-tertiary": "#ffffff",
+                    "surface": "#faf9fe",
+                    "primary-container": "#002b5b",
+                    "inverse-on-surface": "#f1f0f5",
+                    "tertiary-container": "#4f1c02",
+                    "on-primary-fixed-variant": "#264778",
+                    "on-tertiary-fixed-variant": "#713619",
+                    "surface-container-low": "#f4f3f8",
+                    "error-container": "#ffdad6",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#2f0c00",
+                    "secondary-fixed": "#8df5e4",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed-dim": "#ffb596",
+                    "inverse-primary": "#a9c7ff",
+                    "primary-fixed": "#d6e3ff",
+                    "outline-variant": "#c4c6d0",
+                    "on-primary-container": "#7594ca",
+                    "tertiary-fixed": "#ffdbcd",
+                    "surface-dim": "#dad9de",
+                    "surface-tint": "#405f91",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e8e7ec",
+                    "surface-container": "#eeedf2",
+                    "on-secondary-fixed": "#00201c",
+                    "primary": "#001736",
+                    "outline": "#747780",
+                    "on-tertiary-fixed": "#360f00",
+                    "on-tertiary-container": "#cd805d",
+                    "surface-bright": "#faf9fe",
+                    "on-secondary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed-dim": "#70d8c8",
+                    "secondary": "#006b5f",
+                    "secondary-container": "#8df5e4",
+                    "on-secondary-container": "#007165",
+                    "on-surface": "#1a1c1f",
+                    "on-secondary-fixed-variant": "#005048",
+                    "on-surface-variant": "#43474f",
+                    "primary-fixed-dim": "#a9c7ff",
+                    "surface-variant": "#e3e2e7"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "xl": "80px",
+                    "grid_columns": "12",
+                    "xs": "4px",
+                    "grid_margin": "auto",
+                    "sm": "12px",
+                    "md": "24px",
+                    "grid_gutter": "24px",
+                    "lg": "48px"
+            },
+            "fontFamily": {
+                    "h2": [
+                            "Noto Serif KR"
+                    ],
+                    "ui-label": [
+                            "Pretendard"
+                    ],
+                    "h3": [
+                            "Noto Serif KR"
+                    ],
+                    "body-lg": [
+                            "Pretendard"
+                    ],
+                    "h1": [
+                            "Noto Serif KR"
+                    ],
+                    "body-md": [
+                            "Pretendard"
+                    ],
+                    "data-num": [
+                            "Pretendard"
+                    ]
+            },
+            "fontSize": {
+                    "h2": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "ui-label": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "0.02em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "h3": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "letterSpacing": "0",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.8",
+                                    "letterSpacing": "-0.01em",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "h1": [
+                            "40px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "letterSpacing": "0",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "data-num": [
+                            "14px",
+                            {
+                                    "lineHeight": "1",
+                                    "letterSpacing": "0",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md sticky top-0 w-full z-50 border-b border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-none">
+<div class="flex justify-between items-center h-16 px-6 max-w-[1280px] mx-auto">
+<div class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-100 font-h2">Zinsight</div>
+<nav class="hidden md:flex gap-8">
+<a class="text-blue-900 dark:text-blue-400 border-b-2 border-blue-900 dark:border-blue-400 pb-1 font-semibold font-ui-label text-ui-label active:scale-95 duration-150" href="#">Home</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all font-ui-label text-ui-label active:scale-95 duration-150" href="#">Industry Radar</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all font-ui-label text-ui-label active:scale-95 duration-150" href="#">Magazine</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all font-ui-label text-ui-label active:scale-95 duration-150" href="#">Analysis</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-900 dark:hover:text-blue-300 transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 transition-all font-ui-label text-ui-label active:scale-95 duration-150" href="#">Intelligence</a>
+</nav>
+<div class="flex items-center gap-4 text-blue-900 dark:text-blue-400">
+<button class="hover:bg-slate-50 dark:hover:bg-slate-900 transition-all p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-slate-50 dark:hover:bg-slate-900 transition-all p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<main class="flex-grow max-w-[1280px] mx-auto w-full px-4 md:px-6 py-8 md:py-12 flex flex-col gap-16 md:gap-24">
+<!-- Hero Section -->
+<section class="flex flex-col items-center text-center max-w-4xl mx-auto gap-8 mt-8">
+<h1 class="font-h1 text-h1 text-primary">미래를 여는 데이터, <br/> 통찰력 있는 분석.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Zinsight는 심층적인 산업 분석과 실시간 데이터 트렌드를 결합하여 프리미엄 비즈니스 인사이트를 제공합니다.</p>
+<div class="w-full max-w-2xl relative mt-4">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full pl-12 pr-4 py-4 rounded-lg border border-outline-variant focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all bg-surface text-on-surface font-body-md text-body-md shadow-sm" placeholder="산업, 기업 또는 최신 트렌드를 검색하세요" type="text"/>
+</div>
+<div class="flex gap-4 mt-2">
+<button class="bg-primary-container text-on-primary rounded-lg px-6 py-3 font-ui-label text-ui-label shadow-sm hover:bg-primary transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="radar">radar</span>
+                    Insight Radar 탐색
+                </button>
+<button class="border border-outline-variant text-on-surface rounded-lg px-6 py-3 font-ui-label text-ui-label hover:bg-surface-container-low transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="auto_stories">auto_stories</span>
+                    Zinsight 매거진 읽기
+                </button>
+</div>
+</section>
+<!-- Radar Highlights -->
+<section class="flex flex-col gap-6">
+<div class="flex items-end justify-between border-b border-surface-variant pb-2">
+<h2 class="font-h2 text-h2 text-primary">Radar Highlights</h2>
+<a class="text-secondary font-ui-label text-ui-label flex items-center gap-1 hover:text-on-secondary-container transition-colors" href="#">
+                    실시간 지표 보기 <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Highlight Card 1 -->
+<div class="bg-surface rounded-lg border border-surface-variant p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-secondary"></div>
+<div class="flex justify-between items-start mb-4">
+<span class="bg-secondary-container/20 text-on-secondary-container px-2 py-1 rounded text-xs font-ui-label flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="trending_up">trending_up</span> Tech
+                        </span>
+<span class="text-outline text-xs font-ui-label">Just now</span>
+</div>
+<h3 class="font-h3 text-h3 mb-2 text-on-surface group-hover:text-primary transition-colors">AI 반도체 시장, 2025년까지 50% 성장 전망</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">글로벌 테크 기업들의 자체 칩 개발 가속화가 시장 판도를 변화시키고 있습니다.</p>
+</div>
+<!-- Highlight Card 2 -->
+<div class="bg-surface rounded-lg border border-surface-variant p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary-container"></div>
+<div class="flex justify-between items-start mb-4">
+<span class="bg-primary-fixed text-on-primary-fixed px-2 py-1 rounded text-xs font-ui-label flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="show_chart">show_chart</span> Finance
+                        </span>
+<span class="text-outline text-xs font-ui-label">2h ago</span>
+</div>
+<h3 class="font-h3 text-h3 mb-2 text-on-surface group-hover:text-primary transition-colors">아시아 금융 시장, 금리 인하 기대감에 반등</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">주요 중앙은행의 통화 정책 변화 조짐이 투자 심리를 자극하고 있습니다.</p>
+</div>
+<!-- Highlight Card 3 -->
+<div class="bg-surface rounded-lg border border-surface-variant p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary-container"></div>
+<div class="flex justify-between items-start mb-4">
+<span class="bg-tertiary-fixed text-on-tertiary-fixed px-2 py-1 rounded text-xs font-ui-label flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="energy_savings_leaf">energy_savings_leaf</span> Energy
+                        </span>
+<span class="text-outline text-xs font-ui-label">5h ago</span>
+</div>
+<h3 class="font-h3 text-h3 mb-2 text-on-surface group-hover:text-primary transition-colors">유럽 재생에너지 투자, 사상 최고치 경신</h3>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">에너지 안보 확립과 탄소 중립 목표 달성을 위한 투자가 집중되고 있습니다.</p>
+</div>
+</div>
+</section>
+<!-- Magazine Features (NYT Style) -->
+<section class="flex flex-col gap-6">
+<div class="flex items-end justify-between border-b-2 border-primary pb-2">
+<h2 class="font-h2 text-h2 text-primary uppercase tracking-widest text-sm">Magazine Features</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<!-- Main Featured Article -->
+<article class="md:col-span-8 flex flex-col gap-4 border-b md:border-b-0 md:border-r border-surface-variant pb-8 md:pb-0 md:pr-8">
+<div class="aspect-video bg-surface-container-high rounded-sm overflow-hidden mb-2">
+<img alt="Corporate skyscrapers reflecting sunlight in a dense urban financial district" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" data-alt="Corporate skyscrapers reflecting sunlight in a dense urban financial district" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-tgW1zgFFJnK3gzVqWYzphH9eM0AghooXhE7EUlMcArdAQeAXhXN4cmIWu5BUJG5542U89zL0aaWOHTRQiqE6i_aIsZw4jJnt9DBF_Uxg2XQlhCE4ivz0K9mGAspYz8wEzs6TXdN_lcuWAhALqRvNPTForQQhnaDq4lbXc1cDfBAx7wjibDfGCa9mFKTqIUkTAmKSzJe1efOUUdPf_XbUBLLMRJ4C7Hiz1z36Ws2o2jkIf7Xem6Tin7UnrfTN9tyaCeftQ1E4Rs0"/>
+</div>
+<div class="flex flex-col gap-2">
+<h3 class="font-h1 text-[36px] leading-[1.2] text-primary font-bold">글로벌 공급망 재편의 승자와 패자</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant">지정학적 긴장이 고조되는 가운데, 다국적 기업들은 효율성에서 회복탄력성으로 공급망 전략의 초점을 이동하고 있습니다. 이러한 변화가 지역 경제와 산업 지형에 미치는 심층적인 영향을 분석합니다.</p>
+<div class="flex items-center gap-2 mt-4 text-outline font-ui-label text-sm">
+<span class="text-primary font-semibold">김민수 수석 연구원</span>
+<span>•</span>
+<span>10분 리딩</span>
+</div>
+</div>
+</article>
+<!-- Side Articles -->
+<div class="md:col-span-4 flex flex-col gap-8">
+<article class="flex flex-col gap-3 border-b border-surface-variant pb-8">
+<h4 class="font-h3 text-h3 text-primary leading-snug">웹 3.0이 금융 산업에 미치는 실질적 위협</h4>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">탈중앙화 금융(DeFi) 모델의 성장이 전통적인 은행 수익 모델을 어떻게 잠식하고 있는지에 대한 데이터 기반 분석.</p>
+</article>
+<article class="flex flex-col gap-3">
+<h4 class="font-h3 text-h3 text-primary leading-snug">Z세대 소비 트렌드: 가치 소비의 역설</h4>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">환경과 윤리를 중시하면서도 초저가 패스트 패션을 소비하는 모순적인 패턴 이면의 경제적 배경 탐구.</p>
+</article>
+</div>
+</div>
+</section>
+<!-- Zinsight Report (Stat Cards) -->
+<section class="bg-surface-container-low rounded-xl p-8 md:p-12 border border-surface-variant">
+<div class="text-center mb-10">
+<h2 class="font-h2 text-h2 text-primary mb-2">Zinsight Report</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">방대한 데이터베이스가 제공하는 깊이 있는 통찰</p>
+</div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+<div class="flex flex-col items-center text-center gap-2">
+<div class="text-secondary mb-2">
+<span class="material-symbols-outlined text-[32px]" data-icon="article">article</span>
+</div>
+<div class="font-h1 text-[48px] text-primary tracking-tighter">15K+</div>
+<div class="font-ui-label text-ui-label text-on-surface-variant uppercase tracking-widest text-xs">Articles</div>
+</div>
+<div class="flex flex-col items-center text-center gap-2">
+<div class="text-secondary mb-2">
+<span class="material-symbols-outlined text-[32px]" data-icon="domain">domain</span>
+</div>
+<div class="font-h1 text-[48px] text-primary tracking-tighter">4,200</div>
+<div class="font-ui-label text-ui-label text-on-surface-variant uppercase tracking-widest text-xs">Organizations</div>
+</div>
+<div class="flex flex-col items-center text-center gap-2">
+<div class="text-secondary mb-2">
+<span class="material-symbols-outlined text-[32px]" data-icon="category">category</span>
+</div>
+<div class="font-h1 text-[48px] text-primary tracking-tighter">85</div>
+<div class="font-ui-label text-ui-label text-on-surface-variant uppercase tracking-widest text-xs">Industries</div>
+</div>
+<div class="flex flex-col items-center text-center gap-2">
+<div class="text-secondary mb-2">
+<span class="material-symbols-outlined text-[32px]" data-icon="group">group</span>
+</div>
+<div class="font-h1 text-[48px] text-primary tracking-tighter">1.2M</div>
+<div class="font-ui-label text-ui-label text-on-surface-variant uppercase tracking-widest text-xs">User Submissions</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-white dark:bg-slate-950 w-full py-8 mt-12 border-t border-slate-200 dark:border-slate-800 flat">
+<div class="max-w-[1280px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+<div class="font-bold text-blue-900 font-h3 text-lg">Zinsight</div>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200 font-serif text-xs" href="#">Privacy Policy</a>
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200 font-serif text-xs" href="#">Terms of Service</a>
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200 font-serif text-xs" href="#">Data Methodology</a>
+<a class="text-slate-400 hover:text-blue-900 hover:text-emerald-600 transition-colors duration-200 font-serif text-xs" href="#">Contact Research</a>
+</div>
+<div class="text-slate-500 font-serif text-xs">
+                © 2024 Zinsight Intelligence Hub. All rights reserved.
+            </div>
+</div>
+</footer>
+</body></html>
