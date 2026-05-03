@@ -31,7 +31,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 {/* ── 뒤로가기 ── */}
                 <Link
                     href="/insight-radar"
-                    className="mb-8 inline-flex items-center gap-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-navy"
+                    className="mb-8 inline-flex items-center gap-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-primary"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     인사이트 레이더로 돌아가기
@@ -45,7 +45,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                         <div>
                             {/* 배지 + 티커 */}
                             <div className="mb-4 flex items-center gap-3">
-                                <span className="bg-zi-navy px-2 py-0.5 text-zi-label font-semibold uppercase tracking-wider text-white">
+                                <span className="bg-zi-primary px-2 py-0.5 text-zi-label font-semibold uppercase tracking-wider text-white">
                                     {company.entity_type ?? 'Enterprise'}
                                 </span>
                                 {company.industry && (
@@ -56,7 +56,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             </div>
 
                             {/* 기업명 */}
-                            <h1 className="font-serif mb-3 text-zi-headline-lg font-semibold text-zi-navy">
+                            <h1 className="font-serif mb-3 text-zi-headline-lg font-semibold text-zi-primary">
                                 {company.company_name}
                             </h1>
 
@@ -77,12 +77,12 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
 
                         {/* 액션 버튼 */}
                         <div className="flex gap-3">
-                            <button className="border border-zi-navy px-6 py-3 text-zi-label font-semibold text-zi-navy transition-colors hover:bg-zi-surface-high">
+                            <button className="border border-zi-primary px-6 py-3 text-zi-label font-semibold text-zi-primary transition-colors hover:bg-zi-surface-high">
                                 데이터 내려받기
                             </button>
                             <Link
                                 href="/insight-radar"
-                                className="flex items-center gap-2 bg-zi-navy px-6 py-3 text-zi-label font-semibold text-white transition-opacity hover:opacity-90"
+                                className="flex items-center gap-2 bg-zi-primary px-6 py-3 text-zi-label font-semibold text-white transition-opacity hover:opacity-90"
                             >
                                 <TrendingUp className="h-4 w-4" />
                                 실시간 모니터링
@@ -97,14 +97,14 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 <section className="mb-zi-stack-lg">
                     <div className="mb-6 flex items-center gap-2">
                         <span className="text-zi-blue">⚡</span>
-                        <h2 className="text-zi-headline-md font-bold text-zi-navy">
+                        <h2 className="text-zi-headline-md font-bold text-zi-primary">
                             Intelligence Report: [섭외 원 포인트]
                         </h2>
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
                         {/* AI 전략 코어 박스 (Dark Navy) */}
-                        <div className="flex flex-col justify-between border border-zi-navy bg-zi-navy p-10 text-white md:col-span-8">
+                        <div className="flex flex-col justify-between border border-zi-primary bg-zi-primary p-10 text-white md:col-span-8">
                             <div>
                                 <span className="mb-4 block text-zi-label font-semibold uppercase tracking-widest text-zi-blue-bright">
                                     AI Strategic Logic
@@ -216,8 +216,8 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 {/* ─────────────────────────────── */}
                 <section>
                     <div className="mb-8 flex items-center justify-between">
-                        <h2 className="text-zi-headline-md font-bold text-zi-navy">Activity Timeline</h2>
-                        <button className="text-zi-label font-semibold text-zi-navy underline decoration-1">
+                        <h2 className="text-zi-headline-md font-bold text-zi-primary">Activity Timeline</h2>
+                        <button className="text-zi-label font-semibold text-zi-primary underline decoration-1">
                             전체 기사 보기
                         </button>
                     </div>
@@ -299,7 +299,7 @@ function TimelineItem({
             {/* 타임라인 도트 */}
             <div
                 className={`absolute left-0 top-0 z-10 h-4 w-4 rounded-full border-4 border-white shadow-sm ${
-                    isFirst ? 'bg-zi-navy' : 'bg-slate-200'
+                    isFirst ? 'bg-zi-primary' : 'bg-slate-200'
                 }`}
             />
 

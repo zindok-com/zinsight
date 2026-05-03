@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, TrendingUp } from 'lucide-react';
+import { HomeStats } from '@/components/public/home/HomeStats';
 import {
     getRadarLatestArticles,
     getRadarTrendingKeywords,
@@ -45,10 +46,11 @@ export default async function PublicHomePage() {
                         미래를 여는 데이터, <br/> 통찰력 있는 분석.
                     </h1>
                     <p className="font-body-lg text-body-lg text-zi-on-surface-variant max-w-2xl mx-auto mb-12">
-                        Zinsight는 심층적인 산업 분석과 실시간 데이터 트렌드를 결합하여 프리미엄 비즈니스 인사이트를 제공합니다.
+                        Zinsight는 심층적인 산업 분석과 실시간 데이터 트렌드를 결합하여 <br/> 프리미엄 비즈니스 인사이트를 제공합니다.
                     </p>
 
-                    {/* 통합 검색바 */}
+                    {/* 통합 검색바 (인사이트 레이더 이동 버튼으로 사용되던 부분 주석 처리) */}
+                    {/* 
                     <div className="mx-auto mb-12 max-w-2xl relative">
                         <Link href="/insight-radar" className="group relative block">
                             <div className="flex h-16 w-full items-center rounded-zi-btn border border-zi-outline-variant bg-zi-surface pl-14 pr-6 transition-all shadow-sm group-hover:shadow-md group-hover:border-zi-primary-container">
@@ -67,6 +69,7 @@ export default async function PublicHomePage() {
                             </div>
                         </Link>
                     </div>
+                    */}
 
                     {/* CTA 버튼 */}
                     <div className="flex flex-col justify-center gap-4 sm:flex-row mt-2">
@@ -97,13 +100,33 @@ export default async function PublicHomePage() {
             </section>
 
             {/* ─────────────────────────────── */}
-            {/* 실시간 인사이트 레이더 섹션 */}
+            {/* 인사이트 레이더 현황 섹션 (이동됨) */}
             {/* ─────────────────────────────── */}
+            <section className="bg-zi-surface-container-low/30 border-y border-zi-divider py-16">
+                <div className="mx-auto max-w-zi-container px-6">
+                    <div className="mb-12 text-center">
+                        <h2 className="mb-4 text-zi-headline-md font-bold text-zi-primary">
+                            인사이트 레이더 현황
+                        </h2>
+                        <p className="mx-auto max-w-2xl text-zi-body-md text-zi-on-surface-variant">
+                            Zinsight의 AI 분석 엔진이 식별한 전략 산업군 및 비즈니스 카테고리별 핵심 기업과 <br/>
+                            기술 인사이트를 실시간으로 모니터링합니다.
+                        </p>
+                    </div>
+
+                    {/* 통계 바 (클라이언트 컴포넌트로 교체) */}
+                    <HomeStats totalStats={totalStats} />
+                </div>
+            </section>
+
+            {/* ─────────────────────────────── */}
+            {/* 실시간 인사이트 레이더 섹션 (추후 기능 추가 시 사용을 위해 주석 처리) */}
+            {/* ─────────────────────────────── */}
+            {/* 
             <section className="mx-auto max-w-zi-container border-t border-zi-divider px-6 py-24">
-                {/* 섹션 헤더 */}
                 <div className="mb-12 flex items-end justify-between">
                     <div>
-                        <h2 className="mb-2 text-zi-headline-md font-bold text-zi-navy">
+                        <h2 className="mb-2 text-zi-headline-md font-bold text-zi-primary">
                             실시간 인사이트 레이더
                         </h2>
                         <p className="text-zi-body-md text-zi-on-surface-variant">
@@ -119,13 +142,11 @@ export default async function PublicHomePage() {
                     </Link>
                 </div>
 
-                {/* 벤토 그리드 */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-                    {/* 메인 피처 카드 */}
                     <div className="flex flex-col justify-between border border-zi-divider bg-white p-8 md:col-span-8">
                         <div>
                             <div className="mb-8 flex items-start justify-between">
-                                <span className="bg-zi-navy px-3 py-1 text-zi-label font-semibold tracking-wider text-white uppercase">
+                                <span className="bg-zi-primary px-3 py-1 text-zi-label font-semibold tracking-wider text-white uppercase">
                                     Trending Sector
                                 </span>
                                 <span className="flex items-center gap-1 text-zi-label font-semibold text-zi-error">
@@ -154,7 +175,6 @@ export default async function PublicHomePage() {
                             )}
                         </div>
 
-                        {/* 미니 바 차트 */}
                         <div className="mt-12 flex h-32 items-end gap-2">
                             {[20, 35, 50, 45, 70, 85, 100].map((h, i) => (
                                 <div
@@ -169,16 +189,14 @@ export default async function PublicHomePage() {
                         </div>
                     </div>
 
-                    {/* 사이드 카드 */}
                     <div className="flex flex-col gap-6 md:col-span-4">
-                        {/* Emerging Entity */}
                         <div className="border border-zi-divider bg-zi-surface-low p-6">
                             <h4 className="mb-4 text-zi-label font-semibold uppercase tracking-wider text-slate-500">
                                 Emerging Entity
                             </h4>
                             {featuredCompanies[1] ? (
                                 <>
-                                    <p className="mb-2 text-zi-headline-md font-bold text-zi-navy">
+                                    <p className="mb-2 text-zi-headline-md font-bold text-zi-primary">
                                         {featuredCompanies[1].company_name}
                                     </p>
                                     <p className="text-zi-caption text-zi-on-surface-variant">
@@ -187,7 +205,7 @@ export default async function PublicHomePage() {
                                 </>
                             ) : (
                                 <>
-                                    <p className="mb-2 text-zi-headline-md font-bold text-zi-navy">Replicate AI</p>
+                                    <p className="mb-2 text-zi-headline-md font-bold text-zi-primary">Replicate AI</p>
                                     <p className="text-zi-caption text-zi-on-surface-variant">오픈소스 모델 서빙 시장의 파괴적 혁신자</p>
                                 </>
                             )}
@@ -197,12 +215,11 @@ export default async function PublicHomePage() {
                             </div>
                         </div>
 
-                        {/* Market Sentiment */}
                         <div className="relative overflow-hidden border border-zi-divider bg-white p-6">
                             <h4 className="mb-4 text-zi-label font-semibold uppercase tracking-wider text-slate-500">
                                 Market Sentiment
                             </h4>
-                            <p className="text-zi-headline-md font-bold text-zi-navy">Bullish Neutral</p>
+                            <p className="text-zi-headline-md font-bold text-zi-primary">Bullish Neutral</p>
                             <p className="mt-1 text-zi-caption text-zi-on-surface-variant">
                                 글로벌 투자 심리 지수: {totalStats.totalArticles > 100 ? '68' : '72'}/100
                             </p>
@@ -215,6 +232,7 @@ export default async function PublicHomePage() {
                     </div>
                 </div>
             </section>
+            */}
 
             {/* ─────────────────────────────── */}
             {/* 매거진 프리뷰 섹션 */}
@@ -223,7 +241,7 @@ export default async function PublicHomePage() {
                 <div className="mx-auto max-w-zi-container px-6">
                     {/* 매거진 헤더 */}
                     <div className="mb-16 text-center">
-                        <h2 className="font-serif mb-4 text-zi-display font-semibold italic text-zi-navy">
+                        <h2 className="font-serif mb-4 text-zi-display font-semibold italic text-zi-primary">
                             The Zinsight Magazine
                         </h2>
                         <p className="text-zi-body-md text-slate-500">
@@ -261,54 +279,10 @@ export default async function PublicHomePage() {
                     </div>
                 </div>
             </section>
-
-            {/* ─────────────────────────────── */}
-            {/* 트렌딩 키워드 섹션 */}
-            {/* ─────────────────────────────── */}
-            {trendingKeywords.length > 0 && (
-                <section className="mx-auto max-w-zi-container border-t border-zi-divider px-6 py-16">
-                    <h2 className="mb-8 text-zi-headline-md font-bold text-zi-navy">
-                        트렌딩 키워드
-                    </h2>
-                    <div className="flex flex-wrap gap-3">
-                        {trendingKeywords.map((kw) => (
-                            <Link
-                                key={kw.id}
-                                href={`/insight-radar?q=${encodeURIComponent(kw.keyword_text)}`}
-                                className="border border-zi-divider bg-white px-4 py-2 text-zi-label font-semibold text-zi-navy transition-colors hover:border-zi-blue hover:text-zi-blue"
-                            >
-                                {kw.keyword_text}
-                                <span className="ml-2 text-zi-caption text-zi-on-surface-variant">
-                                    {kw.count}
-                                </span>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {/* ─────────────────────────────── */}
-            {/* CTA 섹션 */}
-            {/* ─────────────────────────────── */}
-            <section className="mx-auto max-w-zi-container border-t border-zi-divider px-6 py-24 text-center">
-                <h2 className="font-serif mb-8 text-zi-headline-lg font-semibold">
-                    비즈니스 의사결정의 기준을 세우십시오.
-                </h2>
-                <p className="mx-auto mb-12 max-w-2xl text-zi-body-lg text-zi-on-surface-variant">
-                    Zinsight의 전문 분석가들이 큐레이션한 최신 리포트와 실시간 데이터 대시보드를
-                    지금 바로 이용해 보세요.
-                </p>
-                <Link
-                    href="/insight-radar"
-                    className="group inline-flex items-center gap-3 bg-zi-navy px-10 py-5 font-bold text-white transition-all hover:gap-5"
-                >
-                    Insight Radar 탐색하기
-                    <ArrowRight className="h-5 w-5" />
-                </Link>
-            </section>
         </div>
     );
 }
+
 
 // ─────────────────────────────────────────────
 // 내부 컴포넌트
@@ -340,7 +314,7 @@ function MagazineArticleCard({
         <article className="group flex cursor-pointer flex-col">
             {/* 이미지 플레이스홀더 */}
             <div
-                className="mb-6 aspect-[4/5] overflow-hidden"
+                className="mb-6 aspect-square overflow-hidden"
                 style={{ backgroundColor: placeholderColors[index % 3] }}
             >
                 <div className="h-full w-full transition-all duration-500 group-hover:scale-105" />

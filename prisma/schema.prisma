@@ -85,6 +85,7 @@ model Company {
   id               Int      @id @default(autoincrement())
   industry_id      Int
   company_name     String   @db.VarChar(255)
+  aliases          Json?    // 별칭 리스트 (문자열 배열)
   entity_type      String   @default("기업") @db.VarChar(50)
   company_url      String?  @db.VarChar(255)
   business_summary String?  @db.Text
