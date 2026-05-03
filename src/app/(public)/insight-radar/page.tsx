@@ -50,11 +50,11 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
             {/* 페이지 헤더 */}
             {/* ─────────────────────────────── */}
             <div className="mx-auto max-w-zi-container px-6 py-12">
-                <div className="mb-zi-stack-lg">
-                    <h1 className="mb-2 text-zi-headline-lg font-semibold text-zi-navy">
+                <div className="mb-12">
+                    <h1 className="mb-2 font-h1 text-h1 text-zi-primary">
                         인사이트 레이더
                     </h1>
-                    <p className="max-w-2xl text-zi-body-md text-zi-on-surface-variant">
+                    <p className="max-w-2xl font-body-md text-body-md text-zi-on-surface-variant">
                         Zinsight의 AI 분석 엔진이 식별한 전략 산업군 및 비즈니스 카테고리별 핵심 기업과
                         기술 인사이트를 실시간으로 모니터링합니다.
                     </p>
@@ -89,17 +89,17 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
 
                     {/* 엔티티 유형 필터 칩 */}
                     <div className="flex flex-wrap gap-2">
-                        <span className="py-2 mr-2 text-zi-label font-semibold text-zi-navy">유형 필터:</span>
+                        <span className="py-2 mr-2 font-ui-label text-ui-label font-bold text-zi-outline uppercase tracking-wider">유형 필터:</span>
                         {ENTITY_TYPES.map((et) => {
                             const isActive = selectedEntityType === et.value || (!selectedEntityType && et.value === '');
                             return (
                                 <Link
                                     key={et.value}
                                     href={buildEntityTypeHref(params, et.value || undefined)}
-                                    className={`px-3 py-1 text-zi-label font-semibold transition-colors ${
+                                    className={`px-4 py-1.5 rounded-full font-ui-label text-[13px] transition-all active:scale-95 ${
                                         isActive
-                                            ? 'bg-zi-navy text-white'
-                                            : 'bg-zi-surface-high text-zi-navy hover:bg-zi-outline-variant'
+                                            ? 'bg-zi-primary text-white font-bold'
+                                            : 'bg-zi-surface-container text-zi-on-surface-variant hover:bg-zi-surface-container-highest'
                                     }`}
                                 >
                                     {et.label}
@@ -110,24 +110,24 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
                 </div>
 
                 {/* ── 조직 목록 테이블 ── */}
-                <div className="border border-zi-divider bg-white">
+                <div className="border border-zi-divider bg-white rounded-zi-card overflow-hidden shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full border-collapse text-left">
                             <thead>
-                                <tr className="border-b border-zi-divider bg-zi-surface-low">
-                                    <th className="px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                <tr className="border-b border-zi-divider bg-zi-surface-container-low">
+                                    <th className="px-6 py-4 font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline">
                                         기업명 / 기관
                                     </th>
-                                    <th className="px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                    <th className="px-6 py-4 font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline">
                                         유형
                                     </th>
-                                    <th className="px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                    <th className="px-6 py-4 font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline">
                                         AI 인사이트 분석
                                     </th>
-                                    <th className="hidden px-6 py-4 text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant md:table-cell">
+                                    <th className="hidden px-6 py-4 font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline md:table-cell">
                                         최신 기사
                                     </th>
-                                    <th className="px-6 py-4 text-right text-zi-label font-semibold uppercase tracking-wider text-zi-on-surface-variant">
+                                    <th className="px-6 py-4 text-right font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline">
                                         상세보기
                                     </th>
                                 </tr>
@@ -160,7 +160,7 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
 
                                             {/* 유형 */}
                                             <td className="px-6 py-6 align-top">
-                                                <span className="bg-zi-surface-container px-2 py-0.5 text-zi-label text-zi-navy">
+                                                <span className="bg-zi-surface-container px-2 py-1 rounded-full font-ui-label text-[11px] font-bold text-zi-secondary uppercase tracking-tighter">
                                                     {company.entity_type ?? '기업'}
                                                 </span>
                                             </td>
@@ -211,22 +211,22 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
                     </div>
 
                     {/* 페이지네이션 */}
-                    <div className="flex items-center justify-center gap-4 border-t border-zi-divider p-6">
+                    <div className="flex items-center justify-center gap-4 border-t border-zi-divider p-6 bg-zi-surface-container-low/30">
                         {currentPage > 1 && (
                             <Link
                                 href={buildPageHref(params, currentPage - 1)}
-                                className="border border-zi-divider px-4 py-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-navy"
+                                className="border border-zi-outline-variant px-4 py-2 rounded-zi-btn font-ui-label text-ui-label text-zi-on-surface-variant transition-all hover:bg-white active:scale-95"
                             >
                                 이전
                             </Link>
                         )}
-                        <span className="text-zi-body-md text-zi-on-surface-variant">
+                        <span className="font-data-num text-data-num text-zi-on-surface-variant">
                             {currentPage} / {Math.max(totalPages, 1)}
                         </span>
                         {currentPage < totalPages && (
                             <Link
                                 href={buildPageHref(params, currentPage + 1)}
-                                className="flex items-center gap-2 border border-zi-divider px-4 py-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-navy"
+                                className="flex items-center gap-2 bg-zi-primary px-4 py-2 rounded-zi-btn font-ui-label text-ui-label text-white transition-all hover:bg-zi-primary/90 active:scale-95 shadow-sm"
                             >
                                 데이터 더보기
                                 <ArrowRight className="h-4 w-4" />
@@ -284,14 +284,14 @@ export default async function InsightRadarPage({ searchParams }: InsightRadarPag
 
 function StatBadge({ icon, label, value, unit }: { icon: React.ReactNode; label: string; value: number; unit: string }) {
     return (
-        <div className="border border-zi-divider bg-white px-4 py-3">
-            <div className="mb-1 flex items-center gap-2 text-zi-on-surface-variant">
+        <div className="border border-zi-divider bg-zi-surface-container-low/50 px-4 py-4 rounded-zi-card">
+            <div className="mb-2 flex items-center gap-2 text-zi-outline">
                 {icon}
-                <span className="text-zi-caption">{label}</span>
+                <span className="font-ui-label text-[12px] uppercase tracking-wider font-bold">{label}</span>
             </div>
-            <p className="tabular-nums text-2xl font-bold text-zi-navy">
+            <p className="tabular-nums font-data-num text-2xl font-bold text-zi-primary">
                 {value.toLocaleString()}
-                <span className="ml-0.5 text-sm font-normal text-zi-on-surface-variant">{unit}</span>
+                <span className="ml-1 text-sm font-normal text-zi-on-surface-variant">{unit}</span>
             </p>
         </div>
     );
@@ -301,10 +301,10 @@ function IndustryTab({ label, href, isActive }: { label: string; href: string; i
     return (
         <Link
             href={href}
-            className={`whitespace-nowrap px-6 py-3 text-zi-label font-semibold border-b-2 transition-colors ${
+            className={`whitespace-nowrap px-6 py-3 font-ui-label text-ui-label border-b-2 transition-all active:scale-95 ${
                 isActive
-                    ? 'border-zi-navy text-zi-navy'
-                    : 'border-transparent text-zi-on-surface-variant hover:text-zi-navy'
+                    ? 'border-zi-primary text-zi-primary font-bold'
+                    : 'border-transparent text-zi-on-surface-variant hover:text-zi-primary'
             }`}
         >
             {label}

@@ -41,26 +41,27 @@ export default async function PublicHomePage() {
                     </span>
 
                     {/* 헤드라인 */}
-                    <h1 className="font-serif mb-12 text-zi-display font-semibold leading-tight text-zi-navy">
-                        인텔리전스의 정점,
-                        <br />
-                        데이터로 읽는 시장의 미래
+                    <h1 className="font-h1 text-h1 text-zi-primary mb-8">
+                        미래를 여는 데이터, <br/> 통찰력 있는 분석.
                     </h1>
+                    <p className="font-body-lg text-body-lg text-zi-on-surface-variant max-w-2xl mx-auto mb-12">
+                        Zinsight는 심층적인 산업 분석과 실시간 데이터 트렌드를 결합하여 프리미엄 비즈니스 인사이트를 제공합니다.
+                    </p>
 
                     {/* 통합 검색바 */}
-                    <div className="mx-auto mb-12 max-w-3xl">
+                    <div className="mx-auto mb-12 max-w-2xl relative">
                         <Link href="/insight-radar" className="group relative block">
-                            <div className="flex h-16 w-full items-center border-b-2 border-zi-navy bg-white pl-14 pr-6 transition-all">
+                            <div className="flex h-16 w-full items-center rounded-zi-btn border border-zi-outline-variant bg-zi-surface pl-14 pr-6 transition-all shadow-sm group-hover:shadow-md group-hover:border-zi-primary-container">
                                 <svg
-                                    className="absolute left-4 h-6 w-6 text-slate-400"
+                                    className="absolute left-4 h-6 w-6 text-zi-outline"
                                     fill="none"
                                     viewBox="0 0 24 24"
                                     stroke="currentColor"
                                     strokeWidth={2}
                                 >
-                                    <path strokeLinecap="square" strokeLinejoin="miter" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
-                                <span className="text-zi-body-lg text-slate-400">
+                                <span className="text-body-md font-body-md text-zi-on-surface-variant">
                                     산업, 기업 또는 최신 트렌드를 검색하세요
                                 </span>
                             </div>
@@ -68,17 +69,24 @@ export default async function PublicHomePage() {
                     </div>
 
                     {/* CTA 버튼 */}
-                    <div className="flex flex-col justify-center gap-4 sm:flex-row">
+                    <div className="flex flex-col justify-center gap-4 sm:flex-row mt-2">
                         <Link
                             href="/insight-radar"
-                            className="inline-flex items-center justify-center border border-zi-navy bg-zi-navy px-8 py-4 text-zi-label font-semibold tracking-[0.05em] text-white transition-all active:scale-95"
+                            className="inline-flex items-center justify-center rounded-zi-btn bg-zi-primary px-8 py-3.5 text-ui-label font-ui-label text-white transition-all active:scale-95 shadow-sm hover:bg-zi-primary/90 gap-2"
                         >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
+                            </svg>
                             Insight Radar 탐색
                         </Link>
                         <Link
                             href="/magazine"
-                            className="inline-flex items-center justify-center border border-zi-navy bg-transparent px-8 py-4 text-zi-label font-semibold tracking-[0.05em] text-zi-navy transition-all active:scale-95 hover:bg-zi-surface-high"
+                            className="inline-flex items-center justify-center rounded-zi-btn border border-zi-outline-variant bg-transparent px-8 py-3.5 text-ui-label font-ui-label text-zi-on-surface transition-all active:scale-95 hover:bg-zi-surface-container-low gap-2"
                         >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
                             Zinsight 매거진 읽기
                         </Link>
                     </div>

@@ -21,7 +21,7 @@ export function PublicNavbar() {
                 <div className="flex items-center gap-12">
                     <Link
                         href="/"
-                        className="text-2xl font-black tracking-tight text-zi-navy"
+                        className="text-xl font-bold tracking-tighter text-zi-primary font-h2"
                     >
                         Zinsight
                     </Link>
@@ -35,10 +35,10 @@ export function PublicNavbar() {
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'text-zi-label font-semibold tracking-[0.05em] pb-1 transition-colors duration-200',
+                                        'text-ui-label font-ui-label tracking-[0.05em] pb-1 transition-all duration-150 active:scale-95',
                                         isActive
-                                            ? 'border-b-2 border-zi-navy text-zi-navy'
-                                            : 'text-slate-500 hover:text-zi-navy'
+                                            ? 'border-b-2 border-zi-primary text-zi-primary font-semibold'
+                                            : 'text-slate-500 hover:text-zi-primary'
                                     )}
                                 >
                                     {item.label}
