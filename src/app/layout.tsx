@@ -3,6 +3,7 @@ import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const newsreader = Newsreader({
@@ -36,6 +37,7 @@ export default function RootLayout({
             >
                 {children}
                 <Toaster />
+                <SpeedInsights />
             </body>
         </html>
     );
