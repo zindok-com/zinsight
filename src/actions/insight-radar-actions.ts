@@ -73,7 +73,7 @@ export async function getRadarIndustries(): Promise<RadarIndustryWithStats[]> {
 
     // 각 산업별 기업 수 및 최신 기사 수집일 집계
     const industryStats = await Promise.all(
-        industries.map(async (industry) => {
+        industries.map(async (industry: typeof industries[number]) => {
             const [companyCount, latestIngestion] = await Promise.all([
                 prisma.company.count({
                     where: { industry_id: industry.id },
@@ -168,7 +168,7 @@ export async function getRadarCompanies(
         prisma.company.count({ where }),
     ]);
 
-    const companies: RadarCompanyCard[] = rawCompanies.map((c) => ({
+    const companies: RadarCompanyCard[] = rawCompanies.map((c: typeof rawCompanies[number]) => ({
         id: c.id,
         company_name: c.company_name,
         entity_type: c.entity_type,
@@ -229,7 +229,7 @@ export async function getRadarLatestArticles(
         take: limit,
     });
 
-    return articles.map((a) => ({
+    return articles.map((a: typeof articles[number]) => ({
         id: a.id,
         title: a.title,
         source: a.source,
@@ -237,8 +237,8 @@ export async function getRadarLatestArticles(
         url: a.link,                  // Article.link → url
         summary: a.description,       // Article.description → summary
         keywords: a.ingestions
-            .map((ing) => ing.keyword)
-            .filter((k): k is { id: number; keyword_text: string } => k !== null),
+            .map((ing: typeof a.ingestions[number]) => ing.keyword)
+            .filter((k: typeof a.ingestions[number]['keyword']): k is { id: number; keyword_text: string } => k !== null),
         industryName: a.ingestions[0]?.industry?.name ?? '기타',
     }));
 }
@@ -265,7 +265,7 @@ export async function getRadarTrendingKeywords(
         take: limit,
     });
 
-    return keywords.map((k) => ({
+    return keywords.map((k: typeof keywords[number]) => ({
         id: k.id,
         keyword_text: k.keyword_text,
         count: k._count.ingestions,
@@ -312,7 +312,7 @@ export async function getRadarCompanyDetail(companyId: number) {
         recent_status: company.recent_status,
         core_keywords: company.core_keywords,
         industry: company.industry,
-        recentArticles: company.company_articles.map((ca) => ({
+        recentArticles: company.company_articles.map((ca: typeof company.company_articles[number]) => ({
             ...ca.article,
             url: ca.article.link,           // link → url 별칭
             summary: ca.article.description, // description → summary 별칭
