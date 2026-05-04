@@ -44,7 +44,7 @@ export async function generateMonthlySnapshot(industryId: number, month: string)
             source_field: 'pub_date',
         },
         article_count: articles.length,
-        articles: articles.map(a => ({
+        articles: articles.map((a: typeof articles[number]) => ({
             id: a.id,
             canonical_link: a.canonical_link,
             link: a.link,
@@ -98,9 +98,9 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
             source_field: filterType,
         },
         total_article_count: articles.length,
-        industries: industries.map(ind => {
-            const industryArticles = articles.filter(a => 
-                a.ingestions.some(ing => ing.industry_id === ind.id)
+        industries: industries.map((ind: typeof industries[number]) => {
+            const industryArticles = articles.filter((a: typeof articles[number]) => 
+                a.ingestions.some((ing: typeof a.ingestions[number]) => ing.industry_id === ind.id)
             );
             
             return {
@@ -108,7 +108,7 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
                 name: ind.name,
                 slug: ind.slug,
                 article_count: industryArticles.length,
-                articles: industryArticles.map(a => ({
+                articles: industryArticles.map((a: typeof industryArticles[number]) => ({
                     id: a.id,
                     canonical_link: a.canonical_link,
                     link: a.link,
@@ -119,7 +119,7 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
                     source: a.source,
                     created_at: a.created_at,
                     updated_at: a.updated_at,
-                    keyword_id: a.ingestions.find(ing => ing.industry_id === ind.id)?.keyword_id,
+                    keyword_id: a.ingestions.find((ing: typeof a.ingestions[number]) => ing.industry_id === ind.id)?.keyword_id,
                 })),
             };
         }),

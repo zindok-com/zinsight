@@ -224,7 +224,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
 
                     <div className="space-y-0">
                         {company.recentArticles.length > 0 ? (
-                            company.recentArticles.map((article, idx) => (
+                            company.recentArticles.map((article: typeof company.recentArticles[number], idx: number) => (
                                 <TimelineItem
                                     key={article.id}
                                     date={article.pub_date
