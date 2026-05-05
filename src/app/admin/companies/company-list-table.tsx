@@ -48,6 +48,18 @@ function ExpandableText({ text }: { text: string | null }) {
   );
 }
 
+function parseKeywords(keywordsStr: any) {
+  if (!keywordsStr) return null;
+  try {
+    if (typeof keywordsStr === 'string') {
+      return JSON.parse(keywordsStr);
+    }
+    return keywordsStr;
+  } catch {
+    return null;
+  }
+}
+
 export function CompanyListTable({ companies }: { companies: any[] }) {
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -97,18 +109,6 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
         toast.error('수정에 실패했습니다.');
       }
     });
-  };
-
-  const parseKeywords = (keywordsStr: any) => {
-    if (!keywordsStr) return null;
-    try {
-      if (typeof keywordsStr === 'string') {
-        return JSON.parse(keywordsStr);
-      }
-      return keywordsStr;
-    } catch {
-      return null;
-    }
   };
 
   // 고유한 산업군 목록 추출
