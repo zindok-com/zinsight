@@ -14,7 +14,9 @@ export function middleware(request: NextRequest) {
 
     // /admin 경로에 비인증 상태로 접근하면 /login으로 리다이렉트
     if (isAdminPath && !authToken) {
-        return NextResponse.redirect(new URL('/login', request.url));
+        const loginUrl = new URL('/login', request.url);
+        loginUrl.searchParams.set('callbackUrl', pathname);
+        return NextResponse.redirect(loginUrl);
     }
 
     // 이미 로그인한 상태에서 /login 접근 시 /admin으로 리다이렉트

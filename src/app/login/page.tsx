@@ -1,21 +1,21 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 
-export default function LoginPage() {
+function LoginForm() {
     const [passcode, setPasscode] = useState('');
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const callbackUrl = searchParams.get('callbackUrl') || '/admin';
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Server Action would be better, but for now simple cookie set via API Route or Action
-        // Let's use a server action to set the cookie
         const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -24,7 +24,7 @@ export default function LoginPage() {
 
         if (res.ok) {
             toast.success("Login successful");
-            router.push('/');
+            router.push(callbackUrl);
             router.refresh();
         } else {
             toast.error("Invalid passcode");
@@ -53,5 +53,17 @@ export default function LoginPage() {
                 </form>
             </Card>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-screen items-center justify-center bg-slate-100">
+                <p>Loading...</p>
+            </div>
+        }>
+            <LoginForm />
+        </Suspense>
     );
 }
