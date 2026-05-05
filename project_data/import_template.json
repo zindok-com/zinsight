@@ -1,62 +1,29 @@
 {
-  "report_month": "YYYY-MM",
-  "total_industries": 2,
-  "industries": [
+  "industry_id": 1,
+  "industry_name": "산업명 (선택사항)",
+  "report_month": "2026-04",
+  "total_leads": 1,
+  "leads": [
     {
-      "industry_id": 1,
-      "industry_name": "산업1 (선택사항)",
-      "total_leads": 1,
-      "leads": [
+      "company_name": "조직명 A",
+      "aliases": ["별칭1", "별칭2"],
+      "entity_type": "기업/기관/대학/센터 등",
+      "company_url": "https://example.com",
+      "business_summary": "조직에 대한 간략한 요약 설명",
+      "core_keywords": {
+        "products": ["제품1", "제품2"],
+        "technology": ["기술1", "기술2"],
+        "target_market": ["시장1", "시장2"]
+      },
+      "recent_status": "최근 동향 및 현황",
+      "related_articles": [
         {
-          "company_name": "조직명 A",
-          "entity_type": "기업/기관/대학/센터 등",
-          "company_url": "https://example.com",
-          "business_summary": "조직에 대한 간략한 요약 설명",
-          "core_keywords": {
-            "products": ["제품1", "제품2"],
-            "technology": ["기술1", "기술2"],
-            "target_market": ["시장1", "시장2"]
-          },
-          "recent_status": "최근 동향 및 현황",
-          "related_articles": [
-            {
-              "id": 123,
-              "title": "관련 기사 제목 (참조용)",
-              "canonical_link": "http://example.com/article/123",
-              "pub_date": "2026-04-28T09:00:00.000Z",
-              "description": "기사 요약 내용...",
-              "keyword": 2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "industry_id": 2,
-      "industry_name": "산업2 (선택사항)",
-      "total_leads": 1,
-      "leads": [
-        {
-          "company_name": "조직명 B",
-          "entity_type": "기업/기관/대학/센터 등",
-          "company_url": "https://example2.com",
-          "business_summary": "조직 B 요약",
-          "core_keywords": {
-            "products": [],
-            "technology": [],
-            "target_market": []
-          },
-          "recent_status": "조직 B 동향",
-          "related_articles": [
-            {
-              "id": 124,
-              "title": "관련 기사 2",
-              "canonical_link": "http://example.com/article/124",
-              "pub_date": "2026-04-28T10:00:00.000Z",
-              "description": "기사 요약 내용...",
-              "keyword": 1
-            }
-          ]
+          "id": 123,
+          "title": "관련 기사 제목 (참조용)",
+          "canonical_link": "http://example.com/article/123",
+          "pub_date": "2026-04-28T09:00:00.000Z",
+          "description": "기사 요약 내용...",
+          "keyword": 2
         }
       ]
     }

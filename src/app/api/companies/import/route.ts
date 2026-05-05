@@ -4,34 +4,17 @@ import { prisma } from '@/lib/db';
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const top_industry_id = data.industry_id;
-    
-    let allLeads: any[] = [];
+    const industry_id = data.industry_id;
+    const leads = data.leads;
 
-    // 1. 그룹형 구조 처리 (여러 산업군 통합)
-    if (data.industries && Array.isArray(data.industries)) {
-      for (const ind of data.industries) {
-        if (ind.leads && Array.isArray(ind.leads)) {
-          for (const lead of ind.leads) {
-            // 개별 lead에 industry_id가 없으면 상위 그룹의 industry_id 사용
-            lead.industry_id = lead.industry_id || ind.industry_id;
-            allLeads.push(lead);
-          }
-        }
-      }
+    if (!industry_id || !leads || !Array.isArray(leads)) {
+      return NextResponse.json({ error: 'Invalid data format: industry_id and leads array are required' }, { status: 400 });
     }
 
-    // 2. 평면형 구조 처리 (기존 단일 배열 형태)
-    if (data.leads && Array.isArray(data.leads)) {
-      for (const lead of data.leads) {
-        lead.industry_id = lead.industry_id || top_industry_id;
-        allLeads.push(lead);
-      }
-    }
-
-    if (allLeads.length === 0) {
-      return NextResponse.json({ error: 'Invalid data format: leads array or industries array is required' }, { status: 400 });
-    }
+    const allLeads = leads.map(lead => ({
+      ...lead,
+      industry_id: lead.industry_id || industry_id
+    }));
 
     const results = {
       addedCompanies: 0,
@@ -66,6 +49,7 @@ export async function POST(request: Request) {
           data: {
             industry_id,
             company_name: lead.company_name,
+            aliases: lead.aliases || null,
             company_url: lead.company_url || null,
             entity_type: lead.entity_type || '기업',
             business_summary: lead.business_summary || null,
@@ -79,6 +63,7 @@ export async function POST(request: Request) {
         company = await prisma.company.update({
           where: { id: company.id },
           data: {
+            aliases: lead.aliases || company.aliases,
             recent_status: lead.recent_status || company.recent_status,
           }
         });
