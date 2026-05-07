@@ -64,6 +64,7 @@ const config = {
                 "zi-surface-container": "#eeedf2",
                 "zi-surface-container-low": "#f4f3f8",
                 "zi-surface-container-highest": "#e3e2e7",
+                "zi-blue": "hsl(var(--zi-blue))",
             },
             fontFamily: {
                 "h1": ["Noto Serif KR", "serif"],

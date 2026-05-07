@@ -35,6 +35,8 @@
     --input: 227 10% 79%;
     --ring: 215 100% 11%;
 
+    --zi-blue: 211 100% 50%; /* #007bff */
+
     --radius: 0.5rem;
   }
 
@@ -66,6 +68,8 @@
     --border: 220 9% 30%;
     --input: 220 9% 30%;
     --ring: 249 100% 99%;
+
+    --zi-blue: 211 100% 60%; /* Slightly lighter for dark mode */
   }
 }
 
