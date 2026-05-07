@@ -24,6 +24,7 @@ export interface RadarCompanyCard {
     business_summary: string | null;
     recent_status: string | null;
     core_keywords: unknown;
+    recent_keywords: unknown;
     industry: {
         id: number;
         name: string;
@@ -175,6 +176,7 @@ export async function getRadarCompanies(
         business_summary: c.business_summary,
         recent_status: c.recent_status,
         core_keywords: c.core_keywords,
+        recent_keywords: c.recent_keywords,
         industry: c.industry,
         articleCount: c._count.company_articles,
         latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
@@ -311,6 +313,7 @@ export async function getRadarCompanyDetail(companyId: number) {
         business_summary: company.business_summary,
         recent_status: company.recent_status,
         core_keywords: company.core_keywords,
+        recent_keywords: company.recent_keywords,
         industry: company.industry,
         recentArticles: company.company_articles.map((ca: typeof company.company_articles[number]) => ({
             ...ca.article,

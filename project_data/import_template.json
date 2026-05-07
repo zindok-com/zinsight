@@ -15,6 +15,7 @@
         "technology": ["기술1", "기술2"],
         "target_market": ["시장1", "시장2"]
       },
+      "recent_keywords": ["최신키워드1", "최신키워드2"],
       "recent_status": "최근 동향 및 현황",
       "related_articles": [
         {

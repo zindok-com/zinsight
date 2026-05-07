@@ -90,6 +90,7 @@ model Company {
   company_url      String?  @db.VarChar(255)
   business_summary String?  @db.Text
   core_keywords    Json?    
+  recent_keywords  Json?    
   recent_status    String?  @db.Text
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt

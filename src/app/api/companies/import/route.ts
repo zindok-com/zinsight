@@ -54,6 +54,7 @@ export async function POST(request: Request) {
             entity_type: lead.entity_type || '기업',
             business_summary: lead.business_summary || null,
             core_keywords: lead.core_keywords || null,
+            recent_keywords: lead.recent_keywords || null,
             recent_status: lead.recent_status || null,
           },
         });
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
         company = await prisma.company.update({
           where: { id: company.id },
           data: {
-            aliases: lead.aliases || company.aliases,
+            recent_keywords: lead.recent_keywords || company.recent_keywords,
             recent_status: lead.recent_status || company.recent_status,
           }
         });

@@ -11,6 +11,7 @@ interface RadarCompanyCard {
     entity_type: string | null;
     business_summary: string | null;
     core_keywords: any;
+    recent_keywords: any;
     industry: {
         id: number;
         name: string;

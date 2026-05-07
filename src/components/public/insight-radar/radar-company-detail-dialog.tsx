@@ -22,6 +22,21 @@ interface RadarCompanyDetailDialogProps {
 
 type CompanyDetail = Awaited<ReturnType<typeof getRadarCompanyDetail>>;
 
+function extractKeywords(raw: unknown): string[] {
+    if (!raw) return [];
+    try {
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        if (Array.isArray(parsed)) {
+            return parsed
+                .map((item) => (typeof item === 'string' ? item : item?.text ?? item?.keyword ?? ''))
+                .filter(Boolean);
+        }
+    } catch {
+        return [];
+    }
+    return [];
+}
+
 export function RadarCompanyDetailDialog({ companyId, companyName }: RadarCompanyDetailDialogProps) {
     const [open, setOpen] = useState(false);
     const [detail, setDetail] = useState<CompanyDetail>(null);
@@ -87,6 +102,39 @@ export function RadarCompanyDetailDialog({ companyId, companyName }: RadarCompan
                                 </p>
                             </div>
                         )}
+
+                        {/* 키워드 (핵심 & 최신) */}
+                        <div className="flex flex-col gap-4">
+                            {detail.core_keywords && extractKeywords(detail.core_keywords).length > 0 && (
+                                <div>
+                                    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        핵심 키워드
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {extractKeywords(detail.core_keywords).map((kw, i) => (
+                                            <Badge key={i} variant="secondary" className="font-normal">
+                                                #{kw}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {detail.recent_keywords && extractKeywords(detail.recent_keywords).length > 0 && (
+                                <div>
+                                    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                        최신 추출 키워드
+                                    </h4>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {extractKeywords(detail.recent_keywords).map((kw, i) => (
+                                            <Badge key={i} variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 font-normal">
+                                                #{kw}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {/* 최근 동향 */}
                         {detail.recent_status && (
