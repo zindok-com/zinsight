@@ -3,7 +3,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { prisma } from '@/lib/db';
-import { getArticlesForExport, getConsolidatedArticlesForExport } from './article-actions';
+import { getConsolidatedArticlesForExport } from './article-actions';
 
 const SNAPSHOTS_DIR = path.join(process.cwd(), 'data', 'snapshots');
 
@@ -17,58 +17,7 @@ function formatDate(date: Date): string {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-export async function generateMonthlySnapshot(industryId: number, month: string): Promise<{
-    success: boolean;
-    filename?: string;
-    articleCount?: number;
-    message: string;
-}> {
-    const industry = await prisma.industry.findUnique({ where: { id: industryId } });
-    if (!industry) {
-        return { success: false, message: '산업를 찾을 수 없습니다.' };
-    }
 
-    const articles = await getArticlesForExport(industryId, month);
-    const now = new Date();
-    const todayStr = formatDate(now);
-    const filename = `snapshot_${industry.slug}_${month}_generated_${todayStr}_${now.getTime()}.json`;
-    const filepath = path.join(SNAPSHOTS_DIR, filename);
-
-    const snapshot = {
-        industry: { id: industry.id, name: industry.name, slug: industry.slug },
-        month,
-        generated_at: now.toISOString(),
-        filters: {
-            industry_id: industryId,
-            month,
-            source_field: 'pub_date',
-        },
-        article_count: articles.length,
-        articles: articles.map((a: typeof articles[number]) => ({
-            id: a.id,
-            canonical_link: a.canonical_link,
-            link: a.link,
-            originallink: a.originallink,
-            title: a.title,
-            description: a.description,
-            pub_date: a.pub_date,
-            source: a.source,
-            created_at: a.created_at,
-            updated_at: a.updated_at,
-            keyword_id: a.ingestions[0]?.keyword_id,
-        })),
-    };
-
-    await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
-    await fs.writeFile(filepath, JSON.stringify(snapshot, null, 2), 'utf-8');
-
-    return {
-        success: true,
-        filename,
-        articleCount: articles.length,
-        message: `Snapshot 생성 완료: ${filename} (기사 ${articles.length}건)`,
-    };
-}
 
 export async function generateConsolidatedSnapshot(industryIds: number[], month: string, filterType: 'pub_date' | 'created_at'): Promise<{
     success: boolean;

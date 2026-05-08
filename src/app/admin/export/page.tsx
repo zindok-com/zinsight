@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { getIndustries } from '@/actions/industry-actions';
-import { generateMonthlySnapshot, generateConsolidatedSnapshot, listSnapshots, type SnapshotInfo } from '@/actions/export-actions';
+import { generateConsolidatedSnapshot, listSnapshots, type SnapshotInfo } from '@/actions/export-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, FileJson, Loader2, Star } from 'lucide-react';
+import { Download, FileJson, Loader2, Star, CheckSquare, Square } from 'lucide-react';
 
 type Industry = Awaited<ReturnType<typeof getIndustries>>[number];
 
@@ -24,10 +24,6 @@ function monthOptions() {
 
 export default function ExportPage() {
     const [industries, setIndustries] = useState<Industry[]>([]);
-    const [selectedIndustryId, setSelectedIndustryId] = useState<number | ''>('');
-    const [selectedMonth, setSelectedMonth] = useState(monthOptions()[0].value);
-    const [generating, setGenerating] = useState(false);
-    const [snapshots, setSnapshots] = useState<SnapshotInfo[]>([]);
     const [snapshotLoading, setSnapshotLoading] = useState(false);
     
     // Consolidated snapshot states
@@ -43,55 +39,46 @@ export default function ExportPage() {
         getIndustries(false).then(data => {
             setIndustries(data);
             if (data.length > 0) {
-                setSelectedIndustryId(data[0].id);
-                setConsolidatedIndustries([data[0].id]);
+                // 기본으로 모든 산업 선택
+                setConsolidatedIndustries(data.map(i => i.id));
             }
         });
+        loadSnapshots();
     }, []);
 
-    const selectedIndustry = industries.find(e => e.id === Number(selectedIndustryId));
-
     async function loadSnapshots() {
-        if (!selectedIndustry) return;
         setSnapshotLoading(true);
-        const [list, consolidatedList] = await Promise.all([
-            listSnapshots(selectedIndustry.slug),
-            listSnapshots('consolidated')
-        ]);
-        setSnapshots(list);
-        setConsolidatedSnapshots(consolidatedList);
-        setSnapshotLoading(false);
-    }
-
-    useEffect(() => {
-        if (selectedIndustry) loadSnapshots();
-    }, [selectedIndustry]); // eslint-disable-line
-
-    async function handleGenerate() {
-        if (!selectedIndustryId) { toast.error('산업를 선택하세요.'); return; }
-        setGenerating(true);
-        toast.info('Snapshot 생성 중...');
-        const result = await generateMonthlySnapshot(Number(selectedIndustryId), selectedMonth);
-        setGenerating(false);
-        if (result.success) {
-            toast.success(result.message);
-            loadSnapshots();
-        } else {
-            toast.error(result.message);
+        try {
+            const consolidatedList = await listSnapshots('consolidated');
+            setConsolidatedSnapshots(consolidatedList);
+        } catch (error) {
+            console.error('Failed to load snapshots:', error);
+            toast.error('Snapshot 히스토리를 불러오는데 실패했습니다.');
+        } finally {
+            setSnapshotLoading(false);
         }
     }
 
     async function handleGenerateConsolidated() {
-        if (consolidatedIndustries.length === 0) { toast.error('하나 이상의 산업을 선택하세요.'); return; }
+        if (consolidatedIndustries.length === 0) {
+            toast.error('하나 이상의 산업을 선택하세요.');
+            return;
+        }
         setConsolidatedGenerating(true);
         toast.info('통합 Snapshot 생성 중...');
-        const result = await generateConsolidatedSnapshot(consolidatedIndustries, consolidatedMonth, consolidatedFilterType);
-        setConsolidatedGenerating(false);
-        if (result.success) {
-            toast.success(result.message);
-            loadSnapshots();
-        } else {
-            toast.error(result.message);
+        try {
+            const result = await generateConsolidatedSnapshot(consolidatedIndustries, consolidatedMonth, consolidatedFilterType);
+            if (result.success) {
+                toast.success(result.message);
+                loadSnapshots();
+            } else {
+                toast.error(result.message);
+            }
+        } catch (error) {
+            console.error('Failed to generate snapshot:', error);
+            toast.error('Snapshot 생성 중 오류가 발생했습니다.');
+        } finally {
+            setConsolidatedGenerating(false);
         }
     }
 
@@ -101,78 +88,51 @@ export default function ExportPage() {
         return `${(b / 1024 / 1024).toFixed(1)} MB`;
     }
 
-    const filteredSnapshots = snapshots.filter(s => s.month === selectedMonth);
-    const allSnapshots = snapshots;
+    const toggleAllIndustries = () => {
+        if (consolidatedIndustries.length === industries.length) {
+            setConsolidatedIndustries([]);
+        } else {
+            setConsolidatedIndustries(industries.map(i => i.id));
+        }
+    };
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-5xl mx-auto space-y-6 pb-12">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    <Download className="h-8 w-8" /> Export
+                    <Download className="h-8 w-8 text-zi-primary" /> 통합 Snapshot
                 </h1>
-                <p className="text-muted-foreground mt-1">월간 기사 묶음 Snapshot 생성 및 히스토리 관리</p>
+                <p className="text-muted-foreground mt-1">여러 산업 분야의 데이터를 하나로 묶어 월간 스냅샷을 생성하고 관리합니다.</p>
             </div>
 
-            {/* Snapshot Generator */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base">Snapshot 생성</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label className="text-sm font-medium">산업</label>
-                            <select
-                                className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                value={selectedIndustryId}
-                                onChange={e => setSelectedIndustryId(e.target.value ? Number(e.target.value) : '')}
-                            >
-                                <option value="">선택하세요</option>
-                                {industries.map(ex => (
-                                    <option key={ex.id} value={ex.id}>{ex.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div>
-                            <label className="text-sm font-medium">기준 월 (pub_date)</label>
-                            <select
-                                className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                value={selectedMonth}
-                                onChange={e => setSelectedMonth(e.target.value)}
-                            >
-                                {months.map(m => (
-                                    <option key={m.value} value={m.value}>{m.label} ({m.value})</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Button onClick={handleGenerate} disabled={generating || !selectedIndustryId}>
-                            {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileJson className="h-4 w-4 mr-2" />}
-                            Snapshot 생성
-                        </Button>
-                        <p className="text-xs text-muted-foreground">
-                            같은 산업+월 조합으로 여러 Snapshot을 생성할 수 있습니다 (히스토리 유지).
-                        </p>
-                    </div>
-                </CardContent>
-            </Card>
-
             {/* Consolidated Snapshot Generator */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base">통합 Snapshot 생성</CardTitle>
+            <Card className="border-zi-primary/20 shadow-sm">
+                <CardHeader className="bg-zi-primary/5 border-b border-zi-primary/10">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <FileJson className="h-5 w-5 text-zi-primary" /> 통합 Snapshot 생성
+                    </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="md:col-span-2 lg:col-span-1">
-                            <label className="text-sm font-medium mb-2 block">대상 산업 선택</label>
-                            <div className="border rounded-md p-3 max-h-[150px] overflow-y-auto space-y-2 bg-slate-50 dark:bg-slate-900">
+                <CardContent className="space-y-6 pt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Industry Selection */}
+                        <div className="lg:col-span-1 space-y-3">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-semibold text-zi-primary uppercase tracking-wider">대상 산업</label>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-7 px-2 text-[11px] font-bold"
+                                    onClick={toggleAllIndustries}
+                                >
+                                    {consolidatedIndustries.length === industries.length ? '전체 해제' : '전체 선택'}
+                                </Button>
+                            </div>
+                            <div className="border border-zi-divider rounded-md p-2 max-h-[220px] overflow-y-auto space-y-1 bg-zi-surface/50">
                                 {industries.map(ex => (
-                                    <label key={`cons-${ex.id}`} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded">
+                                    <label key={`cons-${ex.id}`} className="flex items-center gap-2.5 text-sm cursor-pointer hover:bg-zi-primary/5 p-1.5 rounded-sm transition-colors">
                                         <input
                                             type="checkbox"
-                                            className="rounded border-slate-300"
+                                            className="rounded border-zi-divider text-zi-primary focus:ring-zi-primary"
                                             checked={consolidatedIndustries.includes(ex.id)}
                                             onChange={(e) => {
                                                 if (e.target.checked) {
@@ -182,173 +142,136 @@ export default function ExportPage() {
                                                 }
                                             }}
                                         />
-                                        {ex.name}
+                                        <span className="font-medium text-zi-on-surface">{ex.name}</span>
                                     </label>
                                 ))}
                             </div>
                         </div>
-                        <div>
-                            <label className="text-sm font-medium">필터 기준</label>
-                            <select
-                                className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                value={consolidatedFilterType}
-                                onChange={e => setConsolidatedFilterType(e.target.value as 'pub_date' | 'created_at')}
-                            >
-                                <option value="pub_date">발행일 (pub_date) 기준</option>
-                                <option value="created_at">수집일 (created_at) 기준</option>
-                            </select>
+
+                        {/* Configuration */}
+                        <div className="lg:col-span-2 space-y-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-zi-primary uppercase tracking-wider">필터 기준</label>
+                                    <select
+                                        className="w-full border border-zi-divider rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zi-primary bg-white shadow-sm"
+                                        value={consolidatedFilterType}
+                                        onChange={e => setConsolidatedFilterType(e.target.value as 'pub_date' | 'created_at')}
+                                    >
+                                        <option value="pub_date">뉴스 발행일 (pub_date) 기준</option>
+                                        <option value="created_at">데이터 수집일 (created_at) 기준</option>
+                                    </select>
+                                    <p className="text-[11px] text-muted-foreground px-1">기사가 해당 월에 포함되는지 판단하는 기준입니다.</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-sm font-semibold text-zi-primary uppercase tracking-wider">기준 월</label>
+                                    <select
+                                        className="w-full border border-zi-divider rounded-md px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-zi-primary bg-white shadow-sm"
+                                        value={consolidatedMonth}
+                                        onChange={e => setConsolidatedMonth(e.target.value)}
+                                    >
+                                        {months.map(m => (
+                                            <option key={`cons-${m.value}`} value={m.value}>{m.label} ({m.value})</option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[11px] text-muted-foreground px-1">스냅샷에 포함될 기사의 날짜 범위입니다.</p>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-zi-divider flex flex-col sm:flex-row items-center gap-4">
+                                <Button 
+                                    onClick={handleGenerateConsolidated} 
+                                    disabled={consolidatedGenerating || consolidatedIndustries.length === 0} 
+                                    size="lg"
+                                    className="w-full sm:w-auto px-8 bg-zi-primary hover:bg-zi-primary/90 text-white font-bold rounded-zi-btn shadow-lg transition-all active:scale-95"
+                                >
+                                    {consolidatedGenerating ? <Loader2 className="h-5 w-5 mr-2 animate-spin" /> : <Download className="h-5 w-5 mr-2" />}
+                                    통합 Snapshot 생성
+                                </Button>
+                                <div className="text-xs text-muted-foreground bg-zi-surface px-3 py-2 rounded border border-zi-divider flex-1">
+                                    <strong className="text-zi-primary">안내:</strong> {consolidatedIndustries.length}개의 산업 분야 기사를 묶어 {consolidatedMonth} 스냅샷을 생성합니다. 
+                                    기존 파일이 있는 경우 덮어쓰지 않고 새로운 버전으로 저장됩니다.
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <label className="text-sm font-medium">기준 월</label>
-                            <select
-                                className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                value={consolidatedMonth}
-                                onChange={e => setConsolidatedMonth(e.target.value)}
-                            >
-                                {months.map(m => (
-                                    <option key={`cons-${m.value}`} value={m.value}>{m.label} ({m.value})</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-3 pt-2">
-                        <Button onClick={handleGenerateConsolidated} disabled={consolidatedGenerating || consolidatedIndustries.length === 0} variant="secondary">
-                            {consolidatedGenerating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileJson className="h-4 w-4 mr-2" />}
-                            통합 Snapshot 생성
-                        </Button>
-                        <p className="text-xs text-muted-foreground">
-                            여러 산업의 기사를 선택한 필터(발행일/수집일) 기준으로 묶어서 생성합니다.
-                        </p>
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Snapshot History for selected industry */}
-                {selectedIndustry && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="text-base flex items-center justify-between">
-                            <span>Snapshot 히스토리 — {selectedIndustry.name}</span>
-                            <span className="text-xs font-normal text-muted-foreground">{allSnapshots.length}개</span>
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {snapshotLoading ? (
-                            <div className="py-8 text-center text-muted-foreground">
-                                <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                                불러오는 중...
-                            </div>
-                        ) : allSnapshots.length === 0 ? (
-                            <p className="text-sm text-muted-foreground text-center py-8">생성된 Snapshot이 없습니다.</p>
-                        ) : (
-                            <div className="space-y-2">
-                                {/* Group by month */}
-                                {Array.from(new Set(allSnapshots.map(s => s.month))).map(mon => (
-                                    <div key={mon}>
-                                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 mt-4 first:mt-0">
-                                            {mon}
-                                        </h3>
-                                        {allSnapshots.filter(s => s.month === mon).map(snap => (
+            {/* Consolidated Snapshot History */}
+            <Card className="shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between py-5">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                        <Star className="h-5 w-5 text-amber-500" /> 통합 Snapshot 히스토리
+                    </CardTitle>
+                    <Badge variant="outline" className="font-mono text-xs">
+                        {consolidatedSnapshots.length} Files
+                    </Badge>
+                </CardHeader>
+                <CardContent className="pt-0">
+                    {snapshotLoading ? (
+                        <div className="py-12 text-center text-muted-foreground">
+                            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 opacity-20" />
+                            <p className="font-medium">Snapshot 목록을 불러오고 있습니다...</p>
+                        </div>
+                    ) : consolidatedSnapshots.length === 0 ? (
+                        <div className="py-16 text-center border-2 border-dashed border-zi-divider rounded-lg">
+                            <FileJson className="h-12 w-12 text-zi-divider mx-auto mb-3" />
+                            <p className="text-zi-on-surface-variant font-medium">생성된 통합 Snapshot이 없습니다.</p>
+                            <p className="text-sm text-zi-outline mt-1">상단의 생성 버튼을 눌러 첫 번째 통합 스냅샷을 만들어보세요.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {Array.from(new Set(consolidatedSnapshots.map(s => s.month))).map(mon => (
+                                <div key={`cons-hist-${mon}`} className="space-y-3">
+                                    <h3 className="text-sm font-bold text-zi-primary flex items-center gap-2 px-1">
+                                        <div className="h-1 w-1 rounded-full bg-zi-primary" />
+                                        {mon.replace('-', '년 ')}월 데이터
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {consolidatedSnapshots.filter(s => s.month === mon).map(snap => (
                                             <div
                                                 key={snap.filename}
-                                                className="flex items-center justify-between gap-3 p-3 border rounded-lg hover:bg-slate-50"
+                                                className="group flex items-center justify-between gap-4 p-4 border border-zi-divider rounded-zi-card bg-white hover:border-zi-primary/30 hover:shadow-md transition-all"
                                             >
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <FileJson className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                                <div className="flex items-center gap-3 min-w-0">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                                                        <FileJson className="h-5 w-5" />
+                                                    </div>
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-mono text-slate-600 truncate">{snap.filename}</p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            생성일: {snap.generatedAt} · {formatBytes(snap.sizeBytes)}
+                                                        <p className="text-[13px] font-semibold text-zi-primary truncate" title={snap.filename}>
+                                                            {snap.filename}
+                                                        </p>
+                                                        <p className="text-[11px] text-zi-outline mt-0.5">
+                                                            생성: {snap.generatedAt} · {formatBytes(snap.sizeBytes)}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 flex-shrink-0">
                                                     {snap.isLatest && (
-                                                        <Badge variant="default" className="text-xs flex items-center gap-1">
-                                                            <Star className="h-3 w-3" /> 최신
+                                                        <Badge className="bg-amber-500 text-white hover:bg-amber-600 border-none px-2 py-0 h-5 text-[10px] font-bold">
+                                                            LATEST
                                                         </Badge>
                                                     )}
                                                     <a
                                                         href={`/api/snapshots/${encodeURIComponent(snap.filename)}`}
                                                         download={snap.filename}
+                                                        className="inline-flex"
                                                     >
-                                                        <Button size="sm" variant="outline">
-                                                            <Download className="h-3 w-3 mr-1" /> 다운로드
+                                                        <Button size="sm" variant="outline" className="h-8 text-xs font-bold border-zi-divider hover:border-zi-primary hover:text-zi-primary">
+                                                            <Download className="h-3.5 w-3.5 mr-1" /> 받기
                                                         </Button>
                                                     </a>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Consolidated Snapshot History */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base flex items-center justify-between">
-                        <span>통합 Snapshot 히스토리</span>
-                        <span className="text-xs font-normal text-muted-foreground">{consolidatedSnapshots.length}개</span>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {snapshotLoading ? (
-                        <div className="py-8 text-center text-muted-foreground">
-                            <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                            불러오는 중...
-                        </div>
-                    ) : consolidatedSnapshots.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-8">생성된 통합 Snapshot이 없습니다.</p>
-                    ) : (
-                        <div className="space-y-2">
-                            {Array.from(new Set(consolidatedSnapshots.map(s => s.month))).map(mon => (
-                                <div key={`cons-hist-${mon}`}>
-                                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 mt-4 first:mt-0">
-                                        {mon}
-                                    </h3>
-                                    {consolidatedSnapshots.filter(s => s.month === mon).map(snap => (
-                                        <div
-                                            key={snap.filename}
-                                            className="flex items-center justify-between gap-3 p-3 border rounded-lg hover:bg-slate-50"
-                                        >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                <FileJson className="h-4 w-4 text-emerald-500 flex-shrink-0" />
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-mono text-slate-600 truncate">{snap.filename}</p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        생성일: {snap.generatedAt} · {formatBytes(snap.sizeBytes)}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-2 flex-shrink-0">
-                                                {snap.isLatest && (
-                                                    <Badge variant="default" className="text-xs flex items-center gap-1">
-                                                        <Star className="h-3 w-3" /> 최신
-                                                    </Badge>
-                                                )}
-                                                <a
-                                                    href={`/api/snapshots/${encodeURIComponent(snap.filename)}`}
-                                                    download={snap.filename}
-                                                >
-                                                    <Button size="sm" variant="outline">
-                                                        <Download className="h-3 w-3 mr-1" /> 다운로드
-                                                    </Button>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    ))}
                                 </div>
                             ))}
                         </div>
                     )}
                 </CardContent>
             </Card>
-            </div>
         </div>
     );
 }

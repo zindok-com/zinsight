@@ -58,27 +58,7 @@ export async function getArticles(filter: ArticleFilter) {
     return { articles, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
-export async function getArticlesForExport(industryId: number, month: string) {
-    const [year, mon] = month.split('-').map(Number);
-    const fromDate = new Date(year, mon - 1, 1);
-    const toDate = new Date(year, mon, 0, 23, 59, 59);
 
-    return prisma.article.findMany({
-        where: {
-            pub_date: { gte: fromDate, lte: toDate },
-            ingestions: { some: { industry_id: industryId } }
-        },
-        include: {
-            ingestions: {
-                where: { industry_id: industryId },
-                include: {
-                    keyword: { select: { id: true, keyword_text: true, keyword_type: true } }
-                }
-            }
-        },
-        orderBy: { pub_date: 'desc' },
-    });
-}
 
 export async function getConsolidatedArticlesForExport(industryIds: number[], month: string, filterType: 'pub_date' | 'created_at') {
     const [year, mon] = month.split('-').map(Number);
