@@ -92,6 +92,10 @@ model Company {
   core_keywords    Json?    
   recent_keywords  Json?    
   recent_status    String?  @db.Text
+  founded_year     String?  @db.VarChar(10)
+  hq_location      String?  @db.VarChar(255)
+  ceo_name         String?  @db.VarChar(100)
+  key_references   Json?    
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 

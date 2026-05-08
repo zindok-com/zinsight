@@ -12,6 +12,10 @@ export async function updateCompany(
     business_summary?: string;
     recent_status?: string;
     core_keywords?: any;
+    founded_year?: string;
+    hq_location?: string;
+    ceo_name?: string;
+    key_references?: any;
   }
 ) {
   try {

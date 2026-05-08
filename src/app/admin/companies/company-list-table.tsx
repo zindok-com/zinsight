@@ -77,6 +77,10 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
       company_url: selectedCompany.company_url || '',
       business_summary: selectedCompany.business_summary || '',
       recent_status: selectedCompany.recent_status || '',
+      founded_year: selectedCompany.founded_year || '',
+      hq_location: selectedCompany.hq_location || '',
+      ceo_name: selectedCompany.ceo_name || '',
+      key_references: selectedCompany.key_references?.join(', ') || '',
       kw_products: kw.products?.join(', ') || '',
       kw_technology: kw.technology?.join(', ') || '',
       kw_target_market: kw.target_market?.join(', ') || '',
@@ -98,6 +102,10 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
         company_url: editForm.company_url,
         business_summary: editForm.business_summary,
         recent_status: editForm.recent_status,
+        founded_year: editForm.founded_year,
+        hq_location: editForm.hq_location,
+        ceo_name: editForm.ceo_name,
+        key_references: editForm.key_references.split(',').map((s: string) => s.trim()).filter(Boolean),
         core_keywords,
       });
 
@@ -311,6 +319,76 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   ) : (
                     <div className="text-sm leading-relaxed p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
                       <ExpandableText text={selectedCompany.business_summary} />
+                    </div>
+                  )}
+                </section>
+                
+                {/* 1.1 기본 정보 (신규 필드) */}
+                <section>
+                  <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
+                    기본 정보
+                  </h3>
+                  {isEditing ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border rounded-lg">
+                      <div className="space-y-1.5">
+                        <Label>설립연도</Label>
+                        <Input 
+                          value={editForm.founded_year}
+                          onChange={(e) => setEditForm({...editForm, founded_year: e.target.value})}
+                          placeholder="예: 2010"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>대표자명</Label>
+                        <Input 
+                          value={editForm.ceo_name}
+                          onChange={(e) => setEditForm({...editForm, ceo_name: e.target.value})}
+                        />
+                      </div>
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label>본사 소재지</Label>
+                        <Input 
+                          value={editForm.hq_location}
+                          onChange={(e) => setEditForm({...editForm, hq_location: e.target.value})}
+                          placeholder="예: 서울특별시 강남구"
+                        />
+                      </div>
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label>주요 레퍼런스 (쉼표로 구분)</Label>
+                        <Input 
+                          value={editForm.key_references}
+                          onChange={(e) => setEditForm({...editForm, key_references: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg text-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">설립연도</span>
+                        <span className="font-medium">{selectedCompany.founded_year || '-'}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs text-muted-foreground">대표자</span>
+                        <span className="font-medium">{selectedCompany.ceo_name || '-'}</span>
+                      </div>
+                      <div className="flex flex-col gap-1 sm:col-span-2">
+                        <span className="text-xs text-muted-foreground">본사 소재지</span>
+                        <span className="font-medium">{selectedCompany.hq_location || '-'}</span>
+                      </div>
+                      <div className="flex flex-col gap-2 sm:col-span-2">
+                        <span className="text-xs text-muted-foreground">주요 레퍼런스</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedCompany.key_references && selectedCompany.key_references.length > 0 ? (
+                            selectedCompany.key_references.map((ref: string, i: number) => (
+                              <Badge key={i} variant="secondary" className="text-[11px] font-normal px-2 py-0">
+                                {ref}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </section>

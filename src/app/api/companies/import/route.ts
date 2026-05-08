@@ -56,6 +56,10 @@ export async function POST(request: Request) {
             core_keywords: lead.core_keywords || null,
             recent_keywords: lead.recent_keywords || null,
             recent_status: lead.recent_status || null,
+            founded_year: lead.founded_year || null,
+            hq_location: lead.hq_location || null,
+            ceo_name: lead.ceo_name || null,
+            key_references: lead.key_references || null,
           },
         });
         results.addedCompanies++;
@@ -66,6 +70,10 @@ export async function POST(request: Request) {
           data: {
             recent_keywords: lead.recent_keywords || company.recent_keywords,
             recent_status: lead.recent_status || company.recent_status,
+            founded_year: lead.founded_year || company.founded_year,
+            hq_location: lead.hq_location || company.hq_location,
+            ceo_name: lead.ceo_name || company.ceo_name,
+            key_references: lead.key_references || company.key_references,
           }
         });
         results.updatedCompanies++;
