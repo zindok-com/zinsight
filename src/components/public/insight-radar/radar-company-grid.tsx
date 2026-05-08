@@ -123,18 +123,22 @@ export function RadarCompanyGrid({ companies, total }: RadarCompanyGridProps) {
                                 )}
 
                                 {/* 최신 추출 키워드 (recent_keywords) */}
-                                {company.recent_keywords && extractKeywords(company.recent_keywords).length > 0 && (
-                                    <div className="flex flex-wrap gap-1">
-                                        {extractKeywords(company.recent_keywords).map((kw, i) => (
-                                            <span
-                                                key={i}
-                                                className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600 border border-blue-100"
-                                            >
-                                                #{kw}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
+                                {(() => {
+                                    const recentKws = extractKeywords(company.recent_keywords);
+                                    if (recentKws.length === 0) return null;
+                                    return (
+                                        <div className="flex flex-wrap gap-1">
+                                            {recentKws.map((kw, i) => (
+                                                <span
+                                                    key={i}
+                                                    className="rounded-full bg-blue-50 px-2 py-0.5 text-xs text-blue-600 border border-blue-100"
+                                                >
+                                                    #{kw}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
 
                                 {/* 하단: 날짜 & 상세 버튼 */}
                                 <div className="mt-auto flex items-center justify-between pt-2">

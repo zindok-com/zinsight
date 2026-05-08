@@ -105,35 +105,43 @@ export function RadarCompanyDetailDialog({ companyId, companyName }: RadarCompan
 
                         {/* 키워드 (핵심 & 최신) */}
                         <div className="flex flex-col gap-4">
-                            {detail.core_keywords && extractKeywords(detail.core_keywords).length > 0 && (
-                                <div>
-                                    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                        핵심 키워드
-                                    </h4>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {extractKeywords(detail.core_keywords).map((kw, i) => (
-                                            <Badge key={i} variant="secondary" className="font-normal">
-                                                #{kw}
-                                            </Badge>
-                                        ))}
+                            {(() => {
+                                const coreKws = extractKeywords(detail.core_keywords);
+                                if (coreKws.length === 0) return null;
+                                return (
+                                    <div>
+                                        <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            핵심 키워드
+                                        </h4>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {coreKws.map((kw, i) => (
+                                                <Badge key={i} variant="secondary" className="font-normal">
+                                                    #{kw}
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                );
+                            })()}
 
-                            {detail.recent_keywords && extractKeywords(detail.recent_keywords).length > 0 && (
-                                <div>
-                                    <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                        최신 추출 키워드
-                                    </h4>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {extractKeywords(detail.recent_keywords).map((kw, i) => (
-                                            <Badge key={i} variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 font-normal">
-                                                #{kw}
-                                            </Badge>
-                                        ))}
+                            {(() => {
+                                const recentKws = extractKeywords(detail.recent_keywords);
+                                if (recentKws.length === 0) return null;
+                                return (
+                                    <div>
+                                        <h4 className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                            최신 추출 키워드
+                                        </h4>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {recentKws.map((kw, i) => (
+                                                <Badge key={i} variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 font-normal">
+                                                    #{kw}
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                );
+                            })()}
                         </div>
 
                         {/* 최근 동향 */}
