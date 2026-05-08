@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { LOGS_DIR } from './constants';
+const LOGS_DIR = path.join(process.cwd(), 'data', 'logs');
 
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
