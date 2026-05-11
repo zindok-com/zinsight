@@ -20,6 +20,11 @@ export const metadata: Metadata = {
         default: "zinsight — 당신의 시간을 지킵니다",
     },
     description: "산업별 기업 동향과 최신 뉴스를 한눈에. zinsight Insight Radar.",
+    icons: {
+        icon: "/img/zinsight_icon.png",
+        shortcut: "/img/zinsight_icon.png",
+        apple: "/img/zinsight_icon.png",
+    },
 };
 
 export default function RootLayout({
