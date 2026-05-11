@@ -16,6 +16,8 @@ export async function updateCompany(
     hq_location?: string;
     ceo_name?: string;
     key_references?: any;
+    aliases?: any;
+    recent_keywords?: any;
   }
 ) {
   try {

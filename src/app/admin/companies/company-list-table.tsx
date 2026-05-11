@@ -84,6 +84,8 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
       kw_products: kw.products?.join(', ') || '',
       kw_technology: kw.technology?.join(', ') || '',
       kw_target_market: kw.target_market?.join(', ') || '',
+      aliases: selectedCompany.aliases?.join(', ') || '',
+      recent_keywords: selectedCompany.recent_keywords?.join(', ') || '',
     });
     setIsEditing(true);
   };
@@ -107,6 +109,8 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
         ceo_name: editForm.ceo_name,
         key_references: editForm.key_references.split(',').map((s: string) => s.trim()).filter(Boolean),
         core_keywords,
+        aliases: editForm.aliases.split(',').map((s: string) => s.trim()).filter(Boolean),
+        recent_keywords: editForm.recent_keywords.split(',').map((s: string) => s.trim()).filter(Boolean),
       });
 
       if (res.success) {
@@ -141,7 +145,8 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
       const matchSearch = term === '' || 
         company.company_name?.toLowerCase().includes(term) ||
         company.business_summary?.toLowerCase().includes(term) || 
-        company.recent_status?.toLowerCase().includes(term);
+        company.recent_status?.toLowerCase().includes(term) ||
+        company.aliases?.some((alias: string) => alias.toLowerCase().includes(term));
 
       return matchIndustry && matchSearch;
     });
@@ -257,9 +262,20 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                         />
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
-                        <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
-                        <Badge variant="secondary">{selectedCompany.entity_type || '기업'}</Badge>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
+                          <Badge variant="secondary">{selectedCompany.entity_type || '기업'}</Badge>
+                        </div>
+                        {selectedCompany.aliases && selectedCompany.aliases.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {selectedCompany.aliases.map((alias: string, i: number) => (
+                              <span key={i} className="text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                                {alias}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     <Badge variant="outline">{selectedCompany.industry?.name}</Badge>
@@ -360,6 +376,14 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                           onChange={(e) => setEditForm({...editForm, key_references: e.target.value})}
                         />
                       </div>
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label>별칭 (쉼표로 구분)</Label>
+                        <Input 
+                          value={editForm.aliases}
+                          onChange={(e) => setEditForm({...editForm, aliases: e.target.value})}
+                          placeholder="예: 현대, 현대차"
+                        />
+                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg text-sm">
@@ -422,6 +446,13 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                           onChange={(e) => setEditForm({...editForm, kw_target_market: e.target.value})}
                         />
                       </div>
+                      <div>
+                        <Label>최신 키워드 (쉼표로 구분)</Label>
+                        <Input 
+                          value={editForm.recent_keywords}
+                          onChange={(e) => setEditForm({...editForm, recent_keywords: e.target.value})}
+                        />
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -456,12 +487,24 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                               </div>
                             )}
                             {kw.target_market && kw.target_market.length > 0 && (
-                              <div className="p-4 border rounded-lg md:col-span-2">
+                              <div className="p-4 border rounded-lg">
                                 <h4 className="text-xs font-semibold mb-2">타겟 시장</h4>
                                 <div className="flex flex-wrap gap-1.5">
                                   {kw.target_market.map((m: string, i: number) => (
                                     <Badge key={i} variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
                                       {m}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {selectedCompany.recent_keywords && selectedCompany.recent_keywords.length > 0 && (
+                              <div className="p-4 border rounded-lg">
+                                <h4 className="text-xs font-semibold mb-2">최신 키워드</h4>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {selectedCompany.recent_keywords.map((rk: string, i: number) => (
+                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                                      {rk}
                                     </Badge>
                                   ))}
                                 </div>
