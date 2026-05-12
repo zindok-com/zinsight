@@ -34,11 +34,27 @@ export async function POST(request: Request) {
       const articleIds = lead.related_articles?.map((a: any) => a.id) || [];
 
       // 기업 조회 (중복 확인)
+      // 1. 정확한 조직명으로 검색
       let company = await prisma.company.findUnique({
         where: {
           company_name,
         },
       });
+
+      // 2. 정확한 매칭이 없을 경우, 임포트 데이터의 별칭(aliases) 중 하나가 DB의 조직명과 일치하는지 확인
+      if (!company && lead.aliases && Array.isArray(lead.aliases) && lead.aliases.length > 0) {
+        company = await prisma.company.findFirst({
+          where: {
+            company_name: {
+              in: lead.aliases
+            }
+          }
+        });
+        
+        if (company) {
+          console.log(`Matched existing company "${company.company_name}" via import alias.`);
+        }
+      }
 
       if (!company) {
         // 신규 기업 추가
