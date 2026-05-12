@@ -1,12 +1,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import {
-    Building2,
-    ArrowRight,
-    Search,
-    TrendingUp,
-    Globe,
-    ExternalLink,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import {
     getRadarIndustries,
@@ -15,7 +11,7 @@ import {
     getRadarLatestArticles,
 } from '@/actions/insight-radar-actions';
 import { RadarSearchBar } from '@/components/public/insight-radar/RadarSearchBar';
-import { RadarCompanyTable } from '@/components/public/insight-radar/RadarCompanyTable';
+import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompanyList';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,32 +64,56 @@ export default async function InsightRadarPage({
                     currentQuery={searchQuery} 
                 />
 
-                {/* ── 조직 목록 테이블 (클라이언트 컴포넌트) ── */}
-                <RadarCompanyTable companies={companies} />
+                {/* ── 조직 목록 카드 리스트 (클라이언트 컴포넌트) ── */}
+                <RadarCompanyList companies={companies} />
 
                 {/* 페이지네이션 */}
                 {totalPages > 1 && (
-                    <div className="mt-8 flex items-center justify-center gap-4">
-                        {currentPage > 1 && (
-                            <Link
-                                href={buildPageHref(params, currentPage - 1)}
-                                className="border border-zi-outline-variant px-4 py-2 rounded-zi-btn font-ui-label text-ui-label text-zi-on-surface-variant transition-all hover:bg-white active:scale-95"
-                            >
-                                이전
-                            </Link>
-                        )}
-                        <span className="font-data-num text-data-num text-zi-on-surface-variant">
-                            {currentPage} / {Math.max(totalPages, 1)}
-                        </span>
-                        {currentPage < totalPages && (
-                            <Link
-                                href={buildPageHref(params, currentPage + 1)}
-                                className="flex items-center gap-2 bg-zi-primary px-4 py-2 rounded-zi-btn font-ui-label text-ui-label text-white transition-all hover:bg-zi-primary/90 active:scale-95 shadow-sm"
-                            >
-                                데이터 더보기
-                                <ArrowRight className="h-4 w-4" />
-                            </Link>
-                        )}
+                    <div className="mt-12 flex items-center justify-center">
+                        <div className="inline-flex items-center p-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
+                            {/* 이전 버튼 */}
+                            {currentPage > 1 ? (
+                                <Link
+                                    href={buildPageHref(params, currentPage - 1)}
+                                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-colors"
+                                >
+                                    <ChevronLeft className="w-4 h-4" />
+                                    <span>이전</span>
+                                </Link>
+                            ) : (
+                                <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold text-slate-300 cursor-not-allowed">
+                                    <ChevronLeft className="w-4 h-4" />
+                                    <span>이전</span>
+                                </div>
+                            )}
+
+                            {/* 페이지 인디케이터 */}
+                            <div className="flex items-center justify-center px-4">
+                                <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[13px] font-extrabold shadow-inner border border-blue-100">
+                                    {currentPage}
+                                </span>
+                                <span className="mx-2 text-slate-300">/</span>
+                                <span className="text-[13px] font-bold text-slate-400">
+                                    {Math.max(totalPages, 1)}
+                                </span>
+                            </div>
+
+                            {/* 다음 버튼 */}
+                            {currentPage < totalPages ? (
+                                <Link
+                                    href={buildPageHref(params, currentPage + 1)}
+                                    className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-500/20 transition-all active:scale-95"
+                                >
+                                    <span>다음 페이지</span>
+                                    <ChevronRight className="w-4 h-4" />
+                                </Link>
+                            ) : (
+                                <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold text-slate-300 cursor-not-allowed">
+                                    <span>다음 페이지</span>
+                                    <ChevronRight className="w-4 h-4" />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
             </div>
