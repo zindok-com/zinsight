@@ -45,7 +45,7 @@ const ENTITY_CONFIG = {
     }
 };
 
-const getEntityConfig = (entityType?: string) => {
+const getEntityConfig = (entityType?: string | null) => {
     if (!entityType) return ENTITY_CONFIG.default;
     if (entityType.includes('기업')) return ENTITY_CONFIG['기업'];
     if (entityType.includes('기관')) return ENTITY_CONFIG['기관'];
