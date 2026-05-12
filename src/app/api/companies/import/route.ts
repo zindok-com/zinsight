@@ -36,10 +36,7 @@ export async function POST(request: Request) {
       // 기업 조회 (중복 확인)
       let company = await prisma.company.findUnique({
         where: {
-          industry_id_company_name: {
-            industry_id,
-            company_name,
-          },
+          company_name,
         },
       });
 
@@ -47,33 +44,54 @@ export async function POST(request: Request) {
         // 신규 기업 추가
         company = await prisma.company.create({
           data: {
-            industry_id,
             company_name: lead.company_name,
             aliases: lead.aliases || null,
             company_url: lead.company_url || null,
             entity_type: lead.entity_type || '기업',
             business_summary: lead.business_summary || null,
             core_keywords: lead.core_keywords || null,
-            recent_keywords: lead.recent_keywords || null,
-            recent_status: lead.recent_status || null,
             founded_year: lead.founded_year || null,
             hq_location: lead.hq_location || null,
             ceo_name: lead.ceo_name || null,
             key_references: lead.key_references || null,
+            industries: {
+              create: {
+                industry_id,
+                recent_keywords: lead.recent_keywords || null,
+                recent_status: lead.recent_status || null,
+              }
+            }
           },
         });
         results.addedCompanies++;
       } else {
-        // 기존 기업 최신 상태 업데이트
+        // 기존 기업 정보 업데이트
         company = await prisma.company.update({
           where: { id: company.id },
           data: {
-            recent_keywords: lead.recent_keywords || company.recent_keywords,
-            recent_status: lead.recent_status || company.recent_status,
             founded_year: lead.founded_year || company.founded_year,
             hq_location: lead.hq_location || company.hq_location,
             ceo_name: lead.ceo_name || company.ceo_name,
             key_references: lead.key_references || company.key_references,
+            industries: {
+              upsert: {
+                where: {
+                  company_id_industry_id: {
+                    company_id: company.id,
+                    industry_id,
+                  }
+                },
+                create: {
+                  industry_id,
+                  recent_keywords: lead.recent_keywords || null,
+                  recent_status: lead.recent_status || null,
+                },
+                update: {
+                  recent_keywords: lead.recent_keywords || undefined,
+                  recent_status: lead.recent_status || undefined,
+                }
+              }
+            }
           }
         });
         results.updatedCompanies++;

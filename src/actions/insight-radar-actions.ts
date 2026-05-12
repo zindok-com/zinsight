@@ -76,7 +76,7 @@ export async function getRadarIndustries(): Promise<RadarIndustryWithStats[]> {
     const industryStats = await Promise.all(
         industries.map(async (industry: typeof industries[number]) => {
             const [companyCount, latestIngestion] = await Promise.all([
-                prisma.company.count({
+                prisma.companyIndustry.count({
                     where: { industry_id: industry.id },
                 }),
                 prisma.articleIngestion.findFirst({
@@ -129,14 +129,14 @@ export async function getRadarCompanies(
     const { industryId, entityType, searchQuery } = filter;
 
     const where = {
-        ...(industryId ? { industry_id: industryId } : {}),
+        ...(industryId ? { industries: { some: { industry_id: industryId } } } : {}),
         ...(entityType ? { entity_type: entityType } : {}),
         ...(searchQuery
             ? {
                   OR: [
                       { company_name: { contains: searchQuery } },
                       { business_summary: { contains: searchQuery } },
-                      { recent_status: { contains: searchQuery } },
+                      { industries: { some: { recent_status: { contains: searchQuery } } } },
                   ],
               }
             : {}),
@@ -146,8 +146,14 @@ export async function getRadarCompanies(
         prisma.company.findMany({
             where,
             include: {
-                industry: {
-                    select: { id: true, name: true, slug: true },
+                industries: {
+                    include: {
+                        industry: {
+                            select: { id: true, name: true, slug: true },
+                        },
+                    },
+                    // 필터가 있으면 해당 산업군을 우선적으로 가져오도록 할 수도 있으나 
+                    // 현재는 모든 연결된 산업군을 가져옴
                 },
                 company_articles: {
                     include: {
@@ -169,18 +175,25 @@ export async function getRadarCompanies(
         prisma.company.count({ where }),
     ]);
 
-    const companies: RadarCompanyCard[] = rawCompanies.map((c: typeof rawCompanies[number]) => ({
-        id: c.id,
-        company_name: c.company_name,
-        entity_type: c.entity_type,
-        business_summary: c.business_summary,
-        recent_status: c.recent_status,
-        core_keywords: c.core_keywords,
-        recent_keywords: c.recent_keywords,
-        industry: c.industry,
-        articleCount: c._count.company_articles,
-        latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
-    }));
+    const companies: RadarCompanyCard[] = rawCompanies.map((c: any) => {
+        // 현재 필터된 산업군 정보 또는 첫 번째 산업군 정보 선택
+        const targetCI = industryId 
+            ? c.industries.find((ci: any) => ci.industry_id === industryId) || c.industries[0]
+            : c.industries[0];
+
+        return {
+            id: c.id,
+            company_name: c.company_name,
+            entity_type: c.entity_type,
+            business_summary: c.business_summary,
+            recent_status: targetCI?.recent_status ?? null,
+            core_keywords: c.core_keywords,
+            recent_keywords: targetCI?.recent_keywords ?? null,
+            industry: targetCI?.industry ?? null,
+            articleCount: c._count.company_articles,
+            latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
+        };
+    });
 
     return {
         companies,
@@ -283,7 +296,11 @@ export async function getRadarCompanyDetail(companyId: number) {
     const company = await prisma.company.findUnique({
         where: { id: companyId },
         include: {
-            industry: true,
+            industries: {
+                include: {
+                    industry: true,
+                }
+            },
             company_articles: {
                 include: {
                     article: {
@@ -306,16 +323,19 @@ export async function getRadarCompanyDetail(companyId: number) {
 
     if (!company) return null;
 
+    const firstCI = company.industries[0] || {};
+
     return {
         id: company.id,
         company_name: company.company_name,
         entity_type: company.entity_type,
         business_summary: company.business_summary,
-        recent_status: company.recent_status,
+        recent_status: firstCI.recent_status ?? null,
         core_keywords: company.core_keywords,
-        recent_keywords: company.recent_keywords,
-        industry: company.industry,
-        recentArticles: company.company_articles.map((ca: typeof company.company_articles[number]) => ({
+        recent_keywords: firstCI.recent_keywords ?? null,
+        industry: firstCI.industry ?? null,
+        allIndustries: company.industries.map((ci: any) => ci.industry),
+        recentArticles: company.company_articles.map((ca: any) => ({
             ...ca.article,
             url: ca.article.link,           // link → url 별칭
             summary: ca.article.description, // description → summary 별칭

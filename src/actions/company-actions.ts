@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 
 export async function updateCompany(
   id: number,
+  industryId: number,
   data: {
     company_name: string;
     entity_type?: string;
@@ -21,11 +22,46 @@ export async function updateCompany(
   }
 ) {
   try {
+    const { recent_status, recent_keywords, ...companyData } = data;
+
     const updatedCompany = await prisma.company.update({
       where: { id },
-      data,
+      data: {
+        ...companyData,
+        industries: {
+          upsert: {
+            where: {
+              company_id_industry_id: {
+                company_id: id,
+                industry_id: industryId,
+              },
+            },
+            create: {
+              industry_id: industryId,
+              recent_status,
+              recent_keywords,
+            },
+            update: {
+              recent_status,
+              recent_keywords,
+            },
+          },
+        },
+      },
+      include: {
+        industries: {
+          include: {
+            industry: true,
+          },
+        },
+        company_articles: {
+          include: {
+            article: true,
+          },
+        },
+      },
     });
-    
+
     revalidatePath('/admin/companies');
     return { success: true, company: updatedCompany };
   } catch (error: any) {

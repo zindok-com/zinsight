@@ -18,7 +18,7 @@ model Industry {
 
   keywords    SearchKeyword[]
   ingestions  ArticleIngestion[]
-  companies   Company[]
+  companies   CompanyIndustry[]
 
   @@index([slug, deleted_at])
   @@map("industries")
@@ -83,15 +83,12 @@ model ArticleIngestion {
 
 model Company {
   id               Int      @id @default(autoincrement())
-  industry_id      Int
   company_name     String   @db.VarChar(255)
   aliases          Json?    // 별칭 리스트 (문자열 배열)
   entity_type      String   @default("기업") @db.VarChar(50)
   company_url      String?  @db.VarChar(255)
   business_summary String?  @db.Text
   core_keywords    Json?    
-  recent_keywords  Json?    
-  recent_status    String?  @db.Text
   founded_year     String?  @db.VarChar(10)
   hq_location      String?  @db.VarChar(255)
   ceo_name         String?  @db.VarChar(100)
@@ -99,12 +96,26 @@ model Company {
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  industry         Industry         @relation(fields: [industry_id], references: [id])
+  industries       CompanyIndustry[]
   company_articles CompanyArticle[]
 
-  @@unique([industry_id, company_name])
-  @@index([industry_id])
+  @@unique([company_name])
   @@map("companies")
+}
+
+model CompanyIndustry {
+  company_id      Int
+  industry_id     Int
+  recent_keywords Json?
+  recent_status   String?  @db.Text
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  company  Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  industry Industry @relation(fields: [industry_id], references: [id], onDelete: Cascade)
+
+  @@id([company_id, industry_id])
+  @@map("company_industries")
 }
 
 model CompanyArticle {

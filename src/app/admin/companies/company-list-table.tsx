@@ -23,7 +23,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 function ExpandableText({ text }: { text: string | null }) {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  if (!text) return <span>정보 없음</span>;
+  if (!text) return <span>기록된 데이터가 없습니다.</span>;
 
   // 100자를 기준으로 긴 텍스트인지 판단
   const isLong = text.length > 100;
@@ -71,12 +71,22 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
 
   const handleEditClick = () => {
     const kw = parseKeywords(selectedCompany.core_keywords) || {};
+    
+    // 선택된 산업군 또는 기본 산업군의 컨텍스트 로드
+    const currentIndustryId = editForm.active_industry_id || (selectedIndustry !== 'all' 
+      ? parseInt(selectedIndustry) 
+      : selectedCompany.industries[0]?.industry_id);
+    
+    const industrySpecific = selectedCompany.industries.find(
+      (i: any) => i.industry_id === currentIndustryId
+    ) || {};
+
     setEditForm({
       company_name: selectedCompany.company_name || '',
       entity_type: selectedCompany.entity_type || '기업',
       company_url: selectedCompany.company_url || '',
       business_summary: selectedCompany.business_summary || '',
-      recent_status: selectedCompany.recent_status || '',
+      recent_status: industrySpecific.recent_status || '',
       founded_year: selectedCompany.founded_year || '',
       hq_location: selectedCompany.hq_location || '',
       ceo_name: selectedCompany.ceo_name || '',
@@ -85,7 +95,8 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
       kw_technology: kw.technology?.join(', ') || '',
       kw_target_market: kw.target_market?.join(', ') || '',
       aliases: selectedCompany.aliases?.join(', ') || '',
-      recent_keywords: selectedCompany.recent_keywords?.join(', ') || '',
+      recent_keywords: industrySpecific.recent_keywords?.join(', ') || '',
+      active_industry_id: currentIndustryId,
     });
     setIsEditing(true);
   };
@@ -98,7 +109,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
         target_market: editForm.kw_target_market.split(',').map((s: string) => s.trim()).filter(Boolean),
       };
 
-      const res = await updateCompany(selectedCompany.id, {
+      const res = await updateCompany(selectedCompany.id, editForm.active_industry_id, {
         company_name: editForm.company_name,
         entity_type: editForm.entity_type,
         company_url: editForm.company_url,
@@ -127,9 +138,11 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
   const industries = useMemo(() => {
     const map = new Map();
     companies.forEach(company => {
-      if (company.industry) {
-        map.set(company.industry.id, company.industry);
-      }
+      company.industries?.forEach((ci: any) => {
+        if (ci.industry) {
+          map.set(ci.industry.id, ci.industry);
+        }
+      });
     });
     return Array.from(map.values());
   }, [companies]);
@@ -138,15 +151,16 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
   const filteredCompanies = useMemo(() => {
     return companies.filter(company => {
       // 산업군 필터
-      const matchIndustry = selectedIndustry === 'all' || String(company.industry_id) === selectedIndustry;
+      const matchIndustry = selectedIndustry === 'all' || 
+        company.industries?.some((ci: any) => String(ci.industry_id) === selectedIndustry);
       
-      // 검색어 필터 (회사명, 요약 등에서 검색)
+      // 검색어 필터
       const term = searchTerm.trim().toLowerCase();
       const matchSearch = term === '' || 
         company.company_name?.toLowerCase().includes(term) ||
         company.business_summary?.toLowerCase().includes(term) || 
-        company.recent_status?.toLowerCase().includes(term) ||
-        company.aliases?.some((alias: string) => alias.toLowerCase().includes(term));
+        company.aliases?.some((alias: string) => alias.toLowerCase().includes(term)) ||
+        company.industries?.some((ci: any) => ci.recent_status?.toLowerCase().includes(term));
 
       return matchIndustry && matchSearch;
     });
@@ -205,7 +219,23 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                 <TableRow
                   key={company.id}
                   className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  onClick={() => setSelectedCompany(company)}
+                  onClick={() => {
+                    setSelectedCompany(company);
+                    // 상세 뷰 진입 시 초기 활성 산업군 컨텍스트 설정
+                    const defaultIndustryId = selectedIndustry !== 'all' 
+                      ? parseInt(selectedIndustry) 
+                      : company.industries[0]?.industry_id;
+                    
+                    const industrySpecific = company.industries.find(
+                      (i: any) => i.industry_id === defaultIndustryId
+                    ) || {};
+
+                    setEditForm({ 
+                      active_industry_id: defaultIndustryId,
+                      recent_status: industrySpecific.recent_status || '',
+                      recent_keywords: industrySpecific.recent_keywords?.join(', ') || '',
+                    });
+                  }}
                 >
                   <TableCell className="font-medium text-blue-600 dark:text-blue-400">
                     {company.company_name}
@@ -214,7 +244,13 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                     <Badge variant="secondary">{company.entity_type || '기업'}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{company.industry?.name || '알 수 없음'}</Badge>
+                    <div className="flex flex-wrap gap-1 max-w-[200px]">
+                      {company.industries?.map((ci: any) => (
+                        <Badge key={ci.industry_id} variant="outline" className="text-[10px] whitespace-nowrap">
+                          {ci.industry?.name}
+                        </Badge>
+                      )) || '알 수 없음'}
+                    </div>
                   </TableCell>
                   <TableCell>
                     {company.company_url ? (
@@ -262,23 +298,37 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                         />
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
-                          <Badge variant="secondary">{selectedCompany.entity_type || '기업'}</Badge>
-                        </div>
-                        {selectedCompany.aliases && selectedCompany.aliases.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {selectedCompany.aliases.map((alias: string, i: number) => (
-                              <span key={i} className="text-xs text-muted-foreground bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                {alias}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center gap-2">
+                        <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
+                        <Badge variant="secondary">{selectedCompany.entity_type || '기업'}</Badge>
                       </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedCompany.industries?.map((ci: any) => (
+                          <Badge 
+                            key={ci.industry_id} 
+                            variant={editForm.active_industry_id === ci.industry_id ? "default" : "outline"}
+                            className="cursor-pointer"
+                            onClick={() => {
+                              // 산업군 전환 로직
+                              const industrySpecific = selectedCompany.industries.find(
+                                (i: any) => i.industry_id === ci.industry_id
+                              ) || {};
+                              setEditForm({
+                                ...editForm,
+                                active_industry_id: ci.industry_id,
+                                recent_status: industrySpecific.recent_status || '',
+                                recent_keywords: industrySpecific.recent_keywords?.join(', ') || '',
+                              });
+                            }}
+                          >
+                            {ci.industry?.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                     )}
-                    <Badge variant="outline">{selectedCompany.industry?.name}</Badge>
+                    {/* 배지는 상단에서 통합 관리하므로 제거 */}
                   </div>
                   <div className="mt-2 sm:mt-0">
                     {!isEditing ? (
@@ -324,7 +374,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                 {/* 1. 비즈니스 요약 */}
                 <section>
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
-                    비즈니스 요약
+                    Business Outline
                   </h3>
                   {isEditing ? (
                     <Textarea 
@@ -420,7 +470,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                 {/* 2. 핵심 키워드 */}
                 <section>
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
-                    핵심 키워드
+                    전략 포지셔닝 키워드
                   </h3>
                   {isEditing ? (
                     <div className="space-y-4 p-4 border rounded-lg">
@@ -464,7 +514,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {kw.products && kw.products.length > 0 && (
                               <div className="p-4 border rounded-lg">
-                                <h4 className="text-xs font-semibold mb-2">주요 제품</h4>
+                                <h4 className="text-xs font-semibold mb-2">핵심 제품 및 서비스</h4>
                                 <div className="flex flex-wrap gap-1.5">
                                   {kw.products.map((p: string, i: number) => (
                                     <Badge key={i} variant="outline" className="text-xs font-normal bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
@@ -498,18 +548,25 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                                 </div>
                               </div>
                             )}
-                            {selectedCompany.recent_keywords && selectedCompany.recent_keywords.length > 0 && (
-                              <div className="p-4 border rounded-lg">
-                                <h4 className="text-xs font-semibold mb-2">최신 키워드</h4>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {selectedCompany.recent_keywords.map((rk: string, i: number) => (
-                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
-                                      {rk}
-                                    </Badge>
-                                  ))}
+                            {(() => {
+                              const currentInd = selectedCompany.industries.find(
+                                (ci: any) => ci.industry_id === editForm.active_industry_id
+                              );
+                              if (!currentInd?.recent_keywords?.length) return null;
+                              
+                              return (
+                                <div className="p-4 border rounded-lg">
+                                  <h4 className="text-xs font-semibold mb-2">분야별 전략 키워드 ({currentInd.industry?.name})</h4>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {currentInd.recent_keywords.map((rk: string, i: number) => (
+                                      <Badge key={i} variant="outline" className="text-xs font-normal bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                                        {rk}
+                                      </Badge>
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              );
+                            })()}
                           </div>
                         );
                       })()}
@@ -520,7 +577,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                 {/* 3. 최근 동향 */}
                 <section>
                   <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
-                    최근 동향
+                    Industry Insights
                   </h3>
                   {isEditing ? (
                     <Textarea 
@@ -530,7 +587,12 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                     />
                   ) : (
                     <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                      <ExpandableText text={selectedCompany.recent_status} />
+                      <div className="text-xs font-semibold mb-2 text-primary">
+                        [{selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.industry?.name}] 분야별 전략 및 동향
+                      </div>
+                      <ExpandableText text={
+                        selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.recent_status
+                      } />
                     </div>
                   )}
                 </section>

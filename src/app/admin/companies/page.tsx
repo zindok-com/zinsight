@@ -8,7 +8,11 @@ export const dynamic = 'force-dynamic';
 export default async function CompaniesPage() {
   const companies = await prisma.company.findMany({
     include: {
-      industry: true,
+      industries: {
+        include: {
+          industry: true,
+        },
+      },
       company_articles: {
         include: {
           article: true,
