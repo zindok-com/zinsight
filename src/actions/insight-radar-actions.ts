@@ -24,12 +24,9 @@ export interface RadarCompanyCard {
     business_summary: string | null;
     recent_status: string | null;
     core_keywords: unknown;
-    recent_keywords: unknown;
-    industry: {
-        id: number;
-        name: string;
-        slug: string;
-    } | null;
+    recent_keywords: any;
+    industry: { id: number; name: string; slug: string } | null;
+    allIndustries?: { id: number; name: string; slug: string }[];
     articleCount: number;
     latestArticleDate: Date | null;
 }
@@ -190,6 +187,7 @@ export async function getRadarCompanies(
             core_keywords: c.core_keywords,
             recent_keywords: targetCI?.recent_keywords ?? null,
             industry: targetCI?.industry ?? null,
+            allIndustries: c.industries.map((ci: any) => ci.industry),
             articleCount: c._count.company_articles,
             latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
         };

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Edit2, Save, X, Loader2 } from 'lucide-react';
+import { Search, Edit2, Save, X, Loader2, ExternalLink, TrendingUp, Building2, Calendar, LayoutDashboard } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateCompany } from '@/actions/company-actions';
 import {
@@ -277,189 +277,216 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
           setIsEditing(false);
         }
       }}>
-        <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-3xl overflow-y-auto bg-slate-50/50 dark:bg-slate-950/50 p-0 border-l-0 sm:border-l">
           {selectedCompany && (
-            <>
-              <SheetHeader className="mb-6">
-                <div className="flex items-start justify-between pr-8">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                    {isEditing ? (
-                      <div className="flex gap-2">
-                        <Input
-                          value={editForm.company_name}
-                          onChange={(e) => setEditForm({...editForm, company_name: e.target.value})}
-                          className="text-xl font-bold w-[250px]"
-                        />
-                        <Input
-                          value={editForm.entity_type}
-                          onChange={(e) => setEditForm({...editForm, entity_type: e.target.value})}
-                          className="w-[100px]"
-                          placeholder="구분 (기업, 기관 등)"
-                        />
-                      </div>
-                    ) : (
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2">
-                        <SheetTitle className="text-2xl">{selectedCompany.company_name}</SheetTitle>
-                        <Badge variant="secondary">{selectedCompany.entity_type || '기업'}</Badge>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {selectedCompany.industries?.map((ci: any) => (
-                          <Badge 
-                            key={ci.industry_id} 
-                            variant={editForm.active_industry_id === ci.industry_id ? "default" : "outline"}
-                            className="cursor-pointer"
-                            onClick={() => {
-                              // 산업군 전환 로직
-                              const industrySpecific = selectedCompany.industries.find(
-                                (i: any) => i.industry_id === ci.industry_id
-                              ) || {};
-                              setEditForm({
-                                ...editForm,
-                                active_industry_id: ci.industry_id,
-                                recent_status: industrySpecific.recent_status || '',
-                                recent_keywords: industrySpecific.recent_keywords?.join(', ') || '',
-                              });
-                            }}
-                          >
-                            {ci.industry?.name}
+            <div className="flex flex-col min-h-full bg-white dark:bg-slate-900 shadow-xl">
+              {/* Header Section */}
+              <div className="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b px-6 py-6 sm:px-10">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-4 flex-1">
+                    <div className="flex flex-col gap-2">
+                      {isEditing ? (
+                        <div className="flex flex-wrap gap-2">
+                          <Input
+                            value={editForm.company_name}
+                            onChange={(e) => setEditForm({...editForm, company_name: e.target.value})}
+                            className="text-2xl font-bold h-12 flex-1 min-w-[200px]"
+                          />
+                          <Input
+                            value={editForm.entity_type}
+                            onChange={(e) => setEditForm({...editForm, entity_type: e.target.value})}
+                            className="w-[120px] h-12"
+                            placeholder="구분"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex flex-wrap items-center gap-3">
+                          <SheetTitle className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+                            {selectedCompany.company_name}
+                          </SheetTitle>
+                          <Badge variant="secondary" className="px-3 py-1 text-xs font-semibold uppercase tracking-wider">
+                            {selectedCompany.entity_type || '기업'}
                           </Badge>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+                      
+                      {!isEditing && selectedCompany.company_url && (
+                        <div className="flex items-center gap-2 text-sm text-blue-500">
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <a href={selectedCompany.company_url} target="_blank" rel="noreferrer" className="hover:underline">
+                            {selectedCompany.company_url}
+                          </a>
+                        </div>
+                      ) || isEditing && (
+                        <Input
+                          placeholder="https://example.com"
+                          value={editForm.company_url}
+                          onChange={(e) => setEditForm({...editForm, company_url: e.target.value})}
+                          className="max-w-md"
+                        />
+                      )}
                     </div>
-                    )}
-                    {/* 배지는 상단에서 통합 관리하므로 제거 */}
+                    
+                    {/* Industry Selector Tabs */}
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {selectedCompany.industries?.map((ci: any) => (
+                        <button 
+                          key={ci.industry_id} 
+                          onClick={() => {
+                            const industrySpecific = selectedCompany.industries.find(
+                              (i: any) => i.industry_id === ci.industry_id
+                            ) || {};
+                            setEditForm({
+                              ...editForm,
+                              active_industry_id: ci.industry_id,
+                              recent_status: industrySpecific.recent_status || '',
+                              recent_keywords: industrySpecific.recent_keywords?.join(', ') || '',
+                            });
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-semibold transition-all border ${
+                            editForm.active_industry_id === ci.industry_id 
+                              ? "bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-600/20" 
+                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-400 hover:bg-slate-50"
+                          }`}
+                        >
+                          {ci.industry?.name}
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="mt-2 sm:mt-0">
+
+                  <div className="flex shrink-0 gap-2">
                     {!isEditing ? (
-                      <Button variant="outline" size="sm" onClick={handleEditClick}>
-                        <Edit2 className="w-4 h-4 mr-2" /> 수정
+                      <Button variant="outline" size="lg" className="h-11 px-6 shadow-sm" onClick={handleEditClick}>
+                        <Edit2 className="w-4 h-4 mr-2" /> 수정하기
                       </Button>
                     ) : (
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setIsEditing(false)} disabled={isPending}>
-                          <X className="w-4 h-4 mr-2" /> 취소
+                      <>
+                        <Button variant="ghost" size="lg" className="h-11" onClick={() => setIsEditing(false)} disabled={isPending}>
+                          취소
                         </Button>
-                        <Button size="sm" onClick={handleSave} disabled={isPending}>
+                        <Button size="lg" className="h-11 px-8 shadow-md bg-blue-600 hover:bg-blue-700" onClick={handleSave} disabled={isPending}>
                           {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} 저장
                         </Button>
-                      </div>
+                      </>
                     )}
                   </div>
                 </div>
-                {isEditing ? (
-                  <Input
-                    placeholder="https://example.com"
-                    value={editForm.company_url}
-                    onChange={(e) => setEditForm({...editForm, company_url: e.target.value})}
-                    className="mt-2"
-                  />
-                ) : (
-                  selectedCompany.company_url && (
-                    <SheetDescription>
-                      <a
-                        href={selectedCompany.company_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-500 hover:underline inline-flex items-center gap-1"
-                      >
-                        {selectedCompany.company_url}
-                      </a>
-                    </SheetDescription>
-                  )
-                )}
-              </SheetHeader>
+              </div>
 
-              <div className="space-y-8">
-                {/* 1. 비즈니스 요약 */}
+              <div className="flex-1 px-6 py-8 sm:px-10 space-y-12">
+                {/* 1. Business Outline */}
                 <section>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
                     Business Outline
                   </h3>
                   {isEditing ? (
                     <Textarea 
                       value={editForm.business_summary}
                       onChange={(e) => setEditForm({...editForm, business_summary: e.target.value})}
-                      rows={4}
+                      rows={6}
+                      className="text-base leading-relaxed bg-slate-50/50 dark:bg-slate-900/50 p-6 rounded-2xl border-slate-200 dark:border-slate-800"
+                      placeholder="조직의 비즈니스 모델 및 핵심 가치에 대해 설명하세요."
                     />
                   ) : (
-                    <div className="text-sm leading-relaxed p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                    <div className="text-base leading-relaxed p-8 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-slate-700 dark:text-slate-300">
                       <ExpandableText text={selectedCompany.business_summary} />
                     </div>
                   )}
                 </section>
                 
-                {/* 1.1 기본 정보 (신규 필드) */}
+                {/* 2. Company Profile */}
                 <section>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
-                    기본 정보
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                    Company Profile
                   </h3>
                   {isEditing ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 border rounded-lg">
-                      <div className="space-y-1.5">
-                        <Label>설립연도</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-inner">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">설립연도</Label>
                         <Input 
                           value={editForm.founded_year}
                           onChange={(e) => setEditForm({...editForm, founded_year: e.target.value})}
                           placeholder="예: 2010"
+                          className="h-11 bg-white dark:bg-slate-950"
                         />
                       </div>
-                      <div className="space-y-1.5">
-                        <Label>대표자명</Label>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">대표자명</Label>
                         <Input 
                           value={editForm.ceo_name}
                           onChange={(e) => setEditForm({...editForm, ceo_name: e.target.value})}
+                          className="h-11 bg-white dark:bg-slate-950"
                         />
                       </div>
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <Label>본사 소재지</Label>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">본사 소재지</Label>
                         <Input 
                           value={editForm.hq_location}
                           onChange={(e) => setEditForm({...editForm, hq_location: e.target.value})}
                           placeholder="예: 서울특별시 강남구"
+                          className="h-11 bg-white dark:bg-slate-950"
                         />
                       </div>
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <Label>주요 레퍼런스 (쉼표로 구분)</Label>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">주요 레퍼런스 (쉼표로 구분)</Label>
                         <Input 
                           value={editForm.key_references}
                           onChange={(e) => setEditForm({...editForm, key_references: e.target.value})}
+                          className="h-11 bg-white dark:bg-slate-950"
                         />
                       </div>
-                      <div className="space-y-1.5 sm:col-span-2">
-                        <Label>별칭 (쉼표로 구분)</Label>
+                      <div className="space-y-2 sm:col-span-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">별칭 (쉼표로 구분)</Label>
                         <Input 
                           value={editForm.aliases}
                           onChange={(e) => setEditForm({...editForm, aliases: e.target.value})}
                           placeholder="예: 현대, 현대차"
+                          className="h-11 bg-white dark:bg-slate-950"
                         />
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg text-sm">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs text-muted-foreground">설립연도</span>
-                        <span className="font-medium">{selectedCompany.founded_year || '-'}</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8 p-8 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">설립연도</span>
+                        <span className="text-base font-semibold text-slate-800 dark:text-slate-200">{selectedCompany.founded_year || '-'}</span>
                       </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs text-muted-foreground">대표자</span>
-                        <span className="font-medium">{selectedCompany.ceo_name || '-'}</span>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">대표자</span>
+                        <span className="text-base font-semibold text-slate-800 dark:text-slate-200">{selectedCompany.ceo_name || '-'}</span>
                       </div>
-                      <div className="flex flex-col gap-1 sm:col-span-2">
-                        <span className="text-xs text-muted-foreground">본사 소재지</span>
-                        <span className="font-medium">{selectedCompany.hq_location || '-'}</span>
+                      <div className="flex flex-col gap-1.5 sm:col-span-2">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">본사 소재지</span>
+                        <span className="text-base font-semibold text-slate-800 dark:text-slate-200">{selectedCompany.hq_location || '-'}</span>
                       </div>
-                      <div className="flex flex-col gap-2 sm:col-span-2">
-                        <span className="text-xs text-muted-foreground">주요 레퍼런스</span>
-                        <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-col gap-3 sm:col-span-2">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">주요 레퍼런스</span>
+                        <div className="flex flex-wrap gap-2">
                           {selectedCompany.key_references && selectedCompany.key_references.length > 0 ? (
                             selectedCompany.key_references.map((ref: string, i: number) => (
-                              <Badge key={i} variant="secondary" className="text-[11px] font-normal px-2 py-0">
+                              <Badge key={i} variant="secondary" className="px-3 py-1 text-xs font-medium">
                                 {ref}
                               </Badge>
                             ))
                           ) : (
-                            <span className="text-muted-foreground">-</span>
+                            <span className="text-sm text-slate-400 font-medium italic">정보가 없습니다.</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-3 sm:col-span-2">
+                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">별칭 (Aliases)</span>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedCompany.aliases && selectedCompany.aliases.length > 0 ? (
+                            selectedCompany.aliases.map((alias: string, i: number) => (
+                              <Badge key={i} variant="outline" className="px-3 py-1 text-xs font-medium border-slate-200 dark:border-slate-700">
+                                {alias}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-sm text-slate-400 font-medium italic">별칭이 설정되지 않았습니다.</span>
                           )}
                         </div>
                       </div>
@@ -467,57 +494,65 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   )}
                 </section>
 
-                {/* 2. 핵심 키워드 */}
+                {/* 3. Strategic Positioning */}
                 <section>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
-                    전략 포지셔닝 키워드
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
+                    Strategic Positioning
                   </h3>
                   {isEditing ? (
-                    <div className="space-y-4 p-4 border rounded-lg">
-                      <div>
-                        <Label>주요 제품 (쉼표로 구분)</Label>
+                    <div className="grid grid-cols-1 gap-6 p-6 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">핵심 제품 및 서비스</Label>
                         <Input 
                           value={editForm.kw_products}
                           onChange={(e) => setEditForm({...editForm, kw_products: e.target.value})}
                           placeholder="예: LED 조명, 산업용 조명"
+                          className="bg-white dark:bg-slate-950"
                         />
                       </div>
-                      <div>
-                        <Label>핵심 기술 (쉼표로 구분)</Label>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">핵심 기술 (Tech)</Label>
                         <Input 
                           value={editForm.kw_technology}
                           onChange={(e) => setEditForm({...editForm, kw_technology: e.target.value})}
+                          className="bg-white dark:bg-slate-950"
                         />
                       </div>
-                      <div>
-                        <Label>타겟 시장 (쉼표로 구분)</Label>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-widest">타겟 시장 (Market)</Label>
                         <Input 
                           value={editForm.kw_target_market}
                           onChange={(e) => setEditForm({...editForm, kw_target_market: e.target.value})}
+                          className="bg-white dark:bg-slate-950"
                         />
                       </div>
-                      <div>
-                        <Label>최신 키워드 (쉼표로 구분)</Label>
+                      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                        <Label className="text-xs font-bold text-blue-500 uppercase tracking-widest flex items-center gap-1.5">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          [{selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.industry?.name}] 특화 키워드
+                        </Label>
                         <Input 
                           value={editForm.recent_keywords}
                           onChange={(e) => setEditForm({...editForm, recent_keywords: e.target.value})}
+                          className="bg-blue-50/30 border-blue-200 dark:bg-blue-900/10 dark:border-blue-900/40"
                         />
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {(() => {
                         const kw = parseKeywords(selectedCompany.core_keywords);
-                        if (!kw) return <div className="text-sm text-muted-foreground">정보 없음</div>;
+                        if (!kw) return <div className="text-sm text-slate-400 italic col-span-2">설정된 키워드가 없습니다.</div>;
 
                         return (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <>
                             {kw.products && kw.products.length > 0 && (
-                              <div className="p-4 border rounded-lg">
-                                <h4 className="text-xs font-semibold mb-2">핵심 제품 및 서비스</h4>
-                                <div className="flex flex-wrap gap-1.5">
+                              <div className="p-6 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950/30">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">핵심 제품 및 서비스</h4>
+                                <div className="flex flex-wrap gap-2">
                                   {kw.products.map((p: string, i: number) => (
-                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                                    <Badge key={i} variant="outline" className="text-xs font-bold bg-blue-50/50 text-blue-700 border-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800 px-3 py-1">
                                       {p}
                                     </Badge>
                                   ))}
@@ -525,11 +560,11 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                               </div>
                             )}
                             {kw.technology && kw.technology.length > 0 && (
-                              <div className="p-4 border rounded-lg">
-                                <h4 className="text-xs font-semibold mb-2">핵심 기술</h4>
-                                <div className="flex flex-wrap gap-1.5">
+                              <div className="p-6 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950/30">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">핵심 기술 (Tech)</h4>
+                                <div className="flex flex-wrap gap-2">
                                   {kw.technology.map((t: string, i: number) => (
-                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800">
+                                    <Badge key={i} variant="outline" className="text-xs font-bold bg-indigo-50/50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800 px-3 py-1">
                                       {t}
                                     </Badge>
                                   ))}
@@ -537,11 +572,11 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                               </div>
                             )}
                             {kw.target_market && kw.target_market.length > 0 && (
-                              <div className="p-4 border rounded-lg">
-                                <h4 className="text-xs font-semibold mb-2">타겟 시장</h4>
-                                <div className="flex flex-wrap gap-1.5">
+                              <div className="p-6 border border-slate-200 dark:border-slate-800 rounded-2xl bg-white dark:bg-slate-950/30">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">타겟 시장 (Market)</h4>
+                                <div className="flex flex-wrap gap-2">
                                   {kw.target_market.map((m: string, i: number) => (
-                                    <Badge key={i} variant="outline" className="text-xs font-normal bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800">
+                                    <Badge key={i} variant="outline" className="text-xs font-bold bg-emerald-50/50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800 px-3 py-1">
                                       {m}
                                     </Badge>
                                   ))}
@@ -555,11 +590,14 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                               if (!currentInd?.recent_keywords?.length) return null;
                               
                               return (
-                                <div className="p-4 border rounded-lg">
-                                  <h4 className="text-xs font-semibold mb-2">분야별 전략 키워드 ({currentInd.industry?.name})</h4>
-                                  <div className="flex flex-wrap gap-1.5">
+                                <div className="p-6 border border-blue-100 dark:border-blue-900/30 rounded-2xl bg-blue-50/30 dark:bg-blue-900/10">
+                                  <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+                                    <TrendingUp className="w-3.5 h-3.5" />
+                                    분야별 전략 키워드 ({currentInd.industry?.name})
+                                  </h4>
+                                  <div className="flex flex-wrap gap-2">
                                     {currentInd.recent_keywords.map((rk: string, i: number) => (
-                                      <Badge key={i} variant="outline" className="text-xs font-normal bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-800">
+                                      <Badge key={i} variant="outline" className="text-xs font-bold bg-white text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-3 py-1 shadow-sm">
                                         {rk}
                                       </Badge>
                                     ))}
@@ -567,32 +605,45 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                                 </div>
                               );
                             })()}
-                          </div>
+                          </>
                         );
                       })()}
                     </div>
                   )}
                 </section>
 
-                {/* 3. 최근 동향 */}
+                {/* 4. Industry Insights */}
                 <section>
-                  <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                    <div className="w-1.5 h-6 bg-blue-500 rounded-full" />
                     Industry Insights
                   </h3>
                   {isEditing ? (
-                    <Textarea 
-                      value={editForm.recent_status}
-                      onChange={(e) => setEditForm({...editForm, recent_status: e.target.value})}
-                      rows={5}
-                    />
-                  ) : (
-                    <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-                      <div className="text-xs font-semibold mb-2 text-primary">
-                        [{selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.industry?.name}] 분야별 전략 및 동향
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 px-1 text-blue-600 dark:text-blue-400 font-bold text-sm uppercase tracking-wider">
+                        <TrendingUp className="w-4 h-4" />
+                        [{selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.industry?.name}] 컨텍스트 편집
                       </div>
-                      <ExpandableText text={
-                        selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.recent_status
-                      } />
+                      <Textarea 
+                        value={editForm.recent_status}
+                        onChange={(e) => setEditForm({...editForm, recent_status: e.target.value})}
+                        rows={5}
+                        className="text-base leading-relaxed bg-slate-50/50 dark:bg-slate-900/50 p-6 rounded-2xl border-slate-200 dark:border-slate-800"
+                        placeholder="해당 산업군 내 조직의 전략적 위치나 최근 동향을 입력하세요."
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative p-8 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 dark:from-blue-900/10 dark:to-indigo-900/5 border border-blue-100 dark:border-blue-900/30 rounded-2xl overflow-hidden shadow-sm">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
+                      <div className="flex items-center gap-2 text-xs font-bold mb-4 text-blue-600 dark:text-blue-400 uppercase tracking-[0.2em]">
+                        <TrendingUp className="w-4 h-4" />
+                        [{selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.industry?.name}] 전략 및 동향
+                      </div>
+                      <div className="text-base leading-relaxed text-slate-700 dark:text-slate-300 font-medium">
+                        <ExpandableText text={
+                          selectedCompany.industries.find((ci: any) => ci.industry_id === editForm.active_industry_id)?.recent_status
+                        } />
+                      </div>
                     </div>
                   )}
                 </section>
@@ -639,7 +690,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   )}
                 </section>
               </div>
-            </>
+            </div>
           )}
         </SheetContent>
       </Sheet>

@@ -98,9 +98,19 @@ export function RadarCompanyTable({ companies }: RadarCompanyTableProps) {
 
                                     {/* 산업군 */}
                                     <td className="px-6 py-5">
-                                        <span className="text-zi-body-md text-zi-on-surface-variant font-medium">
-                                            {company.industry?.name || '알 수 없음'}
-                                        </span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {company.allIndustries && company.allIndustries.length > 0 ? (
+                                                company.allIndustries.map((ind) => (
+                                                    <span key={ind.id} className="text-zi-body-sm text-zi-on-surface-variant font-medium bg-zi-surface-container-low px-2 py-0.5 rounded border border-zi-divider whitespace-nowrap">
+                                                        {ind.name}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-zi-body-md text-zi-on-surface-variant font-medium">
+                                                    {company.industry?.name || '알 수 없음'}
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
 
                                     {/* 핵심 키워드 */}

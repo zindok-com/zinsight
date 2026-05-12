@@ -79,7 +79,13 @@ export function RadarCompanyGrid({ companies, total }: RadarCompanyGridProps) {
                                         <Badge variant="secondary" className="text-xs">
                                             {getEntityLabel(company.entity_type)}
                                         </Badge>
-                                        {company.industry && (
+                                        {company.allIndustries && company.allIndustries.length > 0 ? (
+                                            company.allIndustries.map((ind) => (
+                                                <Badge key={ind.id} variant="outline" className="text-xs">
+                                                    {ind.name}
+                                                </Badge>
+                                            ))
+                                        ) : company.industry && (
                                             <Badge variant="outline" className="text-xs">
                                                 {company.industry.name}
                                             </Badge>

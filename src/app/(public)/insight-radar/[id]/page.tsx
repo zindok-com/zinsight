@@ -48,7 +48,13 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                 <span className="bg-zi-primary px-2 py-0.5 text-zi-label font-semibold uppercase tracking-wider text-white">
                                     {company.entity_type ?? 'Enterprise'}
                                 </span>
-                                {company.industry && (
+                                {company.allIndustries && company.allIndustries.length > 0 ? (
+                                    company.allIndustries.map((ind) => (
+                                        <span key={ind.id} className="text-zi-label font-semibold text-zi-outline border border-zi-divider px-2 py-0.5 rounded">
+                                            {ind.name}
+                                        </span>
+                                    ))
+                                ) : company.industry && (
                                     <span className="text-zi-label font-semibold text-zi-outline">
                                         {company.industry.name}
                                     </span>
@@ -67,7 +73,13 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                         기사 {company.articleCount.toLocaleString()}건
                                     </span>
                                 </span>
-                                {company.industry && (
+                                {company.allIndustries && company.allIndustries.length > 0 ? (
+                                    company.allIndustries.map((ind, idx) => (
+                                        <span key={ind.id} className={`flex items-center gap-1 ${idx > 0 ? 'border-l border-zi-divider pl-4' : 'border-l border-zi-divider pl-4'} text-zi-body-md`}>
+                                            {ind.name} 산업
+                                        </span>
+                                    ))
+                                ) : company.industry && (
                                     <span className="flex items-center gap-1 border-l border-zi-divider pl-4 text-zi-body-md">
                                         {company.industry.name} 산업
                                     </span>
@@ -133,7 +145,9 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                         산업 분야
                                     </div>
                                     <div className="text-3xl font-semibold font-serif">
-                                        {company.industry?.name ?? '—'}
+                                        {company.allIndustries && company.allIndustries.length > 0 
+                                            ? company.allIndustries.map(i => i.name).join(', ') 
+                                            : (company.industry?.name ?? '—')}
                                     </div>
                                 </div>
                                 <div className="border-l border-white/20 pl-8">
