@@ -31,6 +31,31 @@ export interface RadarCompanyCard {
     latestArticleDate: Date | null;
 }
 
+export interface RadarCompanyDetail {
+    id: number;
+    company_name: string;
+    entity_type: string | null;
+    business_summary: string | null;
+    recent_status: string | null;
+    core_keywords: any;
+    recent_keywords: any;
+    industry: { id: number; name: string; slug: string } | null;
+    allIndustries?: { id: number; name: string; slug: string }[];
+    industryDetails?: {
+        industry: { id: number; name: string; slug: string };
+        recent_status: string | null;
+        recent_keywords: any;
+    }[];
+    recentArticles: RadarArticleItem[];
+    articleCount: number;
+    company_url?: string | null;
+    founded_year?: string | null;
+    hq_location?: string | null;
+    ceo_name?: string | null;
+    key_references?: any | null;
+    latestArticleDate: Date | null;
+}
+
 export interface RadarArticleItem {
     id: number;
     title: string;
@@ -333,11 +358,21 @@ export async function getRadarCompanyDetail(companyId: number) {
         recent_keywords: firstCI.recent_keywords ?? null,
         industry: firstCI.industry ?? null,
         allIndustries: company.industries.map((ci: any) => ci.industry),
+        industryDetails: company.industries.map((ci: any) => ({
+            industry: ci.industry,
+            recent_status: ci.recent_status ?? null,
+            recent_keywords: ci.recent_keywords ?? null,
+        })),
         recentArticles: company.company_articles.map((ca: any) => ({
             ...ca.article,
             url: ca.article.link,           // link → url 별칭
             summary: ca.article.description, // description → summary 별칭
         })),
         articleCount: company._count.company_articles,
+        company_url: company.company_url,
+        founded_year: company.founded_year,
+        hq_location: company.hq_location,
+        ceo_name: company.ceo_name,
+        key_references: company.key_references,
     };
 }

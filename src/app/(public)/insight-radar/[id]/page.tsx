@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Lightbulb, TrendingUp, AlertTriangle, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, User, Target, Zap, Briefcase, Tag } from 'lucide-react';
 import { getRadarCompanyDetail } from '@/actions/insight-radar-actions';
 
 interface PageProps {
@@ -19,11 +19,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
 }
 
+/**
+ * 기업의 핵심 키워드를 파싱하는 헬퍼 함수
+ */
+function parseKeywords(keywordsStr: any) {
+    if (!keywordsStr) return null;
+    try {
+        if (typeof keywordsStr === 'string') {
+            return JSON.parse(keywordsStr);
+        }
+        return keywordsStr as { products?: string[]; technology?: string[]; target_market?: string[] };
+    } catch {
+        return null;
+    }
+}
+
 export default async function InsightRadarDetailPage({ params }: PageProps) {
     const { id } = await params;
     const company = await getRadarCompanyDetail(Number(id));
 
     if (!company) notFound();
+
+    const coreKw = parseKeywords(company.core_keywords);
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
@@ -38,205 +55,221 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 </Link>
 
                 {/* ─────────────────────────────── */}
-                {/* 조직 헤더 메타데이터 섹션 */}
+                {/* 1. Header & Profile Section     */}
                 {/* ─────────────────────────────── */}
-                <section className="mb-zi-stack-lg border-b border-zi-divider pb-10">
-                    <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
-                        <div>
-                            {/* 배지 + 티커 */}
-                            <div className="mb-4 flex items-center gap-3">
-                                <span className="bg-zi-primary px-2 py-0.5 text-zi-label font-semibold uppercase tracking-wider text-white">
-                                    {company.entity_type ?? 'Enterprise'}
-                                </span>
+                <section className="mb-12">
+                    {/* 1. Header Section */}
+                    <div className="border-b border-slate-200 pb-8 mb-8">
+                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
+                            <div>
+                                <h1 className="text-4xl font-bold text-[#002B5B] font-serif mb-2">
+                                    {company.company_name}
+                                </h1>
+                                {company.company_url && (
+                                    <a href={company.company_url} target="_blank" rel="noopener noreferrer" className="text-sm text-slate-400 hover:text-[#007AFF] flex items-center gap-1 transition-colors">
+                                        <ExternalLink size={14} /> {company.company_url}
+                                    </a>
+                                )}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
                                 {company.allIndustries && company.allIndustries.length > 0 ? (
                                     company.allIndustries.map((ind) => (
-                                        <span key={ind.id} className="text-zi-label font-semibold text-zi-outline border border-zi-divider px-2 py-0.5 rounded">
+                                        <span key={ind.id} className="text-[#00897B] border border-[#00897B] rounded-full px-3 py-1 text-xs font-semibold">
                                             {ind.name}
                                         </span>
                                     ))
                                 ) : company.industry && (
-                                    <span className="text-zi-label font-semibold text-zi-outline">
+                                    <span className="text-[#00897B] border border-[#00897B] rounded-full px-3 py-1 text-xs font-semibold">
                                         {company.industry.name}
                                     </span>
                                 )}
                             </div>
+                        </div>
+                        
+                        <p className="text-lg text-slate-700 leading-relaxed max-w-3xl">
+                            {company.business_summary || '등록된 비즈니스 요약이 없습니다.'}
+                        </p>
+                    </div>
 
-                            {/* 기업명 */}
-                            <h1 className="font-serif mb-3 text-zi-headline-lg font-semibold text-zi-primary">
-                                {company.company_name}
-                            </h1>
+                    {/* 2. Metadata Insight Bar */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 py-6 px-8 bg-[#F9FAFB] rounded-xl border border-slate-100 mb-10">
+                        <div className="flex flex-col gap-1">
+                            <span className="text-xs text-slate-400 font-medium">대표자</span>
+                            <span className="text-sm text-slate-800 font-semibold">{company.ceo_name || '-'}</span>
+                        </div>
+                        <div className="flex flex-col gap-1 md:border-l border-slate-200 md:pl-8">
+                            <span className="text-xs text-slate-400 font-medium">설립연도</span>
+                            <span className="text-sm text-slate-800 font-semibold">{company.founded_year || '-'}</span>
+                        </div>
+                        <div className="flex flex-col gap-1 md:border-l border-slate-200 md:pl-8">
+                            <span className="text-xs text-slate-400 font-medium">소재지</span>
+                            <span className="text-sm text-slate-800 font-semibold">{company.hq_location || '-'}</span>
+                        </div>
+                        <div className="flex flex-col gap-1 md:border-l border-slate-200 md:pl-8">
+                            <span className="text-xs text-slate-400 font-medium">기업유형</span>
+                            <span className="text-sm text-slate-800 font-semibold text-[#00897B]">{company.entity_type || 'Enterprise'}</span>
+                        </div>
+                    </div>
 
-                            {/* 메타 정보 */}
-                            <div className="flex flex-wrap items-center gap-4 text-slate-500">
-                                <span className="flex items-center gap-1 text-zi-body-md">
-                                    <span className="text-zi-label font-semibold text-zi-blue">
-                                        기사 {company.articleCount.toLocaleString()}건
+                    {/* 3. Key References Section */}
+                    {Array.isArray(company.key_references) && company.key_references.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <Target size={16} className="text-[#002B5B]" /> 주요 레퍼런스
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {(company.key_references as string[]).map((ref, i) => (
+                                    <span key={i} className="px-3 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-full hover:border-[#002B5B] transition-colors cursor-default">
+                                        {ref}
                                     </span>
-                                </span>
-                                {company.allIndustries && company.allIndustries.length > 0 ? (
-                                    company.allIndustries.map((ind, idx) => (
-                                        <span key={ind.id} className={`flex items-center gap-1 ${idx > 0 ? 'border-l border-zi-divider pl-4' : 'border-l border-zi-divider pl-4'} text-zi-body-md`}>
-                                            {ind.name} 산업
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </section>
+
+                {/* ─────────────────────────────── */}
+                {/* 2. Strategic Positioning        */}
+                {/* ─────────────────────────────── */}
+                <section className="mb-12">
+                    <div className="mb-6 flex items-center gap-2">
+                        <Target className="h-6 w-6 text-zi-blue" />
+                        <h2 className="text-2xl font-bold text-zi-primary font-serif tracking-tight">Strategic Positioning</h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Products */}
+                        <div className="border border-zi-divider bg-white p-6 rounded-xl shadow-sm">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">핵심 제품 및 서비스</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {coreKw?.products && coreKw.products.length > 0 ? (
+                                    coreKw.products.map((p: string, i: number) => (
+                                        <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100">
+                                            {p}
                                         </span>
                                     ))
-                                ) : company.industry && (
-                                    <span className="flex items-center gap-1 border-l border-zi-divider pl-4 text-zi-body-md">
-                                        {company.industry.name} 산업
-                                    </span>
+                                ) : (
+                                    <span className="text-sm text-slate-400 italic">정보 없음</span>
                                 )}
                             </div>
                         </div>
 
-                        {/* 액션 버튼 */}
-                        <div className="flex gap-3">
-                            <button className="border border-zi-primary px-6 py-3 text-zi-label font-semibold text-zi-primary transition-colors hover:bg-zi-surface-high">
-                                데이터 내려받기
-                            </button>
-                            <Link
-                                href="/insight-radar"
-                                className="flex items-center gap-2 bg-zi-primary px-6 py-3 text-zi-label font-semibold text-white transition-opacity hover:opacity-90"
-                            >
-                                <TrendingUp className="h-4 w-4" />
-                                실시간 모니터링
-                            </Link>
-                        </div>
-                    </div>
-                </section>
-
-                {/* ─────────────────────────────── */}
-                {/* Intelligence Report: 섭외 원 포인트 */}
-                {/* ─────────────────────────────── */}
-                <section className="mb-zi-stack-lg">
-                    <div className="mb-6 flex items-center gap-2">
-                        <span className="text-zi-blue">⚡</span>
-                        <h2 className="text-zi-headline-md font-bold text-zi-primary">
-                            Intelligence Report: [섭외 원 포인트]
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-                        {/* AI 전략 코어 박스 (Dark Navy) */}
-                        <div className="flex flex-col justify-between border border-zi-primary bg-zi-primary p-10 text-white md:col-span-8">
-                            <div>
-                                <span className="mb-4 block text-zi-label font-semibold uppercase tracking-widest text-zi-blue-bright">
-                                    AI Strategic Logic
-                                </span>
-                                <h3 className="font-serif mb-8 text-4xl font-semibold leading-tight text-white">
-                                    {company.company_name}의 전략적 포지셔닝
-                                </h3>
-                                <p className="mb-12 max-w-2xl text-zi-body-lg text-slate-300">
-                                    {company.business_summary ??
-                                        '비즈니스 요약 정보를 분석 중입니다. 최신 뉴스 데이터를 바탕으로 핵심 전략 인사이트를 생성하고 있습니다.'}
-                                </p>
-                            </div>
-
-                            {/* 지표 행 */}
-                            <div className="flex flex-wrap gap-8">
-                                <div>
-                                    <div className="mb-1 text-zi-label font-semibold text-zi-blue-bright">
-                                        수집 기사 수
-                                    </div>
-                                    <div className="text-3xl font-semibold font-serif">
-                                        {company.articleCount.toLocaleString()}건
-                                    </div>
-                                </div>
-                                <div className="border-l border-white/20 pl-8">
-                                    <div className="mb-1 text-zi-label font-semibold text-zi-blue-bright">
-                                        산업 분야
-                                    </div>
-                                    <div className="text-3xl font-semibold font-serif">
-                                        {company.allIndustries && company.allIndustries.length > 0 
-                                            ? company.allIndustries.map(i => i.name).join(', ') 
-                                            : (company.industry?.name ?? '—')}
-                                    </div>
-                                </div>
-                                <div className="border-l border-white/20 pl-8">
-                                    <div className="mb-1 text-zi-label font-semibold text-zi-blue-bright">
-                                        인사이트 일치도
-                                    </div>
-                                    <div className="text-3xl font-semibold font-serif text-zi-blue-bright">
-                                        High
-                                    </div>
-                                </div>
+                        {/* Technology */}
+                        <div className="border border-zi-divider bg-white p-6 rounded-xl shadow-sm">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">핵심 기술 (Tech)</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {coreKw?.technology && coreKw.technology.length > 0 ? (
+                                    coreKw.technology.map((t: string, i: number) => (
+                                        <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium border border-indigo-100">
+                                            {t}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-sm text-slate-400 italic">정보 없음</span>
+                                )}
                             </div>
                         </div>
 
-                        {/* 비즈니스 가치 시뮬레이션 카드 */}
-                        <div className="flex flex-col border border-zi-divider bg-white p-8 md:col-span-4">
-                            <span className="mb-4 block text-zi-label font-semibold uppercase text-slate-400">
-                                Value Simulation
-                            </span>
+                        {/* Target Market */}
+                        <div className="border border-zi-divider bg-white p-6 rounded-xl shadow-sm">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">타겟 시장 (Market)</h4>
+                            <div className="flex flex-wrap gap-2">
+                                {coreKw?.target_market && coreKw.target_market.length > 0 ? (
+                                    coreKw.target_market.map((m: string, i: number) => (
+                                        <span key={i} className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium border border-emerald-100">
+                                            {m}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-sm text-slate-400 italic">정보 없음</span>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
-                            {/* 시각적 추상 플레이스홀더 */}
-                            <div className="flex flex-grow items-center justify-center py-6">
-                                <div className="relative flex aspect-square w-full max-w-[180px] items-center justify-center bg-zi-surface-low">
-                                    <div
-                                        className="absolute inset-0 opacity-10"
-                                        style={{
-                                            backgroundImage: 'radial-gradient(#001F3F 1px, transparent 1px)',
-                                            backgroundSize: '20px 20px',
-                                        }}
-                                    />
-                                    <div className="flex h-32 w-32 items-center justify-center rounded-full border-2 border-dashed border-zi-blue">
-                                        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-zi-blue/10">
-                                            <TrendingUp className="h-10 w-10 text-zi-blue" />
+                    {/* Recent Keywords */}
+                    <div className="mt-6 border border-blue-100 bg-blue-50/50 p-6 rounded-xl">
+                        <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+                            <Zap className="h-4 w-4" /> 최근 전략 키워드
+                        </h4>
+                        <div className="flex flex-col gap-4">
+                            {company.industryDetails && company.industryDetails.length > 0 ? (
+                                company.industryDetails.map((detail, idx) => (
+                                    <div key={idx}>
+                                        <div className="text-[11px] font-bold text-blue-500/80 mb-2">[{detail.industry.name}] 특화</div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {Array.isArray(detail.recent_keywords) && detail.recent_keywords.length > 0 ? (
+                                                (detail.recent_keywords as string[]).map((rk, i) => (
+                                                    <span key={i} className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm font-bold border border-blue-200 shadow-sm">
+                                                        {rk}
+                                                    </span>
+                                                ))
+                                            ) : (
+                                                <span className="text-sm text-slate-500 italic">키워드 데이터가 없습니다.</span>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                ))
+                            ) : (
+                                <span className="text-sm text-slate-500 italic">산업 정보가 없습니다.</span>
+                            )}
+                        </div>
+                    </div>
+                </section>
 
-                            <div className="mt-6">
-                                <h4 className="mb-2 text-zi-body-lg font-semibold">비즈니스 가치 시뮬레이션</h4>
-                                <p className="text-sm text-slate-600">
-                                    {company.recent_status ??
-                                        '현재 상태 정보 및 마케팅 협업 시나리오 시뮬레이션 결과를 분석 중입니다.'}
-                                </p>
+                {/* ─────────────────────────────── */}
+                {/* 3. Intelligence Report (Status) */}
+                {/* ─────────────────────────────── */}
+                <section className="mb-12">
+                    <div className="bg-gradient-to-br from-zi-primary to-slate-800 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
+                            <Zap className="w-64 h-64 text-white" />
+                        </div>
+                        <div className="relative z-10">
+                            <span className="mb-4 inline-block px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest text-blue-200">
+                                Intelligence Report
+                            </span>
+                            <h3 className="font-serif text-3xl font-bold mb-8">최근 동향 및 현황</h3>
+                            
+                            <div className="space-y-8 max-w-4xl">
+                                {company.industryDetails && company.industryDetails.length > 0 ? (
+                                    company.industryDetails.map((detail, idx) => (
+                                        <div key={idx} className="relative pl-4 before:absolute before:left-0 before:top-1.5 before:bottom-1 before:w-1 before:bg-blue-500/50 before:rounded-full">
+                                            <h4 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-wide">
+                                                [{detail.industry.name}] 분야
+                                            </h4>
+                                            <div className="prose prose-invert max-w-none">
+                                                <p className="text-lg leading-relaxed text-slate-200 font-medium">
+                                                    {detail.recent_status || '최신 비즈니스 동향 정보를 수집 중입니다.'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-lg leading-relaxed text-slate-200 font-medium">
+                                        최신 비즈니스 동향 정보를 수집 중입니다.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     </div>
                 </section>
 
                 {/* ─────────────────────────────── */}
-                {/* 인사이트 3단 그리드 */}
-                {/* ─────────────────────────────── */}
-                <section className="mb-zi-stack-lg grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <InsightCard
-                        icon={<Lightbulb className="h-5 w-5 text-zi-blue" />}
-                        title="핵심 의사결정권자 패턴"
-                        content={
-                            Array.isArray(company.core_keywords) && company.core_keywords.length > 0
-                                ? `핵심 키워드: ${(company.core_keywords as string[]).slice(0, 3).join(', ')} 등을 중심으로 비즈니스 전략을 펼치고 있습니다.`
-                                : 'C-Level 중심의 의사결정 구조가 확인됩니다. 기술 도입 효율성과 데이터 기반 전략에 민감하게 반응합니다.'
-                        }
-                    />
-                    <InsightCard
-                        icon={<TrendingUp className="h-5 w-5 text-zi-blue" />}
-                        title="시장 기회 포착"
-                        content={
-                            company.recent_status
-                                ? company.recent_status.slice(0, 120)
-                                : '최신 뉴스 분석 결과, 동종 업계 대비 신규 투자 영역에서 성장 기회가 확인됩니다.'
-                        }
-                    />
-                    <InsightCard
-                        icon={<AlertTriangle className="h-5 w-5 text-zi-error" />}
-                        title="커뮤니케이션 리스크"
-                        content="최근 업계 동향 변화로 내부 인사 및 전략 방향에 변동이 있을 수 있으므로, 의사결정 구조의 재확인이 선행되어야 합니다."
-                    />
-                </section>
-
-                {/* ─────────────────────────────── */}
-                {/* Activity Timeline */}
+                {/* 4. Activity Timeline            */}
                 {/* ─────────────────────────────── */}
                 <section>
-                    <div className="mb-8 flex items-center justify-between">
-                        <h2 className="text-zi-headline-md font-bold text-zi-primary">Activity Timeline</h2>
-                        <button className="text-zi-label font-semibold text-zi-primary underline decoration-1">
-                            전체 기사 보기
-                        </button>
+                    <div className="mb-8 flex items-center justify-between border-b border-zi-divider pb-4">
+                        <h2 className="text-2xl font-bold text-zi-primary font-serif tracking-tight flex items-center gap-2">
+                            <Tag className="h-6 w-6 text-slate-400" />
+                            Activity Timeline
+                        </h2>
+                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-semibold">
+                            관련 기사 {company.articleCount.toLocaleString()}건
+                        </span>
                     </div>
 
-                    <div className="space-y-0">
+                    <div className="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
                         {company.recentArticles.length > 0 ? (
                             company.recentArticles.map((article: typeof company.recentArticles[number], idx: number) => (
                                 <TimelineItem
@@ -251,14 +284,12 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                     }
                                     category={article.source ?? 'News'}
                                     title={article.title}
-                                    summary={article.description?.slice(0, 120) ?? ''}
+                                    summary={article.description?.slice(0, 150) ?? ''}
                                     url={article.link ?? undefined}
-                                    isFirst={idx === 0}
-                                    isLast={idx === company.recentArticles.length - 1}
                                 />
                             ))
                         ) : (
-                            <div className="border border-zi-divider bg-white p-8 text-center text-zi-body-md text-zi-on-surface-variant">
+                            <div className="relative py-8 text-center text-sm text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-200">
                                 수집된 기사가 없습니다. 뉴스 수집 후 다시 확인해 주세요.
                             </div>
                         )}
@@ -273,83 +304,47 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
 // 내부 컴포넌트
 // ─────────────────────────────────────────────
 
-function InsightCard({
-    icon,
-    title,
-    content,
-}: {
-    icon: React.ReactNode;
-    title: string;
-    content: string;
-}) {
-    return (
-        <div className="border border-zi-divider bg-zi-surface-low p-6">
-            <span className="mb-4 block">{icon}</span>
-            <h4 className="mb-2 text-zi-body-lg font-semibold">{title}</h4>
-            <p className="text-sm text-slate-600">{content}</p>
-        </div>
-    );
-}
-
 function TimelineItem({
     date,
     category,
     title,
     summary,
     url,
-    isFirst,
-    isLast,
 }: {
     date: string;
     category: string;
     title: string;
     summary: string;
     url?: string;
-    isFirst: boolean;
-    isLast: boolean;
 }) {
     return (
-        <div className={`relative pl-12 pb-12 ${!isLast ? 'zi-timeline-item' : ''}`}>
-            {/* 타임라인 도트 */}
-            <div
-                className={`absolute left-0 top-0 z-10 h-4 w-4 rounded-full border-4 border-white shadow-sm ${
-                    isFirst ? 'bg-zi-primary' : 'bg-slate-200'
-                }`}
-            />
-
-            <div className="flex flex-col gap-6 md:flex-row">
-                {/* 날짜 */}
-                <div className="flex-shrink-0 md:w-32">
-                    <span className="text-zi-label font-semibold text-slate-400">{date}</span>
+        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-4">
+            {/* 도트 마커 */}
+            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-zi-blue text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                <div className="w-2 h-2 bg-white rounded-full"></div>
+            </div>
+            
+            {/* 컨텐츠 카드 */}
+            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-xl border border-zi-divider shadow-sm transition-all hover:shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-bold uppercase text-zi-blue bg-blue-50 px-2 py-1 rounded">{category}</span>
+                    <time className="text-xs font-semibold text-slate-400">{date}</time>
                 </div>
-
-                {/* 기사 카드 */}
-                <div className="flex-grow border border-zi-divider bg-white p-6 transition-shadow hover:shadow-sm">
-                    <div className="flex-grow">
-                        <span
-                            className={`mb-2 block text-[11px] font-bold uppercase ${
-                                isFirst ? 'text-zi-blue' : 'text-slate-400'
-                            }`}
-                        >
-                            {category}
-                        </span>
-                        <h3 className="mb-2 text-zi-body-lg font-semibold">{title}</h3>
-                        {summary && (
-                            <p className="line-clamp-2 text-sm text-slate-500">{summary}</p>
-                        )}
-                        {url && (
-                            <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-3 inline-flex items-center gap-1 text-zi-label font-semibold text-zi-blue hover:underline"
-                            >
-                                원문 보기
-                                <ExternalLink className="h-3 w-3" />
-                            </a>
-                        )}
-                    </div>
-                </div>
+                <h3 className="mb-3 text-base font-bold text-zi-primary leading-snug">{title}</h3>
+                {summary && (
+                    <p className="line-clamp-2 text-sm text-slate-500 mb-4 leading-relaxed">{summary}</p>
+                )}
+                {url && (
+                    <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-zi-primary hover:text-zi-blue transition-colors"
+                    >
+                        원문 보기
+                        <ExternalLink className="h-3 w-3" />
+                    </a>
+                )}
             </div>
         </div>
     );
