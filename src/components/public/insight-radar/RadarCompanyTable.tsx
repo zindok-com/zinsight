@@ -4,21 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Building2 } from 'lucide-react';
-
-interface RadarCompanyCard {
-    id: number;
-    company_name: string;
-    entity_type: string | null;
-    business_summary: string | null;
-    core_keywords: any;
-    recent_keywords: any;
-    industry: {
-        id: number;
-        name: string;
-        slug: string;
-    } | null;
-    articleCount: number;
-}
+import type { RadarCompanyCard } from '@/actions/insight-radar-actions';
 
 interface RadarCompanyTableProps {
     companies: RadarCompanyCard[];
