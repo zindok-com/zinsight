@@ -157,6 +157,7 @@ model MagazinePost {
   authorName      String?   // 대학 기자단 실명 혹은 AI 작성 여부
   status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   viewCount       Int       @default(0)       // 조회수
+  headlinePriority Int      @default(0)       // 0: 일반, 1-5: 헤드라인 우선순위
   
   // 비즈니스 모델(BM) 관련 필드
   isPaid          Boolean   @default(false)   // 유료 기사 여부 (8만원 모델)

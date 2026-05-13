@@ -29,6 +29,7 @@ const INSIGHT_RADAR_ITEMS = [
 
 const MAGAZINE_ITEMS = [
     { name: '매거진 포스트', href: '/admin/magazine', icon: Newspaper },
+    { name: '헤드라인 설정', href: '/admin/magazine/headlines', icon: LayoutDashboard },
 ];
 
 export function Sidebar() {

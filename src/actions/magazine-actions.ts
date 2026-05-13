@@ -147,3 +147,35 @@ export async function deleteMagazinePost(id: number) {
         return { success: false, error: error.message };
     }
 }
+
+export async function updateHeadlinePriority(id: number, priority: number) {
+    try {
+        await prisma.$transaction(async (tx) => {
+            // 만약 새로 설정하려는 우선순위가 0보다 크다면, 
+            // 이미 해당 우선순위를 가진 다른 포스트가 있는지 확인하고 0으로 초기화
+            if (priority > 0) {
+                await tx.magazinePost.updateMany({
+                    where: { 
+                        headlinePriority: priority,
+                        id: { not: id }
+                    },
+                    data: { headlinePriority: 0 }
+                });
+            }
+
+            // 현재 포스트의 우선순위 업데이트
+            await tx.magazinePost.update({
+                where: { id },
+                data: { headlinePriority: priority }
+            });
+        });
+
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin/magazine/headlines');
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Failed to update headline priority:', error);
+        return { success: false, error: error.message };
+    }
+}
