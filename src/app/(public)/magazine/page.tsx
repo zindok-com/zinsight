@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/magazine-actions';
 import { getRadarIndustries } from '@/actions/insight-radar-actions';
 
@@ -86,14 +87,27 @@ export default async function MagazinePage() {
                                 {featuredPost?.category === 'DEEP_DIVE' ? 'Deep Dive' : 'Newsletter'}
                             </span>
                         </div>
-                        <h2 className="font-h1 text-h1 text-zi-on-surface mb-6">
-                            {featuredPost?.title ?? '등록된 주요 기사가 없습니다.'}
-                        </h2>
-                        <p className="font-body-lg text-body-lg text-zi-on-surface-variant mb-8">
-                            <HighlightedText 
-                                text={featuredPost?.summary ?? (featuredPost?.content ? featuredPost.content.slice(0, 180) + '...' : '새로운 인사이트를 준비 중입니다.')} 
-                            />
-                        </p>
+                        {featuredPost ? (
+                            <Link href={`/magazine/${featuredPost.slug}`} className="group block cursor-pointer">
+                                <h2 className="font-h1 text-h1 text-zi-on-surface mb-6 group-hover:text-zi-secondary transition-colors">
+                                    {featuredPost.title}
+                                </h2>
+                                <p className="font-body-lg text-body-lg text-zi-on-surface-variant mb-8">
+                                    <HighlightedText 
+                                        text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
+                                    />
+                                </p>
+                            </Link>
+                        ) : (
+                            <>
+                                <h2 className="font-h1 text-h1 text-zi-on-surface mb-6">
+                                    등록된 주요 기사가 없습니다.
+                                </h2>
+                                <p className="font-body-lg text-body-lg text-zi-on-surface-variant mb-8">
+                                    새로운 인사이트를 준비 중입니다.
+                                </p>
+                            </>
+                        )}
                         <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
                             <span className="text-zi-on-surface font-semibold">By Zinsight 편집부</span>
                             <span>•</span>
@@ -101,21 +115,29 @@ export default async function MagazinePage() {
                         </div>
                     </div>
                     <div className="lg:col-span-6 aspect-[4/3] w-full order-1 lg:order-2">
-                        <div className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative">
-                            {featuredPost?.thumbnailUrl ? (
-                                <Image 
-                                    src={featuredPost.thumbnailUrl} 
-                                    alt={featuredPost.title}
-                                    fill
-                                    className="object-cover transition-transform duration-700 hover:scale-105"
-                                    priority
-                                />
-                            ) : (
+                        {featuredPost ? (
+                            <Link href={`/magazine/${featuredPost.slug}`} className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative block group">
+                                {featuredPost.thumbnailUrl ? (
+                                    <Image 
+                                        src={featuredPost.thumbnailUrl} 
+                                        alt={featuredPost.title}
+                                        fill
+                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                        priority
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 bg-gradient-to-br from-zi-primary/10 to-zi-secondary/5 flex items-center justify-center text-zi-outline-variant italic">
+                                        No Image Available
+                                    </div>
+                                )}
+                            </Link>
+                        ) : (
+                            <div className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative block group">
                                 <div className="absolute inset-0 bg-gradient-to-br from-zi-primary/10 to-zi-secondary/5 flex items-center justify-center text-zi-outline-variant italic">
                                     No Image Available
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </section>
 
@@ -132,7 +154,7 @@ export default async function MagazinePage() {
                                 : (article as any).category;
                             
                             return (
-                                <article key={isReal ? article.id : idx} className="flex flex-col group cursor-pointer">
+                                <Link href={isReal ? `/magazine/${(article as any).slug}` : '#'} key={isReal ? article.id : idx} className="flex flex-col group cursor-pointer">
                                     <div className="mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
                                         {isReal && (article as any).thumbnailUrl ? (
                                             <Image 
@@ -158,7 +180,7 @@ export default async function MagazinePage() {
                                         <span>{isReal ? 'Zinsight 편집부' : (article as any).author}</span>
                                         <ArrowRight className="h-4 w-4" />
                                     </div>
-                                </article>
+                                </Link>
                             );
                         })}
                     </div>
@@ -188,7 +210,7 @@ export default async function MagazinePage() {
                                 More Headlines
                             </h3>
                             {sideArticles.map((article) => (
-                                <div key={article.id} className="group cursor-pointer">
+                                <Link href={`/magazine/${(article as any).slug}`} key={article.id} className="group cursor-pointer block">
                                     <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
                                         {article.title}
                                     </h4>
@@ -200,7 +222,7 @@ export default async function MagazinePage() {
                                         <span>•</span>
                                         <span>Zinsight 편집부</span>
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>
