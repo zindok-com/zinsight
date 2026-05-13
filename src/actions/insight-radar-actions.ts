@@ -130,7 +130,7 @@ export async function getRadarIndustries(): Promise<RadarIndustryWithStats[]> {
 
 export async function getRadarTotalStats() {
     const [totalCompanies, totalArticles, totalIndustries, totalKeywords] = await Promise.all([
-        prisma.company.count(),
+        prisma.organization.count(),
         prisma.article.count(),
         prisma.industry.count({ where: { deleted_at: null, is_active: true } }),
         prisma.searchKeyword.count({ where: { deleted_at: null, is_active: true } }),
@@ -165,7 +165,7 @@ export async function getRadarCompanies(
     };
 
     const [rawCompanies, total] = await Promise.all([
-        prisma.company.findMany({
+        prisma.organization.findMany({
             where,
             include: {
                 industries: {
@@ -194,7 +194,7 @@ export async function getRadarCompanies(
             skip: (page - 1) * pageSize,
             take: pageSize,
         }),
-        prisma.company.count({ where }),
+        prisma.organization.count({ where }),
     ]);
 
     const companies: RadarCompanyCard[] = rawCompanies.map((c: any) => {
@@ -316,7 +316,7 @@ export async function getRadarTrendingKeywords(
 // ─────────────────────────────────────────────
 
 export async function getRadarCompanyDetail(companyId: number) {
-    const company = await prisma.company.findUnique({
+    const company = await prisma.organization.findUnique({
         where: { id: companyId },
         include: {
             industries: {

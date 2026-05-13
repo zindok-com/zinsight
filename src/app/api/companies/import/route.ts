@@ -35,7 +35,7 @@ export async function POST(request: Request) {
 
       // 기업 조회 (중복 확인)
       // 1. 정확한 조직명으로 검색
-      let company = await prisma.company.findUnique({
+      let company = await prisma.organization.findUnique({
         where: {
           company_name,
         },
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
       // 2. 정확한 매칭이 없을 경우, 임포트 데이터의 별칭(aliases) 중 하나가 DB의 조직명과 일치하는지 확인
       if (!company && lead.aliases && Array.isArray(lead.aliases) && lead.aliases.length > 0) {
-        company = await prisma.company.findFirst({
+        company = await prisma.organization.findFirst({
           where: {
             company_name: {
               in: lead.aliases
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
       if (!company) {
         // 신규 기업 추가
-        company = await prisma.company.create({
+        company = await prisma.organization.create({
           data: {
             company_name: lead.company_name,
             aliases: lead.aliases || null,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         results.addedCompanies++;
       } else {
         // 기존 기업 정보 업데이트
-        company = await prisma.company.update({
+        company = await prisma.organization.update({
           where: { id: company.id },
           data: {
             founded_year: lead.founded_year || company.founded_year,

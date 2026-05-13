@@ -16,9 +16,10 @@ model Industry {
   created_at  DateTime           @default(now())
   updated_at  DateTime           @updatedAt
 
-  keywords    SearchKeyword[]
-  ingestions  ArticleIngestion[]
-  companies   CompanyIndustry[]
+  keywords      SearchKeyword[]
+  ingestions    ArticleIngestion[]
+  companies     CompanyIndustry[]
+  magazinePosts MagazinePostIndustry[]
 
   @@index([slug, deleted_at])
   @@map("industries")
@@ -81,7 +82,7 @@ model ArticleIngestion {
   @@map("article_ingestions")
 }
 
-model Company {
+model Organization {
   id               Int      @id @default(autoincrement())
   company_name     String   @db.VarChar(255)
   aliases          Json?    // 별칭 리스트 (문자열 배열)
@@ -98,6 +99,7 @@ model Company {
 
   industries       CompanyIndustry[]
   company_articles CompanyArticle[]
+  magazinePosts    MagazinePostOrganization[]
 
   @@unique([company_name])
   @@map("companies")
@@ -111,8 +113,8 @@ model CompanyIndustry {
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 
-  company  Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  industry Industry @relation(fields: [industry_id], references: [id], onDelete: Cascade)
+  company  Organization @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  industry Industry     @relation(fields: [industry_id], references: [id], onDelete: Cascade)
 
   @@id([company_id, industry_id])
   @@map("company_industries")
@@ -124,11 +126,76 @@ model CompanyArticle {
   article_id Int
   created_at DateTime @default(now())
 
-  company    Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  article    Article @relation(fields: [article_id], references: [id], onDelete: Cascade)
+  company    Organization @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  article    Article      @relation(fields: [article_id], references: [id], onDelete: Cascade)
 
   @@unique([company_id, article_id])
   @@index([article_id])
   @@index([company_id])
   @@map("company_articles")
 }
+
+// 매거진 포스트 (MagazinePost)
+// AI의 먹이가 될 고도화된 마케팅 기사 데이터를 담는 테이블입니다.
+model MagazinePost {
+  id              Int       @id @default(autoincrement())
+  
+  // 콘텐츠 기본 정보
+  title           String    @db.VarChar(255)
+  slug            String    @unique @db.VarChar(255) // SEO 최적화 URL
+  content         String    @db.LongText            // 기사 본문
+  summary         String?   @db.Text                // AI 요약 및 메타 설명 (SEO/AEO용)
+  thumbnailUrl    String?   @db.VarChar(512)
+  
+  // AEO/GEO 최적화 핵심 필드
+  structuredData  Json?     // Schema.org(JSON-LD) 등 AI가 읽기 좋은 구조화 데이터
+  faqData         Json?     // AI 에이전트 답변 생성을 위한 Q&A 데이터 세트
+  targetKeywords  String?   // AEO/GEO를 위해 집중 타겟팅한 핵심 키워드 목록
+  
+  // 작성 및 상태 관리
+  authorName      String?   // 대학 기자단 실명 혹은 AI 작성 여부
+  status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  viewCount       Int       @default(0)       // 조회수
+  
+  // 비즈니스 모델(BM) 관련 필드
+  isPaid          Boolean   @default(false)   // 유료 기사 여부 (8만원 모델)
+  price           Int       @default(0)       // 실제 결제 금액 (할인 적용 등 기록용)
+  
+  // 외부 배포 추적 (업셀링 고정수입 관리용)
+  isCrossPosted   Boolean   @default(false)   // 고객사 워드프레스/블로그 배포 여부
+  externalLinks   Json?     // 배포된 외부 채널(WP, Blog, Post) URL 리스트
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships (Many-to-Many via join tables)
+  industries      MagazinePostIndustry[]
+  organizations   MagazinePostOrganization[]
+
+  @@map("magazine_posts")
+}
+
+// 매거진 포스트 - 산업 연결 테이블 (Many-to-Many)
+model MagazinePostIndustry {
+  magazinePostId Int
+  industryId     Int
+  
+  magazinePost   MagazinePost @relation(fields: [magazinePostId], references: [id], onDelete: Cascade)
+  industry       Industry     @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([magazinePostId, industryId])
+  @@map("magazine_post_industries")
+}
+
+// 매거진 포스트 - 조직 연결 테이블 (Many-to-Many)
+model MagazinePostOrganization {
+  magazinePostId Int
+  organizationId Int
+  
+  magazinePost   MagazinePost @relation(fields: [magazinePostId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([magazinePostId, organizationId])
+  @@map("magazine_post_organizations")
+}
+

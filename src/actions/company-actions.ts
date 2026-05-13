@@ -24,7 +24,7 @@ export async function updateCompany(
   try {
     const { recent_status, recent_keywords, ...companyData } = data;
 
-    const updatedCompany = await prisma.company.update({
+    const updatedCompany = await prisma.organization.update({
       where: { id },
       data: {
         ...companyData,

@@ -6,7 +6,7 @@ import { CompanyListTable } from './company-list-table';
 export const dynamic = 'force-dynamic';
 
 export default async function CompaniesPage() {
-  const companies = await prisma.company.findMany({
+  const companies = await prisma.organization.findMany({
     include: {
       industries: {
         include: {
