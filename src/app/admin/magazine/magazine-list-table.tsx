@@ -21,6 +21,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 export function MagazineListTable({ posts, industries }: { posts: any[], industries: any[] }) {
     const [selectedPost, setSelectedPost] = useState<any | null>(null);
@@ -42,11 +43,29 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
 
     const handleRowClick = (post: any) => {
         setSelectedPost(post);
+        
+        let rawContent = post.content;
+        try {
+            // JSON 형태라면 마커 기반의 텍스트로 복원하여 편집 가능하게 함
+            const parsed = JSON.parse(post.content);
+            if (parsed.lead || parsed.bodies || parsed.closing) {
+                rawContent = `**(리드)**\n${parsed.lead || ''}\n\n`;
+                parsed.bodies?.forEach((b: any, i: number) => {
+                    rawContent += `**(본문 ${i + 1} — ${b.title})**\n${b.content}\n\n`;
+                });
+                if (parsed.closing) {
+                    rawContent += `**(클로징)**\n${parsed.closing}`;
+                }
+            }
+        } catch (e) {
+            // JSON이 아니라면 기존 텍스트 그대로 사용
+        }
+
         setEditForm({
             title: post.title,
             slug: post.slug,
             category: post.category,
-            content: post.content,
+            content: rawContent,
             thumbnailUrl: post.thumbnailUrl || '',
             status: post.status,
             industryIds: post.industries.map((mi: any) => mi.industryId)
@@ -255,22 +274,24 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                     {/* Thumbnail */}
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                            <ImageIcon className="w-3 h-3" /> 썸네일 이미지 URL
+                                            <ImageIcon className="w-3 h-3" /> 썸네일 이미지
                                         </Label>
                                         {isEditing ? (
-                                            <Input 
+                                            <ImageUpload 
                                                 value={editForm.thumbnailUrl}
-                                                onChange={(e) => setEditForm({...editForm, thumbnailUrl: e.target.value})}
-                                                placeholder="https://example.com/image.jpg"
+                                                onChange={(url) => setEditForm({...editForm, thumbnailUrl: url})}
+                                                onRemove={() => setEditForm({...editForm, thumbnailUrl: ''})}
                                             />
                                         ) : (
                                             <div className="relative group">
                                                 {selectedPost.thumbnailUrl ? (
-                                                    <img 
-                                                        src={selectedPost.thumbnailUrl} 
-                                                        alt="Thumbnail" 
-                                                        className="w-full h-48 object-cover rounded-lg border shadow-sm"
-                                                    />
+                                                    <div className="relative w-full h-48 rounded-lg overflow-hidden border shadow-sm">
+                                                        <img 
+                                                            src={selectedPost.thumbnailUrl} 
+                                                            alt="Thumbnail" 
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    </div>
                                                 ) : (
                                                     <div className="w-full h-48 bg-slate-100 rounded-lg border border-dashed flex items-center justify-center text-slate-400 italic">
                                                         등록된 이미지가 없습니다.
@@ -319,8 +340,40 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                                 className="min-h-[400px] bg-white"
                                             />
                                         ) : (
-                                            <div className="p-6 bg-white border rounded-md prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap">
-                                                {selectedPost.content}
+                                            <div className="p-6 bg-white border rounded-md prose prose-sm max-w-none text-slate-700">
+                                                {(() => {
+                                                    try {
+                                                        const parsed = JSON.parse(selectedPost.content);
+                                                        if (!parsed.lead && !parsed.bodies?.length && !parsed.closing) {
+                                                            throw new Error('Not structured');
+                                                        }
+                                                        return (
+                                                            <div className="space-y-6">
+                                                                {parsed.lead && (
+                                                                    <div className="italic text-slate-500 border-l-4 border-indigo-200 pl-4 py-2 bg-indigo-50/30 rounded-r-md">
+                                                                        {parsed.lead}
+                                                                    </div>
+                                                                )}
+                                                                {parsed.bodies?.map((b: any, i: number) => (
+                                                                    <div key={i} className="space-y-3">
+                                                                        <h5 className="font-bold text-base text-indigo-900 flex items-center gap-2">
+                                                                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[10px]">{i+1}</span>
+                                                                            {b.title}
+                                                                        </h5>
+                                                                        <div className="whitespace-pre-wrap text-sm leading-relaxed">{b.content}</div>
+                                                                    </div>
+                                                                ))}
+                                                                {parsed.closing && (
+                                                                    <div className="pt-6 border-t font-medium text-indigo-600/80 text-sm italic">
+                                                                        {parsed.closing}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    } catch (e) {
+                                                        return <div className="whitespace-pre-wrap">{selectedPost.content}</div>;
+                                                    }
+                                                })()}
                                             </div>
                                         )}
                                     </div>

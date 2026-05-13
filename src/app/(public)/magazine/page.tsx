@@ -1,23 +1,57 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
-import { getRadarLatestArticles, getRadarIndustries } from '@/actions/insight-radar-actions';
+import { getPublicMagazinePosts } from '@/actions/magazine-actions';
+import { getRadarIndustries } from '@/actions/insight-radar-actions';
 
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-    title: 'Magazine',
-    description: '현대 비즈니스와 마케팅의 본질을 꿰뚫는 데이터 기반의 깊이 있는 시선. The Zinsight Magazine.',
+    title: 'Zinsight Magazine',
+    description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine.',
 };
 
+function HighlightedText({ text }: { text: string }) {
+    if (!text) return null;
+    
+    // **{text}** 또는 **text** 패턴을 찾아 강조 처리
+    // 1. **{...}** 패턴 처리
+    // 2. **...** 패턴 처리
+    const parts = text.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*)/g);
+    
+    return (
+        <>
+            {parts.map((part, i) => {
+                if (part.startsWith('**{') && part.endsWith('}**')) {
+                    const content = part.slice(3, -3);
+                    return <span key={i} className="font-bold text-zi-primary underline decoration-zi-primary/30 underline-offset-4">{content}</span>;
+                }
+                if (part.startsWith('**') && part.endsWith('**')) {
+                    const content = part.slice(2, -2);
+                    return <span key={i} className="font-bold text-zi-primary">{content}</span>;
+                }
+                return part;
+            })}
+        </>
+    );
+}
+
 export default async function MagazinePage() {
-    const [latestArticles, industries] = await Promise.all([
-        getRadarLatestArticles({}, 9),
+    const [allPosts, industries] = await Promise.all([
+        getPublicMagazinePosts(),
         getRadarIndustries(),
     ]);
 
-    const featuredArticle = latestArticles[0] ?? null;
-    const sideArticles = latestArticles.slice(1, 4);
-    const gridArticles = latestArticles.slice(4, 10);
+    // 1번: 피처드 스토리
+    const featuredPost = allPosts.find(p => p.headlinePriority === 1) || allPosts[0] || null;
+    
+    // 2~5번: 트렌딩 사이드바 (More Headlines)
+    const sideArticles = allPosts
+        .filter(p => p.headlinePriority >= 2 && p.headlinePriority <= 5)
+        .sort((a, b) => a.headlinePriority - b.headlinePriority);
+        
+    // 0번: 메인 리스트 (최신순)
+    const gridArticles = allPosts.filter(p => p.headlinePriority === 0);
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
@@ -28,15 +62,16 @@ export default async function MagazinePage() {
                 <div className="mb-16 flex flex-col md:flex-row items-end justify-between border-b border-zi-divider pb-8">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest">
-                            Latest Edition
+                            최신 에디션
                         </span>
-                        <h1 className="font-h1 text-h1 text-zi-primary">
-                            The Intelligence Hub
+                        <h1 className="font-h1 text-h1 text-zi-primary uppercase tracking-tighter">
+                            Zinsight Magazine
                         </h1>
                     </div>
                     <div className="hidden text-right md:block">
-                        <p className="max-w-xs text-body-md font-body-md text-zi-on-surface-variant">
-                            현대 비즈니스와 마케팅의 본질을 꿰뚫는 데이터 기반의 깊이 있는 시선.
+                        <p className="max-w-sm text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
+                            데이터의 깊이와 저널리즘의 통찰이 만난 곳,<br />
+                            마케팅의 격을 높이는 프리미엄 미디어
                         </p>
                     </div>
                 </div>
@@ -48,26 +83,38 @@ export default async function MagazinePage() {
                     <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
                         <div className="mb-4">
                             <span className="font-ui-label text-[10px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
-                                Deep Dive
+                                {featuredPost?.category === 'DEEP_DIVE' ? 'Deep Dive' : 'Newsletter'}
                             </span>
                         </div>
                         <h2 className="font-h1 text-h1 text-zi-on-surface mb-6">
-                            {featuredArticle?.title ?? '글로벌 공급망 재편과 아시아 테크 허브의 부상'}
+                            {featuredPost?.title ?? '등록된 주요 기사가 없습니다.'}
                         </h2>
                         <p className="font-body-lg text-body-lg text-zi-on-surface-variant mb-8">
-                            {featuredArticle?.summary
-                                ? featuredArticle.summary.slice(0, 180) + '...'
-                                : '지정학적 긴장이 고조되는 가운데, 반도체 및 첨단 기술 산업의 무게 중심이 어떻게 이동하고 있는지 심층 분석합니다.'}
+                            <HighlightedText 
+                                text={featuredPost?.summary ?? (featuredPost?.content ? featuredPost.content.slice(0, 180) + '...' : '새로운 인사이트를 준비 중입니다.')} 
+                            />
                         </p>
                         <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
-                            <span className="text-zi-on-surface font-semibold">By {featuredArticle?.source ?? 'Zinsight 편집부'}</span>
+                            <span className="text-zi-on-surface font-semibold">By Zinsight 편집부</span>
                             <span>•</span>
-                            <span>12 Min Read</span>
+                            <span>{featuredPost ? new Date(featuredPost.createdAt).toLocaleDateString() : ''}</span>
                         </div>
                     </div>
                     <div className="lg:col-span-6 aspect-[4/3] w-full order-1 lg:order-2">
                         <div className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative">
-                            <div className="absolute inset-0 bg-gradient-to-br from-zi-primary/10 to-zi-secondary/5" />
+                            {featuredPost?.thumbnailUrl ? (
+                                <Image 
+                                    src={featuredPost.thumbnailUrl} 
+                                    alt={featuredPost.title}
+                                    fill
+                                    className="object-cover transition-transform duration-700 hover:scale-105"
+                                    priority
+                                />
+                            ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-zi-primary/10 to-zi-secondary/5 flex items-center justify-center text-zi-outline-variant italic">
+                                    No Image Available
+                                </div>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -80,22 +127,35 @@ export default async function MagazinePage() {
                     <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12">
                         {(gridArticles.length > 0 ? gridArticles : FALLBACK_ARTICLES).map((article, idx) => {
                             const isReal = 'id' in article;
+                            const industryName = isReal 
+                                ? ((article as any).industries?.[0]?.industry?.name || '인사이트') 
+                                : (article as any).category;
+                            
                             return (
                                 <article key={isReal ? article.id : idx} className="flex flex-col group cursor-pointer">
-                                    <div className="mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden">
-                                        <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                    <div className="mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                        {isReal && (article as any).thumbnailUrl ? (
+                                            <Image 
+                                                src={(article as any).thumbnailUrl} 
+                                                alt={article.title}
+                                                fill
+                                                className="object-cover transition-all duration-500 group-hover:scale-105"
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                        )}
                                     </div>
                                     <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                        {isReal ? article.industryName : (article as any).category}
+                                        {industryName}
                                     </span>
                                     <h4 className="mb-4 font-h3 text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
-                                        {isReal ? article.title : (article as any).title}
+                                        {article.title}
                                     </h4>
                                     <p className="mb-6 line-clamp-3 text-body-md font-body-md text-zi-on-surface-variant">
-                                        {isReal ? article.summary : (article as any).excerpt}
+                                        <HighlightedText text={isReal ? (article as any).summary : (article as any).excerpt} />
                                     </p>
                                     <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
-                                        <span>{isReal ? article.source : (article as any).author}</span>
+                                        <span>{isReal ? 'Zinsight 편집부' : (article as any).author}</span>
                                         <ArrowRight className="h-4 w-4" />
                                     </div>
                                 </article>
@@ -117,7 +177,7 @@ export default async function MagazinePage() {
                                     className="w-full px-4 py-3 rounded-zi-btn border border-zi-outline-variant bg-white text-body-md focus:border-zi-primary outline-none transition-all"
                                 />
                                 <button className="w-full py-3 bg-zi-primary text-white font-ui-label rounded-zi-btn hover:bg-zi-primary/90 transition-all active:scale-[0.98]">
-                                    Subscribe
+                                    구독하기
                                 </button>
                             </div>
                         </div>
@@ -132,10 +192,13 @@ export default async function MagazinePage() {
                                     <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
                                         {article.title}
                                     </h4>
+                                    <p className="mb-3 line-clamp-2 text-[13px] text-zi-on-surface-variant leading-relaxed">
+                                        <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
+                                    </p>
                                     <div className="flex items-center gap-2 text-zi-outline text-[12px]">
-                                        <span>{article.industryName}</span>
+                                        <span>{(article as any).industries?.[0]?.industry?.name || '인사이트'}</span>
                                         <span>•</span>
-                                        <span>{article.source}</span>
+                                        <span>Zinsight 편집부</span>
                                     </div>
                                 </div>
                             ))}

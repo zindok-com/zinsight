@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { createMagazinePost } from '@/actions/magazine-actions';
 import { Loader2, Info } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ImageUpload } from '@/components/ui/image-upload';
 
 export function MagazineForm({ industries }: { industries: any[] }) {
     const router = useRouter();
@@ -215,32 +216,13 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                 {/* Right Column: Thumbnail & Other Info */}
                 <div className="space-y-6">
                     <div className="space-y-2">
-                        <Label htmlFor="thumbnailUrl" className="font-bold">썸네일 이미지 URL</Label>
-                        <Input 
-                            id="thumbnailUrl"
-                            placeholder="https://example.com/image.jpg"
+                        <Label className="font-bold">썸네일 이미지</Label>
+                        <ImageUpload 
                             value={formData.thumbnailUrl}
-                            onChange={(e) => setFormData({...formData, thumbnailUrl: e.target.value})}
-                            className="bg-white"
+                            onChange={(url) => setFormData({...formData, thumbnailUrl: url})}
+                            onRemove={() => setFormData({...formData, thumbnailUrl: ''})}
                         />
                     </div>
-                    
-                    {/* Add visual preview if thumbnail is provided */}
-                    {formData.thumbnailUrl && (
-                        <div className="border rounded-lg overflow-hidden bg-slate-100 aspect-video flex items-center justify-center relative">
-                            <img 
-                                src={formData.thumbnailUrl} 
-                                alt="Preview" 
-                                className="object-cover w-full h-full"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = 'https://placehold.co/600x400?text=Invalid+Image+URL';
-                                }}
-                            />
-                            <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded backdrop-blur-sm">
-                                미리보기
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
