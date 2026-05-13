@@ -15,18 +15,49 @@ import {
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
-const MENU_ITEMS = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Industries', href: '/admin/industries', icon: Building2 },
-    { name: 'Organizations', href: '/admin/companies', icon: Briefcase },
-    { name: 'Keywords', href: '/admin/keywords', icon: Tags },
-    { name: 'Articles', href: '/admin/articles', icon: Newspaper },
-    { name: 'Export', href: '/admin/export', icon: Download },
+const TOP_MENU_ITEMS = [
+    { name: '대시보드', href: '/admin', icon: LayoutDashboard },
+];
+
+const INSIGHT_RADAR_ITEMS = [
+    { name: '산업 관리', href: '/admin/industries', icon: Building2 },
+    { name: '조직 관리', href: '/admin/companies', icon: Briefcase },
+    { name: '키워드 관리', href: '/admin/keywords', icon: Tags },
+    { name: '기사 관리', href: '/admin/articles', icon: Newspaper },
+    { name: '데이터 내보내기', href: '/admin/export', icon: Download },
+];
+
+const MAGAZINE_ITEMS = [
+    { name: '매거진 포스트', href: '/admin/magazine', icon: Newspaper },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const renderNavItems = (items: typeof INSIGHT_RADAR_ITEMS) => (
+        <div className="space-y-1">
+            {items.map((item) => {
+                const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+                return (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                            "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                            isActive
+                                ? "bg-slate-700 text-white"
+                                : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                        )}
+                        onClick={() => setMobileMenuOpen(false)}
+                    >
+                        <item.icon className="h-5 w-5" />
+                        {item.name}
+                    </Link>
+                );
+            })}
+        </div>
+    );
 
     return (
         <>
@@ -48,30 +79,26 @@ export function Sidebar() {
                     <p className="text-xs text-slate-400 mt-1">Admin Dashboard</p>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                    {MENU_ITEMS.map((item) => {
-                        const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                                    isActive
-                                        ? "bg-slate-700 text-white"
-                                        : "text-slate-300 hover:bg-slate-800 hover:text-white"
-                                )}
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                <item.icon className="h-5 w-5" />
-                                {item.name}
-                            </Link>
-                        );
-                    })}
+                <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+                    {renderNavItems(TOP_MENU_ITEMS)}
+
+                    <div>
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3">
+                            Insight Radar
+                        </p>
+                        {renderNavItems(INSIGHT_RADAR_ITEMS)}
+                    </div>
+
+                    <div>
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3">
+                            Magazine
+                        </p>
+                        {renderNavItems(MAGAZINE_ITEMS)}
+                    </div>
                 </nav>
 
                 <div className="p-4 border-t border-slate-700 text-xs text-slate-500 text-center">
-                    v3.0.0 (DB Edition)
+                    v3.1.0 (Magazine Edition)
                 </div>
             </aside>
 
