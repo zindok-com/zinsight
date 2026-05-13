@@ -338,7 +338,7 @@ export async function getRadarCompanyDetail(companyId: number) {
                     },
                 },
                 orderBy: { article: { pub_date: 'desc' } },
-                take: 5,
+                take: 10,
             },
             _count: { select: { company_articles: true } },
         },

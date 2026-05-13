@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Building2, Newspaper, Layers, Tag } from 'lucide-react';
+import { LottieIcon } from '@/components/ui/LottieIcon';
 
 interface StatsCounterProps {
     value: number;
@@ -107,10 +107,30 @@ interface HomeStatsProps {
 
 export function HomeStats({ totalStats }: HomeStatsProps) {
     const statsData = [
-        { icon: <Building2 className="h-7 w-7" />, label: '분석 조직', value: totalStats.totalCompanies, unit: '개' },
-        { icon: <Newspaper className="h-7 w-7" />, label: '수집 기사', value: totalStats.totalArticles, unit: '건' },
-        { icon: <Layers className="h-7 w-7" />, label: '산업 분야', value: totalStats.totalIndustries, unit: '개' },
-        { icon: <Tag className="h-7 w-7" />, label: '추적 키워드', value: totalStats.totalKeywords, unit: '개' },
+        { 
+            icon: <LottieIcon name="network" size={36} />, 
+            label: '분석 조직', 
+            value: totalStats.totalCompanies, 
+            unit: '개' 
+        },
+        { 
+            icon: <LottieIcon name="news" size={36} />, 
+            label: '수집 기사', 
+            value: totalStats.totalArticles, 
+            unit: '건' 
+        },
+        { 
+            icon: <LottieIcon name="chart" size={36} />, 
+            label: '산업 분야', 
+            value: totalStats.totalIndustries, 
+            unit: '개' 
+        },
+        { 
+            icon: <LottieIcon name="bulb" size={36} />, 
+            label: '추적 키워드', 
+            value: totalStats.totalKeywords, 
+            unit: '개' 
+        },
     ];
 
     return (

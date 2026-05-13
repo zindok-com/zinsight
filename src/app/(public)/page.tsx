@@ -8,6 +8,8 @@ import {
     getRadarTotalStats,
     getRadarCompanies,
 } from '@/actions/insight-radar-actions';
+import { getHeadlineMagazinePosts } from '@/actions/magazine-actions';
+import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,16 +20,14 @@ export const metadata: Metadata = {
 
 export default async function PublicHomePage() {
     // 홈 페이지에 필요한 데이터를 병렬로 조회
-    const [totalStats, { companies: featuredCompanies }, latestArticles, trendingKeywords] =
+    const [totalStats, { companies: featuredCompanies }, latestArticles, trendingKeywords, headlinePosts] =
         await Promise.all([
             getRadarTotalStats(),
             getRadarCompanies({}, 1, 3),
             getRadarLatestArticles({}, 3),
             getRadarTrendingKeywords(undefined, 8),
+            getHeadlineMagazinePosts(),
         ]);
-
-    // 최신 기사 중 매거진 프리뷰용 상위 3건
-    const magazineArticles = latestArticles.slice(0, 3);
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
@@ -249,33 +249,9 @@ export default async function PublicHomePage() {
                         </p>
                     </div>
 
-                    {/* 아티클 3단 그리드 */}
-                    <div className="grid grid-cols-1 gap-12 md:grid-cols-3">
-                        {magazineArticles.length > 0
-                            ? magazineArticles.map((article, idx) => (
-                                  <MagazineArticleCard
-                                      key={article.id}
-                                      category={article.industryName}
-                                      title={article.title}
-                                      summary={article.summary ?? ''}
-                                      author={article.source ?? 'Zinsight 편집부'}
-                                      readTime={`${(idx + 1) * 4 + 4} min read`}
-                                      href={article.url ?? '#'}
-                                      index={idx}
-                                  />
-                              ))
-                            : FALLBACK_MAGAZINE_ARTICLES.map((article, idx) => (
-                                  <MagazineArticleCard
-                                      key={idx}
-                                      category={article.category}
-                                      title={article.title}
-                                      summary={article.summary}
-                                      author={article.author}
-                                      readTime={article.readTime}
-                                      href="#"
-                                      index={idx}
-                                  />
-                              ))}
+                    {/* 매거진 캐러셀 */}
+                    <div className="mt-8">
+                        <MagazineCarousel posts={headlinePosts as any} />
                     </div>
                 </div>
             </section>
@@ -283,91 +259,3 @@ export default async function PublicHomePage() {
     );
 }
 
-
-// ─────────────────────────────────────────────
-// 내부 컴포넌트
-// ─────────────────────────────────────────────
-
-interface MagazineArticleCardProps {
-    category: string;
-    title: string;
-    summary: string;
-    author: string;
-    readTime: string;
-    href: string;
-    index: number;
-}
-
-function MagazineArticleCard({
-    category,
-    title,
-    summary,
-    author,
-    readTime,
-    href,
-    index,
-}: MagazineArticleCardProps) {
-    // 인덱스에 따른 그레이스케일 이미지 플레이스홀더 색상
-    const placeholderColors = ['#e5e2e1', '#dcd9d9', '#c4c7c9'];
-
-    return (
-        <article className="group flex cursor-pointer flex-col">
-            {/* 이미지 플레이스홀더 */}
-            <div
-                className="mb-6 aspect-square overflow-hidden"
-                style={{ backgroundColor: placeholderColors[index % 3] }}
-            >
-                <div className="h-full w-full transition-all duration-500 group-hover:scale-105" />
-            </div>
-
-            {/* 카테고리 레이블 */}
-            <span className="mb-3 text-zi-label font-semibold uppercase tracking-widest text-zi-blue">
-                {category}
-            </span>
-
-            {/* 제목 */}
-            <h3 className="font-serif mb-4 text-zi-headline-lg font-semibold leading-tight transition-colors group-hover:text-zi-blue">
-                {title}
-            </h3>
-
-            {/* 요약 */}
-            <p className="line-clamp-3 text-zi-body-md text-zi-on-surface-variant">
-                {summary}
-            </p>
-
-            {/* 메타 정보 */}
-            <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-6">
-                <span className="text-zi-caption text-slate-400">{author}</span>
-                <span className="text-zi-caption text-slate-400">{readTime}</span>
-            </div>
-        </article>
-    );
-}
-
-// ─────────────────────────────────────────────
-// 폴백 데이터 (DB가 비어 있을 때 표시)
-// ─────────────────────────────────────────────
-
-const FALLBACK_MAGAZINE_ARTICLES = [
-    {
-        category: 'Macro Analysis',
-        title: '공급망의 재편: 글로벌 생산 거점의 이동과 기회',
-        summary: '탈중국화 현상이 가속화됨에 따라 인도와 동남아시아로 이동하는 글로벌 공급망의 핵심 축을 심층 분석합니다.',
-        author: 'Michael Park',
-        readTime: '8 min read',
-    },
-    {
-        category: 'Brand Strategy',
-        title: '명품의 이면: Z세대가 정의하는 새로운 럭셔리',
-        summary: '소유보다 경험을, 로고보다 가치를 중시하는 새로운 세대의 소비 패턴이 시장의 패러다임을 어떻게 바꾸고 있는가.',
-        author: 'Sarah Kim',
-        readTime: '12 min read',
-    },
-    {
-        category: 'Tech Frontier',
-        title: '생성형 AI가 바꾸는 업무의 미래와 생산성의 한계',
-        summary: '단순 업무 대체를 넘어 창의적 영역까지 침투한 AI가 기업의 조직 문화와 개인의 역량 정의에 미치는 영향.',
-        author: 'David Lee',
-        readTime: '15 min read',
-    },
-];

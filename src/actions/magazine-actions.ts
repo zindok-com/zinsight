@@ -245,6 +245,37 @@ export async function getPublicMagazinePosts() {
     });
 }
 
+export async function getHeadlineMagazinePosts() {
+    const posts = await prisma.magazinePost.findMany({
+        where: { 
+            status: 'PUBLISHED',
+            headlinePriority: { gt: 0 }
+        },
+        include: {
+            industries: {
+                include: {
+                    industry: true
+                }
+            }
+        },
+        orderBy: {
+            headlinePriority: 'asc'
+        },
+        take: 5
+    });
+
+    return posts.map(post => ({
+        id: post.id,
+        title: post.title,
+        summary: post.summary,
+        slug: post.slug,
+        thumbnailUrl: post.thumbnailUrl,
+        industryName: post.industries[0]?.industry?.name ?? '기타',
+        authorName: post.authorName,
+        createdAt: post.createdAt
+    }));
+}
+
 export async function migrateMagazineContent() {
     try {
         const posts = await prisma.magazinePost.findMany();

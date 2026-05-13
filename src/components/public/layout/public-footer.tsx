@@ -21,13 +21,11 @@ export function PublicFooter() {
                             <span className="text-zi-label font-bold uppercase text-zi-primary tracking-wider">탐색</span>
                             <Link href="/insight-radar" className="text-zi-body-md text-slate-500 hover:underline decoration-1">인사이트 레이더</Link>
                             <Link href="/magazine" className="text-zi-body-md text-slate-500 hover:underline decoration-1">매거진 아카이브</Link>
-                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">연구 보고서</Link>
                         </div>
                         <div className="flex flex-col gap-4">
                             <span className="text-zi-label font-bold uppercase text-zi-primary tracking-wider">정보</span>
-                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">Zinsight 소개</Link>
-                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">채용 정보</Link>
-                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">문의하기</Link>
+                            <Link href="https://www.zindok.com" target="_blank" className="text-zi-body-md text-slate-500 hover:underline decoration-1">Zinsight 소개</Link>
+                            <Link href="https://www.zindok.com" target="_blank" className="text-zi-body-md text-slate-500 hover:underline decoration-1">문의하기</Link>
                         </div>
                         <div className="flex flex-col gap-4">
                             <span className="text-zi-label font-bold uppercase text-zi-primary tracking-wider">법령</span>

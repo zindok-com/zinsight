@@ -59,67 +59,79 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 {/* ─────────────────────────────── */}
                 <section className="mb-12">
                     {/* 1. Header Section */}
-                    <div className="border-b border-slate-200 pb-8 mb-8">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 gap-4">
-                            <div>
-                                <h1 className="text-4xl font-bold text-[#002B5B] font-serif mb-2">
-                                    {company.company_name}
-                                </h1>
-                                {company.company_url && (
-                                    <a href={company.company_url} target="_blank" rel="noopener noreferrer" className="text-sm text-slate-400 hover:text-[#007AFF] flex items-center gap-1 transition-colors">
-                                        <ExternalLink size={14} /> {company.company_url}
-                                    </a>
-                                )}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                {company.allIndustries && company.allIndustries.length > 0 ? (
-                                    company.allIndustries.map((ind) => (
-                                        <span key={ind.id} className="text-[#00897B] border border-[#00897B] rounded-full px-3 py-1 text-xs font-semibold">
-                                            {ind.name}
+                    <div className="border-b border-slate-200 pb-10 mb-8">
+                        <div className="mb-6">
+                            <h1 className="text-5xl font-bold text-[#001736] font-serif mb-6 tracking-tight">
+                                {company.company_name}
+                            </h1>
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+                                {/* 산업 태그 */}
+                                <div className="flex flex-wrap gap-2.5">
+                                    {company.allIndustries && company.allIndustries.length > 0 ? (
+                                        company.allIndustries.map((ind) => (
+                                            <span key={ind.id} className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-zi-secondary bg-teal-50 border border-teal-100 rounded-lg">
+                                                <Tag size={14} /> {ind.name}
+                                            </span>
+                                        ))
+                                    ) : company.industry && (
+                                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-zi-secondary bg-teal-50 border border-teal-100 rounded-lg">
+                                            <Tag size={14} /> {company.industry.name}
                                         </span>
-                                    ))
-                                ) : company.industry && (
-                                    <span className="text-[#00897B] border border-[#00897B] rounded-full px-3 py-1 text-xs font-semibold">
-                                        {company.industry.name}
-                                    </span>
+                                    )}
+                                </div>
+                                
+                                {/* 홈페이지 링크 */}
+                                {company.company_url && (
+                                    <>
+                                        <div className="hidden md:block w-px h-5 bg-slate-200" />
+                                        <a 
+                                            href={company.company_url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer" 
+                                            className="inline-flex items-center gap-2 text-lg font-semibold text-zi-blue hover:underline decoration-2 underline-offset-4 transition-all"
+                                        >
+                                            <ExternalLink size={20} /> 
+                                            <span className="tracking-tight">{company.company_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+                                        </a>
+                                    </>
                                 )}
                             </div>
                         </div>
                         
-                        <p className="text-lg text-slate-700 leading-relaxed max-w-3xl">
+                        <p className="text-xl text-slate-600 leading-relaxed max-w-4xl font-medium">
                             {company.business_summary || '등록된 비즈니스 요약이 없습니다.'}
                         </p>
                     </div>
 
                     {/* 2. Metadata Insight Bar */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 py-6 px-8 bg-[#F9FAFB] rounded-xl border border-slate-100 mb-10">
-                        <div className="flex flex-col gap-1">
-                            <span className="text-xs text-slate-400 font-medium">대표자</span>
-                            <span className="text-sm text-slate-800 font-semibold">{company.ceo_name || '-'}</span>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 py-7 px-8 bg-zi-blue rounded-xl border border-blue-400/20 mb-10 shadow-sm">
+                        <div className="flex flex-col gap-1.5">
+                            <span className="text-sm text-blue-100 font-medium">대표자</span>
+                            <span className="text-base text-white font-semibold">{company.ceo_name || '-'}</span>
                         </div>
-                        <div className="flex flex-col gap-1 md:border-l border-slate-200 md:pl-8">
-                            <span className="text-xs text-slate-400 font-medium">설립연도</span>
-                            <span className="text-sm text-slate-800 font-semibold">{company.founded_year || '-'}</span>
+                        <div className="flex flex-col gap-1.5 md:border-l border-white/20 md:pl-8">
+                            <span className="text-sm text-blue-100 font-medium">설립연도</span>
+                            <span className="text-base text-white font-semibold">{company.founded_year || '-'}</span>
                         </div>
-                        <div className="flex flex-col gap-1 md:border-l border-slate-200 md:pl-8">
-                            <span className="text-xs text-slate-400 font-medium">소재지</span>
-                            <span className="text-sm text-slate-800 font-semibold">{company.hq_location || '-'}</span>
+                        <div className="flex flex-col gap-1.5 md:border-l border-white/20 md:pl-8">
+                            <span className="text-sm text-blue-100 font-medium">소재지</span>
+                            <span className="text-base text-white font-semibold">{company.hq_location || '-'}</span>
                         </div>
-                        <div className="flex flex-col gap-1 md:border-l border-slate-200 md:pl-8">
-                            <span className="text-xs text-slate-400 font-medium">기업유형</span>
-                            <span className="text-sm text-slate-800 font-semibold text-[#00897B]">{company.entity_type || 'Enterprise'}</span>
+                        <div className="flex flex-col gap-1.5 md:border-l border-white/20 md:pl-8">
+                            <span className="text-sm text-blue-100 font-medium">조직유형</span>
+                            <span className="text-base text-white font-semibold">{company.entity_type || 'Enterprise'}</span>
                         </div>
                     </div>
 
                     {/* 3. Key References Section */}
                     {Array.isArray(company.key_references) && company.key_references.length > 0 && (
                         <div>
-                            <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                <Target size={16} className="text-[#002B5B]" /> 주요 레퍼런스
+                            <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                <Target size={18} className="text-[#002B5B]" /> 주요 레퍼런스
                             </h3>
                             <div className="flex flex-wrap gap-2">
                                 {(company.key_references as string[]).map((ref, i) => (
-                                    <span key={i} className="px-3 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-full hover:border-[#002B5B] transition-colors cursor-default">
+                                    <span key={i} className="px-4 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full hover:border-[#002B5B] transition-colors cursor-default shadow-sm">
                                         {ref}
                                     </span>
                                 ))}
@@ -265,7 +277,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             Activity Timeline
                         </h2>
                         <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-semibold">
-                            관련 기사 {company.articleCount.toLocaleString()}건
+                            총 {company.articleCount.toLocaleString()}건 중 주요 {company.recentArticles.length}건
                         </span>
                     </div>
 
