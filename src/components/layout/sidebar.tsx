@@ -30,6 +30,7 @@ const INSIGHT_RADAR_ITEMS = [
 const MAGAZINE_ITEMS = [
     { name: '매거진 포스트', href: '/admin/magazine', icon: Newspaper },
     { name: '헤드라인 설정', href: '/admin/magazine/headlines', icon: LayoutDashboard },
+    { name: '리포트 신청 목록', href: '/admin/magazine/requests', icon: Tags },
 ];
 
 export function Sidebar() {
@@ -39,7 +40,15 @@ export function Sidebar() {
     const renderNavItems = (items: typeof INSIGHT_RADAR_ITEMS) => (
         <div className="space-y-1">
             {items.map((item) => {
-                const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+                const isActive = pathname === item.href || (
+                    item.href !== '/admin' && 
+                    pathname.startsWith(item.href) && 
+                    !items.some(other => 
+                        other.href !== item.href && 
+                        pathname.startsWith(other.href) && 
+                        other.href.length > item.href.length
+                    )
+                );
                 return (
                     <Link
                         key={item.href}

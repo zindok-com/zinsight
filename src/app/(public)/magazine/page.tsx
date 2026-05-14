@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/magazine-actions';
 import { getRadarIndustries } from '@/actions/insight-radar-actions';
+import MagazineAeoCTA from '@/components/public/MagazineAeoCTA';
 
 export const dynamic = 'force-dynamic';
 
@@ -184,25 +185,9 @@ export default async function MagazinePage() {
                             );
                         })}
                     </div>
-
                     {/* 사이드바 */}
                     <div className="lg:col-span-4 flex flex-col gap-12">
-                        <div className="bg-zi-surface-container-low p-8 rounded-zi-card border border-zi-divider">
-                            <h3 className="font-h3 text-h3 text-zi-primary mb-4">Newsletter</h3>
-                            <p className="text-body-md font-body-md text-zi-on-surface-variant mb-6">
-                                매주 월요일 아침, 가장 예리한 마켓 인사이트를 편지함으로 보내드립니다.
-                            </p>
-                            <div className="flex flex-col gap-3">
-                                <input
-                                    type="email"
-                                    placeholder="your@email.com"
-                                    className="w-full px-4 py-3 rounded-zi-btn border border-zi-outline-variant bg-white text-body-md focus:border-zi-primary outline-none transition-all"
-                                />
-                                <button className="w-full py-3 bg-zi-primary text-white font-ui-label rounded-zi-btn hover:bg-zi-primary/90 transition-all active:scale-[0.98]">
-                                    구독하기
-                                </button>
-                            </div>
-                        </div>
+                        <MagazineAeoCTA />
 
                         {/* 트렌딩 사이드바 */}
                         <div className="flex flex-col gap-6">
