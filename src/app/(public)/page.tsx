@@ -16,6 +16,17 @@ export const dynamic = 'force-dynamic';
 export const metadata: Metadata = {
     title: 'Zinsight — 인텔리전스의 정점',
     description: '산업별 기업 동향과 최신 뉴스를 한눈에. 데이터로 읽는 시장의 미래.',
+    openGraph: {
+        title: 'Zinsight — 인텔리전스의 정점',
+        description: '산업별 기업 동향과 최신 뉴스를 한눈에. 데이터로 읽는 시장의 미래.',
+        images: ['/img/zinsight_icon.png'],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Zinsight — 인텔리전스의 정점',
+        description: '산업별 기업 동향과 최신 뉴스를 한눈에. 데이터로 읽는 시장의 미래.',
+        images: ['/img/zinsight_icon.png'],
+    },
 };
 
 export default async function PublicHomePage() {

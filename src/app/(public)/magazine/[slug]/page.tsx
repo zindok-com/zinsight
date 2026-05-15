@@ -16,9 +16,34 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     if (!post) return { title: 'Not Found' };
 
+    const title = `${post.title} | Zinsight Magazine`;
+    const description = post.summary || (post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content);
+    const ogImage = post.thumbnailUrl || "/img/zinsight_icon.png";
+
     return {
-        title: `${post.title} | Zinsight Magazine`,
-        description: post.summary || post.content.slice(0, 150),
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            type: 'article',
+            publishedTime: post.createdAt.toISOString(),
+            authors: [post.authorName || 'Zinsight 편집부'],
+            images: [
+                {
+                    url: ogImage,
+                    width: 1200,
+                    height: 630,
+                    alt: post.title,
+                }
+            ],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [ogImage],
+        },
     };
 }
 
