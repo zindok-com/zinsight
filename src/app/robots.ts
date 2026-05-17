@@ -1,6 +1,9 @@
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
+    const domain = process.env.DOMAIN || 'zinsight.com';
+    const baseUrl = `https://${domain}`;
+
     return {
         rules: [
             {
@@ -9,6 +12,6 @@ export default function robots(): MetadataRoute.Robots {
                 disallow: ['/admin', '/login', '/api'],
             },
         ],
-        sitemap: 'https://zinsight.com/sitemap.xml',
+        sitemap: `${baseUrl}/sitemap.xml`,
     };
 }

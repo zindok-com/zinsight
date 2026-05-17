@@ -14,8 +14,11 @@ const newsreader = Newsreader({
     variable: "--font-serif",
 });
 
+const domain = process.env.DOMAIN || "zinsight.com";
+const baseUrl = `https://${domain}`;
+
 export const metadata: Metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://zinsight.com"),
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || baseUrl),
     title: {
         template: "%s | zinsight",
         default: "zinsight — 당신의 시간을 지킵니다",
@@ -38,7 +41,7 @@ export const metadata: Metadata = {
     openGraph: {
         type: "website",
         locale: "ko_KR",
-        url: "https://zinsight.com",
+        url: baseUrl,
         siteName: "zinsight",
         title: "zinsight — 당신의 시간을 지킵니다",
         description: "산업별 기업 동향과 최신 뉴스를 한눈에. zinsight Insight Radar.",

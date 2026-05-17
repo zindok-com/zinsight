@@ -8,9 +8,21 @@ import MagazineAeoCTA from '@/components/public/MagazineAeoCTA';
 
 export const dynamic = 'force-dynamic';
 
+const domain = process.env.DOMAIN || 'zinsight.com';
+const baseUrl = `https://${domain}`;
+
 export const metadata: Metadata = {
     title: 'Zinsight Magazine',
     description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine.',
+    alternates: {
+        canonical: `${baseUrl}/magazine`,
+    },
+    openGraph: {
+        title: 'Zinsight Magazine',
+        description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine.',
+        url: `${baseUrl}/magazine`,
+        type: 'website',
+    },
 };
 
 function HighlightedText({ text }: { text: string }) {

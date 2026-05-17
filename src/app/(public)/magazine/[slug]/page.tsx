@@ -5,30 +5,81 @@ import { ArrowLeft } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { Metadata } from 'next';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 1시간마다 점진적 정적 재생성(ISR)
+export const dynamicParams = true; // 빌드 타임에 생성되지 않은 새 포스트도 온디맨드로 정적 생성
+
+export async function generateStaticParams() {
+    const posts = await prisma.magazinePost.findMany({
+        select: {
+            slug: true,
+        },
+    });
+
+    return posts.map((post) => ({
+        slug: post.slug,
+    }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
+    const domain = process.env.DOMAIN || 'zinsight.com';
+    const baseUrl = `https://${domain}`;
 
     const post = await prisma.magazinePost.findUnique({
         where: { slug },
+        include: {
+            industries: {
+                include: {
+                    industry: true
+                }
+            },
+            organizations: {
+                include: {
+                    organization: true
+                }
+            }
+        }
     });
 
     if (!post) return { title: 'Not Found' };
 
     const title = `${post.title} | Zinsight Magazine`;
     const description = post.summary || (post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content);
-    const ogImage = post.thumbnailUrl || "/img/zinsight_icon.png";
+    const ogImage = post.thumbnailUrl || `${baseUrl}/img/zinsight_icon.png`;
+    
+    // 키워드 태그 목록 추출
+    const tags = [
+        ...post.industries.map(pi => pi.industry.name),
+        ...post.organizations.map(po => po.organization.company_name)
+    ];
 
     return {
         title,
         description,
+        alternates: {
+            canonical: `${baseUrl}/magazine/${post.slug}`,
+        },
+        robots: {
+            index: true,
+            follow: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                'max-video-preview': -1,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+            },
+        },
         openGraph: {
             title,
             description,
             type: 'article',
+            url: `${baseUrl}/magazine/${post.slug}`,
             publishedTime: post.createdAt.toISOString(),
+            modifiedTime: post.updatedAt.toISOString(),
+            section: post.category === 'DEEP_DIVE' ? 'Deep Dive' : 'Newsletter',
             authors: [post.authorName || 'Zinsight 편집부'],
+            tags: tags.length > 0 ? tags : undefined,
             images: [
                 {
                     url: ogImage,
@@ -123,8 +174,48 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
     const isDeepDive = post.category === 'DEEP_DIVE';
     const mainIndustry = post.industries?.[0]?.industry?.name || '인사이트';
 
+    const domain = process.env.DOMAIN || 'zinsight.com';
+    const baseUrl = `https://${domain}`;
+
+    // JSON-LD 구조화 데이터 구축 (Article Schema)
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        'headline': post.title,
+        'description': post.summary || (post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content),
+        'image': post.thumbnailUrl ? [post.thumbnailUrl] : [`${baseUrl}/img/zinsight_icon.png`],
+        'datePublished': post.createdAt.toISOString(),
+        'dateModified': post.updatedAt.toISOString(),
+        'author': {
+            '@type': 'Person',
+            'name': post.authorName || 'Zinsight 편집부',
+        },
+        'publisher': {
+            '@type': 'Organization',
+            'name': 'Zinsight',
+            'logo': {
+                '@type': 'ImageObject',
+                'url': `${baseUrl}/img/zinsight_icon.png`,
+            },
+        },
+        'mainEntityOfPage': {
+            '@type': 'WebPage',
+            '@id': `${baseUrl}/magazine/${post.slug}`,
+        },
+        'keywords': [
+            post.category === 'DEEP_DIVE' ? 'Deep Dive' : 'Newsletter',
+            ...post.industries.map(pi => pi.industry.name),
+            ...post.organizations.map(po => po.organization.company_name),
+        ].join(', '),
+    };
+
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface pb-24">
+            {/* SEO 구조화 데이터 주입 */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <main className="mx-auto max-w-[1024px] px-6 pt-12">
                 {/* ─────────────────────────────── */}
                 {/* 내비게이션 & 메타 정보 */}
