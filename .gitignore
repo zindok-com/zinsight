@@ -10,3 +10,4 @@ data/raw/
 
 /src/generated/prisma
 pnpm-lock.yaml
+next-env.d.ts

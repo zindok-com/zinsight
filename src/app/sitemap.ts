@@ -19,6 +19,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Dynamic magazine routes
     const magazinePosts = await prisma.magazinePost.findMany({
+        where: {
+            status: 'PUBLISHED',
+            deletedAt: null,
+        },
         select: {
             slug: true,
             updatedAt: true,

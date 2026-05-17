@@ -167,6 +167,7 @@ model MagazinePost {
   isCrossPosted   Boolean   @default(false)   // 고객사 워드프레스/블로그 배포 여부
   externalLinks   Json?     // 배포된 외부 채널(WP, Blog, Post) URL 리스트
   
+  deletedAt       DateTime? // 소프트 삭제 일시 기록용 (null 이면 활성 상태)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

@@ -39,6 +39,9 @@ function processMagazineContent(content: string, providedSummary?: string) {
 
 export async function getMagazinePosts() {
     return await prisma.magazinePost.findMany({
+        where: {
+            deletedAt: null
+        },
         include: {
             industries: {
                 include: {
@@ -180,8 +183,11 @@ export async function updateMagazinePost(id: number, data: {
 
 export async function deleteMagazinePost(id: number) {
     try {
-        await prisma.magazinePost.delete({
-            where: { id }
+        await prisma.magazinePost.update({
+            where: { id },
+            data: {
+                deletedAt: new Date()
+            }
         });
         revalidatePath('/admin/magazine');
         revalidatePath('/admin');
@@ -226,7 +232,10 @@ export async function updateHeadlinePriority(id: number, priority: number) {
 
 export async function getPublicMagazinePosts() {
     return await prisma.magazinePost.findMany({
-        where: { status: 'PUBLISHED' },
+        where: { 
+            status: 'PUBLISHED',
+            deletedAt: null
+        },
         include: {
             industries: {
                 include: {
@@ -249,7 +258,8 @@ export async function getHeadlineMagazinePosts() {
     const posts = await prisma.magazinePost.findMany({
         where: { 
             status: 'PUBLISHED',
-            headlinePriority: { gt: 0 }
+            headlinePriority: { gt: 0 },
+            deletedAt: null
         },
         include: {
             industries: {
@@ -301,6 +311,25 @@ export async function migrateMagazineContent() {
         return { success: true, count: migratedCount };
     } catch (error: any) {
         console.error('Migration failed:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updateMultipleMagazinePostsStatus(ids: number[], status: string) {
+    try {
+        await prisma.magazinePost.updateMany({
+            where: {
+                id: { in: ids }
+            },
+            data: {
+                status
+            }
+        });
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Failed to update multiple posts status:', error);
         return { success: false, error: error.message };
     }
 }

@@ -160,92 +160,90 @@ export default async function MagazinePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     {/* 메인 리스트 */}
                     <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12">
-                        {(gridArticles.length > 0 ? gridArticles : FALLBACK_ARTICLES).map((article, idx) => {
-                            const isReal = 'id' in article;
-                            const industryName = isReal 
-                                ? ((article as any).industries?.[0]?.industry?.name || '인사이트') 
-                                : (article as any).category;
-                            
-                            return (
-                                <Link href={isReal ? `/magazine/${(article as any).slug}` : '#'} key={isReal ? article.id : idx} className="flex flex-col group cursor-pointer">
-                                    <div className="mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
-                                        {isReal && (article as any).thumbnailUrl ? (
-                                            <Image 
-                                                src={(article as any).thumbnailUrl} 
-                                                alt={article.title}
-                                                fill
-                                                className="object-cover transition-all duration-500 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
-                                        )}
-                                    </div>
-                                    <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                        {industryName}
-                                    </span>
-                                    <h4 className="mb-4 font-h3 text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
-                                        {article.title}
-                                    </h4>
-                                    <p className="mb-6 line-clamp-3 text-body-md font-body-md text-zi-on-surface-variant">
-                                        <HighlightedText text={isReal ? (article as any).summary : (article as any).excerpt} />
-                                    </p>
-                                    <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
-                                        <span>{isReal ? 'Zinsight 편집부' : (article as any).author}</span>
-                                        <ArrowRight className="h-4 w-4" />
-                                    </div>
-                                </Link>
-                            );
-                        })}
+                        {gridArticles.length > 0 ? (
+                            gridArticles.map((article) => {
+                                const industryName = article.industries?.[0]?.industry?.name || '인사이트';
+                                
+                                return (
+                                    <Link href={`/magazine/${article.slug}`} key={article.id} className="flex flex-col group cursor-pointer">
+                                        <div className="mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                            {article.thumbnailUrl ? (
+                                                <Image 
+                                                    src={article.thumbnailUrl} 
+                                                    alt={article.title}
+                                                    fill
+                                                    className="object-cover transition-all duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                            )}
+                                        </div>
+                                        <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
+                                            {industryName}
+                                        </span>
+                                        <h4 className="mb-4 font-h3 text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
+                                            {article.title}
+                                        </h4>
+                                        <p className="mb-6 line-clamp-3 text-body-md font-body-md text-zi-on-surface-variant">
+                                            <HighlightedText text={article.summary || ''} />
+                                        </p>
+                                        <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
+                                            <span>Zinsight 편집부</span>
+                                            <ArrowRight className="h-4 w-4" />
+                                        </div>
+                                    </Link>
+                                );
+                            })
+                        ) : (
+                            <div className="col-span-full py-16 px-8 border border-dashed border-zi-divider rounded-zi-card bg-zi-surface-container-low flex flex-col items-center justify-center text-center">
+                                <h3 className="font-h3 text-h3 text-zi-primary mb-3">
+                                    등록된 기사가 없습니다.
+                                </h3>
+                                <p className="text-body-md text-zi-on-surface-variant max-w-sm">
+                                    독자 여러분을 위한 새로운 에디션과 깊이 있는 리포트를 준비 중입니다. 조금만 기다려 주세요!
+                                </p>
+                            </div>
+                        )}
                     </div>
                     {/* 사이드바 */}
                     <div className="lg:col-span-4 flex flex-col gap-12">
                         <MagazineAeoCTA />
-
+ 
                         {/* 트렌딩 사이드바 */}
-                        <div className="flex flex-col gap-6">
-                            <h3 className="font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline pb-2 border-b border-zi-divider">
-                                More Headlines
-                            </h3>
-                            {sideArticles.map((article) => (
-                                <Link href={`/magazine/${(article as any).slug}`} key={article.id} className="group cursor-pointer block">
-                                    <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
-                                        {article.title}
-                                    </h4>
-                                    <p className="mb-3 line-clamp-2 text-[13px] text-zi-on-surface-variant leading-relaxed">
-                                        <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
-                                    </p>
-                                    <div className="flex items-center gap-2 text-zi-outline text-[12px]">
-                                        <span>{(article as any).industries?.[0]?.industry?.name || '인사이트'}</span>
-                                        <span>•</span>
-                                        <span>Zinsight 편집부</span>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
+                        {sideArticles.length > 0 ? (
+                            <div className="flex flex-col gap-6">
+                                <h3 className="font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline pb-2 border-b border-zi-divider">
+                                    More Headlines
+                                </h3>
+                                {sideArticles.map((article) => (
+                                    <Link href={`/magazine/${(article as any).slug}`} key={article.id} className="group cursor-pointer block">
+                                        <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
+                                            {article.title}
+                                        </h4>
+                                        <p className="mb-3 line-clamp-2 text-[13px] text-zi-on-surface-variant leading-relaxed">
+                                            <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
+                                        </p>
+                                        <div className="flex items-center gap-2 text-zi-outline text-[12px]">
+                                            <span>{(article as any).industries?.[0]?.industry?.name || '인사이트'}</span>
+                                            <span>•</span>
+                                            <span>Zinsight 편집부</span>
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-4 p-6 border border-dashed border-zi-divider rounded-zi-card bg-zi-surface-container-low/40">
+                                <h4 className="font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline pb-2 border-b border-zi-divider">
+                                    More Headlines
+                                </h4>
+                                <p className="text-[13px] text-zi-on-surface-variant italic">
+                                    추가적인 주요 헤드라인을 준비 중입니다.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </main>
         </div>
     );
 }
-
-const FALLBACK_ARTICLES = [
-    {
-        category: 'Interview',
-        title: '"데이터는 숫자가 아니라 고객의 언어입니다"',
-        excerpt: '글로벌 커머스 플랫폼 CMO가 밝히는 데이터 기반 스토리텔링의 정수.',
-        author: 'Zinsight 편집부',
-    },
-    {
-        category: 'Analysis',
-        title: '핀테크의 다음 장: 임베디드 금융의 폭발적 성장',
-        excerpt: '비금융 플랫폼에 금융 서비스가 녹아드는 내재화 트렌드가 가져올 결제 시장의 재편.',
-        author: 'Zinsight 편집부',
-    },
-    {
-        category: 'Culture',
-        title: '하이브리드 워크가 기업의 브랜드 정체성에 미치는 영향',
-        excerpt: '물리적 공간이 사라진 시대, 어떻게 조직의 문화를 유지하고 강력한 브랜딩을 실현할 것인가.',
-        author: 'Zinsight 편집부',
-    },
-];

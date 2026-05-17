@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon } from 'lucide-react';
-import { deleteMagazinePost, updateMagazinePost } from '@/actions/magazine-actions';
+import { deleteMagazinePost, updateMagazinePost, updateMultipleMagazinePostsStatus } from '@/actions/magazine-actions';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
     Sheet,
@@ -28,6 +29,40 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
     const [isEditing, setIsEditing] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [editForm, setEditForm] = useState<any>({});
+
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const router = useRouter();
+
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedIds(posts.map(p => p.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectRow = (checked: boolean, id: number) => {
+        if (checked) {
+            setSelectedIds(prev => [...prev, id]);
+        } else {
+            setSelectedIds(prev => prev.filter(i => i !== id));
+        }
+    };
+
+    const handleBulkStatusUpdate = (status: string) => {
+        if (selectedIds.length === 0) return;
+        
+        startTransition(async () => {
+            const res = await updateMultipleMagazinePostsStatus(selectedIds, status);
+            if (res.success) {
+                toast.success(`선택된 ${selectedIds.length}개 포스트의 상태가 변경되었습니다.`);
+                setSelectedIds([]);
+                router.refresh();
+            } else {
+                toast.error('일괄 변경 실패: ' + res.error);
+            }
+        });
+    };
 
     const handleDelete = async (e: React.MouseEvent, id: number) => {
         e.stopPropagation();
@@ -99,10 +134,66 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
 
     return (
         <div className="space-y-4">
+            {/* 일괄 작업 툴바 */}
+            {selectedIds.length > 0 && (
+                <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg shadow-sm transition-all animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="flex items-center gap-2 text-sm text-indigo-900 font-medium">
+                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] font-bold animate-pulse">
+                            {selectedIds.length}
+                        </span>
+                        개의 포스트가 선택되었습니다.
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-indigo-700 font-semibold mr-1">상태 일괄 변경:</span>
+                        <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-8 bg-white border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                            onClick={() => handleBulkStatusUpdate('DRAFT')}
+                            disabled={isPending}
+                        >
+                            초안으로 변경
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            className="h-8 bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => handleBulkStatusUpdate('PUBLISHED')}
+                            disabled={isPending}
+                        >
+                            발행됨으로 변경
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            variant="destructive" 
+                            className="h-8 bg-red-600 hover:bg-red-700 text-white border-none"
+                            onClick={() => handleBulkStatusUpdate('HIDDEN')}
+                            disabled={isPending}
+                        >
+                            숨김으로 변경
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-8 text-slate-500 hover:text-slate-700 ml-2"
+                            onClick={() => setSelectedIds([])}
+                            disabled={isPending}
+                        >
+                            선택 해제
+                        </Button>
+                    </div>
+                </div>
+            )}
+
             <div className="overflow-x-auto border rounded-md">
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead className="w-[50px] pl-4">
+                                <Checkbox 
+                                    checked={selectedIds.length === posts.length && posts.length > 0} 
+                                    onCheckedChange={handleSelectAll} 
+                                />
+                            </TableHead>
                             <TableHead>썸네일</TableHead>
                             <TableHead>카테고리</TableHead>
                             <TableHead>제목</TableHead>
@@ -116,9 +207,15 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                         {posts.map((post) => (
                             <TableRow 
                                 key={post.id} 
-                                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                                className={`cursor-pointer hover:bg-slate-50 transition-colors ${selectedIds.includes(post.id) ? 'bg-indigo-50/40 hover:bg-indigo-50/60' : ''}`}
                                 onClick={() => handleRowClick(post)}
                             >
+                                <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox 
+                                        checked={selectedIds.includes(post.id)} 
+                                        onCheckedChange={(checked) => handleSelectRow(checked as boolean, post.id)} 
+                                    />
+                                </TableCell>
                                 <TableCell>
                                     {post.thumbnailUrl ? (
                                         <img 
@@ -151,10 +248,16 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                 </TableCell>
                                 <TableCell>
                                     <Badge 
-                                        variant={post.status === 'PUBLISHED' ? 'default' : 'secondary'}
-                                        className={post.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : ''}
+                                        variant={post.status === 'PUBLISHED' ? 'default' : post.status === 'HIDDEN' ? 'destructive' : 'secondary'}
+                                        className={
+                                            post.status === 'PUBLISHED' 
+                                                ? 'bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200' 
+                                                : post.status === 'HIDDEN' 
+                                                    ? 'bg-red-100 text-red-700 hover:bg-red-100/80 border-red-200' 
+                                                    : 'bg-amber-100 text-amber-700 hover:bg-amber-100/80 border-amber-200'
+                                        }
                                     >
-                                        {post.status === 'PUBLISHED' ? '발행됨' : '초안'}
+                                        {post.status === 'PUBLISHED' ? '발행됨' : post.status === 'HIDDEN' ? '숨김' : '초안'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
@@ -221,7 +324,7 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                             <ScrollArea className="flex-1 p-6 bg-slate-50/50">
                                 <div className="space-y-8 max-w-2xl mx-auto">
                                     {/* Category & Title */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                         <div className="space-y-2">
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">카테고리</Label>
                                             {isEditing ? (
@@ -240,6 +343,28 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
                                                     {selectedPost.category === 'DEEP_DIVE' ? '심층 분석' : '뉴스레터'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">발행 상태</Label>
+                                            {isEditing ? (
+                                                <Select 
+                                                    value={editForm.status} 
+                                                    onValueChange={(val) => setEditForm({...editForm, status: val})}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="DRAFT">초안</SelectItem>
+                                                        <SelectItem value="PUBLISHED">발행됨</SelectItem>
+                                                        <SelectItem value="HIDDEN">숨김</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
+                                                    {selectedPost.status === 'PUBLISHED' ? '발행됨' : selectedPost.status === 'HIDDEN' ? '숨김' : '초안'}
                                                 </div>
                                             )}
                                         </div>

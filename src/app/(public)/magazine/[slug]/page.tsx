@@ -10,6 +10,10 @@ export const dynamicParams = true; // 빌드 타임에 생성되지 않은 새 �
 
 export async function generateStaticParams() {
     const posts = await prisma.magazinePost.findMany({
+        where: {
+            status: 'PUBLISHED',
+            deletedAt: null,
+        },
         select: {
             slug: true,
         },
@@ -41,7 +45,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         }
     });
 
-    if (!post) return { title: 'Not Found' };
+    if (!post || post.deletedAt !== null) return { title: 'Not Found' };
 
     const title = `${post.title} | Zinsight Magazine`;
     const description = post.summary || (post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content);
@@ -152,7 +156,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
         }
     });
 
-    if (!post) {
+    if (!post || post.deletedAt !== null) {
         notFound();
     }
 
