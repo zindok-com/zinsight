@@ -60,6 +60,11 @@ export const metadata: Metadata = {
         description: "산업별 기업 동향과 최신 뉴스를 한눈에. zinsight Insight Radar.",
         images: ["/img/zinsight_icon.png"],
     },
+    verification: {
+        other: {
+            "naver-site-verification": ["301126c0c677dfe31325e4ee14413fc01470819b"],
+        },
+    },
 };
 
 export default function RootLayout({
