@@ -29,8 +29,8 @@ export function PublicFooter() {
                         </div>
                         <div className="flex flex-col gap-4">
                             <span className="text-zi-label font-bold uppercase text-zi-primary tracking-wider">법령</span>
-                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">이용약관</Link>
-                            <Link href="#" className="text-zi-body-md text-slate-500 hover:underline decoration-1">개인정보처리방침</Link>
+                            <Link href="/terms" className="text-zi-body-md text-slate-500 hover:underline decoration-1">이용약관</Link>
+                            <Link href="/privacy" className="text-zi-body-md text-slate-500 hover:underline decoration-1">개인정보처리방침</Link>
                         </div>
                     </div>
                 </div>
