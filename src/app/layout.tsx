@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from 'next/script';
 import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -72,6 +73,7 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
+    const gaId = process.env.NEXT_PUBLIC_GA_ID?process.env.NEXT_PUBLIC_GA_ID : 'G-JV3R82PMH4';
     return (
         <html lang="ko" suppressHydrationWarning>
             <body
@@ -82,6 +84,28 @@ export default function RootLayout({
                 )}
             >
                 {children}
+                {/* 🚀 Google Analytics (GA4) 태그 삽입 */}
+                {gaId && (
+                <>
+                    {/* 구글 추적 스크립트 비동기 로드 */}
+                    <Script
+                    src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+                    strategy="afterInteractive" // 페이지가 인터랙티브해진 직후에 로드하여 성능 최적화
+                    />
+                    {/* 초기화 및 설정 코드 실행 */}
+                    <Script id="google-analytics" strategy="afterInteractive">
+                    {`
+                        window.dataLayer = window.dataLayer || [];
+                        function gtag(){dataLayer.push(arguments);}
+                        gtag('js', new Date());
+
+                        gtag('config', '${gaId}', {
+                        page_path: window.location.pathname,
+                        });
+                    `}
+                    </Script>
+                </>
+                )}
                 <Toaster />
                 <Analytics />
                 <SpeedInsights />
