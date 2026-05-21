@@ -1,23 +1,13 @@
 'use server';
 
-import fs from 'fs/promises';
-import path from 'path';
 import { prisma } from '@/lib/db';
 import { getConsolidatedArticlesForExport } from './article-actions';
 
-const SNAPSHOTS_DIR = path.join(process.cwd(), 'data', 'snapshots');
-
 function pad(n: number) { return String(n).padStart(2, '0'); }
-
-function formatMonth(date: Date): string {
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
-}
 
 function formatDate(date: Date): string {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
-
-
 
 export async function generateConsolidatedSnapshot(industryIds: number[], month: string, filterType: 'pub_date' | 'created_at'): Promise<{
     success: boolean;
@@ -35,7 +25,6 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
     const now = new Date();
     const todayStr = formatDate(now);
     const filename = `snapshot_consolidated_${month}_generated_${todayStr}_${now.getTime()}.json`;
-    const filepath = path.join(SNAPSHOTS_DIR, filename);
 
     const snapshot = {
         type: 'consolidated',
@@ -74,8 +63,18 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
         }),
     };
 
-    await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
-    await fs.writeFile(filepath, JSON.stringify(snapshot, null, 2), 'utf-8');
+    const snapshotString = JSON.stringify(snapshot, null, 2);
+    const sizeBytes = Buffer.byteLength(snapshotString, 'utf-8');
+
+    await prisma.snapshot.create({
+        data: {
+            filename,
+            slug: 'consolidated',
+            month,
+            content: snapshot as any,
+            size_bytes: sizeBytes,
+        }
+    });
 
     return {
         success: true,
@@ -95,40 +94,29 @@ export interface SnapshotInfo {
 }
 
 export async function listSnapshots(industrySlug?: string, month?: string): Promise<SnapshotInfo[]> {
-    await fs.mkdir(SNAPSHOTS_DIR, { recursive: true });
-    const files = await fs.readdir(SNAPSHOTS_DIR);
-
-    const snapshots: SnapshotInfo[] = [];
-
-    for (const filename of files) {
-        if (!filename.endsWith('.json')) continue;
-
-        // Pattern: snapshot_{slug}_{YYYY-MM}_generated_{YYYY-MM-DD}_{ts}.json
-        const match = filename.match(/^snapshot_(.+?)_(\d{4}-\d{2})_generated_(\d{4}-\d{2}-\d{2})_\d+\.json$/);
-        if (!match) continue;
-
-        const [, slug, mon, genDate] = match;
-        
-        // Handle consolidated vs specific industry filtering
-        if (industrySlug) {
-            if (industrySlug === 'consolidated' && slug !== 'consolidated') continue;
-            if (industrySlug !== 'consolidated' && slug !== industrySlug) continue;
+    const dbSnapshots = await prisma.snapshot.findMany({
+        where: {
+            ...(industrySlug ? { slug: industrySlug } : {}),
+            ...(month ? { month } : {}),
+        },
+        orderBy: {
+            filename: 'desc'
         }
+    });
 
-        if (month && mon !== month) continue;
+    const snapshots: SnapshotInfo[] = dbSnapshots.map(s => {
+        // Pattern: snapshot_{slug}_{YYYY-MM}_generated_{YYYY-MM-DD}_{ts}.json
+        const match = s.filename.match(/^snapshot_(.+?)_(\d{4}-\d{2})_generated_(\d{4}-\d{2}-\d{2})_\d+\.json$/);
+        const genDate = match ? match[3] : s.created_at.toISOString().split('T')[0];
 
-        const stat = await fs.stat(path.join(SNAPSHOTS_DIR, filename));
-        snapshots.push({
-            filename,
-            industrySlug: slug,
-            month: mon,
+        return {
+            filename: s.filename,
+            industrySlug: s.slug,
+            month: s.month,
             generatedAt: genDate,
-            sizeBytes: stat.size,
-        });
-    }
-
-    // Sort descending by filename (which includes timestamp)
-    snapshots.sort((a, b) => b.filename.localeCompare(a.filename));
+            sizeBytes: s.size_bytes,
+        };
+    });
 
     // Mark latest per (industrySlug, month) group
     const seen = new Set<string>();
@@ -142,3 +130,4 @@ export async function listSnapshots(industrySlug?: string, month?: string): Prom
 
     return snapshots;
 }
+

@@ -219,3 +219,17 @@ model ConsultingRequest {
   @@map("consulting_requests")
 }
 
+model Snapshot {
+  id           Int      @id @default(autoincrement())
+  filename     String   @unique @db.VarChar(255)
+  slug         String   @db.VarChar(100) // 'consolidated' or industry slug
+  month        String   @db.VarChar(7)   // YYYY-MM
+  content      Json                      // the snapshot data
+  size_bytes   Int
+  created_at   DateTime @default(now())
+
+  @@index([slug, month])
+  @@map("snapshots")
+}
+
+

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from 'next/script';
-import { Inter, Newsreader } from "next/font/google";
+import { Inter, Noto_Serif_KR } from "next/font/google";
+import localFont from 'next/font/local';
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
@@ -8,11 +9,16 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const newsreader = Newsreader({
+const notoSerifKR = Noto_Serif_KR({
     subsets: ["latin"],
-    style: ["normal", "italic"],
-    weight: ["400", "600"],
+    weight: ["400", "600", "700"],
+    display: "swap",
     variable: "--font-serif",
+});
+const pretendard = localFont({
+    src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
+    display: "swap",
+    variable: "--font-pretendard",
 });
 
 const domain = process.env.DOMAIN || "zinsight.com";
@@ -79,8 +85,9 @@ export default function RootLayout({
             <body
                 className={cn(
                     "min-h-screen bg-zi-surface font-sans antialiased text-zi-on-surface",
-                    inter.variable,
-                    newsreader.variable
+                    pretendard.variable,
+                    notoSerifKR.variable,
+                    inter.variable
                 )}
             >
                 {children}

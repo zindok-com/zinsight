@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-
-const SNAPSHOTS_DIR = path.join(process.cwd(), 'data', 'snapshots');
+import { prisma } from '@/lib/db';
 
 export async function GET(
     _request: NextRequest,
@@ -15,10 +12,16 @@ export async function GET(
         return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
     }
 
-    const filepath = path.join(SNAPSHOTS_DIR, filename);
-
     try {
-        const content = await fs.readFile(filepath, 'utf-8');
+        const dbSnapshot = await prisma.snapshot.findUnique({
+            where: { filename }
+        });
+
+        if (!dbSnapshot) {
+            return NextResponse.json({ error: 'Snapshot not found' }, { status: 404 });
+        }
+
+        const content = JSON.stringify(dbSnapshot.content, null, 2);
         return new NextResponse(content, {
             status: 200,
             headers: {
@@ -26,7 +29,9 @@ export async function GET(
                 'Content-Disposition': `attachment; filename="${filename}"`,
             },
         });
-    } catch {
-        return NextResponse.json({ error: 'Snapshot not found' }, { status: 404 });
+    } catch (error) {
+        console.error('Failed to retrieve snapshot:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
+
