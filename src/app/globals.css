@@ -1,9 +1,12 @@
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    --font-pretendard: 'Pretendard Variable';
     --background: 249 100% 99%; /* #faf9fe */
     --foreground: 214 9% 11%; /* #1a1c1f */
 

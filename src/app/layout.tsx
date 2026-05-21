@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Script from 'next/script';
 import { Inter, Noto_Serif_KR } from "next/font/google";
-import localFont from 'next/font/local';
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
@@ -14,11 +13,6 @@ const notoSerifKR = Noto_Serif_KR({
     weight: ["400", "600", "700"],
     display: "swap",
     variable: "--font-serif",
-});
-const pretendard = localFont({
-    src: "../../node_modules/pretendard/dist/web/variable/woff2/PretendardVariable.woff2",
-    display: "swap",
-    variable: "--font-pretendard",
 });
 
 const domain = process.env.DOMAIN || "zinsight.co.kr";
@@ -85,7 +79,6 @@ export default function RootLayout({
             <body
                 className={cn(
                     "min-h-screen bg-zi-surface font-sans antialiased text-zi-on-surface",
-                    pretendard.variable,
                     notoSerifKR.variable,
                     inter.variable
                 )}
