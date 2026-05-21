@@ -14,17 +14,23 @@ import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-    title: 'Zinsight — 인텔리전스의 정점',
-    description: '산업별 기업 동향과 최신 뉴스를 한눈에. 데이터로 읽는 시장의 미래.',
+    // 타이틀에 테크니컬 마케팅 정체성 부여
+    title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
+    
+    // 핵심 용어인 SEO와 차세대 트렌드인 GEO를 자연스럽게 결합 (공백 포함 약 130자로 글자수 완벽 최적화)
+    description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
+    
     openGraph: {
-        title: 'Zinsight — 인텔리전스의 정점',
-        description: '산업별 기업 동향과 최신 뉴스를 한눈에. 데이터로 읽는 시장의 미래.',
+        title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
+        description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다.',
+        url: 'https://zinsight.co.kr',
+        siteName: 'Zinsight',
         images: ['/img/zinsight_icon.png'],
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Zinsight — 인텔리전스의 정점',
-        description: '산업별 기업 동향과 최신 뉴스를 한눈에. 데이터로 읽는 시장의 미래.',
+        title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
+        description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
         images: ['/img/zinsight_icon.png'],
     },
 };
@@ -48,16 +54,26 @@ export default async function PublicHomePage() {
             <section className="relative overflow-hidden pb-32 pt-20">
                 <div className="relative z-10 mx-auto max-w-zi-container px-6 text-center">
                     {/* 수퍼 레이블 */}
-                    <span className="mb-6 block text-zi-label font-semibold tracking-[0.2em] text-zi-blue uppercase">
+                    <span className="mb-4 block text-zi-label font-semibold tracking-[0.2em] text-zi-blue uppercase">
                         Market Intelligence Terminal
                     </span>
 
+                    {/* 핵심 서브타이틀 배지 */}
+                    <div className="mb-8 flex flex-wrap justify-center gap-2.5">
+                        <span className="inline-flex items-center rounded-full bg-zi-secondary/10 px-3.5 py-1 text-[11px] font-bold text-zi-secondary uppercase tracking-wider border border-zi-secondary/20">
+                            [차세대 마케팅 리서치]
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-zi-blue/10 px-3.5 py-1 text-[11px] font-bold text-zi-blue uppercase tracking-wider border border-zi-blue/20">
+                            [AI 검색 최적화 (GEO)]
+                        </span>
+                    </div>
+
                     {/* 헤드라인 */}
                     <h1 className="font-h1 text-h1 text-zi-primary mb-8">
-                        미래를 여는 데이터, <br/> 통찰력 있는 분석.
+                        미래를 여는 데이터, <br/> AI 시대를 선도하는 마케팅 분석.
                     </h1>
-                    <p className="font-body-lg text-body-lg text-zi-on-surface-variant max-w-2xl mx-auto mb-12">
-                        Zinsight는 심층적인 산업 분석과 실시간 데이터 트렌드를 결합하여 <br/> 프리미엄 비즈니스 인사이트를 제공합니다.
+                    <p className="font-body-lg text-body-lg text-zi-on-surface-variant max-w-3xl mx-auto mb-12 break-keep">
+                        진사이트(Zinsight)는 심층적인 산업 리서치와 차세대 검색 최적화(GEO/SEO) 트렌드를 결합하여 <br className="hidden sm:inline" /> 프리미엄 테크니컬 마케팅 통찰력을 제공합니다.
                     </p>
 
                     {/* 통합 검색바 (인사이트 레이더 이동 버튼으로 사용되던 부분 주석 처리) */}
@@ -113,13 +129,23 @@ export default async function PublicHomePage() {
             {/* ─────────────────────────────── */}
             {/* 인사이트 레이더 현황 섹션 (이동됨) */}
             {/* ─────────────────────────────── */}
-            <section className="bg-zi-surface-container-low/30 border-y border-zi-divider py-16">
+            <section className="bg-[#0B0F19] border-y border-[#30363D] py-16 relative overflow-hidden">
                 <div className="mx-auto max-w-zi-container px-6">
-                    <div className="mb-12 text-center">
-                        <h2 className="mb-4 text-zi-headline-md font-bold text-zi-primary">
+                    <div className="mb-12 text-center flex flex-col items-center">
+                        {/* 실시간 라이브 엔진 표시 */}
+                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 border border-emerald-500/20">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            <span className="text-[11px] font-bold tracking-wider text-emerald-400 uppercase">
+                                Real-Time Engine Active
+                            </span>
+                        </div>
+                        <h2 className="mb-4 text-zi-headline-md font-bold text-white">
                             인사이트 레이더 현황
                         </h2>
-                        <p className="mx-auto max-w-2xl text-zi-body-md text-zi-on-surface-variant">
+                        <p className="mx-auto max-w-2xl text-zi-body-md text-slate-400">
                             Zinsight의 AI 분석 엔진이 식별한 전략 산업군 및 비즈니스 카테고리별 핵심 기업과 <br/>
                             기술 인사이트를 실시간으로 모니터링합니다.
                         </p>

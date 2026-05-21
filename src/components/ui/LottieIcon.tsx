@@ -32,6 +32,7 @@ interface LottieIconProps {
   autoplay?: boolean;
   className?: string;
   hover?: boolean; // 마우스 오버 시 재생 여부
+  speed?: number; // 속도 조절 추가
 }
 
 /**
@@ -45,6 +46,7 @@ export function LottieIcon({
   autoplay = true,
   className = '',
   hover = false,
+  speed,
 }: LottieIconProps) {
   const [animationData, setAnimationData] = useState<any>(null);
   const lottieRef = React.useRef<any>(null);
@@ -58,6 +60,12 @@ export function LottieIcon({
       .then((data) => setAnimationData(data))
       .catch((err) => console.error('Lottie load error:', err));
   }, [name]);
+
+  useEffect(() => {
+    if (lottieRef.current && speed !== undefined) {
+      lottieRef.current.setSpeed(speed);
+    }
+  }, [animationData, speed]);
 
   const handleMouseEnter = () => {
     if (hover && lottieRef.current) {

@@ -5,9 +5,9 @@ import { PublicFooter } from '@/components/public/layout/public-footer';
 export const metadata: Metadata = {
     title: {
         template: '%s | Zinsight',
-        default: 'Zinsight — 인텔리전스의 정점',
+        default: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
     },
-    description: '산업별 기업 동향과 최신 뉴스를 한눈에. 데이터로 읽는 시장의 미래.',
+    description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
 };
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {

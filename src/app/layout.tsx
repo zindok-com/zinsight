@@ -21,20 +21,20 @@ const pretendard = localFont({
     variable: "--font-pretendard",
 });
 
-const domain = process.env.DOMAIN || "zinsight.com";
+const domain = process.env.DOMAIN || "zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
     metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || baseUrl),
     title: {
-        template: "%s | zinsight",
-        default: "zinsight — 당신의 시간을 지킵니다",
+        template: "%s | Zinsight",
+        default: "Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어",
     },
-    description: "산업별 기업 동향과 최신 뉴스를 한눈에. zinsight Insight Radar.",
-    keywords: ["zinsight", "인사이트", "기업 분석", "산업 동향", "시장 리서치", "뉴스레터", "비즈니스 인텔리전스"],
-    authors: [{ name: "zinsight Team" }],
-    creator: "zinsight",
-    publisher: "zinsight",
+    description: "진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.",
+    keywords: ["zinsight", "인사이트", "기업 분석", "산업 동향", "시장 리서치", "뉴스레터", "비즈니스 인텔리전스", "GEO", "SEO", "테크니컬 마케팅"],
+    authors: [{ name: "Zinsight Team" }],
+    creator: "Zinsight",
+    publisher: "Zinsight",
     formatDetection: {
         email: false,
         address: false,
@@ -49,22 +49,22 @@ export const metadata: Metadata = {
         type: "website",
         locale: "ko_KR",
         url: baseUrl,
-        siteName: "zinsight",
-        title: "zinsight — 당신의 시간을 지킵니다",
-        description: "산업별 기업 동향과 최신 뉴스를 한눈에. zinsight Insight Radar.",
+        siteName: "Zinsight",
+        title: "Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어",
+        description: "진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다.",
         images: [
             {
                 url: "/img/zinsight_icon.png",
                 width: 1200,
                 height: 630,
-                alt: "zinsight",
+                alt: "Zinsight",
             },
         ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "zinsight — 당신의 시간을 지킵니다",
-        description: "산업별 기업 동향과 최신 뉴스를 한눈에. zinsight Insight Radar.",
+        title: "Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어",
+        description: "진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.",
         images: ["/img/zinsight_icon.png"],
     },
     verification: {
