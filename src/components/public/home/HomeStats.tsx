@@ -1,7 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { LottieIcon } from '@/components/ui/LottieIcon';
+import dynamic from 'next/dynamic';
+
+const LottieIcon = dynamic(() => import('@/components/ui/LottieIcon').then(mod => mod.LottieIcon), {
+    ssr: false,
+    loading: () => <div className="h-9 w-9 bg-sky-200/20 rounded-full animate-pulse" />
+});
 
 interface StatsCounterProps {
     value: number;
@@ -108,25 +113,25 @@ interface HomeStatsProps {
 export function HomeStats({ totalStats }: HomeStatsProps) {
     const statsData = [
         { 
-            icon: <LottieIcon name="network" size={36} speed={0.7} />, 
+            icon: <LottieIcon name="network" size={36} speed={0.7} hover={true} />, 
             label: '분석 조직', 
             value: totalStats.totalCompanies, 
             unit: '개' 
         },
         { 
-            icon: <LottieIcon name="news" size={36} speed={0.7} />, 
+            icon: <LottieIcon name="news" size={36} speed={0.7} hover={true} />, 
             label: '수집 기사', 
             value: totalStats.totalArticles, 
             unit: '건' 
         },
         { 
-            icon: <LottieIcon name="chart" size={36} speed={0.7} />, 
+            icon: <LottieIcon name="chart" size={36} speed={0.7} hover={true} />, 
             label: '산업 분야', 
             value: totalStats.totalIndustries, 
             unit: '개' 
         },
         { 
-            icon: <LottieIcon name="bulb" size={36} speed={0.7} />, 
+            icon: <LottieIcon name="bulb" size={36} speed={0.7} hover={true} />, 
             label: '추적 키워드', 
             value: totalStats.totalKeywords, 
             unit: '개' 
