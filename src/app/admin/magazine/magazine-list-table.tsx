@@ -51,7 +51,7 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
 
     const handleBulkStatusUpdate = (status: string) => {
         if (selectedIds.length === 0) return;
-        
+
         startTransition(async () => {
             const res = await updateMultipleMagazinePostsStatus(selectedIds, status);
             if (res.success) {
@@ -67,7 +67,7 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
     const handleDelete = async (e: React.MouseEvent, id: number) => {
         e.stopPropagation();
         if (!confirm('정말 이 포스트를 삭제하시겠습니까?')) return;
-        
+
         const res = await deleteMagazinePost(id);
         if (res.success) {
             toast.success('포스트가 삭제되었습니다.');
@@ -78,7 +78,7 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
 
     const handleRowClick = (post: any) => {
         setSelectedPost(post);
-        
+
         let rawContent = post.content;
         try {
             // JSON 형태라면 마커 기반의 텍스트로 복원하여 편집 가능하게 함
@@ -112,10 +112,12 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
             const res = await updateMagazinePost(selectedPost.id, editForm);
             if (res.success) {
                 toast.success('포스트가 수정되었습니다.');
-                setSelectedPost({ ...selectedPost, ...editForm, industries: editForm.industryIds.map((id: number) => ({
-                    industryId: id,
-                    industry: industries.find(ind => ind.id === id)
-                })) });
+                setSelectedPost({
+                    ...selectedPost, ...editForm, industries: editForm.industryIds.map((id: number) => ({
+                        industryId: id,
+                        industry: industries.find(ind => ind.id === id)
+                    }))
+                });
                 setIsEditing(false);
             } else {
                 toast.error('수정 실패: ' + res.error);
@@ -126,8 +128,8 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
     const toggleIndustry = (id: number) => {
         setEditForm((prev: any) => ({
             ...prev,
-            industryIds: prev.industryIds.includes(id) 
-                ? prev.industryIds.filter((i: number) => i !== id) 
+            industryIds: prev.industryIds.includes(id)
+                ? prev.industryIds.filter((i: number) => i !== id)
                 : [...prev.industryIds, id]
         }));
     };
@@ -145,35 +147,35 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs text-indigo-700 font-semibold mr-1">상태 일괄 변경:</span>
-                        <Button 
-                            size="sm" 
-                            variant="outline" 
+                        <Button
+                            size="sm"
+                            variant="outline"
                             className="h-8 bg-white border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
                             onClick={() => handleBulkStatusUpdate('DRAFT')}
                             disabled={isPending}
                         >
                             초안으로 변경
                         </Button>
-                        <Button 
-                            size="sm" 
+                        <Button
+                            size="sm"
                             className="h-8 bg-green-600 hover:bg-green-700 text-white"
                             onClick={() => handleBulkStatusUpdate('PUBLISHED')}
                             disabled={isPending}
                         >
                             발행됨으로 변경
                         </Button>
-                        <Button 
-                            size="sm" 
-                            variant="destructive" 
+                        <Button
+                            size="sm"
+                            variant="destructive"
                             className="h-8 bg-red-600 hover:bg-red-700 text-white border-none"
                             onClick={() => handleBulkStatusUpdate('HIDDEN')}
                             disabled={isPending}
                         >
                             숨김으로 변경
                         </Button>
-                        <Button 
-                            size="sm" 
-                            variant="ghost" 
+                        <Button
+                            size="sm"
+                            variant="ghost"
                             className="h-8 text-slate-500 hover:text-slate-700 ml-2"
                             onClick={() => setSelectedIds([])}
                             disabled={isPending}
@@ -189,9 +191,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                     <TableHeader>
                         <TableRow>
                             <TableHead className="w-[50px] pl-4">
-                                <Checkbox 
-                                    checked={selectedIds.length === posts.length && posts.length > 0} 
-                                    onCheckedChange={handleSelectAll} 
+                                <Checkbox
+                                    checked={selectedIds.length === posts.length && posts.length > 0}
+                                    onCheckedChange={handleSelectAll}
                                 />
                             </TableHead>
                             <TableHead>썸네일</TableHead>
@@ -205,22 +207,22 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                     </TableHeader>
                     <TableBody>
                         {posts.map((post) => (
-                            <TableRow 
-                                key={post.id} 
+                            <TableRow
+                                key={post.id}
                                 className={`cursor-pointer hover:bg-slate-50 transition-colors ${selectedIds.includes(post.id) ? 'bg-indigo-50/40 hover:bg-indigo-50/60' : ''}`}
                                 onClick={() => handleRowClick(post)}
                             >
                                 <TableCell className="pl-4" onClick={(e) => e.stopPropagation()}>
-                                    <Checkbox 
-                                        checked={selectedIds.includes(post.id)} 
-                                        onCheckedChange={(checked) => handleSelectRow(checked as boolean, post.id)} 
+                                    <Checkbox
+                                        checked={selectedIds.includes(post.id)}
+                                        onCheckedChange={(checked) => handleSelectRow(checked as boolean, post.id)}
                                     />
                                 </TableCell>
                                 <TableCell>
                                     {post.thumbnailUrl ? (
-                                        <img 
-                                            src={post.thumbnailUrl} 
-                                            alt={post.title} 
+                                        <img
+                                            src={post.thumbnailUrl}
+                                            alt={post.title}
                                             className="w-12 h-12 object-cover rounded shadow-sm"
                                         />
                                     ) : (
@@ -253,13 +255,13 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    <Badge 
+                                    <Badge
                                         variant={post.status === 'PUBLISHED' ? 'default' : post.status === 'HIDDEN' ? 'destructive' : 'secondary'}
                                         className={
-                                            post.status === 'PUBLISHED' 
-                                                ? 'bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200' 
-                                                : post.status === 'HIDDEN' 
-                                                    ? 'bg-red-100 text-red-700 hover:bg-red-100/80 border-red-200' 
+                                            post.status === 'PUBLISHED'
+                                                ? 'bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200'
+                                                : post.status === 'HIDDEN'
+                                                    ? 'bg-red-100 text-red-700 hover:bg-red-100/80 border-red-200'
                                                     : 'bg-amber-100 text-amber-700 hover:bg-amber-100/80 border-amber-200'
                                         }
                                     >
@@ -274,9 +276,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2">
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
                                             onClick={(e) => handleDelete(e, post.id)}
                                         >
@@ -334,9 +336,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                         <div className="space-y-2">
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">카테고리</Label>
                                             {isEditing ? (
-                                                <Select 
-                                                    value={editForm.category} 
-                                                    onValueChange={(val) => setEditForm({...editForm, category: val})}
+                                                <Select
+                                                    value={editForm.category}
+                                                    onValueChange={(val) => setEditForm({ ...editForm, category: val })}
                                                 >
                                                     <SelectTrigger>
                                                         <SelectValue />
@@ -351,17 +353,17 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
                                                     {selectedPost.category === 'INTELLIGENCE_REPORT' ? 'Zinsight 오리지널' :
-                                                     selectedPost.category === 'TECH_AUDIT' ? '무료 진단 사례' :
-                                                     selectedPost.category === 'SALES_SCENARIO' ? '세일즈 가이드' : '뉴스레터'}
+                                                        selectedPost.category === 'TECH_AUDIT' ? '무료 진단 사례' :
+                                                            selectedPost.category === 'SALES_SCENARIO' ? '세일즈 가이드' : '뉴스레터'}
                                                 </div>
                                             )}
                                         </div>
                                         <div className="space-y-2">
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">발행 상태</Label>
                                             {isEditing ? (
-                                                <Select 
-                                                    value={editForm.status} 
-                                                    onValueChange={(val) => setEditForm({...editForm, status: val})}
+                                                <Select
+                                                    value={editForm.status}
+                                                    onValueChange={(val) => setEditForm({ ...editForm, status: val })}
                                                 >
                                                     <SelectTrigger>
                                                         <SelectValue />
@@ -381,9 +383,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                         <div className="space-y-2 md:col-span-2">
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">제목</Label>
                                             {isEditing ? (
-                                                <Input 
+                                                <Input
                                                     value={editForm.title}
-                                                    onChange={(e) => setEditForm({...editForm, title: e.target.value})}
+                                                    onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
                                                 />
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">{selectedPost.title}</div>
@@ -400,16 +402,16 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             </p>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                                 <div>
-                                                    <span className="font-bold text-blue-600">뉴스레터</span>: 기존 뉴스레터 (산업 동향 주기적 발행)
+                                                    <span className="font-bold text-blue-600">뉴스레터</span>: 뉴스레터 (산업 동향 주기적 발행)
                                                 </div>
                                                 <div>
-                                                    <span className="font-bold text-purple-600">Zinsight 오리지널</span>: 구 심층분석 → 오리지널 (SEO/GEO 최적화 기업 분석)
+                                                    <span className="font-bold text-purple-600">Zinsight 오리지널</span>: SEO/GEO 최적화 기업 분석
                                                 </div>
                                                 <div>
-                                                    <span className="font-bold text-emerald-600">무료 진단 사례</span>: 신설 추천 1 → AEO/SEO 무료 진단 사례 아카이빙
+                                                    <span className="font-bold text-emerald-600">무료 진단 사례</span>: AEO/SEO 무료 진단 사례 아카이빙
                                                 </div>
                                                 <div>
-                                                    <span className="font-bold text-amber-600">세일즈 가이드</span>: 신설 추천 2 → 실전 섭외 명분 및 세일즈 가이드
+                                                    <span className="font-bold text-amber-600">세일즈 가이드</span>: 실전 섭외 명분 및 세일즈 가이드
                                                 </div>
                                             </div>
                                         </div>
@@ -421,9 +423,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             <Globe className="w-3 h-3" /> 슬러그 (URL)
                                         </Label>
                                         {isEditing ? (
-                                            <Input 
+                                            <Input
                                                 value={editForm.slug}
-                                                onChange={(e) => setEditForm({...editForm, slug: e.target.value})}
+                                                onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
                                             />
                                         ) : (
                                             <div className="p-3 bg-white border rounded-md font-mono text-xs text-indigo-600">{selectedPost.slug}</div>
@@ -436,18 +438,18 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             <ImageIcon className="w-3 h-3" /> 썸네일 이미지
                                         </Label>
                                         {isEditing ? (
-                                            <ImageUpload 
+                                            <ImageUpload
                                                 value={editForm.thumbnailUrl}
-                                                onChange={(url) => setEditForm({...editForm, thumbnailUrl: url})}
-                                                onRemove={() => setEditForm({...editForm, thumbnailUrl: ''})}
+                                                onChange={(url) => setEditForm({ ...editForm, thumbnailUrl: url })}
+                                                onRemove={() => setEditForm({ ...editForm, thumbnailUrl: '' })}
                                             />
                                         ) : (
                                             <div className="relative group">
                                                 {selectedPost.thumbnailUrl ? (
                                                     <div className="relative w-full h-48 rounded-lg overflow-hidden border shadow-sm">
-                                                        <img 
-                                                            src={selectedPost.thumbnailUrl} 
-                                                            alt="Thumbnail" 
+                                                        <img
+                                                            src={selectedPost.thumbnailUrl}
+                                                            alt="Thumbnail"
                                                             className="w-full h-full object-cover"
                                                         />
                                                     </div>
@@ -467,7 +469,7 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             <div className="grid grid-cols-2 gap-2 p-4 border rounded-md bg-white">
                                                 {industries.map((ind) => (
                                                     <div key={ind.id} className="flex items-center space-x-2">
-                                                        <Checkbox 
+                                                        <Checkbox
                                                             id={`edit-ind-${ind.id}`}
                                                             checked={editForm.industryIds.includes(ind.id)}
                                                             onCheckedChange={() => toggleIndustry(ind.id)}
@@ -493,9 +495,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">본문 내용</Label>
                                         {isEditing ? (
-                                            <Textarea 
+                                            <Textarea
                                                 value={editForm.content}
-                                                onChange={(e) => setEditForm({...editForm, content: e.target.value})}
+                                                onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
                                                 className="min-h-[400px] bg-white"
                                             />
                                         ) : (
@@ -516,7 +518,7 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                                                 {parsed.bodies?.map((b: any, i: number) => (
                                                                     <div key={i} className="space-y-3">
                                                                         <h5 className="font-bold text-base text-indigo-900 flex items-center gap-2">
-                                                                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[10px]">{i+1}</span>
+                                                                            <span className="flex items-center justify-center w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 text-[10px]">{i + 1}</span>
                                                                             {b.title}
                                                                         </h5>
                                                                         <div className="whitespace-pre-wrap text-sm leading-relaxed">{b.content}</div>
