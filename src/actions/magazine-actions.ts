@@ -63,7 +63,7 @@ export async function getMagazinePosts() {
 export async function createMagazinePost(data: {
     title: string;
     content: string;
-    category?: 'NEWSLETTER' | 'DEEP_DIVE';
+    category?: 'NEWSLETTER' | 'INTELLIGENCE_REPORT' | 'TECH_AUDIT' | 'SALES_SCENARIO';
     slug?: string;
     thumbnailUrl?: string;
     industryIds: number[];
@@ -138,7 +138,7 @@ export async function createMagazinePost(data: {
 export async function updateMagazinePost(id: number, data: {
     title: string;
     content: string;
-    category: 'NEWSLETTER' | 'DEEP_DIVE';
+    category: 'NEWSLETTER' | 'INTELLIGENCE_REPORT' | 'TECH_AUDIT' | 'SALES_SCENARIO';
     slug: string;
     thumbnailUrl?: string;
     industryIds: number[];

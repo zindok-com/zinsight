@@ -139,7 +139,7 @@ model CompanyArticle {
 // AI의 먹이가 될 고도화된 마케팅 기사 데이터를 담는 테이블입니다.
 model MagazinePost {
   id              Int       @id @default(autoincrement())
-  category        PostCategory @default(NEWSLETTER)
+  category        MagazineCategory @default(NEWSLETTER)
   
   // 콘텐츠 기본 정보
   title           String    @db.VarChar(255)
@@ -202,9 +202,11 @@ model MagazinePostOrganization {
   @@map("magazine_post_organizations")
 }
 
-enum PostCategory {
+enum MagazineCategory {
   NEWSLETTER
-  DEEP_DIVE
+  INTELLIGENCE_REPORT
+  TECH_AUDIT
+  SALES_SCENARIO
 }
 
 model ConsultingRequest {

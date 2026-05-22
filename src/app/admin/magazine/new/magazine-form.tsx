@@ -17,7 +17,7 @@ export function MagazineForm({ industries }: { industries: any[] }) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [selectedIndustries, setSelectedIndustries] = useState<number[]>([]);
-    
+
     const now = new Date();
     const [year, setYear] = useState(String(now.getFullYear()));
     const [month, setMonth] = useState(String(now.getMonth() + 1).padStart(2, '0'));
@@ -46,7 +46,7 @@ export function MagazineForm({ industries }: { industries: any[] }) {
         if (formData.category === 'NEWSLETTER') {
             setSelectedIndustries([id]);
         } else {
-            setSelectedIndustries(prev => 
+            setSelectedIndustries(prev =>
                 prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
             );
         }
@@ -54,7 +54,7 @@ export function MagazineForm({ industries }: { industries: any[] }) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!formData.title || !formData.content) {
             toast.error('제목과 본문을 모두 입력해주세요.');
             return;
@@ -90,10 +90,10 @@ export function MagazineForm({ industries }: { industries: any[] }) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="category">카테고리</Label>
-                    <Select 
-                        value={formData.category} 
+                    <Select
+                        value={formData.category}
                         onValueChange={(val) => {
-                            setFormData({...formData, category: val});
+                            setFormData({ ...formData, category: val });
                             if (val === 'NEWSLETTER' && selectedIndustries.length > 1) {
                                 setSelectedIndustries([selectedIndustries[0]]);
                             }
@@ -104,20 +104,48 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="NEWSLETTER">뉴스레터</SelectItem>
-                            <SelectItem value="DEEP_DIVE">심층 분석</SelectItem>
+                            <SelectItem value="INTELLIGENCE_REPORT">Zinsight 오리지널</SelectItem>
+                            <SelectItem value="TECH_AUDIT">무료 진단 사례</SelectItem>
+                            <SelectItem value="SALES_SCENARIO">세일즈 가이드</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="title">제목</Label>
-                    <Input 
+                    <Input
                         id="title"
                         placeholder="기사 제목을 입력하세요"
                         value={formData.title}
-                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         className="bg-white"
                         required
                     />
+                </div>
+            </div>
+
+            {/* 카테고리 안내 가이드 */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5 text-xs text-slate-600 shadow-sm">
+                <p className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
+                    <Info className="w-4 h-4 text-indigo-500" />
+                    카테고리 안내 가이드
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                    <div className="space-y-1">
+                        <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[11px]">뉴스레터 (NEWSLETTER)</span>
+                        <p className="text-slate-500 pl-1">뉴스레터</p>
+                    </div>
+                    <div className="space-y-1">
+                        <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[11px]">Zinsight 오리지널 (INTELLIGENCE_REPORT)</span>
+                        <p className="text-slate-500 pl-1">Zinsight 오리지널 (SEO/GEO 최적화 기업 분석)</p>
+                    </div>
+                    <div className="space-y-1">
+                        <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">무료 진단 사례 (TECH_AUDIT)</span>
+                        <p className="text-slate-500 pl-1">AEO/SEO 무료 진단 사례 아카이빙</p>
+                    </div>
+                    <div className="space-y-1">
+                        <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[11px]">세일즈 가이드 (SALES_SCENARIO)</span>
+                        <p className="text-slate-500 pl-1">실전 섭외 명분 및 세일즈 가이드</p>
+                    </div>
                 </div>
             </div>
 
@@ -167,18 +195,17 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                         </Label>
                         <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-white shadow-sm min-h-[200px] content-start">
                             {industries.map((ind) => (
-                                <div 
-                                    key={ind.id} 
-                                    className={`flex items-center space-x-2 p-2 rounded transition-colors ${
-                                        selectedIndustries.includes(ind.id) ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-slate-50'
-                                    }`}
+                                <div
+                                    key={ind.id}
+                                    className={`flex items-center space-x-2 p-2 rounded transition-colors ${selectedIndustries.includes(ind.id) ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-slate-50'
+                                        }`}
                                 >
-                                    <Checkbox 
+                                    <Checkbox
                                         id={`ind-${ind.id}`}
                                         checked={selectedIndustries.includes(ind.id)}
                                         onCheckedChange={() => toggleIndustry(ind.id)}
                                     />
-                                    <label 
+                                    <label
                                         htmlFor={`ind-${ind.id}`}
                                         className="text-sm font-medium leading-none cursor-pointer flex-1"
                                     >
@@ -192,11 +219,11 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                     <div className="space-y-2">
                         <Label htmlFor="slug" className="font-bold">슬러그 (URL)</Label>
                         <div className="relative">
-                            <Input 
+                            <Input
                                 id="slug"
                                 placeholder="my-article-slug"
                                 value={formData.slug}
-                                onChange={(e) => setFormData({...formData, slug: e.target.value})}
+                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                                 className="bg-white pr-10 font-mono text-sm border-2 focus-visible:ring-indigo-500"
                             />
                             {formData.category === 'NEWSLETTER' && (
@@ -206,7 +233,7 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                             )}
                         </div>
                         <p className="text-[11px] text-slate-500 italic">
-                            {formData.category === 'NEWSLETTER' 
+                            {formData.category === 'NEWSLETTER'
                                 ? '대상 기간과 산업군에 따라 자동으로 생성됩니다. 직접 수정도 가능합니다.'
                                 : 'URL에 사용될 고유 식별자입니다.'}
                         </p>
@@ -217,10 +244,10 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                 <div className="space-y-6">
                     <div className="space-y-2">
                         <Label className="font-bold">썸네일 이미지</Label>
-                        <ImageUpload 
+                        <ImageUpload
                             value={formData.thumbnailUrl}
-                            onChange={(url) => setFormData({...formData, thumbnailUrl: url})}
-                            onRemove={() => setFormData({...formData, thumbnailUrl: ''})}
+                            onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                            onRemove={() => setFormData({ ...formData, thumbnailUrl: '' })}
                         />
                     </div>
                 </div>
@@ -228,28 +255,28 @@ export function MagazineForm({ industries }: { industries: any[] }) {
 
             <div className="space-y-2">
                 <Label htmlFor="content" className="font-bold">본문 내용</Label>
-                <Textarea 
+                <Textarea
                     id="content"
                     placeholder="기사 본문 내용을 작성하세요..."
                     className="min-h-[400px] bg-white border-2 text-base leading-relaxed"
                     value={formData.content}
-                    onChange={(e) => setFormData({...formData, content: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     required
                 />
             </div>
 
             <div className="flex justify-end gap-3 pt-6 border-t">
-                <Button 
-                    type="button" 
-                    variant="outline" 
+                <Button
+                    type="button"
+                    variant="outline"
                     className="h-11 px-8"
                     onClick={() => router.back()}
                     disabled={isPending}
                 >
                     취소
                 </Button>
-                <Button 
-                    type="submit" 
+                <Button
+                    type="submit"
                     className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95"
                     disabled={isPending}
                 >

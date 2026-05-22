@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon } from 'lucide-react';
+import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info } from 'lucide-react';
 import { deleteMagazinePost, updateMagazinePost, updateMultipleMagazinePostsStatus } from '@/actions/magazine-actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -230,9 +230,15 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                     )}
                                 </TableCell>
                                 <TableCell>
-                                    <Badge variant="outline" className={post.category === 'DEEP_DIVE' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200'}>
-                                        {post.category === 'DEEP_DIVE' ? '심층 분석' : '뉴스레터'}
-                                    </Badge>
+                                    {post.category === 'INTELLIGENCE_REPORT' ? (
+                                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Zinsight 오리지널</Badge>
+                                    ) : post.category === 'TECH_AUDIT' ? (
+                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">무료 진단 사례</Badge>
+                                    ) : post.category === 'SALES_SCENARIO' ? (
+                                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">세일즈 가이드</Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">뉴스레터</Badge>
+                                    )}
                                 </TableCell>
                                 <TableCell className="font-medium max-w-xs truncate">
                                     {post.title}
@@ -337,12 +343,16 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="NEWSLETTER">뉴스레터</SelectItem>
-                                                        <SelectItem value="DEEP_DIVE">심층 분석</SelectItem>
+                                                        <SelectItem value="INTELLIGENCE_REPORT">Zinsight 오리지널</SelectItem>
+                                                        <SelectItem value="TECH_AUDIT">무료 진단 사례</SelectItem>
+                                                        <SelectItem value="SALES_SCENARIO">세일즈 가이드</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
-                                                    {selectedPost.category === 'DEEP_DIVE' ? '심층 분석' : '뉴스레터'}
+                                                    {selectedPost.category === 'INTELLIGENCE_REPORT' ? 'Zinsight 오리지널' :
+                                                     selectedPost.category === 'TECH_AUDIT' ? '무료 진단 사례' :
+                                                     selectedPost.category === 'SALES_SCENARIO' ? '세일즈 가이드' : '뉴스레터'}
                                                 </div>
                                             )}
                                         </div>
@@ -380,6 +390,30 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             )}
                                         </div>
                                     </div>
+
+                                    {/* 카테고리 안내 가이드 (수정 모드일 때만 노출) */}
+                                    {isEditing && (
+                                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2 text-[11px] text-slate-600 shadow-sm">
+                                            <p className="font-semibold text-slate-800 flex items-center gap-1.5 text-xs">
+                                                <Info className="w-3.5 h-3.5 text-indigo-500" />
+                                                카테고리 안내 가이드
+                                            </p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                                                <div>
+                                                    <span className="font-bold text-blue-600">뉴스레터</span>: 기존 뉴스레터 (산업 동향 주기적 발행)
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold text-purple-600">Zinsight 오리지널</span>: 구 심층분석 → 오리지널 (SEO/GEO 최적화 기업 분석)
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold text-emerald-600">무료 진단 사례</span>: 신설 추천 1 → AEO/SEO 무료 진단 사례 아카이빙
+                                                </div>
+                                                <div>
+                                                    <span className="font-bold text-amber-600">세일즈 가이드</span>: 신설 추천 2 → 실전 섭외 명분 및 세일즈 가이드
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Slug */}
                                     <div className="space-y-2">

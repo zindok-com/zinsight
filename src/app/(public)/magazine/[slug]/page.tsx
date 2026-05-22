@@ -5,6 +5,17 @@ import { ArrowLeft } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { Metadata } from 'next';
 
+function getCategoryLabel(category: string) {
+    switch (category) {
+        case 'INTELLIGENCE_REPORT': return 'Zinsight Original';
+        case 'TECH_AUDIT': return 'Tech Audit';
+        case 'SALES_SCENARIO': return 'Sales Guide';
+        case 'NEWSLETTER':
+        default:
+            return 'Newsletter';
+    }
+}
+
 export const revalidate = 3600; // 1시간마다 점진적 정적 재생성(ISR)
 export const dynamicParams = true; // 빌드 타임에 생성되지 않은 새 포스트도 온디맨드로 정적 생성
 
@@ -81,7 +92,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             url: `${baseUrl}/magazine/${post.slug}`,
             publishedTime: post.createdAt.toISOString(),
             modifiedTime: post.updatedAt.toISOString(),
-            section: post.category === 'DEEP_DIVE' ? 'Deep Dive' : 'Newsletter',
+            section: getCategoryLabel(post.category),
             authors: [post.authorName || 'Zinsight 편집부'],
             tags: tags.length > 0 ? tags : undefined,
             images: [
@@ -175,7 +186,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
         console.error("Failed to parse content JSON:", e);
     }
 
-    const isDeepDive = post.category === 'DEEP_DIVE';
+    const categoryLabel = getCategoryLabel(post.category);
     const mainIndustry = post.industries?.[0]?.industry?.name || '인사이트';
 
     const domain = process.env.DOMAIN || 'zinsight.com';
@@ -207,7 +218,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
             '@id': `${baseUrl}/magazine/${post.slug}`,
         },
         'keywords': [
-            post.category === 'DEEP_DIVE' ? 'Deep Dive' : 'Newsletter',
+            getCategoryLabel(post.category),
             ...post.industries.map(pi => pi.industry.name),
             ...post.organizations.map(po => po.organization.company_name),
         ].join(', '),
@@ -232,7 +243,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
                     
                     <div className="flex items-center gap-3 mb-6">
                         <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1.5 rounded-full text-zi-blue font-bold">
-                            {isDeepDive ? 'Deep Dive' : 'Newsletter'}
+                            {categoryLabel}
                         </span>
                         <span className="text-zi-outline font-ui-label text-ui-label font-semibold uppercase tracking-widest">
                             {mainIndustry}
