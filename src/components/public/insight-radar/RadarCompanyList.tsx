@@ -8,6 +8,7 @@ import { LottieIcon, LottieIconName } from '@/components/ui/LottieIcon';
 
 interface RadarCompanyListProps {
     companies: RadarCompanyCard[];
+    isInitialState?: boolean;
 }
 
 /**
@@ -53,7 +54,7 @@ const getEntityConfig = (entityType?: string | null) => {
     return ENTITY_CONFIG.default;
 };
 
-export function RadarCompanyList({ companies }: RadarCompanyListProps) {
+export function RadarCompanyList({ companies, isInitialState }: RadarCompanyListProps) {
     const router = useRouter();
 
     const handleCardClick = (id: number) => {
@@ -73,8 +74,15 @@ export function RadarCompanyList({ companies }: RadarCompanyListProps) {
     }
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-            {companies.map((company, index) => {
+        <div className="mt-8">
+            {isInitialState && companies.length > 0 && (
+                <div className="mb-4 flex items-center gap-2">
+                    <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                    <h2 className="text-lg font-bold text-zi-on-surface">주목할 만한 기관 및 기업</h2>
+                </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {companies.map((company, index) => {
                 const kw = parseKeywords(company.core_keywords);
                 const allKws = kw 
                     ? [...(kw.products || []), ...(kw.technology || []), ...(kw.target_market || [])].slice(0, 4)
@@ -168,6 +176,7 @@ export function RadarCompanyList({ companies }: RadarCompanyListProps) {
                     </div>
                 );
             })}
+            </div>
         </div>
     );
 }

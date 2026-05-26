@@ -70,6 +70,8 @@ export default async function InsightRadarPage({
     const currentPage = params.page ? parseInt(params.page) : 1;
     const pageSize = 15;
 
+    const isInitialState = !selectedIndustryId && !selectedEntityType && !searchQuery;
+
     // 데이터 페칭
     const [industries, totalStats, { companies, total, totalPages }, latestArticles] = await Promise.all([
         getRadarIndustries(),
@@ -101,7 +103,7 @@ export default async function InsightRadarPage({
                 />
 
                 {/* ── 조직 목록 카드 리스트 (클라이언트 컴포넌트) ── */}
-                <RadarCompanyList companies={companies} />
+                <RadarCompanyList companies={companies} isInitialState={isInitialState} />
 
                 {/* 페이지네이션 */}
                 {totalPages > 1 && (

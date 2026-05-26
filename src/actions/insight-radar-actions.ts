@@ -150,7 +150,11 @@ export async function getRadarCompanies(
 ): Promise<{ companies: RadarCompanyCard[]; total: number; totalPages: number }> {
     const { industryId, entityType, searchQuery } = filter;
 
+    // 필터가 하나도 없으면 초기 상태 -> 피처드 기업만 노출
+    const isInitialState = !industryId && !entityType && !searchQuery;
+
     const where = {
+        ...(isInitialState ? { is_featured: true } : {}),
         ...(industryId ? { industries: { some: { industry_id: industryId } } } : {}),
         ...(entityType ? { entity_type: entityType } : {}),
         ...(searchQuery

@@ -19,15 +19,17 @@ export async function updateCompany(
     key_references?: any;
     aliases?: any;
     recent_keywords?: any;
+    is_featured?: boolean;
   }
 ) {
   try {
-    const { recent_status, recent_keywords, ...companyData } = data;
+    const { recent_status, recent_keywords, is_featured, ...companyData } = data;
 
     const updatedCompany = await prisma.organization.update({
       where: { id },
       data: {
         ...companyData,
+        is_featured,
         industries: {
           upsert: {
             where: {
@@ -69,3 +71,19 @@ export async function updateCompany(
     return { success: false, error: error.message };
   }
 }
+
+export async function toggleCompanyFeatured(id: number, is_featured: boolean) {
+  try {
+    const updatedCompany = await prisma.organization.update({
+      where: { id },
+      data: { is_featured },
+    });
+    revalidatePath('/admin/companies');
+    revalidatePath('/insight-radar'); // public insight-radar page
+    return { success: true, company: updatedCompany };
+  } catch (error: any) {
+    console.error('Failed to toggle featured status:', error);
+    return { success: false, error: error.message };
+  }
+}
+

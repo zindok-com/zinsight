@@ -94,6 +94,7 @@ model Organization {
   hq_location      String?  @db.VarChar(255)
   ceo_name         String?  @db.VarChar(100)
   key_references   Json?    
+  is_featured      Boolean  @default(false)
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
