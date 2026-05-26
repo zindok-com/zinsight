@@ -92,7 +92,8 @@ export default async function PublicHomePage() {
     };
 
     return (
-        <div className="min-h-screen bg-zi-surface text-zi-on-surface">
+        <>
+            <div className="min-h-screen bg-zi-surface text-zi-on-surface">
             {/* JSON-LD 구조화 데이터 */}
             <script
                 type="application/ld+json"
