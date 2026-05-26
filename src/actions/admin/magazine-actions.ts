@@ -84,7 +84,7 @@ export async function createMagazinePost(data: {
     status?: string;
 }) {
     try {
-        const { industryIds, organizationIds = [], slug: providedSlug, category = 'NEWSLETTER', ...postData } = data;
+        const { industryIds, organizationIds = [], slug: providedSlug, category = 'NEWSLETTER', lead, bodies, closing, ...postData } = data as any;
         
         let slug = providedSlug;
 
@@ -159,7 +159,7 @@ export async function updateMagazinePost(id: number, data: {
     status?: string;
 }) {
     try {
-        const { industryIds, organizationIds = [], ...postData } = data;
+        const { industryIds, organizationIds = [], lead, bodies, closing, ...postData } = data as any;
 
         // Content processing: Extract summary from lead and clean markers
         const { summary: extractedSummary, cleanedContent } = processMagazineContent(postData.content, (postData as any).summary);
