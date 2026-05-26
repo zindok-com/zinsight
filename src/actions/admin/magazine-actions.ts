@@ -127,12 +127,12 @@ export async function createMagazinePost(data: {
                 category,
                 slug,
                 industries: {
-                    create: industryIds.map(id => ({
+                    create: industryIds.map((id: number) => ({
                         industryId: id
                     }))
                 },
                 organizations: {
-                    create: organizationIds.map(id => ({
+                    create: organizationIds.map((id: number) => ({
                         organizationId: id
                     }))
                 }
@@ -172,13 +172,13 @@ export async function updateMagazinePost(id: number, data: {
                 summary: extractedSummary,
                 industries: {
                     deleteMany: {},
-                    create: industryIds.map(id => ({
+                    create: industryIds.map((id: number) => ({
                         industryId: id
                     }))
                 },
                 organizations: {
                     deleteMany: {},
-                    create: organizationIds.map(id => ({
+                    create: organizationIds.map((id: number) => ({
                         organizationId: id
                     }))
                 }
