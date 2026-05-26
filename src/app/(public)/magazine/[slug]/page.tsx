@@ -308,7 +308,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
                         <div className="flex flex-col gap-12">
                             {/* 리드 (Lead) */}
                             {parsedContent.lead && (
-                                <div className="text-[20px] leading-[1.7] font-body-lg text-zi-on-surface border-l-4 border-zi-blue pl-6 py-2 bg-gradient-to-r from-zi-blue/5 to-transparent rounded-r-lg">
+                                <div className="text-[18px] leading-[1.7] font-body-lg text-zi-on-surface border-l-4 border-zi-blue pl-6 py-2 bg-gradient-to-r from-zi-blue/5 to-transparent rounded-r-lg">
                                     <HighlightedText text={parsedContent.lead} />
                                 </div>
                             )}
@@ -322,7 +322,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
                                             {body.title}
                                         </h2>
                                     )}
-                                    <div className="text-[17px]">
+                                    <div className="text-[16px]">
                                         <HighlightedText text={body.content} />
                                     </div>
                                 </section>
@@ -330,7 +330,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
 
                             {/* 클로징 (Closing) */}
                             {parsedContent.closing && (
-                                <div className="mt-8 p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[17px]">
+                                <div className="mt-8 p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[16px]">
                                     <div className="flex items-center gap-2 mb-4">
                                         <div className="w-2 h-2 rounded-full bg-zi-blue" />
                                         <span className="font-ui-label text-ui-label font-bold text-zi-secondary uppercase tracking-widest">
@@ -343,7 +343,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
                         </div>
                     ) : (
                         /* 구형 데이터 포맷 (단순 텍스트) */
-                        <div className="text-[17px]">
+                        <div className="text-[16px]">
                             <HighlightedText text={post.content} />
                         </div>
                     )}
