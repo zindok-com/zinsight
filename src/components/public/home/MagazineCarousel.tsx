@@ -93,13 +93,13 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                 {posts.map((post, index) => (
                     <div 
                         key={post.id} 
-                        className="w-[82vw] flex-shrink-0 snap-start sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-32px)] lg:flex-shrink lg:flex-grow"
+                        className="w-[82vw] flex-shrink-0 snap-start sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-32px)] lg:flex-shrink-0"
                     >
                         <Link href={`/magazine/${post.slug}`} className="group/card block h-full">
                             <article className="flex h-full flex-col">
                                 {/* 이미지 영역 */}
                                 <div 
-                                    className="relative mb-4 sm:mb-6 aspect-square overflow-hidden rounded-zi-card"
+                                    className="relative mb-4 sm:mb-6 aspect-[4/3] overflow-hidden rounded-zi-card"
                                     style={{ backgroundColor: placeholderColors[index % 3] }}
                                 >
                                     {post.thumbnailUrl ? (
@@ -141,6 +141,40 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                 </div>
                             </article>
                         </Link>
+                    </div>
+                ))}
+                
+                {/* 빈 카드 플레이스홀더 (PC 전용) */}
+                {[1, 2].map((i) => (
+                    <div 
+                        key={`placeholder-${i}`} 
+                        className="hidden lg:block w-[82vw] flex-shrink-0 snap-start sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-32px)] lg:flex-shrink-0 opacity-50 select-none"
+                    >
+                        <article className="flex h-full flex-col">
+                            {/* 이미지 영역 */}
+                            <div className="relative mb-4 sm:mb-6 aspect-[4/3] overflow-hidden rounded-zi-card bg-slate-100 border-2 border-dashed border-slate-200 flex items-center justify-center">
+                                <span className="text-slate-400 text-sm font-medium tracking-widest">COMING SOON</span>
+                            </div>
+
+                            {/* 카테고리 레이블 */}
+                            <div className="mb-2 sm:mb-3 h-4 w-20 bg-slate-100 rounded animate-pulse"></div>
+
+                            {/* 제목 */}
+                            <div className="mb-3 sm:mb-4 h-6 w-3/4 bg-slate-100 rounded animate-pulse"></div>
+
+                            {/* 요약 */}
+                            <div className="space-y-2 mb-4">
+                                <div className="h-3.5 w-full bg-slate-100 rounded animate-pulse"></div>
+                                <div className="h-3.5 w-5/6 bg-slate-100 rounded animate-pulse"></div>
+                                <div className="h-3.5 w-4/6 bg-slate-100 rounded animate-pulse"></div>
+                            </div>
+                            
+                            {/* 메타 정보 */}
+                            <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
+                                <div className="h-3 w-16 bg-slate-100 rounded animate-pulse"></div>
+                                <div className="h-3 w-16 bg-slate-100 rounded animate-pulse"></div>
+                            </div>
+                        </article>
                     </div>
                 ))}
             </div>
