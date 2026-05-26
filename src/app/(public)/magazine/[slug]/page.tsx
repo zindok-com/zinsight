@@ -37,32 +37,56 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
-    const domain = process.env.DOMAIN || 'zinsight.com';
+    const domain = process.env.DOMAIN || 'zinsight.co.kr';
     const baseUrl = `https://${domain}`;
 
     const post = await prisma.magazinePost.findUnique({
         where: { slug },
         include: {
-            industries: {
-                include: {
-                    industry: true
-                }
-            },
-            organizations: {
-                include: {
-                    organization: true
-                }
-            }
+            industries: { include: { industry: true } },
+            organizations: { include: { organization: true } }
         }
     });
 
-    if (!post || post.deletedAt !== null) return { title: 'Not Found' };
+    // 존재하지 않거나 삭제된 포스트
+    if (!post || post.deletedAt !== null) {
+        return {
+            title: 'Not Found',
+            robots: { index: false, follow: false },
+        };
+    }
+
+    // PUBLISHED가 아닌 포스트(DRAFT 등)는 검색엔진 색인 제외
+    if (post.status !== 'PUBLISHED') {
+        return {
+            title: post.title,
+            robots: { index: false, follow: false },
+        };
+    }
 
     const title = `${post.title} | Zinsight Magazine`;
-    const description = post.summary || (post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content);
+
+    // description 우선순위:
+    // 1) post.summary (편집자가 작성한 요약)
+    // 2) parsedContent.lead (JSON 포맷 본문의 리드 문장)
+    // 3) content 앞부분 (단, JSON 형태인 경우 제외)
+    let description = post.summary || '';
+    if (!description) {
+        try {
+            if (post.content.trim().startsWith('{')) {
+                const parsed = JSON.parse(post.content);
+                description = parsed.lead?.slice(0, 160) || '';
+            }
+        } catch {}
+        if (!description && !post.content.trim().startsWith('{')) {
+            description = post.content.slice(0, 160).trim();
+        }
+        if (!description) description = `${post.title} — Zinsight Magazine 리서치 콘텐츠`;
+    }
+    // **마크다운 강조 기호 제거**
+    description = description.replace(/\*\*/g, '').replace(/\*\{.*?\}\*/g, '').slice(0, 160);
+
     const ogImage = post.thumbnailUrl || `${baseUrl}/img/zinsight_icon.png`;
-    
-    // 키워드 태그 목록 추출
     const tags = [
         ...post.industries.map(pi => pi.industry.name),
         ...post.organizations.map(po => po.organization.company_name)
@@ -95,14 +119,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             section: getCategoryLabel(post.category),
             authors: [post.authorName || 'Zinsight 편집부'],
             tags: tags.length > 0 ? tags : undefined,
-            images: [
-                {
-                    url: ogImage,
-                    width: 1200,
-                    height: 630,
-                    alt: post.title,
-                }
-            ],
+            locale: 'ko_KR',
+            siteName: 'Zinsight',
+            images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
         },
         twitter: {
             card: 'summary_large_image',
@@ -167,7 +186,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
         }
     });
 
-    if (!post || post.deletedAt !== null) {
+    if (!post || post.deletedAt !== null || post.status !== 'PUBLISHED') {
         notFound();
     }
 
@@ -189,7 +208,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
     const categoryLabel = getCategoryLabel(post.category);
     const mainIndustry = post.industries?.[0]?.industry?.name || '인사이트';
 
-    const domain = process.env.DOMAIN || 'zinsight.com';
+    const domain = process.env.DOMAIN || 'zinsight.co.kr';
     const baseUrl = `https://${domain}`;
 
     // JSON-LD 구조화 데이터 구축 (Article Schema)

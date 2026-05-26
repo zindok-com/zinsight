@@ -68,7 +68,7 @@ export default function MagazineAeoCTA() {
     }
 
     return (
-        <div className="relative overflow-hidden bg-gradient-to-br from-zi-primary to-[#002a5a] p-8 rounded-zi-card border border-white/10 shadow-2xl">
+        <div className="relative overflow-hidden bg-gradient-to-br from-zi-primary to-[#002a5a] p-6 sm:p-8 rounded-zi-card border border-white/10 shadow-2xl">
             {/* Background pattern */}
             <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-white/5 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 bg-zi-secondary/10 rounded-full blur-2xl pointer-events-none" />

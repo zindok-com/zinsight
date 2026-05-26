@@ -50,7 +50,7 @@ export function RadarSearchBar({ industries, currentIndustryId, currentQuery }: 
     };
 
     return (
-        <div className="mb-14 relative overflow-hidden rounded-[32px] bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-800 p-8 md:p-12 shadow-2xl">
+        <div className="mb-10 sm:mb-14 relative overflow-hidden rounded-[24px] sm:rounded-[32px] bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-800 p-5 sm:p-8 md:p-12 shadow-2xl">
             {/* 배경 장식 요소 */}
             <div className="pointer-events-none absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/10 blur-3xl"></div>
             <div className="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-blue-400/20 blur-3xl"></div>
@@ -61,16 +61,16 @@ export function RadarSearchBar({ industries, currentIndustryId, currentQuery }: 
                     <Sparkles className="w-3.5 h-3.5 text-blue-200" />
                     Insight Radar
                 </div>
-                <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3 tracking-tight">
+                <h2 className="text-[22px] sm:text-3xl md:text-4xl font-extrabold text-white mb-2 sm:mb-3 tracking-tight break-keep">
                     관심 있는 조직과 기술 트렌드를 탐색하세요
                 </h2>
-                <p className="text-blue-100 text-sm md:text-base max-w-2xl font-medium">
+                <p className="text-blue-100 text-[13px] sm:text-sm md:text-base max-w-2xl font-medium">
                     최신 산업 동향, 핵심 키워드, 그리고 연관 기사까지 한 번에 검색할 수 있습니다.
                 </p>
             </div>
 
             {/* 메인 검색 컨테이너 (최신 트렌드 플로팅 바) */}
-            <div className="relative z-10 max-w-5xl mx-auto bg-white p-2 rounded-[24px] shadow-xl flex flex-col md:flex-row gap-2 items-center border border-white/40 backdrop-blur-xl">
+            <div className="relative z-10 max-w-5xl mx-auto bg-white p-2 rounded-[18px] sm:rounded-[24px] shadow-xl flex flex-col md:flex-row gap-2 items-center border border-white/40 backdrop-blur-xl">
 
                 {/* 산업 필터 */}
                 <div className="relative w-full md:w-[260px] shrink-0">
