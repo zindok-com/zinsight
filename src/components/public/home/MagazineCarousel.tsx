@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
@@ -22,11 +22,11 @@ interface MagazineCarouselProps {
 
 export function MagazineCarousel({ posts }: MagazineCarouselProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
+    const [activeIndex, setActiveIndex] = useState(0);
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
             const { scrollLeft, clientWidth } = scrollRef.current;
-            // 한번에 한 칸씩 이동하도록 조정 (카드 너비 + gap)
             const cardWidth = scrollRef.current.querySelector('div')?.clientWidth || clientWidth;
             const gap = 48; // gap-12
             const scrollTo = direction === 'left' 
@@ -40,6 +40,22 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
         }
     };
 
+    // 스크롤 위치로 현재 활성 dot 계산
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+
+        const handleScroll = () => {
+            const cardWidth = el.querySelector('div')?.clientWidth || el.clientWidth;
+            const gap = 48;
+            const index = Math.round(el.scrollLeft / (cardWidth + gap));
+            setActiveIndex(Math.min(index, posts.length - 1));
+        };
+
+        el.addEventListener('scroll', handleScroll, { passive: true });
+        return () => el.removeEventListener('scroll', handleScroll);
+    }, [posts.length]);
+
     if (!posts || posts.length === 0) {
         return (
             <div className="flex h-64 items-center justify-center rounded-zi-card border border-zi-divider bg-zi-surface-low text-zi-on-surface-variant">
@@ -52,7 +68,7 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
 
     return (
         <div className="group relative">
-            {/* 내비게이션 버튼 */}
+            {/* 데스크탑 내비게이션 버튼 */}
             <button 
                 onClick={() => scroll('left')}
                 className="absolute -left-4 top-[150px] z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-zi-divider bg-white shadow-md transition-all hover:bg-zi-surface-high hover:scale-105 active:scale-95 disabled:opacity-0 hidden lg:flex"
@@ -71,19 +87,19 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
             {/* 슬라이드 컨테이너 */}
             <div 
                 ref={scrollRef}
-                className="flex gap-12 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-8 pt-4"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-4 px-4 sm:px-0 sm:gap-8 lg:gap-12"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollPaddingLeft: '1rem' }}
             >
                 {posts.map((post, index) => (
                     <div 
                         key={post.id} 
-                        className="w-full flex-shrink-0 snap-start md:w-[calc(33.333%-32px)]"
+                        className="w-[82vw] flex-shrink-0 snap-start sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-32px)] lg:flex-shrink lg:flex-grow"
                     >
                         <Link href={`/magazine/${post.slug}`} className="group/card block h-full">
                             <article className="flex h-full flex-col">
-                                {/* 이미지 영역 (기존 스타일: 정사각형) */}
+                                {/* 이미지 영역 */}
                                 <div 
-                                    className="relative mb-6 aspect-square overflow-hidden"
+                                    className="relative mb-4 sm:mb-6 aspect-square overflow-hidden rounded-zi-card"
                                     style={{ backgroundColor: placeholderColors[index % 3] }}
                                 >
                                     {post.thumbnailUrl ? (
@@ -91,7 +107,7 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                             src={post.thumbnailUrl}
                                             alt={post.title}
                                             fill
-                                            sizes="(max-width: 768px) 100vw, 33vw"
+                                            sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 33vw"
                                             className="object-cover transition-all duration-500 group-hover/card:scale-105"
                                         />
                                     ) : (
@@ -99,18 +115,18 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                     )}
                                 </div>
 
-                                {/* 카테고리 레이블 (기존 스타일) */}
-                                <span className="mb-3 text-zi-label font-semibold uppercase tracking-widest text-zi-blue">
+                                {/* 카테고리 레이블 */}
+                                <span className="mb-2 sm:mb-3 text-zi-label font-semibold uppercase tracking-widest text-zi-blue text-[11px]">
                                     {post.industryName}
                                 </span>
 
-                                {/* 제목 (기존 스타일: font-serif, text-zi-headline-lg) */}
-                                <h3 className="font-serif mb-4 text-zi-headline-lg font-semibold leading-tight transition-colors group-hover/card:text-zi-blue">
+                                {/* 제목 */}
+                                <h3 className="font-serif mb-3 sm:mb-4 text-[17px] sm:text-zi-headline-lg font-semibold leading-tight transition-colors group-hover/card:text-zi-blue">
                                     {post.title}
                                 </h3>
 
-                                {/* 요약 (기존 스타일) - **텍스트** 강조 처리 */}
-                                <p className="line-clamp-3 text-zi-body-md text-zi-on-surface-variant">
+                                {/* 요약 */}
+                                <p className="line-clamp-3 text-[13px] sm:text-zi-body-md text-zi-on-surface-variant leading-relaxed">
                                     {post.summary?.split(/(\*\*.*?\*\*)/).map((part, i) => 
                                         part.startsWith('**') && part.endsWith('**') 
                                             ? <strong key={i} className="font-bold text-zi-primary">{part.slice(2, -2)}</strong>
@@ -118,8 +134,8 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                     )}
                                 </p>
 
-                                {/* 메타 정보 (기존 스타일) */}
-                                <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-6 text-zi-caption text-slate-400">
+                                {/* 메타 정보 */}
+                                <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-caption text-slate-400 mt-4">
                                     <span>{post.authorName || 'Zinsight 편집부'}</span>
                                     <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}</span>
                                 </div>
@@ -128,6 +144,29 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                     </div>
                 ))}
             </div>
+
+            {/* 모바일 전용 dot indicator */}
+            {posts.length > 1 && (
+                <div className="flex justify-center gap-1.5 mt-2 lg:hidden">
+                    {posts.map((_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => {
+                                if (scrollRef.current) {
+                                    const cardWidth = scrollRef.current.querySelector('div')?.clientWidth || scrollRef.current.clientWidth;
+                                    scrollRef.current.scrollTo({ left: i * (cardWidth + 48), behavior: 'smooth' });
+                                }
+                            }}
+                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                                i === activeIndex
+                                    ? 'w-6 bg-zi-primary'
+                                    : 'w-1.5 bg-zi-outline-variant'
+                            }`}
+                            aria-label={`슬라이드 ${i + 1}로 이동`}
+                        />
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

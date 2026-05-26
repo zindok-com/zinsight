@@ -28,8 +28,16 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-    // public 정적 파일은 미들웨어 제외
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico).*)',
+        /*
+         * 아래 경로를 제외한 모든 요청에 미들웨어 적용:
+         * - _next/static (정적 파일)
+         * - _next/image (이미지 최적화)
+         * - favicon.ico
+         * - sitemap.xml, robots.txt, rss.xml (SEO 크롤러 필수 경로)
+         * - /img/, /public/ (정적 에셋)
+         * - /.well-known/ (도메인 인증)
+         */
+        '/((?!_next/static|_next/image|favicon.ico|sitemap\\.xml|robots\\.txt|rss\\.xml|\\.well-known|img/).*)',
     ],
 };

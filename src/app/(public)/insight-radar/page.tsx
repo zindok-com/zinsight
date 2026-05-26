@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Link from 'next/link';
 import {
@@ -13,7 +14,42 @@ import {
 import { RadarSearchBar } from '@/components/public/insight-radar/RadarSearchBar';
 import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompanyList';
 
-export const dynamic = 'force-dynamic';
+// 검색/필터 파라미터가 없는 기본 페이지는 1시간 캐시, 파라미터가 있으면 동적 렌더링
+export const revalidate = 3600;
+
+export const metadata: Metadata = {
+    title: '인사이트 레이더 — 실시간 산업동향 및 기업 분석',
+    description: 'Zinsight 인사이트 레이더로 AI 분석 엔진이 식별한 전략 산업군과 핵심 기업을 탐색하세요. 기업 정보, 핵심 키워드, 연관 리서치를 한눈에 확인할 수 있습니다.',
+    alternates: {
+        canonical: 'https://zinsight.co.kr/insight-radar',
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
+    },
+    openGraph: {
+        title: '인사이트 레이더 — 실시간 산업동향 및 기업 분석 | Zinsight',
+        description: 'Zinsight 인사이트 레이더로 AI 분석 엔진이 식별한 전략 산업군과 핵심 기업를 탐색하세요.',
+        url: 'https://zinsight.co.kr/insight-radar',
+        siteName: 'Zinsight',
+        locale: 'ko_KR',
+        type: 'website',
+        images: [{ url: '/img/zinsight_icon.png', width: 1200, height: 630, alt: 'Zinsight 인사이트 레이더' }],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: '인사이트 레이더 — 실시간 산업동향 및 기업 분석 | Zinsight',
+        description: 'AI 분석 엔진이 식별한 전략 산업군과 핵심 기업를 탐색하세요.',
+        images: ['/img/zinsight_icon.png'],
+    },
+};
 
 interface PageParams {
     industryId?: string;
@@ -55,7 +91,7 @@ export default async function InsightRadarPage({
             {/* ─────────────────────────────── */}
             {/* 페이지 헤더 */}
             {/* ─────────────────────────────── */}
-            <div className="mx-auto max-w-zi-container px-6 py-12">
+            <div className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
 
                 {/* ── 통합 검색 및 필터 섹션 ── */}
                 <RadarSearchBar 

@@ -6,22 +6,42 @@ import { getPublicMagazinePosts } from '@/actions/magazine-actions';
 import { getRadarIndustries } from '@/actions/insight-radar-actions';
 import MagazineAeoCTA from '@/components/public/MagazineAeoCTA';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 1800; // 30분마다 ISR 재생성
 
-const domain = process.env.DOMAIN || 'zinsight.com';
+const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: 'Zinsight Magazine',
-    description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine.',
+    title: 'Zinsight Magazine — 마케팅 리서치 & 프리미엄 미디어',
+    description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine',
     alternates: {
         canonical: `${baseUrl}/magazine`,
     },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
+    },
     openGraph: {
-        title: 'Zinsight Magazine',
+        title: 'Zinsight Magazine — 마케팅 리서치 & 프리미엄 미디어',
         description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine.',
         url: `${baseUrl}/magazine`,
         type: 'website',
+        locale: 'ko_KR',
+        siteName: 'Zinsight',
+        images: [{ url: '/img/zinsight_icon.png', width: 1200, height: 630, alt: 'Zinsight Magazine' }],
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: 'Zinsight Magazine — 마케팅 리서치 & 프리미엄 미디어',
+        description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine',
+        images: ['/img/zinsight_icon.png'],
     },
 };
 
@@ -69,16 +89,16 @@ export default async function MagazinePage() {
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
-            <main className="mx-auto max-w-zi-container px-6 py-12">
+            <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
                 {/* ─────────────────────────────── */}
                 {/* 매거진 헤더 */}
                 {/* ─────────────────────────────── */}
-                <div className="mb-16 flex flex-col md:flex-row items-end justify-between border-b border-zi-divider pb-8">
+                <div className="mb-8 sm:mb-16 flex flex-col md:flex-row items-start sm:items-end justify-between border-b border-zi-divider pb-5 sm:pb-8 gap-3 sm:gap-0">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest">
                             최신 에디션
                         </span>
-                        <h1 className="font-h1 text-h1 text-zi-primary uppercase tracking-tighter">
+                        <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
                             Zinsight Magazine
                         </h1>
                     </div>
@@ -93,7 +113,7 @@ export default async function MagazinePage() {
                 {/* ─────────────────────────────── */}
                 {/* 피처드 스토리 (Hero) */}
                 {/* ─────────────────────────────── */}
-                <section className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-24 items-center">
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 mb-12 sm:mb-24 items-center">
                     <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
                         <div className="mb-4">
                             <span className="font-ui-label text-[10px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
@@ -104,10 +124,10 @@ export default async function MagazinePage() {
                         </div>
                         {featuredPost ? (
                             <Link href={`/magazine/${featuredPost.slug}`} className="group block cursor-pointer">
-                                <h2 className="font-h1 text-h1 text-zi-on-surface mb-6 group-hover:text-zi-secondary transition-colors">
+                                <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors">
                                     {featuredPost.title}
                                 </h2>
-                                <p className="font-body-lg text-body-lg text-zi-on-surface-variant mb-8">
+                                <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
                                     <HighlightedText 
                                         text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
                                     />
@@ -159,16 +179,16 @@ export default async function MagazinePage() {
                 {/* ─────────────────────────────── */}
                 {/* 서브 섹션 (그리드 + 사이드바) */}
                 {/* ─────────────────────────────── */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
                     {/* 메인 리스트 */}
-                    <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12">
                         {gridArticles.length > 0 ? (
                             gridArticles.map((article) => {
                                 const industryName = article.industries?.[0]?.industry?.name || '인사이트';
                                 
                                 return (
                                     <Link href={`/magazine/${article.slug}`} key={article.id} className="flex flex-col group cursor-pointer">
-                                        <div className="mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                        <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
                                             {article.thumbnailUrl ? (
                                                 <Image 
                                                     src={article.thumbnailUrl} 
@@ -183,10 +203,10 @@ export default async function MagazinePage() {
                                         <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
                                             {industryName}
                                         </span>
-                                        <h4 className="mb-4 font-h3 text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
+                                        <h4 className="mb-3 sm:mb-4 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
                                             {article.title}
                                         </h4>
-                                        <p className="mb-6 line-clamp-3 text-body-md font-body-md text-zi-on-surface-variant">
+                                        <p className="mb-6 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant">
                                             <HighlightedText text={article.summary || ''} />
                                         </p>
                                         <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
@@ -208,7 +228,7 @@ export default async function MagazinePage() {
                         )}
                     </div>
                     {/* 사이드바 */}
-                    <div className="lg:col-span-4 flex flex-col gap-12">
+                    <div className="lg:col-span-4 flex flex-col gap-8 sm:gap-12">
                         <MagazineAeoCTA />
  
                         {/* 트렌딩 사이드바 */}

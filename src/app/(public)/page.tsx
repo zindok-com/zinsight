@@ -11,21 +11,35 @@ import {
 import { getHeadlineMagazinePosts } from '@/actions/magazine-actions';
 import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
 
 export const metadata: Metadata = {
-    // 타이틀에 테크니컬 마케팅 정체성 부여
     title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
     
-    // 핵심 용어인 SEO와 차세대 트렌드인 GEO를 자연스럽게 결합 (공백 포함 약 130자로 글자수 완벽 최적화)
     description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
     
+    alternates: {
+        canonical: 'https://zinsight.co.kr',
+    },
+    robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+            index: true,
+            follow: true,
+            'max-video-preview': -1,
+            'max-image-preview': 'large',
+            'max-snippet': -1,
+        },
+    },
     openGraph: {
         title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
         description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다.',
         url: 'https://zinsight.co.kr',
         siteName: 'Zinsight',
-        images: ['/img/zinsight_icon.png'],
+        locale: 'ko_KR',
+        type: 'website',
+        images: [{ url: '/img/zinsight_icon.png', width: 1200, height: 630, alt: 'Zinsight' }],
     },
     twitter: {
         card: 'summary_large_image',
@@ -46,20 +60,56 @@ export default async function PublicHomePage() {
             getHeadlineMagazinePosts(),
         ]);
 
+    // WebSite + Organization JSON-LD 구조화 데이터
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'WebSite',
+                '@id': 'https://zinsight.co.kr/#website',
+                'url': 'https://zinsight.co.kr',
+                'name': 'Zinsight',
+                'description': '마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
+                'inLanguage': 'ko-KR',
+                'potentialAction': {
+                    '@type': 'SearchAction',
+                    'target': 'https://zinsight.co.kr/insight-radar?q={search_term_string}',
+                    'query-input': 'required name=search_term_string',
+                },
+            },
+            {
+                '@type': 'Organization',
+                '@id': 'https://zinsight.co.kr/#organization',
+                'name': 'Zinsight',
+                'url': 'https://zinsight.co.kr',
+                'logo': {
+                    '@type': 'ImageObject',
+                    'url': 'https://zinsight.co.kr/img/zinsight_icon.png',
+                },
+                'sameAs': ['https://www.zindok.com'],
+            },
+        ],
+    };
+
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
+            {/* JSON-LD 구조화 데이터 */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             {/* ─────────────────────────────── */}
             {/* Hero 섹션 */}
             {/* ─────────────────────────────── */}
-            <section className="relative overflow-hidden pb-32 pt-20">
-                <div className="relative z-10 mx-auto max-w-zi-container px-6 text-center">
+            <section className="relative overflow-hidden pb-16 pt-10 sm:pb-32 sm:pt-20">
+                <div className="relative z-10 mx-auto max-w-zi-container px-4 sm:px-6 text-center">
                     {/* 수퍼 레이블 */}
                     <span className="mb-4 block text-zi-label font-semibold tracking-[0.2em] text-zi-blue uppercase">
                         Market Intelligence Terminal
                     </span>
 
                     {/* 핵심 서브타이틀 배지 */}
-                    <div className="mb-8 flex flex-wrap justify-center gap-2.5">
+                    <div className="mb-5 sm:mb-8 flex flex-wrap justify-center gap-2">
                         <span className="inline-flex items-center rounded-full bg-zi-secondary/10 px-3.5 py-1 text-[11px] font-bold text-zi-secondary uppercase tracking-wider border border-zi-secondary/20">
                             [차세대 마케팅 리서치]
                         </span>
@@ -69,10 +119,10 @@ export default async function PublicHomePage() {
                     </div>
 
                     {/* 헤드라인 */}
-                    <h1 className="font-h1 text-h1 text-zi-primary mb-8">
+                    <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 leading-tight text-zi-primary mb-5 sm:mb-8">
                         미래를 여는 데이터, <br/> AI 시대를 선도하는 마케팅 분석.
                     </h1>
-                    <p className="font-body-lg text-body-lg text-zi-on-surface-variant max-w-3xl mx-auto mb-12 break-keep">
+                    <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant max-w-3xl mx-auto mb-8 sm:mb-12 break-keep">
                         진사이트(Zinsight)는 심층적인 산업 리서치와 차세대 검색 최적화(GEO/SEO) 트렌드를 결합하여 <br className="hidden sm:inline" /> 프리미엄 테크니컬 마케팅 통찰력을 제공합니다.
                     </p>
 
@@ -99,7 +149,7 @@ export default async function PublicHomePage() {
                     */}
 
                     {/* CTA 버튼 */}
-                    <div className="flex flex-col justify-center gap-4 sm:flex-row mt-2">
+                    <div className="flex flex-col justify-center gap-3 sm:flex-row mt-2 px-2 sm:px-0">
                         <Link
                             href="/insight-radar"
                             className="inline-flex items-center justify-center rounded-zi-btn bg-zi-primary px-8 py-3.5 text-ui-label font-ui-label text-white transition-all active:scale-95 shadow-sm hover:bg-zi-primary/90 gap-2"
@@ -129,9 +179,9 @@ export default async function PublicHomePage() {
             {/* ─────────────────────────────── */}
             {/* 인사이트 레이더 현황 섹션 (이동됨) */}
             {/* ─────────────────────────────── */}
-            <section className="bg-[#0B0F19] border-y border-[#30363D] py-16 relative overflow-hidden">
-                <div className="mx-auto max-w-zi-container px-6">
-                    <div className="mb-12 text-center flex flex-col items-center">
+            <section className="bg-[#0B0F19] border-y border-[#30363D] py-10 sm:py-16 relative overflow-hidden">
+                <div className="mx-auto max-w-zi-container px-4 sm:px-6">
+                    <div className="mb-8 sm:mb-12 text-center flex flex-col items-center">
                         {/* 실시간 라이브 엔진 표시 */}
                         <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 border border-emerald-500/20">
                             <span className="relative flex h-2 w-2">
@@ -142,7 +192,7 @@ export default async function PublicHomePage() {
                                 Real-Time Engine Active
                             </span>
                         </div>
-                        <h2 className="mb-4 text-zi-headline-md font-bold text-white">
+                        <h2 className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-white">
                             인사이트 레이더 현황
                         </h2>
                         <p className="mx-auto max-w-2xl text-zi-body-md text-slate-400">
@@ -274,11 +324,11 @@ export default async function PublicHomePage() {
             {/* ─────────────────────────────── */}
             {/* 매거진 프리뷰 섹션 */}
             {/* ─────────────────────────────── */}
-            <section className="border-y border-zi-divider bg-white py-24">
-                <div className="mx-auto max-w-zi-container px-6">
+            <section className="border-y border-zi-divider bg-white py-12 sm:py-24">
+                <div className="mx-auto max-w-zi-container px-4 sm:px-6">
                     {/* 매거진 헤더 */}
-                    <div className="mb-16 text-center">
-                        <h2 className="font-serif mb-4 text-zi-display font-semibold italic text-zi-primary">
+                    <div className="mb-8 sm:mb-16 text-center">
+                        <h2 className="font-serif mb-3 text-[24px] sm:text-zi-display font-semibold italic text-zi-primary">
                             The Zinsight Magazine
                         </h2>
                         <p className="text-zi-body-md text-slate-500">
