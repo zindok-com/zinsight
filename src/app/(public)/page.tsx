@@ -14,7 +14,7 @@ import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
 
 export const metadata: Metadata = {
-    title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
+    title: 'Zinsight - 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어 | 진사이트',
     
     description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
     
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
         },
     },
     openGraph: {
-        title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
+        title: 'Zinsight - 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어 | 진사이트',
         description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다.',
         url: 'https://zinsight.co.kr',
         siteName: 'Zinsight',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Zinsight — 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어',
+        title: 'Zinsight - 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어 | 진사이트',
         description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
         images: ['/img/zinsight_icon.png'],
     },
@@ -343,6 +343,57 @@ export default async function PublicHomePage() {
                 </div>
             </section>
         </div>
+            
+            {/* JSON-LD Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@graph": [
+                            {
+                                "@type": "Organization",
+                                "@id": "https://zinsight.co.kr/#organization",
+                                "name": "Zinsight",
+                                "alternateName": ["진사이트", "지인사이트"],
+                                "url": "https://zinsight.co.kr",
+                                "logo": {
+                                    "@type": "ImageObject",
+                                    "url": "https://zinsight.co.kr/img/zinsight_icon.png"
+                                }
+                            },
+                            {
+                                "@type": "WebSite",
+                                "@id": "https://zinsight.co.kr/#website",
+                                "url": "https://zinsight.co.kr",
+                                "name": "Zinsight",
+                                "alternateName": ["진사이트", "지인사이트"],
+                                "publisher": {
+                                    "@id": "https://zinsight.co.kr/#organization"
+                                }
+                            },
+                            {
+                                "@type": "ItemList",
+                                "itemListElement": [
+                                    {
+                                        "@type": "SiteNavigationElement",
+                                        "position": 1,
+                                        "name": "매거진",
+                                        "url": "https://zinsight.co.kr/magazine"
+                                    },
+                                    {
+                                        "@type": "SiteNavigationElement",
+                                        "position": 2,
+                                        "name": "인사이트 레이더",
+                                        "url": "https://zinsight.co.kr/insight-radar"
+                                    }
+                                ]
+                            }
+                        ]
+                    })
+                }}
+            />
+        </>
     );
 }
 

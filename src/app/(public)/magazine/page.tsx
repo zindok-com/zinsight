@@ -12,8 +12,8 @@ const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: 'Zinsight Magazine — 마케팅 리서치 & 프리미엄 미디어',
-    description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine',
+    title: '매거진 | 진사이트 (Zinsight)',
+    description: '마케팅, 리서치, GEO/SEO 전문 아티클과 최신 트렌드를 다루는 진사이트 매거진입니다. 마케팅의 격을 높이는 프리미엄 미디어.',
     alternates: {
         canonical: `${baseUrl}/magazine`,
     },

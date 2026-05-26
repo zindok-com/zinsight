@@ -18,8 +18,8 @@ import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompany
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-    title: '인사이트 레이더 — 실시간 산업동향 및 기업 분석',
-    description: 'Zinsight 인사이트 레이더로 AI 분석 엔진이 식별한 전략 산업군과 핵심 기업을 탐색하세요. 기업 정보, 핵심 키워드, 연관 리서치를 한눈에 확인할 수 있습니다.',
+    title: '인사이트 레이더 | 진사이트 (Zinsight)',
+    description: '국내외 기업들의 마케팅 동향과 실시간 검색 최적화(GEO) 분석 데이터를 제공하는 진사이트(Zinsight) 인사이트 레이더입니다.',
     alternates: {
         canonical: 'https://zinsight.co.kr/insight-radar',
     },
