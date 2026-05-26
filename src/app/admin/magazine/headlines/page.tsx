@@ -1,4 +1,4 @@
-import { getMagazinePosts } from "@/actions/magazine-actions";
+import { getMagazinePosts } from "@/actions/admin/magazine-actions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HeadlineManager } from "./headline-manager";
 

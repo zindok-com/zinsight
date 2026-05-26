@@ -1,10 +1,10 @@
-import { getMagazinePosts } from "@/actions/magazine-actions";
+import { getMagazinePosts } from "@/actions/admin/magazine-actions";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { MagazineListTable } from "./magazine-list-table";
+import { MagazineListTable } from "@/components/admin/magazine/MagazineListTable";
 
 export const dynamic = 'force-dynamic';
 

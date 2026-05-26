@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MagazineForm } from "./magazine-form";
+import { MagazineForm } from "@/components/admin/magazine/MagazineForm";
 
 export default async function NewMagazinePage() {
     // Fetch active industries for selection

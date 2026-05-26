@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { migrateMagazineContent } from '@/actions/magazine-actions';
+import { migrateMagazineContent } from '@/actions/admin/magazine-actions';
 import { toast } from 'sonner';
 import { Loader2, Database } from 'lucide-react';
 

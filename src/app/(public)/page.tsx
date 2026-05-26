@@ -8,7 +8,7 @@ import {
     getRadarTotalStats,
     getRadarCompanies,
 } from '@/actions/insight-radar-actions';
-import { getHeadlineMagazinePosts } from '@/actions/magazine-actions';
+import { getHeadlineMagazinePosts } from '@/actions/public/magazine-actions';
 import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)

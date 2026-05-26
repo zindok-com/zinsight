@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import { getPublicMagazinePosts } from '@/actions/magazine-actions';
+import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarIndustries } from '@/actions/insight-radar-actions';
 import MagazineAeoCTA from '@/components/public/MagazineAeoCTA';
 

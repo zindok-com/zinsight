@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { updateHeadlinePriority } from '@/actions/magazine-actions';
+import { updateHeadlinePriority } from '@/actions/admin/magazine-actions';
 import { toast } from 'sonner';
 import { Star, Loader2 } from 'lucide-react';
 
