@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info } from 'lucide-react';
+import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info, Plus } from 'lucide-react';
 import { deleteMagazinePost, updateMagazinePost, updateMultipleMagazinePostsStatus } from '@/actions/admin/magazine-actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -79,28 +79,28 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
     const handleRowClick = (post: any) => {
         setSelectedPost(post);
 
-        let rawContent = post.content;
+        let parsedData = { lead: '', bodies: [{ title: '', content: '' }], closing: '' };
         try {
-            // JSON 형태라면 마커 기반의 텍스트로 복원하여 편집 가능하게 함
             const parsed = JSON.parse(post.content);
             if (parsed.lead || parsed.bodies || parsed.closing) {
-                rawContent = `**(리드)**\n${parsed.lead || ''}\n\n`;
-                parsed.bodies?.forEach((b: any, i: number) => {
-                    rawContent += `**(본문 ${i + 1} — ${b.title})**\n${b.content}\n\n`;
-                });
-                if (parsed.closing) {
-                    rawContent += `**(클로징)**\n${parsed.closing}`;
-                }
+                parsedData.lead = parsed.lead || '';
+                parsedData.bodies = parsed.bodies?.length ? parsed.bodies : [{ title: '', content: '' }];
+                parsedData.closing = parsed.closing || '';
+            } else {
+                parsedData.bodies = [{ title: '기존 내용', content: post.content }];
             }
         } catch (e) {
-            // JSON이 아니라면 기존 텍스트 그대로 사용
+            // JSON이 아니라면 기존 텍스트(마크다운 등)를 첫 번째 본문에 할당
+            parsedData.bodies = [{ title: '기존 내용', content: post.content }];
         }
 
         setEditForm({
             title: post.title,
             slug: post.slug,
             category: post.category,
-            content: rawContent,
+            lead: parsedData.lead,
+            bodies: parsedData.bodies,
+            closing: parsedData.closing,
             thumbnailUrl: post.thumbnailUrl || '',
             status: post.status,
             industryIds: post.industries.map((mi: any) => mi.industryId)
@@ -109,7 +109,34 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
 
     const handleSave = () => {
         startTransition(async () => {
-            const res = await updateMagazinePost(selectedPost.id, editForm);
+            if (!editForm.lead || editForm.lead.trim() === '') {
+                toast.error('리드(Lead) 내용을 입력해주세요.');
+                return;
+            }
+
+            if (!editForm.closing || editForm.closing.trim() === '') {
+                toast.error('클로징(Closing) 내용을 입력해주세요.');
+                return;
+            }
+
+            const validBodies = editForm.bodies.filter((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
+            if (validBodies.length === 0) {
+                toast.error('최소 하나의 본문 섹션을 입력해주세요.');
+                return;
+            }
+
+            const structuredContent = JSON.stringify({
+                lead: editForm.lead,
+                bodies: validBodies,
+                closing: editForm.closing
+            });
+
+            const payload = {
+                ...editForm,
+                content: structuredContent
+            };
+
+            const res = await updateMagazinePost(selectedPost.id, payload);
             if (res.success) {
                 toast.success('포스트가 수정되었습니다.');
                 setSelectedPost({
@@ -495,11 +522,86 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                     <div className="space-y-2">
                                         <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">본문 내용</Label>
                                         {isEditing ? (
-                                            <Textarea
-                                                value={editForm.content}
-                                                onChange={(e) => setEditForm({ ...editForm, content: e.target.value })}
-                                                className="min-h-[400px] bg-white"
-                                            />
+                                            <div className="space-y-6">
+                                                <div className="space-y-2 p-4 bg-indigo-50/30 border border-indigo-100 rounded-lg">
+                                                    <Label className="font-bold text-indigo-800 text-xs">리드 (Lead) <span className="text-red-500">*</span></Label>
+                                                    <Textarea
+                                                        className="min-h-[80px] bg-white text-sm"
+                                                        value={editForm.lead}
+                                                        onChange={(e) => setEditForm({ ...editForm, lead: e.target.value })}
+                                                        required
+                                                    />
+                                                </div>
+
+                                                <div className="space-y-4">
+                                                    <div className="flex justify-between items-center">
+                                                        <Label className="font-bold text-slate-800 text-xs">본문 섹션</Label>
+                                                        <Button 
+                                                            type="button" 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => setEditForm({ ...editForm, bodies: [...editForm.bodies, { title: '', content: '' }] })}
+                                                            className="h-7 text-xs bg-white border-dashed text-indigo-600 hover:text-indigo-700"
+                                                        >
+                                                            <Plus className="w-3 h-3 mr-1" /> 추가
+                                                        </Button>
+                                                    </div>
+                                                    
+                                                    {editForm.bodies.map((body: any, index: number) => (
+                                                        <div key={index} className="p-4 border rounded-lg bg-white relative">
+                                                            <div className="flex justify-between items-center mb-3">
+                                                                <h5 className="text-xs font-bold text-slate-600">섹션 {index + 1}</h5>
+                                                                {editForm.bodies.length > 1 && (
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        onClick={() => setEditForm({
+                                                                            ...editForm,
+                                                                            bodies: editForm.bodies.filter((_: any, i: number) => i !== index)
+                                                                        })}
+                                                                        className="h-6 w-6 text-red-400 hover:text-red-600 hover:bg-red-50 -mt-1 -mr-1"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </Button>
+                                                                )}
+                                                            </div>
+                                                            <div className="space-y-3">
+                                                                <Input
+                                                                    placeholder="소제목"
+                                                                    value={body.title}
+                                                                    onChange={(e) => {
+                                                                        const newBodies = [...editForm.bodies];
+                                                                        newBodies[index].title = e.target.value;
+                                                                        setEditForm({ ...editForm, bodies: newBodies });
+                                                                    }}
+                                                                    className="h-8 text-sm"
+                                                                />
+                                                                <Textarea
+                                                                    placeholder="본문 내용"
+                                                                    value={body.content}
+                                                                    onChange={(e) => {
+                                                                        const newBodies = [...editForm.bodies];
+                                                                        newBodies[index].content = e.target.value;
+                                                                        setEditForm({ ...editForm, bodies: newBodies });
+                                                                    }}
+                                                                    className="min-h-[120px] text-sm"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="space-y-2 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                                    <Label className="font-bold text-slate-800 text-xs">클로징 (Closing) <span className="text-red-500">*</span></Label>
+                                                    <Textarea
+                                                        className="min-h-[80px] bg-white text-sm"
+                                                        value={editForm.closing}
+                                                        onChange={(e) => setEditForm({ ...editForm, closing: e.target.value })}
+                                                        required
+                                                    />
+                                                </div>
+                                            </div>
                                         ) : (
                                             <div className="p-6 bg-white border rounded-md prose prose-sm max-w-none text-slate-700">
                                                 {(() => {

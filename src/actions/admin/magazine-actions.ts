@@ -4,32 +4,45 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 function processMagazineContent(content: string, providedSummary?: string) {
-    const sections: any = {
+    let sections: any = {
         lead: '',
         bodies: [],
         closing: ''
     };
 
-    // 섹션별 분리 로직
-    // 1. 리드 추출
-    const leadMatch = content.match(/\*\*\(리드\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/);
-    if (leadMatch) sections.lead = leadMatch[1].trim();
-
-    // 2. 본문 섹션들 추출
-    const bodyMatches = content.matchAll(/\*\*\(본문\s*\d+\s*[—|-]\s*(.*?)\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/g);
-    for (const match of bodyMatches) {
-        sections.bodies.push({
-            title: match[1].trim(),
-            content: match[2].trim()
-        });
+    let isAlreadyJson = false;
+    try {
+        const parsed = JSON.parse(content);
+        if (parsed && typeof parsed === 'object' && ('lead' in parsed || 'bodies' in parsed)) {
+            sections = parsed;
+            isAlreadyJson = true;
+        }
+    } catch (e) {
+        // Not a JSON string, fallback to markdown parsing
     }
 
-    // 3. 클로징 추출
-    const closingMatch = content.match(/\*\*\(클로징\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/);
-    if (closingMatch) sections.closing = closingMatch[1].trim();
+    if (!isAlreadyJson) {
+        // 섹션별 분리 로직 (마크다운 기반)
+        // 1. 리드 추출
+        const leadMatch = content.match(/\*\*\(리드\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/);
+        if (leadMatch) sections.lead = leadMatch[1].trim();
+
+        // 2. 본문 섹션들 추출
+        const bodyMatches = content.matchAll(/\*\*\(본문\s*\d+\s*[—|-]\s*(.*?)\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/g);
+        for (const match of bodyMatches) {
+            sections.bodies.push({
+                title: match[1].trim(),
+                content: match[2].trim()
+            });
+        }
+
+        // 3. 클로징 추출
+        const closingMatch = content.match(/\*\*\(클로징\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/);
+        if (closingMatch) sections.closing = closingMatch[1].trim();
+    }
 
     // 요약(summary)은 리드 내용을 기본으로 사용
-    const summary = providedSummary || sections.lead;
+    const summary = providedSummary || sections.lead || '';
 
     // 전체 본문을 구조화된 JSON 문자열로 저장
     const structuredContent = JSON.stringify(sections);

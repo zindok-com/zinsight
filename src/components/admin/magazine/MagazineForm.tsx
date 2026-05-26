@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info } from 'lucide-react';
+import { Loader2, Info, Plus, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 
@@ -25,7 +25,9 @@ export function MagazineForm({ industries }: { industries: any[] }) {
     const [formData, setFormData] = useState<any>({
         title: '',
         slug: '',
-        content: '',
+        lead: '',
+        bodies: [{ title: '', content: '' }],
+        closing: '',
         thumbnailUrl: '',
         category: 'NEWSLETTER',
         status: 'PUBLISHED'
@@ -55,8 +57,24 @@ export function MagazineForm({ industries }: { industries: any[] }) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.title || !formData.content) {
-            toast.error('제목과 본문을 모두 입력해주세요.');
+        if (!formData.title) {
+            toast.error('제목을 입력해주세요.');
+            return;
+        }
+
+        if (!formData.lead || formData.lead.trim() === '') {
+            toast.error('리드(Lead) 내용을 입력해주세요.');
+            return;
+        }
+
+        if (!formData.closing || formData.closing.trim() === '') {
+            toast.error('클로징(Closing) 내용을 입력해주세요.');
+            return;
+        }
+
+        const validBodies = formData.bodies.filter((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
+        if (validBodies.length === 0) {
+            toast.error('최소 하나의 본문 섹션을 입력해주세요.');
             return;
         }
 
@@ -66,8 +84,15 @@ export function MagazineForm({ industries }: { industries: any[] }) {
         }
 
         startTransition(async () => {
+            const structuredContent = JSON.stringify({
+                lead: formData.lead,
+                bodies: validBodies,
+                closing: formData.closing
+            });
+
             const res = await createMagazinePost({
                 ...formData,
+                content: structuredContent,
                 slug: formData.slug || undefined,
                 industryIds: selectedIndustries
             });
@@ -253,16 +278,118 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="content" className="font-bold">본문 내용</Label>
-                <Textarea
-                    id="content"
-                    placeholder="기사 본문 내용을 작성하세요..."
-                    className="min-h-[400px] bg-white border-2 text-base leading-relaxed"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    required
-                />
+            <div className="space-y-6 pt-6 border-t border-slate-200">
+                <div className="flex items-center justify-between">
+                    <Label className="text-lg font-bold text-slate-800">본문 내용</Label>
+                    <span className="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full">구조화된 텍스트 에디터</span>
+                </div>
+                
+                {/* 리드 (Lead) */}
+                <div className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
+                    <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
+                    <p className="text-[11px] text-indigo-600/80 pb-1">기사의 도입부나 요약을 작성해주세요.</p>
+                    <Textarea
+                        id="lead"
+                        placeholder="리드 내용을 작성하세요..."
+                        className="min-h-[100px] bg-white border-indigo-200 focus-visible:ring-indigo-500 text-sm leading-relaxed"
+                        value={formData.lead}
+                        onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
+                        required
+                    />
+                </div>
+
+                {/* 본문 섹션 (Bodies) */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between pb-2">
+                        <div>
+                            <Label className="font-bold text-slate-800 text-sm">본문 섹션</Label>
+                            <p className="text-[11px] text-slate-500 mt-0.5">최소 1개의 본문 섹션이 필요합니다.</p>
+                        </div>
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => setFormData({ ...formData, bodies: [...formData.bodies, { title: '', content: '' }] })}
+                            className="bg-white border-dashed border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400 gap-1.5"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            섹션 추가
+                        </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                        {formData.bodies.map((body: any, index: number) => (
+                            <div key={index} className="relative p-5 bg-white border border-slate-200 rounded-xl shadow-sm transition-all hover:border-slate-300">
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 rounded-l-xl"></div>
+                                <div className="flex justify-between items-start mb-4">
+                                    <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs">
+                                            {index + 1}
+                                        </span>
+                                        섹션 {index + 1}
+                                    </h4>
+                                    {formData.bodies.length > 1 && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => setFormData({
+                                                ...formData,
+                                                bodies: formData.bodies.filter((_: any, i: number) => i !== index)
+                                            })}
+                                            className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50 -mt-1 -mr-1"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    )}
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-slate-600">소제목</Label>
+                                        <Input
+                                            placeholder="섹션의 소제목을 입력하세요"
+                                            value={body.title}
+                                            onChange={(e) => {
+                                                const newBodies = [...formData.bodies];
+                                                newBodies[index].title = e.target.value;
+                                                setFormData({ ...formData, bodies: newBodies });
+                                            }}
+                                            className="bg-slate-50/50"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-semibold text-slate-600">내용</Label>
+                                        <Textarea
+                                            placeholder="본문 내용을 작성하세요..."
+                                            className="min-h-[150px] bg-slate-50/50 text-sm leading-relaxed"
+                                            value={body.content}
+                                            onChange={(e) => {
+                                                const newBodies = [...formData.bodies];
+                                                newBodies[index].content = e.target.value;
+                                                setFormData({ ...formData, bodies: newBodies });
+                                            }}
+                                            required={index === 0}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 클로징 (Closing) */}
+                <div className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
+                    <p className="text-[11px] text-slate-500 pb-1">기사의 맺음말이나 결론을 작성해주세요.</p>
+                    <Textarea
+                        id="closing"
+                        placeholder="클로징 내용을 작성하세요..."
+                        className="min-h-[100px] bg-white text-sm leading-relaxed"
+                        value={formData.closing}
+                        onChange={(e) => setFormData({ ...formData, closing: e.target.value })}
+                        required
+                    />
+                </div>
             </div>
 
             <div className="flex justify-end gap-3 pt-6 border-t">
