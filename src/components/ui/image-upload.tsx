@@ -31,6 +31,31 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
             return;
         }
 
+        const checkImageDimension = (file: File): Promise<boolean> => {
+            return new Promise((resolve) => {
+                const img = new window.Image();
+                const objectUrl = URL.createObjectURL(file);
+                img.onload = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    if (img.width < 1200) {
+                        toast.error(`이미지 가로폭이 너무 작습니다 (현재: ${img.width}px). 구글 디스커버 최적화를 위해 최소 1200px 이상이어야 합니다.`);
+                        resolve(false);
+                    } else {
+                        resolve(true);
+                    }
+                };
+                img.onerror = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    toast.error('이미지 파일을 읽을 수 없습니다.');
+                    resolve(false);
+                };
+                img.src = objectUrl;
+            });
+        };
+
+        const isValidDimension = await checkImageDimension(file);
+        if (!isValidDimension) return;
+
         setIsUploading(true);
         const formData = new FormData();
         formData.append('file', file);
@@ -105,7 +130,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
                         </Button>
                     </label>
                     <p className="text-[10px] text-slate-500 mt-2">
-                        추천 사이즈: 1200x630 (5MB 이하)
+                        필수 사이즈: 가로 1200px 이상 (5MB 이하)
                     </p>
                 </div>
             </div>

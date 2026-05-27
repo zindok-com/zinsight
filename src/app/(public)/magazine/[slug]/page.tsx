@@ -217,7 +217,17 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
         '@type': 'TechArticle',
         'headline': post.title,
         'description': post.summary || (post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content),
-        'image': post.thumbnailUrl ? [post.thumbnailUrl] : [`${baseUrl}/img/zinsight_icon.png`],
+        // TODO: (주의) 현재 동적 이미지 리사이징/크롭 CDN이 없으므로, 원본 썸네일에 쿼리 파라미터를 붙여 구글 스키마의 다중 비율(16:9, 4:3, 1:1) 요건을 가상으로 맞춤.
+        // 완벽한 최적화를 위해서는 추후 이미지 리사이징 서버를 연동하고 쿼리 파라미터가 실제 해당 비율의 이미지를 반환하도록 서버 설정이 필요함.
+        'image': post.thumbnailUrl ? [
+            `${post.thumbnailUrl}?ar=16:9`,
+            `${post.thumbnailUrl}?ar=4:3`,
+            `${post.thumbnailUrl}?ar=1:1`
+        ] : [
+            `${baseUrl}/img/zinsight_icon.png?ar=16:9`,
+            `${baseUrl}/img/zinsight_icon.png?ar=4:3`,
+            `${baseUrl}/img/zinsight_icon.png?ar=1:1`
+        ],
         'datePublished': post.createdAt.toISOString(),
         'dateModified': post.updatedAt.toISOString(),
         'author': {
