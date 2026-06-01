@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Newspaper, Tag, ArrowRight } from 'lucide-react';
 import type { RadarCompanyCard } from '@/actions/insight-radar-actions';
 import { LottieIcon, LottieIconName } from '@/components/ui/LottieIcon';
@@ -55,11 +55,6 @@ const getEntityConfig = (entityType?: string | null) => {
 };
 
 export function RadarCompanyList({ companies, isInitialState }: RadarCompanyListProps) {
-    const router = useRouter();
-
-    const handleCardClick = (id: number) => {
-        router.push(`/insight-radar/${id}`);
-    };
 
     if (!companies || companies.length === 0) {
         return (
@@ -94,10 +89,10 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
                 const iconName = config.icon;
 
                 return (
-                    <div
+                    <Link
                         key={company.id}
-                        onClick={() => handleCardClick(company.id)}
-                        className={`group flex flex-col cursor-pointer border border-zi-divider bg-white rounded-zi-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-zi-primary/40 border-t-[4px] ${theme.border}`}
+                        href={`/insight-radar/${company.id}`}
+                        className={`group flex flex-col border border-zi-divider bg-white rounded-zi-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-zi-primary/40 border-t-[4px] ${theme.border}`}
                     >
                         {/* Header Section */}
                         <div className="p-6 pb-5 border-b border-zi-divider/50 flex-grow-0">
@@ -173,7 +168,7 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
                                 <ArrowRight className={`h-4 w-4 text-zi-outline transition-transform group-hover:translate-x-1 ${theme.arrowHover}`} />
                             </div>
                         </div>
-                    </div>
+                    </Link>
                 );
             })}
             </div>
