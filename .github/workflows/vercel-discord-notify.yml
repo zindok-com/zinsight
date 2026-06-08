@@ -20,7 +20,7 @@ jobs:
           if [ "$STATUS" = "success" ]; then
             COLOR=3066993
             TITLE="🚀 Zinsight 실서버 배포 성공!"
-            DESC="최신 커밋이 운영 서버에 성공적으로 반영되었습니다.\n\n🔗 **[라이브 사이트 접속]**\n$ENV_URL"
+            DESC="최신 커밋이 운영 서버에 성공적으로 반영되었습니다.\n\n🔗 **[라이브 사이트 접속]**\nhttps://zinsight.co.kr"
           else
             COLOR=15158332
             TITLE="❌ Zinsight 실서버 배포 실패"
