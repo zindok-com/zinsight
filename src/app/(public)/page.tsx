@@ -120,8 +120,8 @@ export default async function PublicHomePage() {
                     </div>
 
                     {/* 헤드라인 */}
-                    <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 leading-tight text-zi-primary mb-5 sm:mb-8">
-                        미래를 여는 데이터, <br/> AI 시대를 선도하는 마케팅 분석.
+                    <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 leading-tight text-zi-primary mb-5 sm:mb-8 break-keep">
+                        미래를 여는 데이터, <br className="hidden sm:inline" /> AI 시대를 선도하는 마케팅 분석.
                     </h1>
                     <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant max-w-3xl mx-auto mb-8 sm:mb-12 break-keep">
                         진사이트(Zinsight)는 심층적인 산업 리서치와 차세대 검색 최적화(GEO/SEO) 트렌드를 결합하여 <br className="hidden sm:inline" /> 프리미엄 테크니컬 마케팅 통찰력을 제공합니다.
@@ -196,8 +196,8 @@ export default async function PublicHomePage() {
                         <h2 className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-white">
                             인사이트 레이더 현황
                         </h2>
-                        <p className="mx-auto max-w-2xl text-zi-body-md text-slate-400">
-                            Zinsight의 AI 분석 엔진이 식별한 전략 산업군 및 비즈니스 카테고리별 핵심 기업과 <br/>
+                        <p className="mx-auto max-w-2xl text-zi-body-md text-slate-400 break-keep">
+                            Zinsight의 AI 분석 엔진이 식별한 전략 산업군 및 비즈니스 카테고리별 핵심 기업과 <br className="hidden sm:inline" />
                             기술 인사이트를 실시간으로 모니터링합니다.
                         </p>
                     </div>
