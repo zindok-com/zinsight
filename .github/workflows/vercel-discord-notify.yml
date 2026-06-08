@@ -1,0 +1,44 @@
+name: Vercel Deployment Notification
+
+on:
+  deployment_status: # Vercel이 쏘아주는 배포 상태 이벤트를 수신
+
+jobs:
+  discord_notification:
+    runs-on: ubuntu-latest
+    # 배포 상태가 성공(success)이거나 실패(failure)인 경우에만 작동
+    if: github.event.deployment_status.state == 'success' || github.event.deployment_status.state == 'failure'
+    
+    steps:
+      - name: Send Webhook to Discord
+        run: |
+          STATUS="${{ github.event.deployment_status.state }}"
+          ENV_URL="${{ github.event.deployment_status.environment_url }}"
+          REPO_NAME="${{ github.repository }}"
+          
+          # 성공 시 초록색(3066993), 실패 시 빨간색(15158332) 임베드 컬러 지정
+          if [ "$STATUS" = "success" ]; then
+            COLOR=3066993
+            TITLE="🚀 Zinsight 실서버 배포 성공!"
+            DESC="최신 커밋이 운영 서버에 성공적으로 반영되었습니다.\n\n🔗 **[라이브 사이트 접속]**\n$ENV_URL"
+          else
+            COLOR=15158332
+            TITLE="❌ Zinsight 실서버 배포 실패"
+            DESC="Vercel 빌드 중 에러가 발생했습니다. 대시보드 로그를 확인해 주세요."
+          fi
+
+          # 디스코드 표준 Webhook Payload 전송 (외부 라이브러리 없이 순수 curl 처리)
+          curl -X POST -H "Content-Type: application/json" \
+            -d '{
+              "embeds": [{
+                "title": "'"$TITLE"'",
+                "description": "'"$DESC"'",
+                "color": '$COLOR',
+                "fields": [
+                  { "name": "Repository", "value": "'"$REPO_NAME"'", "inline": true },
+                  { "name": "Environment", "value": "${{ github.event.deployment.environment }}", "inline": true }
+                ],
+                "footer": { "text": "Zinsight CI/CD Agent" },
+                "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"
+              }]
+            }' ${{ secrets.DISCORD_WEBHOOK_URL }}
