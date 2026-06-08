@@ -10,13 +10,15 @@ import {
     Newspaper,
     Download,
     Menu,
-    Briefcase
+    Briefcase,
+    ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 
 const TOP_MENU_ITEMS = [
     { name: '대시보드', href: '/admin', icon: LayoutDashboard },
+    { name: '보안 설정', href: '/admin/settings', icon: ShieldCheck },
 ];
 
 const INSIGHT_RADAR_ITEMS = [

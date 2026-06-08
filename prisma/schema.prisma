@@ -235,4 +235,14 @@ model Snapshot {
   @@map("snapshots")
 }
 
+model AdminSetting {
+  key        String   @id @db.VarChar(100)
+  value      String   @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("admin_settings")
+}
+
+
 
