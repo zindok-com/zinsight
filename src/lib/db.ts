@@ -2,12 +2,31 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 function createPrismaClient() {
+    let host = process.env.DB_HOST ?? 'localhost';
+    let port = Number(process.env.DB_PORT ?? 3306);
+    let user = process.env.DB_USER ?? 'root';
+    let password = process.env.DB_PASSWORD ?? '';
+    let database = process.env.DB_NAME ?? 'zinsight';
+
+    if (process.env.DATABASE_URL) {
+        try {
+            const url = new URL(process.env.DATABASE_URL);
+            host = url.hostname || host;
+            port = url.port ? Number(url.port) : port;
+            user = url.username ? decodeURIComponent(url.username) : user;
+            password = url.password ? decodeURIComponent(url.password) : password;
+            database = url.pathname ? url.pathname.replace(/^\//, '') : database;
+        } catch (error) {
+            console.error('Failed to parse DATABASE_URL in db.ts:', error);
+        }
+    }
+
     const adapter = new PrismaMariaDb({
-        host: process.env.DB_HOST ?? 'localhost',
-        port: Number(process.env.DB_PORT ?? 3306),
-        user: process.env.DB_USER ?? 'root',
-        password: process.env.DB_PASSWORD ?? '',
-        database: process.env.DB_NAME ?? 'zinsight',
+        host,
+        port,
+        user,
+        password,
+        database,
     });
 
     return new PrismaClient({
