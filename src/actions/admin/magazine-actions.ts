@@ -139,6 +139,8 @@ export async function createMagazinePost(data: {
             }
         });
 
+        revalidatePath('/magazine');
+        revalidatePath('/');
         revalidatePath('/admin/magazine');
         revalidatePath('/admin');
         return { success: true, post };
@@ -185,6 +187,9 @@ export async function updateMagazinePost(id: number, data: {
             }
         });
 
+        revalidatePath('/magazine');
+        revalidatePath('/');
+        revalidatePath(`/magazine/${post.slug}`);
         revalidatePath('/admin/magazine');
         revalidatePath('/admin');
         return { success: true, post };
@@ -196,12 +201,15 @@ export async function updateMagazinePost(id: number, data: {
 
 export async function deleteMagazinePost(id: number) {
     try {
-        await prisma.magazinePost.update({
+        const post = await prisma.magazinePost.update({
             where: { id },
             data: {
                 deletedAt: new Date()
             }
         });
+        revalidatePath('/magazine');
+        revalidatePath('/');
+        revalidatePath(`/magazine/${post.slug}`);
         revalidatePath('/admin/magazine');
         revalidatePath('/admin');
         return { success: true };
@@ -233,6 +241,8 @@ export async function updateHeadlinePriority(id: number, priority: number) {
             });
         });
 
+        revalidatePath('/magazine');
+        revalidatePath('/');
         revalidatePath('/admin/magazine');
         revalidatePath('/admin/magazine/headlines');
         revalidatePath('/admin');
@@ -264,6 +274,8 @@ export async function migrateMagazineContent() {
             migratedCount++;
         }
 
+        revalidatePath('/magazine');
+        revalidatePath('/');
         revalidatePath('/admin');
         return { success: true, count: migratedCount };
     } catch (error: any) {
@@ -274,6 +286,11 @@ export async function migrateMagazineContent() {
 
 export async function updateMultipleMagazinePostsStatus(ids: number[], status: string) {
     try {
+        const posts = await prisma.magazinePost.findMany({
+            where: { id: { in: ids } },
+            select: { slug: true }
+        });
+
         await prisma.magazinePost.updateMany({
             where: {
                 id: { in: ids }
@@ -282,6 +299,11 @@ export async function updateMultipleMagazinePostsStatus(ids: number[], status: s
                 status
             }
         });
+        revalidatePath('/magazine');
+        revalidatePath('/');
+        for (const post of posts) {
+            revalidatePath(`/magazine/${post.slug}`);
+        }
         revalidatePath('/admin/magazine');
         revalidatePath('/admin');
         return { success: true };
