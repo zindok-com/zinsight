@@ -144,7 +144,19 @@ export default async function MagazinePage() {
                             </>
                         )}
                         <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
-                            <span className="text-zi-on-surface font-semibold">By Zinsight 편집부</span>
+                            <span className="text-zi-on-surface font-semibold">
+                                By{' '}
+                                {featuredPost?.author ? (
+                                    <Link 
+                                        href={`/author/${featuredPost.author.slug}`} 
+                                        className="hover:text-indigo-600 underline underline-offset-4 decoration-indigo-300 transition-colors"
+                                    >
+                                        {featuredPost.author.name}
+                                    </Link>
+                                ) : (
+                                    featuredPost?.authorName || 'Zinsight 편집부'
+                                )}
+                            </span>
                             <span>•</span>
                             <span>{featuredPost ? new Date(featuredPost.createdAt).toLocaleDateString() : ''}</span>
                         </div>
@@ -210,7 +222,7 @@ export default async function MagazinePage() {
                                             <HighlightedText text={article.summary || ''} />
                                         </p>
                                         <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
-                                            <span>Zinsight 편집부</span>
+                                            <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
                                             <ArrowRight className="h-4 w-4" />
                                         </div>
                                     </Link>
@@ -248,7 +260,7 @@ export default async function MagazinePage() {
                                         <div className="flex items-center gap-2 text-zi-outline text-[12px]">
                                             <span>{(article as any).industries?.[0]?.industry?.name || '인사이트'}</span>
                                             <span>•</span>
-                                            <span>Zinsight 편집부</span>
+                                            <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
                                         </div>
                                     </Link>
                                 ))}

@@ -118,7 +118,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
             publishedTime: post.createdAt.toISOString(),
             modifiedTime: post.updatedAt.toISOString(),
             section: getCategoryLabel(post.category),
-            authors: [post.authorName || 'Zinsight 편집부'],
+            authors: [post.author?.name || post.authorName || 'Zinsight 편집부'],
             tags: tags.length > 0 ? tags : undefined,
             locale: 'ko_KR',
             siteName: 'Zinsight',
@@ -234,7 +234,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
         'dateModified': post.updatedAt.toISOString(),
         'author': {
             '@type': 'Person',
-            'name': post.authorName || 'Zinsight 편집부',
+            'name': post.author?.name || post.authorName || 'Zinsight 편집부',
         },
         'publisher': {
             '@type': 'Organization',

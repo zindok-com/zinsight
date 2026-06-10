@@ -18,7 +18,8 @@ export async function getPublicMagazinePosts() {
                 include: {
                     organization: true
                 }
-            }
+            },
+            author: true
         },
         orderBy: {
             createdAt: 'desc'
@@ -38,7 +39,8 @@ export async function getHeadlineMagazinePosts() {
                 include: {
                     industry: true
                 }
-            }
+            },
+            author: true
         },
         orderBy: {
             headlinePriority: 'asc'
@@ -54,6 +56,11 @@ export async function getHeadlineMagazinePosts() {
         thumbnailUrl: post.thumbnailUrl,
         industryName: post.industries[0]?.industry?.name ?? '기타',
         authorName: post.authorName,
+        author: post.author ? {
+            name: post.author.name,
+            slug: post.author.slug,
+        } : null,
         createdAt: post.createdAt
     }));
 }
+
