@@ -11,9 +11,10 @@ interface ImageUploadProps {
     value?: string;
     onChange: (url: string) => void;
     onRemove: () => void;
+    validateWidth?: boolean;
 }
 
-export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, onRemove, validateWidth = true }: ImageUploadProps) {
     const [isUploading, setIsUploading] = useState(false);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -33,6 +34,10 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
 
         const checkImageDimension = (file: File): Promise<boolean> => {
             return new Promise((resolve) => {
+                if (!validateWidth) {
+                    resolve(true);
+                    return;
+                }
                 const img = new window.Image();
                 const objectUrl = URL.createObjectURL(file);
                 img.onload = () => {
@@ -130,7 +135,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
                         </Button>
                     </label>
                     <p className="text-[10px] text-slate-500 mt-2">
-                        필수 사이즈: 가로 1200px 이상 (5MB 이하)
+                        {validateWidth ? '필수 사이즈: 가로 1200px 이상 (5MB 이하)' : '권장 사이즈: 1:1 비율 (5MB 이하)'}
                     </p>
                 </div>
             </div>

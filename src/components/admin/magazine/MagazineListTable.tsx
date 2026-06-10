@@ -24,7 +24,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 
-export function MagazineListTable({ posts, industries }: { posts: any[], industries: any[] }) {
+export function MagazineListTable({ posts, industries, authors = [] }: { posts: any[], industries: any[], authors?: any[] }) {
     const [selectedPost, setSelectedPost] = useState<any | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isPending, startTransition] = useTransition();
@@ -103,6 +103,8 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
             closing: parsedData.closing,
             thumbnailUrl: post.thumbnailUrl || '',
             status: post.status,
+            authorId: post.authorId || null,
+            authorName: post.authorName || 'Zinsight 편집부',
             industryIds: post.industries.map((mi: any) => mi.industryId)
         });
     };
@@ -269,8 +271,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">뉴스레터</Badge>
                                     )}
                                 </TableCell>
-                                <TableCell className="font-medium max-w-xs truncate">
-                                    {post.title}
+                                <TableCell className="font-medium max-w-xs">
+                                    <div className="truncate">{post.title}</div>
+                                    <div className="text-[11px] text-slate-400 mt-0.5">By {post.authorName || 'Zinsight 편집부'}</div>
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-wrap gap-1">
@@ -358,9 +361,9 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
 
                             <ScrollArea className="flex-1 p-6 bg-slate-50/50">
                                 <div className="space-y-8 max-w-2xl mx-auto">
-                                    {/* Category & Title */}
-                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                        <div className="space-y-2">
+                                    {/* Category, Status, Author & Title */}
+                                    <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                        <div className="space-y-2 md:col-span-2">
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">카테고리</Label>
                                             {isEditing ? (
                                                 <Select
@@ -385,7 +388,7 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                                 </div>
                                             )}
                                         </div>
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 md:col-span-2">
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">발행 상태</Label>
                                             {isEditing ? (
                                                 <Select
@@ -408,6 +411,40 @@ export function MagazineListTable({ posts, industries }: { posts: any[], industr
                                             )}
                                         </div>
                                         <div className="space-y-2 md:col-span-2">
+                                            <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">작성자(발행자)</Label>
+                                            {isEditing ? (
+                                                <Select
+                                                    value={editForm.authorId ? String(editForm.authorId) : 'default'}
+                                                    onValueChange={(val) => {
+                                                        if (val === 'default') {
+                                                            setEditForm({ ...editForm, authorId: null, authorName: 'Zinsight 편집부' });
+                                                        } else {
+                                                            const selectedAuthor = authors.find(a => String(a.id) === val);
+                                                            if (selectedAuthor) {
+                                                                setEditForm({ ...editForm, authorId: selectedAuthor.id, authorName: selectedAuthor.name });
+                                                            }
+                                                        }
+                                                    }}
+                                                >
+                                                    <SelectTrigger>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
+                                                        {authors.map((author: any) => (
+                                                            <SelectItem key={author.id} value={String(author.id)}>
+                                                                {author.name}
+                                                            </SelectItem>
+                                                        ))}
+                                                    </SelectContent>
+                                                </Select>
+                                            ) : (
+                                                <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
+                                                    {selectedPost.authorName || 'Zinsight 편집부'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="space-y-2 md:col-span-6">
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">제목</Label>
                                             {isEditing ? (
                                                 <Input

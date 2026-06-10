@@ -156,6 +156,8 @@ model MagazinePost {
   
   // 작성 및 상태 관리
   authorName      String?   // 대학 기자단 실명 혹은 AI 작성 여부
+  authorId        Int?      // 발행자 관계 ID
+  author          Author?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
   status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   viewCount       Int       @default(0)       // 조회수
   headlinePriority Int      @default(0)       // 0: 일반, 1-5: 헤드라인 우선순위
@@ -242,6 +244,19 @@ model AdminSetting {
   updated_at DateTime @updatedAt
 
   @@map("admin_settings")
+}
+
+model Author {
+  id          Int            @id @default(autoincrement())
+  name        String         @unique @db.VarChar(100)
+  slug        String         @unique @db.VarChar(100)
+  avatarUrl   String?        @db.VarChar(512)
+  bio         String?        @db.Text
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  posts       MagazinePost[]
+
+  @@map("authors")
 }
 
 

@@ -44,7 +44,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         where: { slug },
         include: {
             industries: { include: { industry: true } },
-            organizations: { include: { organization: true } }
+            organizations: { include: { organization: true } },
+            author: true
         }
     });
 
@@ -182,7 +183,8 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
                 include: {
                     organization: true
                 }
-            }
+            },
+            author: true
         }
     });
 
@@ -285,7 +287,19 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
 
                     <div className="flex items-center justify-between border-y border-zi-divider py-4 mt-8">
                         <div className="flex items-center gap-4 text-zi-outline font-ui-label text-[13px]">
-                            <span className="text-zi-on-surface font-semibold">By {post.authorName || 'Zinsight 편집부'}</span>
+                            <span className="text-zi-on-surface font-semibold">
+                                By{' '}
+                                {post.author ? (
+                                    <Link 
+                                        href={`/author/${post.author.slug}`} 
+                                        className="hover:text-indigo-600 underline underline-offset-4 decoration-indigo-300 transition-colors"
+                                    >
+                                        {post.author.name}
+                                    </Link>
+                                ) : (
+                                    post.authorName || 'Zinsight 편집부'
+                                )}
+                            </span>
                             <span>•</span>
                             <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                         </div>

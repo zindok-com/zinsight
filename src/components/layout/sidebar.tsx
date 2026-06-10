@@ -11,7 +11,8 @@ import {
     Download,
     Menu,
     Briefcase,
-    ShieldCheck
+    ShieldCheck,
+    Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -32,6 +33,7 @@ const INSIGHT_RADAR_ITEMS = [
 const MAGAZINE_ITEMS = [
     { name: '매거진 포스트', href: '/admin/magazine', icon: Newspaper },
     { name: '헤드라인 설정', href: '/admin/magazine/headlines', icon: LayoutDashboard },
+    { name: '발행자 관리', href: '/admin/magazine/authors', icon: Users },
     { name: '리포트 신청 목록', href: '/admin/magazine/requests', icon: Tags },
 ];
 

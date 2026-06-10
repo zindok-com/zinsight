@@ -3,11 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MagazineForm } from "@/components/admin/magazine/MagazineForm";
 
 export default async function NewMagazinePage() {
-    // Fetch active industries for selection
-    const industries = await prisma.industry.findMany({
-        where: { deleted_at: null, is_active: true },
-        orderBy: { name: 'asc' }
-    });
+    // Fetch active industries and authors for selection
+    const [industries, authors] = await Promise.all([
+        prisma.industry.findMany({
+            where: { deleted_at: null, is_active: true },
+            orderBy: { name: 'asc' }
+        }),
+        prisma.author.findMany({
+            orderBy: { name: 'asc' }
+        })
+    ]);
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
@@ -24,7 +29,7 @@ export default async function NewMagazinePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <MagazineForm industries={industries} />
+                    <MagazineForm industries={industries} authors={authors} />
                 </CardContent>
             </Card>
         </div>

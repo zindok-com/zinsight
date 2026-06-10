@@ -13,7 +13,7 @@ import { Loader2, Info, Plus, Trash2 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 
-export function MagazineForm({ industries }: { industries: any[] }) {
+export function MagazineForm({ industries, authors = [] }: { industries: any[], authors?: any[] }) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [selectedIndustries, setSelectedIndustries] = useState<number[]>([]);
@@ -30,7 +30,9 @@ export function MagazineForm({ industries }: { industries: any[] }) {
         closing: '',
         thumbnailUrl: '',
         category: 'NEWSLETTER',
-        status: 'PUBLISHED'
+        status: 'PUBLISHED',
+        authorId: null,
+        authorName: 'Zinsight 편집부'
     });
 
     // Real-time slug generation
@@ -112,7 +114,7 @@ export function MagazineForm({ industries }: { industries: any[] }) {
     return (
         <form onSubmit={handleSubmit} className="space-y-8">
             {/* Category & Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="space-y-2">
                     <Label htmlFor="category">카테고리</Label>
                     <Select
@@ -132,6 +134,34 @@ export function MagazineForm({ industries }: { industries: any[] }) {
                             <SelectItem value="INTELLIGENCE_REPORT">Zinsight 오리지널</SelectItem>
                             <SelectItem value="TECH_AUDIT">무료 진단 사례</SelectItem>
                             <SelectItem value="SALES_SCENARIO">세일즈 가이드</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="authorSelect">작성자(발행자)</Label>
+                    <Select
+                        value={formData.authorId ? String(formData.authorId) : 'default'}
+                        onValueChange={(val) => {
+                            if (val === 'default') {
+                                setFormData({ ...formData, authorId: null, authorName: 'Zinsight 편집부' });
+                            } else {
+                                const selectedAuthor = authors.find(a => String(a.id) === val);
+                                if (selectedAuthor) {
+                                    setFormData({ ...formData, authorId: selectedAuthor.id, authorName: selectedAuthor.name });
+                                }
+                            }
+                        }}
+                    >
+                        <SelectTrigger id="authorSelect" className="bg-white">
+                            <SelectValue placeholder="작성자 선택" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
+                            {authors.map((author: any) => (
+                                <SelectItem key={author.id} value={String(author.id)}>
+                                    {author.name}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                 </div>
