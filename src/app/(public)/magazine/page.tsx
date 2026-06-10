@@ -12,8 +12,10 @@ const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: '매거진 | 진사이트 (Zinsight)',
-    description: '마케팅, 리서치, GEO/SEO 전문 아티클과 최신 트렌드를 다루는 진사이트 매거진입니다. 마케팅의 격을 높이는 프리미엄 미디어.',
+    title: {
+        absolute: 'Zinsight 매거진 - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트',
+    },
+    description: '데이터의 깊이와 저널리즘의 통찰을 결합하여 마케팅의 격을 높이는 진사이트(Zinsight) 매거진의 프리미엄 디지털 콘텐츠 영역입니다.',
     alternates: {
         canonical: `${baseUrl}/magazine`,
     },
@@ -29,8 +31,8 @@ export const metadata: Metadata = {
         },
     },
     openGraph: {
-        title: 'Zinsight Magazine — 마케팅 리서치 & 프리미엄 미디어',
-        description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine.',
+        title: 'Zinsight 매거진 - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트',
+        description: '데이터의 깊이와 저널리즘의 통찰을 결합하여 마케팅의 격을 높이는 프리미엄 디지털 미디어.',
         url: `${baseUrl}/magazine`,
         type: 'website',
         locale: 'ko_KR',
@@ -39,8 +41,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: 'Zinsight Magazine — 마케팅 리서치 & 프리미엄 미디어',
-        description: '데이터의 깊이와 저널리즘의 통찰이 만난 곳, 마케팅의 격을 높이는 프리미엄 미디어. Zinsight Magazine',
+        title: 'Zinsight 매거진 - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트',
+        description: '데이터의 깊이와 저널리즘의 통찰을 결합하여 마케팅의 격을 높이는 프리미엄 디지털 미디어.',
         images: ['/img/zinsight_icon.png'],
     },
 };

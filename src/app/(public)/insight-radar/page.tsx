@@ -18,8 +18,10 @@ import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompany
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-    title: '인사이트 레이더 | 진사이트 (Zinsight)',
-    description: '국내외 기업들의 마케팅 동향과 실시간 검색 최적화(GEO) 분석 데이터를 제공하는 진사이트(Zinsight) 인사이트 레이더입니다.',
+    title: {
+        absolute: '인사이트 레이더 - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트',
+    },
+    description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 진사이트(Zinsight)의 리스트형 데이터 센터입니다.',
     alternates: {
         canonical: 'https://zinsight.co.kr/insight-radar',
     },
@@ -35,8 +37,8 @@ export const metadata: Metadata = {
         },
     },
     openGraph: {
-        title: '인사이트 레이더 — 실시간 산업동향 및 기업 분석 | Zinsight',
-        description: 'Zinsight 인사이트 레이더로 AI 분석 엔진이 식별한 전략 산업군과 핵심 기업를 탐색하세요.',
+        title: '인사이트 레이더 - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트',
+        description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 데이터 센터.',
         url: 'https://zinsight.co.kr/insight-radar',
         siteName: 'Zinsight',
         locale: 'ko_KR',
@@ -45,8 +47,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '인사이트 레이더 — 실시간 산업동향 및 기업 분석 | Zinsight',
-        description: 'AI 분석 엔진이 식별한 전략 산업군과 핵심 기업를 탐색하세요.',
+        title: '인사이트 레이더 - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트',
+        description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 데이터 센터.',
         images: ['/img/zinsight_icon.png'],
     },
 };

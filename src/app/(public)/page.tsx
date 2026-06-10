@@ -14,9 +14,11 @@ import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
 
 export const metadata: Metadata = {
-    title: 'Zinsight - 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어 | 진사이트',
+    title: {
+        absolute: 'Zinsight - 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어 | 진사이트',
+    },
     
-    description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
+    description: '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
     
     alternates: {
         canonical: 'https://zinsight.co.kr',
@@ -34,7 +36,7 @@ export const metadata: Metadata = {
     },
     openGraph: {
         title: 'Zinsight - 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어 | 진사이트',
-        description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다.',
+        description: '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
         url: 'https://zinsight.co.kr',
         siteName: 'Zinsight',
         locale: 'ko_KR',
@@ -44,7 +46,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'Zinsight - 마케팅·리서치 및 GEO·SEO 인텔리전스 미디어 | 진사이트',
-        description: '진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.',
+        description: '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
         images: ['/img/zinsight_icon.png'],
     },
 };
