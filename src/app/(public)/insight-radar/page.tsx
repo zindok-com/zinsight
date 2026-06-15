@@ -19,7 +19,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
     title: {
-        absolute: '인사이트 레이더 - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트',
+        absolute: 'Insight Radar - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트 (Zinsight)',
     },
     description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 진사이트(Zinsight)의 리스트형 데이터 센터입니다.',
     alternates: {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
         },
     },
     openGraph: {
-        title: '인사이트 레이더 - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트',
+        title: 'Insight Radar - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트 (Zinsight)',
         description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 데이터 센터.',
         url: 'https://zinsight.co.kr/insight-radar',
         siteName: 'Zinsight',
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: 'summary_large_image',
-        title: '인사이트 레이더 - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트',
+        title: 'Insight Radar - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트 (Zinsight)',
         description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 데이터 센터.',
         images: ['/img/zinsight_icon.png'],
     },
