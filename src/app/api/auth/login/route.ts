@@ -3,10 +3,9 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { signTempToken } from '@/lib/temp-token';
 
-const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || 'admin1234';
-
 export async function POST(request: Request) {
     try {
+        const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || 'admin1234';
         const body = await request.json();
         const { passcode } = body;
 
