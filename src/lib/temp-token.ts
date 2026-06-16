@@ -1,11 +1,14 @@
 import crypto from 'crypto';
 
-const TOKEN_SECRET = process.env.JWT_SECRET || process.env.ADMIN_PASSCODE || 'fallback-secure-key-zinsight-mfa-pending';
+function getTokenSecret(): string {
+    return process.env.JWT_SECRET || process.env.ADMIN_PASSCODE || 'fallback-secure-key-zinsight-mfa-pending';
+}
 
 /**
  * Signs a payload into a secure HMAC-SHA256 token.
  */
 export function signTempToken(payload: Record<string, any>, expiresInSeconds = 300): string {
+    const TOKEN_SECRET = getTokenSecret();
     const expiresAt = Math.floor(Date.now() / 1000) + expiresInSeconds;
     const data = { ...payload, exp: expiresAt };
     const serialized = JSON.stringify(data);
@@ -25,6 +28,7 @@ export function verifyTempToken(token: string): Record<string, any> | null {
         if (!dataBase64 || !signature) return null;
         
         const serialized = Buffer.from(dataBase64, 'base64url').toString('utf8');
+        const TOKEN_SECRET = getTokenSecret();
         const expectedSignature = crypto.createHmac('sha256', TOKEN_SECRET).update(serialized).digest('hex');
         
         if (signature !== expectedSignature) {
