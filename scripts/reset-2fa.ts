@@ -10,16 +10,6 @@ async function main() {
     console.log('--------------------------------------------------');
 
     try {
-        // 1. 레거시 글로벌 2FA 세팅 삭제 (admin_settings 테이블 정리)
-        console.log('Cleaning up legacy global 2FA keys from admin_settings...');
-        const cleanupResult = await prisma.adminSetting.deleteMany({
-            where: {
-                key: {
-                    in: ['2fa_enabled', '2fa_secret', '2fa_temp_secret']
-                }
-            }
-        });
-        console.log(`🧹 Cleaned up ${cleanupResult.count} legacy settings.`);
 
         // 2. 특정 어드민 계정의 2FA 재설정
         if (username) {

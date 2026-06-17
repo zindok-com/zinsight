@@ -8,35 +8,82 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { createMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info, Plus, Trash2 } from 'lucide-react';
+import { createMagazinePost, updateMagazinePost } from '@/actions/admin/magazine-actions';
+import { Loader2, Info, Plus, Trash2, Edit3, Eye } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 
-export function MagazineForm({ industries, authors = [] }: { industries: any[], authors?: any[] }) {
+export function MagazineForm({ 
+    industries, 
+    authors = [], 
+    post 
+}: { 
+    industries: any[], 
+    authors?: any[], 
+    post?: any 
+}) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    const [selectedIndustries, setSelectedIndustries] = useState<number[]>([]);
+    const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
 
-    const now = new Date();
-    const [year, setYear] = useState(String(now.getFullYear()));
-    const [month, setMonth] = useState(String(now.getMonth() + 1).padStart(2, '0'));
+    // Parse content from post if available (handles both structured JSON and legacy text)
+    const parsedContent = (() => {
+        if (post && post.content) {
+            try {
+                if (post.content.trim().startsWith('{')) {
+                    const parsed = JSON.parse(post.content);
+                    return {
+                        lead: parsed.lead || '',
+                        bodies: parsed.bodies && parsed.bodies.length > 0 
+                            ? parsed.bodies 
+                            : [{ title: '', content: '' }],
+                        closing: parsed.closing || ''
+                    };
+                } else {
+                    return {
+                        lead: '',
+                        bodies: [{ title: '', content: post.content }],
+                        closing: ''
+                    };
+                }
+            } catch (e) {
+                console.error('Failed to parse post content:', e);
+            }
+        }
+        return {
+            lead: '',
+            bodies: [{ title: '', content: '' }],
+            closing: ''
+        };
+    })();
 
-    const [formData, setFormData] = useState<any>({
-        title: '',
-        slug: '',
-        lead: '',
-        bodies: [{ title: '', content: '' }],
-        closing: '',
-        thumbnailUrl: '',
-        category: 'NEWSLETTER',
-        status: 'PUBLISHED',
-        authorId: null,
-        authorName: 'Zinsight 편집부'
+    const [selectedIndustries, setSelectedIndustries] = useState<number[]>(() => {
+        if (post && post.industries) {
+            return post.industries.map((pi: any) => pi.industryId);
+        }
+        return [];
     });
 
-    // Real-time slug generation
+    const initialDate = post ? new Date(post.createdAt) : new Date();
+    const [year, setYear] = useState(String(initialDate.getFullYear()));
+    const [month, setMonth] = useState(String(initialDate.getMonth() + 1).padStart(2, '0'));
+
+    const [formData, setFormData] = useState<any>({
+        title: post?.title || '',
+        slug: post?.slug || '',
+        lead: parsedContent.lead,
+        bodies: parsedContent.bodies,
+        closing: parsedContent.closing,
+        thumbnailUrl: post?.thumbnailUrl || '',
+        category: post?.category || 'NEWSLETTER',
+        status: post?.status || 'PUBLISHED',
+        authorId: post?.authorId || null,
+        authorName: post?.authorName || 'Zinsight 편집부'
+    });
+
+    // Real-time slug generation (Only when creating a new post)
     useEffect(() => {
+        if (post) return; // Skip automatic slug generation during edit mode to prevent breaking existing URLs
         if (formData.category === 'NEWSLETTER' && selectedIndustries.length > 0) {
             const industry = industries.find(i => i.id === selectedIndustries[0]);
             if (industry) {
@@ -44,7 +91,7 @@ export function MagazineForm({ industries, authors = [] }: { industries: any[], 
                 setFormData((prev: any) => ({ ...prev, slug: autoSlug }));
             }
         }
-    }, [formData.category, year, month, selectedIndustries, industries]);
+    }, [formData.category, year, month, selectedIndustries, industries, post]);
 
     const toggleIndustry = (id: number) => {
         if (formData.category === 'NEWSLETTER') {
@@ -92,360 +139,586 @@ export function MagazineForm({ industries, authors = [] }: { industries: any[], 
                 closing: formData.closing
             });
 
-            const res = await createMagazinePost({
-                ...formData,
-                content: structuredContent,
-                slug: formData.slug || undefined,
-                industryIds: selectedIndustries
-            });
+            if (post) {
+                // Edit Mode
+                const res = await updateMagazinePost(post.id, {
+                    ...formData,
+                    content: structuredContent,
+                    industryIds: selectedIndustries
+                });
 
-            if (res.success) {
-                toast.success('포스트가 성공적으로 등록되었습니다!');
-                router.push('/admin/magazine');
+                if (res.success) {
+                    toast.success('포스트가 성공적으로 수정되었습니다!');
+                    router.push('/admin/magazine');
+                } else {
+                    toast.error('수정 실패: ' + res.error);
+                }
             } else {
-                toast.error('등록 실패: ' + res.error);
+                // Create Mode
+                const res = await createMagazinePost({
+                    ...formData,
+                    content: structuredContent,
+                    slug: formData.slug || undefined,
+                    industryIds: selectedIndustries
+                });
+
+                if (res.success) {
+                    toast.success('포스트가 성공적으로 등록되었습니다!');
+                    router.push('/admin/magazine');
+                } else {
+                    toast.error('등록 실패: ' + res.error);
+                }
             }
         });
     };
 
-    const years = Array.from({ length: 5 }, (_, i) => String(now.getFullYear() - 2 + i));
+    const years = Array.from({ length: 5 }, (_, i) => String((post ? new Date(post.createdAt) : new Date()).getFullYear() - 2 + i));
     const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 
+    // Preview Meta Information Helper
+    const categoryLabel = (() => {
+        switch (formData.category) {
+            case 'INTELLIGENCE_REPORT': return 'Zinsight Original';
+            case 'TECH_AUDIT': return 'Tech Audit';
+            case 'SALES_SCENARIO': return 'Sales Guide';
+            case 'NEWSLETTER':
+            default:
+                return 'Newsletter';
+        }
+    })();
+
+    const selectedIndustryNames = selectedIndustries
+        .map(id => industries.find(i => i.id === id)?.name)
+        .filter(Boolean)
+        .join(', ');
+
     return (
-        <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Category & Basic Info */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
-                    <Label htmlFor="category">카테고리</Label>
-                    <Select
-                        value={formData.category}
-                        onValueChange={(val) => {
-                            setFormData({ ...formData, category: val });
-                            if (val === 'NEWSLETTER' && selectedIndustries.length > 1) {
-                                setSelectedIndustries([selectedIndustries[0]]);
-                            }
-                        }}
-                    >
-                        <SelectTrigger id="category" className="bg-white">
-                            <SelectValue placeholder="카테고리 선택" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="NEWSLETTER">뉴스레터</SelectItem>
-                            <SelectItem value="INTELLIGENCE_REPORT">Zinsight 오리지널</SelectItem>
-                            <SelectItem value="TECH_AUDIT">무료 진단 사례</SelectItem>
-                            <SelectItem value="SALES_SCENARIO">세일즈 가이드</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="authorSelect">작성자(발행자)</Label>
-                    <Select
-                        value={formData.authorId ? String(formData.authorId) : 'default'}
-                        onValueChange={(val) => {
-                            if (val === 'default') {
-                                setFormData({ ...formData, authorId: null, authorName: 'Zinsight 편집부' });
-                            } else {
-                                const selectedAuthor = authors.find(a => String(a.id) === val);
-                                if (selectedAuthor) {
-                                    setFormData({ ...formData, authorId: selectedAuthor.id, authorName: selectedAuthor.name });
-                                }
-                            }
-                        }}
-                    >
-                        <SelectTrigger id="authorSelect" className="bg-white">
-                            <SelectValue placeholder="작성자 선택" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
-                            {authors.map((author: any) => (
-                                <SelectItem key={author.id} value={String(author.id)}>
-                                    {author.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="title">제목</Label>
-                    <Input
-                        id="title"
-                        placeholder="기사 제목을 입력하세요"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="bg-white"
-                        required
-                    />
-                </div>
+        <div className="space-y-6">
+            {/* Tab Switched Header */}
+            <div className="flex border-b border-slate-200">
+                <button
+                    type="button"
+                    className={`flex items-center gap-1.5 pb-3 text-sm font-semibold px-5 border-b-2 transition-all ${
+                        activeTab === 'edit'
+                            ? 'border-indigo-600 text-indigo-600 font-bold'
+                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
+                    onClick={() => setActiveTab('edit')}
+                >
+                    <Edit3 className="w-4 h-4" />
+                    에디터 (Edit)
+                </button>
+                <button
+                    type="button"
+                    className={`flex items-center gap-1.5 pb-3 text-sm font-semibold px-5 border-b-2 transition-all ${
+                        activeTab === 'preview'
+                            ? 'border-indigo-600 text-indigo-600 font-bold'
+                            : 'border-transparent text-slate-400 hover:text-slate-600'
+                    }`}
+                    onClick={() => setActiveTab('preview')}
+                >
+                    <Eye className="w-4 h-4" />
+                    미리보기 (Preview)
+                </button>
             </div>
 
-            {/* 카테고리 안내 가이드 */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5 text-xs text-slate-600 shadow-sm">
-                <p className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
-                    <Info className="w-4 h-4 text-indigo-500" />
-                    카테고리 안내 가이드
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                    <div className="space-y-1">
-                        <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[11px]">뉴스레터 (NEWSLETTER)</span>
-                        <p className="text-slate-500 pl-1">뉴스레터</p>
-                    </div>
-                    <div className="space-y-1">
-                        <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[11px]">Zinsight 오리지널 (INTELLIGENCE_REPORT)</span>
-                        <p className="text-slate-500 pl-1">Zinsight 오리지널 (SEO/GEO 최적화 기업 분석)</p>
-                    </div>
-                    <div className="space-y-1">
-                        <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">무료 진단 사례 (TECH_AUDIT)</span>
-                        <p className="text-slate-500 pl-1">AEO/SEO 무료 진단 사례 아카이빙</p>
-                    </div>
-                    <div className="space-y-1">
-                        <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[11px]">세일즈 가이드 (SALES_SCENARIO)</span>
-                        <p className="text-slate-500 pl-1">실전 섭외 명분 및 세일즈 가이드</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Newsletter Specific: Year/Month */}
-            {formData.category === 'NEWSLETTER' && (
-                <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 flex flex-wrap items-center gap-6">
-                    <div className="flex items-center gap-2">
-                        <Info className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm font-semibold text-blue-700">뉴스레터 대상 기간:</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <Label className="text-xs text-slate-500">연도</Label>
-                            <Select value={year} onValueChange={setYear}>
-                                <SelectTrigger className="w-24 bg-white h-9">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {years.map(y => <SelectItem key={y} value={y}>{y}년</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Label className="text-xs text-slate-500">월</Label>
-                            <Select value={month} onValueChange={setMonth}>
-                                <SelectTrigger className="w-20 bg-white h-9">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {months.map(m => <SelectItem key={m} value={m}>{m}월</SelectItem>)}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Left Column: Industry & Slug */}
-                <div className="space-y-6">
-                    <div className="space-y-3">
-                        <Label className="text-sm font-bold flex items-center gap-2">
-                            연결 산업군
-                            {formData.category === 'NEWSLETTER' && (
-                                <Badge variant="outline" className="text-[10px] font-normal border-blue-200 text-blue-600">단일 선택</Badge>
-                            )}
-                        </Label>
-                        <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-white shadow-sm min-h-[200px] content-start">
-                            {industries.map((ind) => (
-                                <div
-                                    key={ind.id}
-                                    className={`flex items-center space-x-2 p-2 rounded transition-colors ${selectedIndustries.includes(ind.id) ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-slate-50'
-                                        }`}
+            <form onSubmit={handleSubmit} className="space-y-8">
+                {activeTab === 'edit' ? (
+                    <div className="space-y-8">
+                        {/* Category & Basic Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="category">카테고리</Label>
+                                <Select
+                                    value={formData.category}
+                                    onValueChange={(val) => {
+                                        setFormData({ ...formData, category: val });
+                                        if (val === 'NEWSLETTER' && selectedIndustries.length > 1) {
+                                            setSelectedIndustries([selectedIndustries[0]]);
+                                        }
+                                    }}
                                 >
-                                    <Checkbox
-                                        id={`ind-${ind.id}`}
-                                        checked={selectedIndustries.includes(ind.id)}
-                                        onCheckedChange={() => toggleIndustry(ind.id)}
-                                    />
-                                    <label
-                                        htmlFor={`ind-${ind.id}`}
-                                        className="text-sm font-medium leading-none cursor-pointer flex-1"
-                                    >
-                                        {ind.name}
-                                    </label>
-                                </div>
-                            ))}
+                                    <SelectTrigger id="category" className="bg-white">
+                                        <SelectValue placeholder="카테고리 선택" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="NEWSLETTER">뉴스레터</SelectItem>
+                                        <SelectItem value="INTELLIGENCE_REPORT">Zinsight 오리지널</SelectItem>
+                                        <SelectItem value="TECH_AUDIT">무료 진단 사례</SelectItem>
+                                        <SelectItem value="SALES_SCENARIO">세일즈 가이드</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="authorSelect">작성자(발행자)</Label>
+                                <Select
+                                    value={formData.authorId ? String(formData.authorId) : 'default'}
+                                    onValueChange={(val) => {
+                                        if (val === 'default') {
+                                            setFormData({ ...formData, authorId: null, authorName: 'Zinsight 편집부' });
+                                        } else {
+                                            const selectedAuthor = authors.find(a => String(a.id) === val);
+                                            if (selectedAuthor) {
+                                                setFormData({ ...formData, authorId: selectedAuthor.id, authorName: selectedAuthor.name });
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger id="authorSelect" className="bg-white">
+                                        <SelectValue placeholder="작성자 선택" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
+                                        {authors.map((author: any) => (
+                                            <SelectItem key={author.id} value={String(author.id)}>
+                                                {author.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="title">제목</Label>
+                                <Input
+                                    id="title"
+                                    placeholder="기사 제목을 입력하세요"
+                                    value={formData.title}
+                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    className="bg-white"
+                                    required
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="slug" className="font-bold">슬러그 (URL)</Label>
-                        <div className="relative">
-                            <Input
-                                id="slug"
-                                placeholder="my-article-slug"
-                                value={formData.slug}
-                                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                                className="bg-white pr-10 font-mono text-sm border-2 focus-visible:ring-indigo-500"
-                            />
-                            {formData.category === 'NEWSLETTER' && (
-                                <div className="absolute right-3 top-2.5">
-                                    <Info className="w-4 h-4 text-indigo-400" />
+                        {/* 카테고리 안내 가이드 */}
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5 text-xs text-slate-600 shadow-sm">
+                            <p className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
+                                <Info className="w-4 h-4 text-indigo-500" />
+                                카테고리 안내 가이드
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                                <div className="space-y-1">
+                                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[11px]">뉴스레터 (NEWSLETTER)</span>
+                                    <p className="text-slate-500 pl-1">뉴스레터</p>
                                 </div>
-                            )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 italic">
-                            {formData.category === 'NEWSLETTER'
-                                ? '대상 기간과 산업군에 따라 자동으로 생성됩니다. 직접 수정도 가능합니다.'
-                                : 'URL에 사용될 고유 식별자입니다.'}
-                        </p>
-                    </div>
-                </div>
-
-                {/* Right Column: Thumbnail & Other Info */}
-                <div className="space-y-6">
-                    <div className="space-y-2">
-                        <Label className="font-bold">썸네일 이미지</Label>
-                        <ImageUpload
-                            value={formData.thumbnailUrl}
-                            onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
-                            onRemove={() => setFormData({ ...formData, thumbnailUrl: '' })}
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="space-y-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-between">
-                    <Label className="text-lg font-bold text-slate-800">본문 내용</Label>
-                    <span className="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full">구조화된 텍스트 에디터</span>
-                </div>
-                
-                {/* 리드 (Lead) */}
-                <div className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
-                    <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
-                    <p className="text-[11px] text-indigo-600/80 pb-1">기사의 도입부나 요약을 작성해주세요.</p>
-                    <Textarea
-                        id="lead"
-                        placeholder="리드 내용을 작성하세요..."
-                        className="min-h-[100px] bg-white border-indigo-200 focus-visible:ring-indigo-500 text-sm leading-relaxed"
-                        value={formData.lead}
-                        onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
-                        required
-                    />
-                </div>
-
-                {/* 본문 섹션 (Bodies) */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-2">
-                        <div>
-                            <Label className="font-bold text-slate-800 text-sm">본문 섹션</Label>
-                            <p className="text-[11px] text-slate-500 mt-0.5">최소 1개의 본문 섹션이 필요합니다.</p>
-                        </div>
-                        <Button 
-                            type="button" 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setFormData({ ...formData, bodies: [...formData.bodies, { title: '', content: '' }] })}
-                            className="bg-white border-dashed border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400 gap-1.5"
-                        >
-                            <Plus className="w-3.5 h-3.5" />
-                            섹션 추가
-                        </Button>
-                    </div>
-
-                    <div className="space-y-4">
-                        {formData.bodies.map((body: any, index: number) => (
-                            <div key={index} className="relative p-5 bg-white border border-slate-200 rounded-xl shadow-sm transition-all hover:border-slate-300">
-                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 rounded-l-xl"></div>
-                                <div className="flex justify-between items-start mb-4">
-                                    <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs">
-                                            {index + 1}
-                                        </span>
-                                        섹션 {index + 1}
-                                    </h4>
-                                    {formData.bodies.length > 1 && (
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => setFormData({
-                                                ...formData,
-                                                bodies: formData.bodies.filter((_: any, i: number) => i !== index)
-                                            })}
-                                            className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50 -mt-1 -mr-1"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
-                                    )}
+                                <div className="space-y-1">
+                                    <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[11px]">Zinsight 오리지널 (INTELLIGENCE_REPORT)</span>
+                                    <p className="text-slate-500 pl-1">Zinsight 오리지널 (SEO/GEO 최적화 기업 분석)</p>
                                 </div>
-                                <div className="space-y-4">
-                                    <div className="space-y-1.5">
-                                        <Label className="text-xs font-semibold text-slate-600">소제목</Label>
-                                        <Input
-                                            placeholder="섹션의 소제목을 입력하세요"
-                                            value={body.title}
-                                            onChange={(e) => {
-                                                const newBodies = [...formData.bodies];
-                                                newBodies[index].title = e.target.value;
-                                                setFormData({ ...formData, bodies: newBodies });
-                                            }}
-                                            className="bg-slate-50/50"
-                                        />
+                                <div className="space-y-1">
+                                    <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">무료 진단 사례 (TECH_AUDIT)</span>
+                                    <p className="text-slate-500 pl-1">AEO/SEO 무료 진단 사례 아카이빙</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[11px]">세일즈 가이드 (SALES_SCENARIO)</span>
+                                    <p className="text-slate-500 pl-1">실전 섭외 명분 및 세일즈 가이드</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Newsletter Specific: Year/Month */}
+                        {formData.category === 'NEWSLETTER' && (
+                            <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 flex flex-wrap items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                    <Info className="w-4 h-4 text-blue-500" />
+                                    <span className="text-sm font-semibold text-blue-700">뉴스레터 대상 기간:</span>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex items-center gap-2">
+                                        <Label className="text-xs text-slate-500">연도</Label>
+                                        <Select value={year} onValueChange={setYear}>
+                                            <SelectTrigger className="w-24 bg-white h-9">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {years.map(y => <SelectItem key={y} value={y}>{y}년</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
-                                    <div className="space-y-1.5">
-                                        <Label className="text-xs font-semibold text-slate-600">내용</Label>
-                                        <Textarea
-                                            placeholder="본문 내용을 작성하세요..."
-                                            className="min-h-[150px] bg-slate-50/50 text-sm leading-relaxed"
-                                            value={body.content}
-                                            onChange={(e) => {
-                                                const newBodies = [...formData.bodies];
-                                                newBodies[index].content = e.target.value;
-                                                setFormData({ ...formData, bodies: newBodies });
-                                            }}
-                                            required={index === 0}
-                                        />
+                                    <div className="flex items-center gap-2">
+                                        <Label className="text-xs text-slate-500">월</Label>
+                                        <Select value={month} onValueChange={setMonth}>
+                                            <SelectTrigger className="w-20 bg-white h-9">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {months.map(m => <SelectItem key={m} value={m}>{m}월</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )}
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {/* Left Column: Industry & Slug */}
+                            <div className="space-y-6">
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-bold flex items-center gap-2">
+                                        연결 산업군
+                                        {formData.category === 'NEWSLETTER' && (
+                                            <Badge variant="outline" className="text-[10px] font-normal border-blue-200 text-blue-600">단일 선택</Badge>
+                                        )}
+                                    </Label>
+                                    <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-white shadow-sm min-h-[200px] content-start">
+                                        {industries.map((ind) => (
+                                            <div
+                                                key={ind.id}
+                                                className={`flex items-center space-x-2 p-2 rounded transition-colors ${selectedIndustries.includes(ind.id) ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-slate-50'
+                                                    }`}
+                                            >
+                                                <Checkbox
+                                                    id={`ind-${ind.id}`}
+                                                    checked={selectedIndustries.includes(ind.id)}
+                                                    onCheckedChange={() => toggleIndustry(ind.id)}
+                                                />
+                                                <label
+                                                    htmlFor={`ind-${ind.id}`}
+                                                    className="text-sm font-medium leading-none cursor-pointer flex-1"
+                                                >
+                                                    {ind.name}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="slug" className="font-bold">슬러그 (URL)</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="slug"
+                                            placeholder="my-article-slug"
+                                            value={formData.slug}
+                                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                                            className="bg-white pr-10 font-mono text-sm border-2 focus-visible:ring-indigo-500"
+                                        />
+                                        {formData.category === 'NEWSLETTER' && (
+                                            <div className="absolute right-3 top-2.5">
+                                                <Info className="w-4 h-4 text-indigo-400" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-[11px] text-slate-500 italic">
+                                        {formData.category === 'NEWSLETTER'
+                                            ? '대상 기간과 산업군에 따라 자동으로 생성됩니다. 직접 수정도 가능합니다.'
+                                            : 'URL에 사용될 고유 식별자입니다.'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Right Column: Thumbnail & Other Info */}
+                            <div className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label className="font-bold">썸네일 이미지</Label>
+                                    <ImageUpload
+                                        value={formData.thumbnailUrl}
+                                        onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
+                                        onRemove={() => setFormData({ ...formData, thumbnailUrl: '' })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-6 pt-6 border-t border-slate-200">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-lg font-bold text-slate-800">본문 내용</Label>
+                                <span className="text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1 rounded-full">구조화된 텍스트 에디터</span>
+                            </div>
+
+                            {/* 리드 (Lead) */}
+                            <div className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
+                                <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
+                                <p className="text-[11px] text-indigo-600/80 pb-1">기사의 도입부나 요약을 작성해주세요. **텍스트** 또는 **{`{텍스트}`}**로 강조할 수 있습니다.</p>
+                                <Textarea
+                                    id="lead"
+                                    placeholder="리드 내용을 작성하세요..."
+                                    className="min-h-[100px] bg-white border-indigo-200 focus-visible:ring-indigo-500 text-sm leading-relaxed"
+                                    value={formData.lead}
+                                    onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
+                                    required
+                                />
+                            </div>
+
+                            {/* 본문 섹션 (Bodies) */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between pb-2">
+                                    <div>
+                                        <Label className="font-bold text-slate-800 text-sm">본문 섹션</Label>
+                                        <p className="text-[11px] text-slate-500 mt-0.5">최소 1개의 본문 섹션이 필요합니다.</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setFormData({ ...formData, bodies: [...formData.bodies, { title: '', content: '' }] })}
+                                        className="bg-white border-dashed border-indigo-300 text-indigo-700 hover:bg-indigo-50 hover:border-indigo-400 gap-1.5"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        섹션 추가
+                                    </Button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {formData.bodies.map((body: any, index: number) => (
+                                        <div key={index} className="relative p-5 bg-white border border-slate-200 rounded-xl shadow-sm transition-all hover:border-slate-300">
+                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 rounded-l-xl"></div>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs">
+                                                        {index + 1}
+                                                    </span>
+                                                    섹션 {index + 1}
+                                                </h4>
+                                                {formData.bodies.length > 1 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => setFormData({
+                                                            ...formData,
+                                                            bodies: formData.bodies.filter((_: any, i: number) => i !== index)
+                                                        })}
+                                                        className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50 -mt-1 -mr-1"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            <div className="space-y-4">
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-semibold text-slate-600">소제목</Label>
+                                                    <Input
+                                                        placeholder="섹션의 소제목을 입력하세요"
+                                                        value={body.title}
+                                                        onChange={(e) => {
+                                                            const newBodies = [...formData.bodies];
+                                                            newBodies[index].title = e.target.value;
+                                                            setFormData({ ...formData, bodies: newBodies });
+                                                        }}
+                                                        className="bg-slate-50/50"
+                                                    />
+                                                </div>
+                                                <div className="space-y-1.5">
+                                                    <Label className="text-xs font-semibold text-slate-600">내용</Label>
+                                                    <Textarea
+                                                        placeholder="본문 내용을 작성하세요..."
+                                                        className="min-h-[150px] bg-slate-50/50 text-sm leading-relaxed"
+                                                        value={body.content}
+                                                        onChange={(e) => {
+                                                            const newBodies = [...formData.bodies];
+                                                            newBodies[index].content = e.target.value;
+                                                            setFormData({ ...formData, bodies: newBodies });
+                                                        }}
+                                                        required={index === 0}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* 클로징 (Closing) */}
+                            <div className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                                <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
+                                <p className="text-[11px] text-slate-500 pb-1">기사의 맺음말이나 결론을 작성해주세요.</p>
+                                <Textarea
+                                    id="closing"
+                                    placeholder="클로징 내용을 작성하세요..."
+                                    className="min-h-[100px] bg-white text-sm leading-relaxed"
+                                    value={formData.closing}
+                                    onChange={(e) => setFormData({ ...formData, closing: e.target.value })}
+                                    required
+                                />
+                            </div>
+                        </div>
                     </div>
-                </div>
+                ) : (
+                    /* High-fidelity Live Preview Mode */
+                    <div className="bg-zi-surface text-zi-on-surface p-6 md:p-10 rounded-xl border border-slate-200 shadow-inner max-w-3xl mx-auto space-y-12 min-h-[500px]">
+                        {/* Meta Tags & Category */}
+                        <div className="space-y-6">
+                            <div className="flex items-center gap-3">
+                                <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1.5 rounded-full text-zi-blue font-bold">
+                                    {categoryLabel}
+                                </span>
+                                {selectedIndustryNames && (
+                                    <span className="text-zi-outline font-ui-label text-xs font-semibold uppercase tracking-widest">
+                                        {selectedIndustryNames}
+                                    </span>
+                                )}
+                            </div>
 
-                {/* 클로징 (Closing) */}
-                <div className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
-                    <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
-                    <p className="text-[11px] text-slate-500 pb-1">기사의 맺음말이나 결론을 작성해주세요.</p>
-                    <Textarea
-                        id="closing"
-                        placeholder="클로징 내용을 작성하세요..."
-                        className="min-h-[100px] bg-white text-sm leading-relaxed"
-                        value={formData.closing}
-                        onChange={(e) => setFormData({ ...formData, closing: e.target.value })}
-                        required
-                    />
-                </div>
-            </div>
+                            <h1 className="font-h1 text-[32px] md:text-[38px] leading-[1.2] text-zi-primary tracking-tight font-serif font-bold">
+                                {formData.title || '제목이 여기에 표시됩니다'}
+                            </h1>
 
-            <div className="flex justify-end gap-3 pt-6 border-t">
-                <Button
-                    type="button"
-                    variant="outline"
-                    className="h-11 px-8"
-                    onClick={() => router.back()}
-                    disabled={isPending}
-                >
-                    취소
-                </Button>
-                <Button
-                    type="submit"
-                    className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95"
-                    disabled={isPending}
-                >
-                    {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : '매거진 포스트 발행'}
-                </Button>
-            </div>
-        </form>
+                            <div className="flex items-center justify-between border-y border-zi-surface-container py-4 mt-8">
+                                <div className="flex items-center gap-4 text-zi-outline text-[13px]">
+                                    <span className="text-zi-on-surface font-semibold">
+                                        By {formData.authorName}
+                                    </span>
+                                    <span>•</span>
+                                    <span>
+                                        {new Date().toLocaleDateString('ko-KR', { 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric' 
+                                        })}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Thumbnail */}
+                        {formData.thumbnailUrl ? (
+                            <div className="w-full aspect-[16/9] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative shadow-sm">
+                                <img
+                                    src={formData.thumbnailUrl}
+                                    alt={formData.title}
+                                    className="object-cover w-full h-full"
+                                />
+                            </div>
+                        ) : (
+                            <div className="w-full aspect-[16/9] bg-slate-100 rounded-zi-card flex flex-col items-center justify-center border-2 border-dashed border-slate-200 text-slate-400 text-sm">
+                                <span>썸네일 이미지가 설정되지 않았습니다</span>
+                                <span className="text-xs text-slate-300 mt-1">이미지를 올리면 미리보기에 자동으로 렌더링됩니다</span>
+                            </div>
+                        )}
+
+                        {/* Body Content */}
+                        <article className="max-w-none space-y-12">
+                            {/* Lead */}
+                            {formData.lead ? (
+                                <div className="text-[17px] leading-[1.7] text-zi-on-surface border-l-4 border-zi-blue pl-6 py-2 bg-gradient-to-r from-zi-blue/5 to-transparent rounded-r-lg">
+                                    <HighlightedText text={formData.lead} />
+                                </div>
+                            ) : (
+                                <div className="text-slate-400 italic text-sm">리드문구가 작성되지 않았습니다.</div>
+                            )}
+
+                            {/* Bodies */}
+                            {formData.bodies && formData.bodies.map((body: any, idx: number) => {
+                                if (!body.title && !body.content) return null;
+                                return (
+                                    <section key={idx} className="flex flex-col gap-4">
+                                        {body.title && (
+                                            <h2 className="font-h2 text-[22px] md:text-[24px] text-zi-primary border-b border-zi-surface-container-highest pb-3 flex items-center gap-2 font-semibold">
+                                                <span className="text-zi-blue text-[20px] opacity-50 font-serif italic">{(idx + 1).toString().padStart(2, '0')}.</span>
+                                                {body.title}
+                                            </h2>
+                                        )}
+                                        {body.content ? (
+                                            <div className="text-[15px] leading-relaxed text-zi-on-surface-variant">
+                                                <HighlightedText text={body.content} />
+                                            </div>
+                                        ) : (
+                                            <div className="text-slate-300 italic text-xs">내용이 비어 있습니다.</div>
+                                        )}
+                                    </section>
+                                );
+                            })}
+
+                            {/* Closing */}
+                            {formData.closing ? (
+                                <div className="mt-8 p-6 bg-zi-surface-container-low rounded-zi-card border border-zi-surface-container-highest text-[15px]">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="w-2 h-2 rounded-full bg-zi-blue" />
+                                        <span className="font-ui-label text-xs font-bold text-zi-secondary uppercase tracking-widest">
+                                            Closing Thoughts
+                                        </span>
+                                    </div>
+                                    <div className="text-zi-on-surface-variant">
+                                        <HighlightedText text={formData.closing} />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-slate-400 italic text-sm">클로징 문구가 작성되지 않았습니다.</div>
+                            )}
+                        </article>
+                    </div>
+                )}
+
+                {/* Form Buttons */}
+                <div className="flex justify-end gap-3 pt-6 border-t">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 px-8 bg-white"
+                        onClick={() => router.back()}
+                        disabled={isPending}
+                    >
+                        취소
+                    </Button>
+                    <Button
+                        type="submit"
+                        className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
+                        disabled={isPending}
+                    >
+                        {isPending ? (
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : post ? (
+                            '수정 완료'
+                        ) : (
+                            '매거진 포스트 발행'
+                        )}
+                    </Button>
+                </div>
+            </form>
+        </div>
     );
 }
 
-// Simple Badge component since it's used inside the form
-function Badge({ children, variant = 'default', className = '' }: { children: React.ReactNode, variant?: 'default' | 'outline', className?: string }) {
+// Inline custom parser for **text** -> zi-blue and **{text}** -> zi-blue + underline
+function HighlightedText({ text }: { text: string }) {
+    if (!text) return null;
+    
+    // Split by newline to preserve paragraph layout
+    const lines = text.split('\n');
+    
+    return (
+        <>
+            {lines.map((line, lineIdx) => {
+                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*)/g);
+                return (
+                    <span key={lineIdx} className="block mb-4 last:mb-0">
+                        {parts.map((part, i) => {
+                            if (part.startsWith('**{') && part.endsWith('}**')) {
+                                const content = part.slice(3, -3);
+                                return (
+                                    <span key={i} className="font-bold text-zi-blue underline decoration-zi-blue/30 underline-offset-4">
+                                        {content}
+                                    </span>
+                                );
+                            }
+                            if (part.startsWith('**') && part.endsWith('**')) {
+                                const content = part.slice(2, -2);
+                                return (
+                                    <span key={i} className="font-bold text-zi-blue">
+                                        {content}
+                                    </span>
+                                );
+                            }
+                            return part;
+                        })}
+                    </span>
+                );
+            })}
+        </>
+    );
+}
+
+// Simple Badge component
+function Badge({ 
+    children, 
+    variant = 'default', 
+    className = '' 
+}: { 
+    children: React.ReactNode, 
+    variant?: 'default' | 'outline', 
+    className?: string 
+}) {
     const variants = {
         default: 'bg-slate-900 text-white',
         outline: 'border border-slate-200 text-slate-950'

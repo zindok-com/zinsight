@@ -237,15 +237,6 @@ model Snapshot {
   @@map("snapshots")
 }
 
-model AdminSetting {
-  key        String   @id @db.VarChar(100)
-  value      String   @db.Text
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  @@map("admin_settings")
-}
-
 model Author {
   id          Int            @id @default(autoincrement())
   name        String         @unique @db.VarChar(100)

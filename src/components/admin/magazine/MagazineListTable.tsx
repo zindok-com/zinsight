@@ -305,7 +305,15 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-right">
-                                    <div className="flex justify-end gap-2">
+                                    <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50"
+                                            onClick={() => router.push(`/admin/magazine/edit/${post.id}`)}
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"
@@ -342,20 +350,9 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                     </SheetDescription>
                                 </div>
                                 <div className="flex gap-2 pr-8">
-                                    {!isEditing ? (
-                                        <Button onClick={() => setIsEditing(true)}>
-                                            <Edit className="w-4 h-4 mr-2" /> 수정하기
-                                        </Button>
-                                    ) : (
-                                        <>
-                                            <Button variant="ghost" onClick={() => setIsEditing(false)} disabled={isPending}>
-                                                <X className="w-4 h-4 mr-2" /> 취소
-                                            </Button>
-                                            <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={handleSave} disabled={isPending}>
-                                                {isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} 저장하기
-                                            </Button>
-                                        </>
-                                    )}
+                                    <Button onClick={() => router.push(`/admin/magazine/edit/${selectedPost.id}`)}>
+                                        <Edit className="w-4 h-4 mr-2" /> 수정하기
+                                    </Button>
                                 </div>
                             </div>
 
