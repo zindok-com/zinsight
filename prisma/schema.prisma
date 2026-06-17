@@ -259,5 +259,18 @@ model Author {
   @@map("authors")
 }
 
+model Admin {
+  id                 Int      @id @default(autoincrement())
+  username           String   @unique @db.VarChar(100)
+  password_hash      String   @db.VarChar(255)
+  two_factor_enabled Boolean  @default(false)
+  two_factor_secret  String?  @db.VarChar(100)
+  two_factor_temp    String?  @db.VarChar(100)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@map("admins")
+}
+
 
 

@@ -23,6 +23,11 @@ export function SecuritySettings() {
     const [showDisable, setShowDisable] = useState(false);
     const [disableOtpCode, setDisableOtpCode] = useState('');
 
+    // 신규 관리자 추가 상태
+    const [newUsername, setNewUsername] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [newAdminOtpCode, setNewAdminOtpCode] = useState('');
+
     useEffect(() => {
         fetchStatus();
     }, []);
@@ -125,6 +130,45 @@ export function SecuritySettings() {
                 fetchStatus();
             } else {
                 toast.error(data.error || "OTP 코드가 올바르지 않습니다.");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("통신 에러가 발생했습니다.");
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleCreateAdmin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newUsername || !newPassword) {
+            toast.error("ID와 비밀번호를 모두 입력해주세요.");
+            return;
+        }
+        if (!newAdminOtpCode || newAdminOtpCode.length !== 6) {
+            toast.error("본인의 6자리 2FA 인증 코드를 입력해주세요.");
+            return;
+        }
+
+        setActionLoading(true);
+        try {
+            const res = await fetch('/api/auth/create-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    newUsername,
+                    newPassword,
+                    otpCode: newAdminOtpCode
+                }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(`관리자 계정 "${newUsername}"이(가) 정상적으로 추가되었습니다.`);
+                setNewUsername('');
+                setNewPassword('');
+                setNewAdminOtpCode('');
+            } else {
+                toast.error(data.error || "관리자 계정 추가에 실패했습니다.");
             }
         } catch (error) {
             console.error(error);
@@ -260,19 +304,16 @@ export function SecuritySettings() {
                     </CardHeader>
                     
                     <CardContent className="space-y-6 pt-6">
-                        {/* ⚠️ 공유 패스코드 보완 주의사항 명시 */}
+                        {/* ⚠️ 개별 어드민 계정 보안 주의사항 명시 */}
                         <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 space-y-2.5">
                             <h4 className="text-sm font-bold flex items-center gap-1.5 text-amber-800">
-                                ⚠️ 공유 패스코드 환경 필수 보완 안내
+                                ⚠️ 2차 인증(2FA) 등록 안내
                             </h4>
                             <p className="text-xs leading-relaxed font-medium">
-                                Zinsight 관리자 기능은 개별 ID/PW 계정이 아닌 단일 환경 변수(<code className="bg-amber-100 px-1 py-0.5 rounded text-[11px] font-bold font-mono">ADMIN_PASSCODE</code>)를 공유하여 사용하는 환경입니다.
-                            </p>
-                            <p className="text-xs leading-relaxed font-bold text-amber-800">
-                                원활한 공동 관리를 위해 본인 스마트폰뿐만 아니라 공동 관리자(대표님) 모두 각자의 Google Authenticator 앱에 동일한 텍스트 비밀키를 반드시 등록해 주셔야 동시 로그인이 가능합니다.
+                                Zinsight 관리자 기능은 개별 ID/PW를 사용하는 독립적인 관리자 계정 체계로 운영됩니다. 본인의 보안을 강화하고 다른 관리자를 추가하기 위해 2차 인증을 필수로 설정하는 것을 권장합니다.
                             </p>
                             <p className="text-xs leading-relaxed text-slate-500 italic">
-                                * 비밀키는 한 번만 조회되므로, 현재 화면에서 바로 등록하시거나 공동 관리자에게 안전하게 즉시 공유해 주세요.
+                                * 비밀키는 한 번만 조회되므로, OTP 앱(Google Authenticator 등)에 등록을 완료한 후 아래 코드를 넣어 검증해주세요.
                             </p>
                         </div>
 
@@ -339,6 +380,73 @@ export function SecuritySettings() {
                     </CardContent>
                 </Card>
             )}
+
+            {/* 4. 관리자 계정 추가 카드 */}
+            <Card className="shadow-md border-slate-200">
+                <CardHeader>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-100 rounded-full text-slate-600">
+                            <ShieldAlert className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold">신규 관리자 계정 추가</CardTitle>
+                            <CardDescription>새로운 관리자 계정을 추가합니다. 본인 확인을 위해 2차 인증(2FA) 코드가 필요합니다.</CardDescription>
+                        </div>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {!enabled ? (
+                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-900 text-sm">
+                            ⚠️ <strong>알림:</strong> 신규 관리자 계정을 추가하려면 먼저 본인 계정의 <strong>2차 인증(2FA)을 활성화</strong>해야 합니다.
+                        </div>
+                    ) : (
+                        <form onSubmit={handleCreateAdmin} className="space-y-4 max-w-md">
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600">새 관리자 ID (Username)</label>
+                                <Input
+                                    type="text"
+                                    placeholder="Username"
+                                    value={newUsername}
+                                    onChange={(e) => setNewUsername(e.target.value)}
+                                    required
+                                    disabled={actionLoading}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600">새 비밀번호 (Password)</label>
+                                <Input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    required
+                                    disabled={actionLoading}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600">본인 OTP 인증 코드</label>
+                                <Input
+                                    type="text"
+                                    maxLength={6}
+                                    placeholder="6자리 숫자"
+                                    value={newAdminOtpCode}
+                                    onChange={(e) => setNewAdminOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                                    className="font-bold tracking-widest max-w-[150px]"
+                                    required
+                                    disabled={actionLoading}
+                                />
+                            </div>
+                            <Button 
+                                type="submit" 
+                                disabled={actionLoading}
+                                className="bg-slate-800 hover:bg-slate-900 text-white font-semibold mt-2"
+                            >
+                                {actionLoading ? '추가 중...' : '관리자 추가'}
+                            </Button>
+                        </form>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     );
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { generateSecret, getOtpauthUri } from '@/lib/totp';
+import { verifyTempToken } from '@/lib/temp-token';
 import QRCode from 'qrcode';
 
 export async function POST() {
@@ -9,13 +10,26 @@ export async function POST() {
         const cookieStore = await cookies();
         const authToken = cookieStore.get('auth_token');
 
-        if (!authToken || authToken.value !== 'authenticated') {
+        if (!authToken) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = verifyTempToken(authToken.value);
+        if (!decoded || !decoded.username) {
+            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const admin = await prisma.admin.findUnique({
+            where: { username: decoded.username }
+        });
+
+        if (!admin) {
+            return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
         }
 
         // 신규 2FA 임시 비밀키 생성
         const secret = generateSecret();
-        const otpauthUri = getOtpauthUri('admin', secret);
+        const otpauthUri = getOtpauthUri(admin.username, secret);
 
         // QR 코드를 Data URL(Base64 png)로 생성
         const qrCodeUrl = await QRCode.toDataURL(otpauthUri, {
@@ -24,10 +38,11 @@ export async function POST() {
         });
 
         // 2FA 확인 단계 전 임시 키로 저장
-        await prisma.adminSetting.upsert({
-            where: { key: '2fa_temp_secret' },
-            update: { value: secret },
-            create: { key: '2fa_temp_secret', value: secret },
+        await prisma.admin.update({
+            where: { id: admin.id },
+            data: {
+                two_factor_temp: secret
+            }
         });
 
         return NextResponse.json({ success: true, secret, qrCodeUrl });

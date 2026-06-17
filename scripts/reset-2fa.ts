@@ -1,25 +1,54 @@
+import 'dotenv/config';
 import { prisma } from '../src/lib/db';
 
 async function main() {
+    const args = process.argv.slice(2);
+    const username = args[0];
+
     console.log('--------------------------------------------------');
-    console.log('🚨 Zinsight Admin 2FA Reset Tool');
+    console.log('🚨 Zinsight Admin 2FA Reset & Settings Cleanup Tool');
     console.log('--------------------------------------------------');
-    console.log('Starting 2FA reset process in database...');
 
     try {
-        const result = await prisma.adminSetting.deleteMany({
+        // 1. 레거시 글로벌 2FA 세팅 삭제 (admin_settings 테이블 정리)
+        console.log('Cleaning up legacy global 2FA keys from admin_settings...');
+        const cleanupResult = await prisma.adminSetting.deleteMany({
             where: {
                 key: {
                     in: ['2fa_enabled', '2fa_secret', '2fa_temp_secret']
                 }
             }
         });
+        console.log(`🧹 Cleaned up ${cleanupResult.count} legacy settings.`);
 
-        console.log(`✅ 2FA has been successfully reset!`);
-        console.log(`Deleted ${result.count} configurations.`);
-        console.log('Now you can log in using only your PASSCODE.');
+        // 2. 특정 어드민 계정의 2FA 재설정
+        if (username) {
+            console.log(`Resetting 2FA for admin user: "${username}"...`);
+            const admin = await prisma.admin.findUnique({
+                where: { username }
+            });
+
+            if (!admin) {
+                console.error(`❌ Admin user "${username}" not found.`);
+                process.exit(1);
+            }
+
+            await prisma.admin.update({
+                where: { id: admin.id },
+                data: {
+                    two_factor_enabled: false,
+                    two_factor_secret: null,
+                    two_factor_temp: null
+                }
+            });
+
+            console.log(`✅ 2FA for admin user "${username}" has been successfully reset!`);
+        } else {
+            console.log('\n💡 Tip: To reset a specific admin\'s 2FA, pass the username:');
+            console.log('  npx ts-node scripts/reset-2fa.ts <username>');
+        }
     } catch (error) {
-        console.error('❌ Failed to reset 2FA settings in database:', error);
+        console.error('❌ Error during 2FA reset & cleanup:', error);
     } finally {
         await prisma.$disconnect();
     }

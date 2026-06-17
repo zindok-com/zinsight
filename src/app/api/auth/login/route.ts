@@ -2,26 +2,31 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { signTempToken } from '@/lib/temp-token';
+import { verifyPassword } from '@/lib/password';
 
 export async function POST(request: Request) {
     try {
-        const ADMIN_PASSCODE = process.env.ADMIN_PASSCODE || 'admin1234';
         const body = await request.json();
-        const { passcode } = body;
+        const { username, password } = body;
 
-        if (passcode !== ADMIN_PASSCODE) {
-            return NextResponse.json({ success: false, error: 'Invalid passcode' }, { status: 401 });
+        if (!username || !password) {
+            return NextResponse.json({ success: false, error: 'Username and password are required' }, { status: 400 });
+        }
+
+        const admin = await prisma.admin.findUnique({
+            where: { username }
+        });
+
+        if (!admin || !verifyPassword(password, admin.password_hash)) {
+            return NextResponse.json({ success: false, error: 'Invalid username or password' }, { status: 401 });
         }
 
         // 2FA 활성화 상태 확인
-        const enabledSetting = await prisma.adminSetting.findUnique({
-            where: { key: '2fa_enabled' }
-        });
-        const is2faEnabled = enabledSetting?.value === 'true';
+        const is2faEnabled = admin.two_factor_enabled;
 
         if (is2faEnabled) {
             // 2FA 대기 임시 토큰 서명
-            const tempToken = signTempToken({ step: 'mfa_pending' }, 300); // 5분 유효
+            const tempToken = signTempToken({ step: 'mfa_pending', username: admin.username }, 300); // 5분 유효
 
             (await cookies()).set('mfa_pending', tempToken, {
                 httpOnly: true,
@@ -35,7 +40,9 @@ export async function POST(request: Request) {
         }
 
         // 2FA가 꺼져있으면 바로 로그인 세션 발급
-        (await cookies()).set('auth_token', 'authenticated', {
+        const authToken = signTempToken({ username: admin.username }, 60 * 60 * 24 * 7);
+
+        (await cookies()).set('auth_token', authToken, {
             httpOnly: true,
             secure: true,
             sameSite: 'strict',

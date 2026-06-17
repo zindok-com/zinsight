@@ -2,52 +2,47 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { verifyTOTP } from '@/lib/totp';
+import { verifyTempToken } from '@/lib/temp-token';
 
 export async function POST(request: Request) {
     try {
         const cookieStore = await cookies();
         const authToken = cookieStore.get('auth_token');
 
-        if (!authToken || authToken.value !== 'authenticated') {
+        if (!authToken) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const decoded = verifyTempToken(authToken.value);
+        if (!decoded || !decoded.username) {
+            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const admin = await prisma.admin.findUnique({
+            where: { username: decoded.username }
+        });
+
+        if (!admin || !admin.two_factor_temp) {
+            return NextResponse.json({ success: false, error: 'MFA setup session not found. Please try setup again.' }, { status: 400 });
         }
 
         const body = await request.json();
         const { code } = body;
 
-        // 임시 저장된 2FA Secret Key 조회
-        const tempSecretSetting = await prisma.adminSetting.findUnique({
-            where: { key: '2fa_temp_secret' }
-        });
-
-        if (!tempSecretSetting?.value) {
-            return NextResponse.json({ success: false, error: 'MFA setup session not found. Please try setup again.' }, { status: 400 });
-        }
-
         // 입력한 코드 검증
-        const isValid = verifyTOTP(code, tempSecretSetting.value);
+        const isValid = verifyTOTP(code, admin.two_factor_temp);
         if (!isValid) {
             return NextResponse.json({ success: false, error: 'Invalid 2FA verification code' }, { status: 400 });
         }
 
-        // 트랜잭션 처리 (Prisma가 MariaDB 환경이므로 여러 개 단독 처리 가능)
-        // 1. 임시 키를 정식 키로 저장
-        await prisma.adminSetting.upsert({
-            where: { key: '2fa_secret' },
-            update: { value: tempSecretSetting.value },
-            create: { key: '2fa_secret', value: tempSecretSetting.value },
-        });
-
-        // 2. 2FA 사용 설정 등록
-        await prisma.adminSetting.upsert({
-            where: { key: '2fa_enabled' },
-            update: { value: 'true' },
-            create: { key: '2fa_enabled', value: 'true' },
-        });
-
-        // 3. 임시 키 삭제
-        await prisma.adminSetting.delete({
-            where: { key: '2fa_temp_secret' }
+        // 어드민 레코드 2FA 활성화 처리
+        await prisma.admin.update({
+            where: { id: admin.id },
+            data: {
+                two_factor_secret: admin.two_factor_temp,
+                two_factor_enabled: true,
+                two_factor_temp: null
+            }
         });
 
         return NextResponse.json({ success: true });

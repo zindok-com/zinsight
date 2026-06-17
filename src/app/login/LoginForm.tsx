@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { toast } from 'sonner';
 
 export function LoginForm() {
-    const [step, setStep] = useState<'passcode' | '2fa'>('passcode');
-    const [passcode, setPasscode] = useState('');
+    const [step, setStep] = useState<'credentials' | '2fa'>('credentials');
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     
@@ -17,10 +18,10 @@ export function LoginForm() {
     const searchParams = useSearchParams();
     const callbackUrl = searchParams.get('callbackUrl') || '/admin';
 
-    const handlePasscodeSubmit = async (e: React.FormEvent) => {
+    const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!passcode) {
-            toast.error("Passcode is required");
+        if (!username || !password) {
+            toast.error("ID와 비밀번호를 입력해주세요.");
             return;
         }
 
@@ -29,7 +30,7 @@ export function LoginForm() {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ passcode }),
+                body: JSON.stringify({ username, password }),
             });
 
             const data = await res.json();
@@ -44,7 +45,7 @@ export function LoginForm() {
                     router.refresh();
                 }
             } else {
-                toast.error(data.error || "올바르지 않은 패스코드입니다.");
+                toast.error(data.error || "올바르지 않은 ID 또는 비밀번호입니다.");
             }
         } catch (error) {
             toast.error("로그인 중 에러가 발생했습니다.");
@@ -94,29 +95,45 @@ export function LoginForm() {
                         Zinsight Admin
                     </CardTitle>
                     <CardDescription className="text-center">
-                        {step === 'passcode' 
-                            ? '관리자 패스코드를 입력하세요.' 
+                        {step === 'credentials' 
+                            ? '관리자 ID와 비밀번호를 입력하세요.' 
                             : '2차 인증(2FA) 코드를 입력하세요.'
                         }
                     </CardDescription>
                 </CardHeader>
                 
-                {step === 'passcode' ? (
-                    <form onSubmit={handlePasscodeSubmit}>
+                {step === 'credentials' ? (
+                    <form onSubmit={handleCredentialsSubmit}>
                         <CardContent className="space-y-4">
-                            <Input
-                                type="password"
-                                placeholder="Passcode"
-                                value={passcode}
-                                onChange={(e) => setPasscode(e.target.value)}
-                                className="text-center text-lg tracking-widest"
-                                disabled={loading}
-                                autoFocus
-                            />
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600">아이디</label>
+                                <Input
+                                    type="text"
+                                    placeholder="Username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    className="text-base"
+                                    disabled={loading}
+                                    autoFocus
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold text-slate-600">비밀번호</label>
+                                <Input
+                                    type="password"
+                                    placeholder="Password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    className="text-base"
+                                    disabled={loading}
+                                    required
+                                />
+                            </div>
                         </CardContent>
                         <CardFooter>
                             <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
-                                {loading ? 'Checking...' : 'Enter'}
+                                {loading ? 'Checking...' : 'Sign In'}
                             </Button>
                         </CardFooter>
                     </form>
@@ -151,11 +168,11 @@ export function LoginForm() {
                                 variant="ghost" 
                                 className="w-full text-slate-500 hover:text-slate-700"
                                 onClick={() => {
-                                    setStep('passcode');
+                                    setStep('credentials');
                                     setCode('');
                                 }}
                                 disabled={loading}
-                            >
+                             >
                                 뒤로 가기
                             </Button>
                         </CardFooter>
