@@ -50,7 +50,7 @@ function stripHtml(html: string): string {
         .trim();
 }
 
-async function fetchNaverNews(keyword: string, display: number = 20, sort: 'sim' | 'date' = 'sim'): Promise<NaverNewsItem[]> {
+async function fetchNaverNews(keyword: string, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<NaverNewsItem[]> {
     const response = await axios.get<NaverApiResponse>(NAVER_API_URL, {
         headers: {
             'X-Naver-Client-Id': NAVER_CLIENT_ID,
@@ -160,7 +160,7 @@ async function ingestItems(
     return { newCount, dupCount, failCount };
 }
 
-export async function ingestByKeyword(keywordId: number, display: number = 20, sort: 'sim' | 'date' = 'sim'): Promise<IngestReport> {
+export async function ingestByKeyword(keywordId: number, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
@@ -193,7 +193,7 @@ export async function ingestByKeyword(keywordId: number, display: number = 20, s
     };
 }
 
-export async function ingestByIndustry(industryId: number, display: number = 20, sort: 'sim' | 'date' = 'sim'): Promise<IngestReport> {
+export async function ingestByIndustry(industryId: number, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
@@ -221,8 +221,8 @@ export async function ingestByIndustry(industryId: number, display: number = 20,
             perKeyword.push({ keywordId: kw.id, keywordText: kw.keyword_text, newCount, dupCount, failCount });
         } catch (err) {
             console.error(`[ingest] Keyword "${kw.keyword_text}" failed:`, err);
-            perKeyword.push({ keywordId: kw.id, keywordText: kw.keyword_text, newCount: 0, dupCount: 0, failCount: 20 });
-            totalFail += 20;
+            perKeyword.push({ keywordId: kw.id, keywordText: kw.keyword_text, newCount: 0, dupCount: 0, failCount: display });
+            totalFail += display;
         }
     }
 

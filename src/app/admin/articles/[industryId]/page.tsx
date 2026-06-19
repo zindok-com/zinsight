@@ -231,8 +231,8 @@ export default function ArticlesByIndustryPage() {
     const [drawerArticle, setDrawerArticle] = useState<ArticleItem | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [confirmType, setConfirmType] = useState<'industry' | 'keyword'>('industry');
-    const [ingestDisplay, setIngestDisplay] = useState<number>(20);
-    const [ingestSort, setIngestSort] = useState<'sim' | 'date'>('sim');
+    const [ingestDisplay, setIngestDisplay] = useState<number>(10);
+    const [ingestSort, setIngestSort] = useState<'sim' | 'date'>('date');
 
     useEffect(() => {
         if (!industryId || isNaN(industryId)) {
