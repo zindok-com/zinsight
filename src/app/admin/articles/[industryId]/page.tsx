@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { getIndustryById } from '@/actions/industry-actions';
 import { getKeywords } from '@/actions/keyword-actions';
-import { getArticles } from '@/actions/article-actions';
+import { getArticles, deleteArticlesByDate } from '@/actions/article-actions';
 import { ingestByIndustry, ingestByKeyword, type IngestReport } from '@/actions/ingest-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
     RefreshCw, Download, ArrowLeft, Loader2,
-    CheckCircle, AlertTriangle, ExternalLink, X, FileJson
+    CheckCircle, AlertTriangle, ExternalLink, X, FileJson, Trash2
 } from 'lucide-react';
 
 type Industry = NonNullable<Awaited<ReturnType<typeof getIndustryById>>>;
@@ -233,6 +233,15 @@ export default function ArticlesByIndustryPage() {
     const [confirmType, setConfirmType] = useState<'industry' | 'keyword'>('industry');
     const [ingestDisplay, setIngestDisplay] = useState<number>(10);
     const [ingestSort, setIngestSort] = useState<'sim' | 'date'>('date');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteDate, setDeleteDate] = useState(() => {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    });
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     useEffect(() => {
         if (!industryId || isNaN(industryId)) {
@@ -355,6 +364,35 @@ export default function ArticlesByIndustryPage() {
         toast.success('JSON 내보내기 완료');
     }
 
+    async function handleDeleteArticles() {
+        if (!deleteDate) {
+            toast.error('삭제할 날짜를 선택하세요.');
+            return;
+        }
+
+        const confirmFirst = window.confirm(
+            `정말로 ${deleteDate}에 수집된 이 산업군의 모든 기사를 데이터베이스에서 영구 삭제하시겠습니까?\n이 작업은 즉시 실행되며 복구할 수 없습니다.`
+        );
+        if (!confirmFirst) return;
+
+        setDeleteLoading(true);
+        try {
+            const res = await deleteArticlesByDate(deleteDate, industry?.id);
+            if (res.success) {
+                toast.success(res.message);
+                setIsDeleteModalOpen(false);
+                loadArticles(1);
+            } else {
+                toast.error(res.error || '기사 삭제 실패');
+            }
+        } catch (err: any) {
+            console.error(err);
+            toast.error('기사 삭제 중 오류가 발생했습니다.');
+        } finally {
+            setDeleteLoading(false);
+        }
+    }
+
     // ─── 렌더 분기 ───
     if (initialLoading) {
         return (
@@ -442,6 +480,10 @@ export default function ArticlesByIndustryPage() {
                             <Button onClick={() => openConfirmModal('keyword')} disabled={ingestLoading || !selectedKeywordId} variant="outline">
                                 {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
                                 키워드 단위 수집
+                            </Button>
+                            <Button onClick={() => setIsDeleteModalOpen(true)} variant="destructive">
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                수집일 기준 삭제
                             </Button>
                             <Button onClick={handleExportJson} variant="outline">
                                 <Download className="h-4 w-4 mr-1" />
@@ -602,6 +644,38 @@ export default function ArticlesByIndustryPage() {
                         <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>취소</Button>
                         <Button onClick={executeIngest} className="bg-blue-600 hover:bg-blue-700 text-white">
                             수집 실행
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600 flex items-center gap-2">
+                            <Trash2 className="h-5 w-5" />
+                            수집일 기준 기사 삭제
+                        </DialogTitle>
+                        <DialogDescription>
+                            선택한 수집일(created_at)에 수집된 이 산업군의 기사들을 데이터베이스에서 영구 삭제합니다. (소프트 삭제 미적용)
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm font-medium">수집일 선택</label>
+                            <input 
+                                type="date"
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={deleteDate} 
+                                onChange={e => setDeleteDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)} disabled={deleteLoading}>취소</Button>
+                        <Button onClick={handleDeleteArticles} disabled={deleteLoading || !deleteDate} className="bg-red-600 hover:bg-red-700 text-white font-medium">
+                            {deleteLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                            삭제 실행
                         </Button>
                     </DialogFooter>
                 </DialogContent>
