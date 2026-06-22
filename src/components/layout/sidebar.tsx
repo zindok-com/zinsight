@@ -77,7 +77,9 @@ export function Sidebar() {
         <>
             {/* Mobile Menu Button */}
             <div className="md:hidden p-4 border-b flex items-center justify-between">
-                <div className="font-bold text-lg">zinsight</div>
+                <Link href="/" className="font-bold text-lg hover:text-slate-600 transition-colors">
+                    zinsight
+                </Link>
                 <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
                     <Menu />
                 </Button>
@@ -89,7 +91,9 @@ export function Sidebar() {
                 mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-6 border-b border-slate-700">
-                    <h1 className="text-2xl font-bold tracking-tight">zinsight</h1>
+                    <Link href="/" className="hover:text-slate-300 transition-colors block">
+                        <h1 className="text-2xl font-bold tracking-tight">zinsight</h1>
+                    </Link>
                     <p className="text-xs text-slate-400 mt-1">Admin Dashboard</p>
                 </div>
 
