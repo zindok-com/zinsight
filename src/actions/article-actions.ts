@@ -69,14 +69,18 @@ export async function getConsolidatedArticlesForExport(industryIds: number[], mo
         ? { pub_date: { gte: fromDate, lte: toDate } }
         : { created_at: { gte: fromDate, lte: toDate } };
 
+    const ingestionFilter = filterType === 'created_at'
+        ? { industry_id: { in: industryIds }, is_duplicate: false }
+        : { industry_id: { in: industryIds } };
+
     return prisma.article.findMany({
         where: {
             ...dateFilter,
-            ingestions: { some: { industry_id: { in: industryIds } } }
+            ingestions: { some: ingestionFilter }
         },
         include: {
             ingestions: {
-                where: { industry_id: { in: industryIds } },
+                where: ingestionFilter,
                 include: {
                     keyword: { select: { id: true, keyword_text: true, keyword_type: true } },
                     industry: { select: { id: true, name: true, slug: true } }
