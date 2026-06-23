@@ -97,62 +97,58 @@ export function PublicNavbar() {
             )}
 
             {/* 모바일 드로어 패널 */}
-            <div
-                className={cn(
-                    'fixed right-0 top-0 z-50 h-full w-72 bg-white shadow-2xl md:hidden',
-                    'flex flex-col',
-                    isOpen ? 'drawer-slide-in' : 'translate-x-full',
-                )}
-                style={{ transition: isOpen ? undefined : 'transform 0.2s ease-in' }}
-                aria-hidden={!isOpen}
-            >
-                {/* 드로어 헤더 */}
-                <div className="flex items-center justify-between border-b border-zi-divider px-6 py-5">
-                    <span className="text-lg font-bold tracking-tighter text-zi-primary">
-                        Zinsight
-                    </span>
-                    <button
-                        className="rounded-md p-1.5 text-zi-outline transition-colors hover:bg-zi-surface-container"
-                        onClick={() => setIsOpen(false)}
-                        aria-label="메뉴 닫기"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
-                </div>
+            {isOpen && (
+                <div
+                    className="fixed right-0 top-0 z-50 h-full w-72 bg-white shadow-2xl md:hidden flex flex-col drawer-slide-in"
+                >
+                    {/* 드로어 헤더 */}
+                    <div className="flex items-center justify-between border-b border-zi-divider px-6 py-5">
+                        <span className="text-lg font-bold tracking-tighter text-zi-primary">
+                            Zinsight
+                        </span>
+                        <button
+                            className="rounded-md p-1.5 text-zi-outline transition-colors hover:bg-zi-surface-container"
+                            onClick={() => setIsOpen(false)}
+                            aria-label="메뉴 닫기"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
 
-                {/* 드로어 네비게이션 */}
-                <nav className="flex flex-col gap-1 px-4 py-6">
-                    {navItems.map((item) => {
-                        const isActive = pathname.startsWith(item.href);
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                className={cn(
-                                    'flex items-center rounded-lg px-4 py-3.5 text-[15px] font-medium tracking-wide transition-all active:scale-95',
-                                    isActive
-                                        ? 'bg-zi-primary text-white'
-                                        : 'text-zi-on-surface hover:bg-zi-surface-container'
-                                )}
-                            >
-                                {item.label}
-                            </Link>
-                        );
-                    })}
-                </nav>
+                    {/* 드로어 네비게이션 */}
+                    <nav className="flex flex-col gap-1 px-4 py-6">
+                        {navItems.map((item) => {
+                            const isActive = pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        'flex items-center rounded-lg px-4 py-3.5 text-[15px] font-medium tracking-wide transition-all active:scale-95',
+                                        isActive
+                                            ? 'bg-zi-primary text-white'
+                                            : 'text-zi-on-surface hover:bg-zi-surface-container'
+                                    )}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </nav>
 
-                {/* 드로어 하단 CTA */}
-                <div className="mt-auto border-t border-zi-divider px-4 py-6">
-                    <Link
-                        href="https://www.zindok.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex w-full items-center justify-center rounded-zi-btn border border-zi-primary bg-transparent px-5 py-3 text-sm font-semibold text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
-                    >
-                        Zindok 바로가기 →
-                    </Link>
+                    {/* 드로어 하단 CTA */}
+                    <div className="mt-auto border-t border-zi-divider px-4 py-6">
+                        <Link
+                            href="https://www.zindok.com"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex w-full items-center justify-center rounded-zi-btn border border-zi-primary bg-transparent px-5 py-3 text-sm font-semibold text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
+                        >
+                            Zindok 바로가기 →
+                        </Link>
+                    </div>
                 </div>
-            </div>
+            )}
         </>
     );
 }
