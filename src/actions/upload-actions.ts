@@ -79,16 +79,24 @@ export async function uploadImageDirect(formData: FormData) {
 // Get all image URLs currently used in magazine posts
 export async function getUsedImageUrls() {
     try {
-        const posts = await prisma.magazinePost.findMany({
-            where: { deletedAt: null },
-            select: {
-                thumbnailUrl: true,
-                content: true,
-            },
-        });
+        const [posts, authors] = await Promise.all([
+            prisma.magazinePost.findMany({
+                where: { deletedAt: null },
+                select: {
+                    thumbnailUrl: true,
+                    content: true,
+                },
+            }),
+            prisma.author.findMany({
+                select: {
+                    avatarUrl: true,
+                },
+            }),
+        ]);
 
         const usedUrls = new Set<string>();
 
+        // 1. Collect from posts (thumbnails & content)
         for (const post of posts) {
             if (post.thumbnailUrl) {
                 usedUrls.add(post.thumbnailUrl);
@@ -105,6 +113,13 @@ export async function getUsedImageUrls() {
                         usedUrls.add(cleaned);
                     }
                 }
+            }
+        }
+
+        // 2. Collect from authors (profile avatar URLs)
+        for (const author of authors) {
+            if (author.avatarUrl) {
+                usedUrls.add(author.avatarUrl);
             }
         }
 
