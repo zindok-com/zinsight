@@ -9,10 +9,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createMagazinePost, updateMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
+import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
 
 export function MagazineForm({ 
     industries, 
@@ -27,6 +28,7 @@ export function MagazineForm({
     const [isPending, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
     const [activeTextareaId, setActiveTextareaId] = useState<string | null>(null);
+    const [activeLinkTextareaId, setActiveLinkTextareaId] = useState<string | null>(null);
 
     const insertTextAtCursor = (id: string, textToInsert: string) => {
         const textarea = document.getElementById(id) as HTMLTextAreaElement;
@@ -62,6 +64,17 @@ export function MagazineForm({
         const markdownImage = `\n![이미지 설명](${url})\n`;
         insertTextAtCursor(activeTextareaId, markdownImage);
         setActiveTextareaId(null);
+    };
+
+    const handleInsertLink = (textareaId: string) => {
+        setActiveLinkTextareaId(textareaId);
+    };
+
+    const handleLinkInsertConfirm = (text: string, url: string) => {
+        if (!activeLinkTextareaId) return;
+        const markdownLink = `[${text}](${url})`;
+        insertTextAtCursor(activeLinkTextareaId, markdownLink);
+        setActiveLinkTextareaId(null);
     };
 
     // Parse content from post if available (handles both structured JSON and legacy text)
@@ -468,16 +481,28 @@ export function MagazineForm({
                             <div className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
                                 <div className="flex justify-between items-center pb-1">
                                     <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setActiveTextareaId('lead')}
-                                        className="h-7 px-2.5 text-xs bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
-                                    >
-                                        <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
-                                        보관함 이미지 삽입
-                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleInsertLink('lead')}
+                                            className="h-7 px-2.5 text-xs bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
+                                        >
+                                            <LinkIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                            링크 삽입
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setActiveTextareaId('lead')}
+                                            className="h-7 px-2.5 text-xs bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
+                                        >
+                                            <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                            보관함 이미지 삽입
+                                        </Button>
+                                    </div>
                                 </div>
                                 <p className="text-[11px] text-indigo-600/80 pb-1">기사의 도입부나 요약을 작성해주세요. **텍스트** 또는 **{`{텍스트}`}**로 강조할 수 있습니다. 이미지는 단독 줄에 URL을 입력하거나 `![설명](주소)` 형식으로 삽입됩니다.</p>
                                 <Textarea
@@ -552,16 +577,28 @@ export function MagazineForm({
                                                 <div className="space-y-1.5">
                                                     <div className="flex justify-between items-center pb-1">
                                                         <Label className="text-xs font-semibold text-slate-600">내용</Label>
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => setActiveTextareaId(`body-${index}`)}
-                                                            className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
-                                                        >
-                                                            <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-                                                            보관함 이미지 삽입
-                                                        </Button>
+                                                        <div className="flex gap-2">
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleInsertLink(`body-${index}`)}
+                                                                className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                                            >
+                                                                <LinkIcon className="w-3.5 h-3.5 text-slate-400" />
+                                                                링크 삽입
+                                                            </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setActiveTextareaId(`body-${index}`)}
+                                                                className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                                            >
+                                                                <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                                                                보관함 이미지 삽입
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                     <Textarea
                                                         id={`body-${index}`}
@@ -586,16 +623,28 @@ export function MagazineForm({
                             <div className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
                                 <div className="flex justify-between items-center pb-1">
                                     <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setActiveTextareaId('closing')}
-                                        className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
-                                    >
-                                        <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-                                        보관함 이미지 삽입
-                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleInsertLink('closing')}
+                                            className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                        >
+                                            <LinkIcon className="w-3.5 h-3.5 text-slate-400" />
+                                            링크 삽입
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setActiveTextareaId('closing')}
+                                            className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                        >
+                                            <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                                            보관함 이미지 삽입
+                                        </Button>
+                                    </div>
                                 </div>
                                 <p className="text-[11px] text-slate-500 pb-1">기사의 맺음말이나 결론을 작성해주세요.</p>
                                 <Textarea
@@ -747,6 +796,12 @@ export function MagazineForm({
                 onClose={() => setActiveTextareaId(null)}
                 onSelect={handleImageSelect}
             />
+
+            <LinkInsertModal
+                isOpen={activeLinkTextareaId !== null}
+                onClose={() => setActiveLinkTextareaId(null)}
+                onInsert={handleLinkInsertConfirm}
+            />
         </div>
     );
 }
@@ -793,8 +848,8 @@ function HighlightedText({ text }: { text: string }) {
                     );
                 }
 
-                // 기존의 강조 처리
-                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*)/g);
+                // 기존의 강조 및 링크 처리
+                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
                 return (
                     <span key={lineIdx} className="block mb-4 last:mb-0">
                         {parts.map((part, i) => {
@@ -813,6 +868,24 @@ function HighlightedText({ text }: { text: string }) {
                                         {content}
                                     </span>
                                 );
+                            }
+                            if (part.startsWith('[') && part.endsWith(')')) {
+                                const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+                                if (match) {
+                                    const linkText = match[1];
+                                    const url = match[2];
+                                    return (
+                                        <a 
+                                            key={i} 
+                                            href={url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-indigo-600 hover:text-indigo-800 underline underline-offset-4 decoration-indigo-300 font-semibold transition-colors"
+                                        >
+                                            {linkText}
+                                        </a>
+                                    );
+                                }
                             }
                             return part;
                         })}

@@ -175,8 +175,8 @@ function HighlightedText({ text }: { text: string }) {
                     );
                 }
 
-                // 기존의 강조 처리
-                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*)/g);
+                // 기존의 강조 및 링크 처리
+                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
                 return (
                     <span key={lineIdx} className="block mb-4 last:mb-0">
                         {parts.map((part, i) => {
@@ -187,6 +187,24 @@ function HighlightedText({ text }: { text: string }) {
                             if (part.startsWith('**') && part.endsWith('**')) {
                                 const content = part.slice(2, -2);
                                 return <span key={i} className="font-bold text-zi-blue">{content}</span>;
+                            }
+                            if (part.startsWith('[') && part.endsWith(')')) {
+                                const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+                                if (match) {
+                                    const linkText = match[1];
+                                    const url = match[2];
+                                    return (
+                                        <a 
+                                            key={i} 
+                                            href={url} 
+                                            target="_blank" 
+                                            rel="noopener noreferrer"
+                                            className="text-indigo-600 hover:text-indigo-800 underline underline-offset-4 decoration-indigo-300 font-semibold transition-colors"
+                                        >
+                                            {linkText}
+                                        </a>
+                                    );
+                                }
                             }
                             return part;
                         })}
