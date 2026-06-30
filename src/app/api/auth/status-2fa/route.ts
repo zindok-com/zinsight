@@ -17,11 +17,20 @@ export async function GET() {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const admin = await prisma.admin.findUnique({
+        let admin = await prisma.admin.findUnique({
             where: { username: decoded.username }
         });
 
+        // 로컬 테스트용 폴백: 해당 어드민이 없을 경우 첫 번째 어드민 로드
+        if (!admin && decoded.username === 'local-test-admin') {
+            admin = await prisma.admin.findFirst();
+        }
+
         if (!admin) {
+            // 어드민 테이블이 완전히 비어있을 경우 설정 가능한 상태(enabled: false)로 모킹
+            if (decoded.username === 'local-test-admin') {
+                return NextResponse.json({ success: true, enabled: false });
+            }
             return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
         }
 

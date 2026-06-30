@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createMagazinePost, updateMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info, Plus, Trash2, Edit3, Eye } from 'lucide-react';
+import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
+import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 
 export function MagazineForm({ 
     industries, 
@@ -25,6 +26,43 @@ export function MagazineForm({
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+    const [activeTextareaId, setActiveTextareaId] = useState<string | null>(null);
+
+    const insertTextAtCursor = (id: string, textToInsert: string) => {
+        const textarea = document.getElementById(id) as HTMLTextAreaElement;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+
+        const newValue = value.substring(0, start) + textToInsert + value.substring(end);
+        
+        // Trigger React state update!
+        if (id === 'lead') {
+            setFormData((prev: any) => ({ ...prev, lead: newValue }));
+        } else if (id === 'closing') {
+            setFormData((prev: any) => ({ ...prev, closing: newValue }));
+        } else if (id.startsWith('body-')) {
+            const index = parseInt(id.split('-')[1]);
+            const newBodies = [...formData.bodies];
+            newBodies[index].content = newValue;
+            setFormData((prev: any) => ({ ...prev, bodies: newBodies }));
+        }
+
+        // Put focus back and set cursor position after inserted text
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(start + textToInsert.length, start + textToInsert.length);
+        }, 0);
+    };
+
+    const handleImageSelect = (url: string) => {
+        if (!activeTextareaId) return;
+        const markdownImage = `\n![이미지 설명](${url})\n`;
+        insertTextAtCursor(activeTextareaId, markdownImage);
+        setActiveTextareaId(null);
+    };
 
     // Parse content from post if available (handles both structured JSON and legacy text)
     const parsedContent = (() => {
@@ -428,8 +466,20 @@ export function MagazineForm({
 
                             {/* 리드 (Lead) */}
                             <div className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
-                                <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
-                                <p className="text-[11px] text-indigo-600/80 pb-1">기사의 도입부나 요약을 작성해주세요. **텍스트** 또는 **{`{텍스트}`}**로 강조할 수 있습니다.</p>
+                                <div className="flex justify-between items-center pb-1">
+                                    <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setActiveTextareaId('lead')}
+                                        className="h-7 px-2.5 text-xs bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
+                                    >
+                                        <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
+                                        보관함 이미지 삽입
+                                    </Button>
+                                </div>
+                                <p className="text-[11px] text-indigo-600/80 pb-1">기사의 도입부나 요약을 작성해주세요. **텍스트** 또는 **{`{텍스트}`}**로 강조할 수 있습니다. 이미지는 단독 줄에 URL을 입력하거나 `![설명](주소)` 형식으로 삽입됩니다.</p>
                                 <Textarea
                                     id="lead"
                                     placeholder="리드 내용을 작성하세요..."
@@ -500,8 +550,21 @@ export function MagazineForm({
                                                     />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <Label className="text-xs font-semibold text-slate-600">내용</Label>
+                                                    <div className="flex justify-between items-center pb-1">
+                                                        <Label className="text-xs font-semibold text-slate-600">내용</Label>
+                                                        <Button
+                                                            type="button"
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => setActiveTextareaId(`body-${index}`)}
+                                                            className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                                        >
+                                                            <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                                                            보관함 이미지 삽입
+                                                        </Button>
+                                                    </div>
                                                     <Textarea
+                                                        id={`body-${index}`}
                                                         placeholder="본문 내용을 작성하세요..."
                                                         className="min-h-[150px] bg-slate-50/50 text-sm leading-relaxed"
                                                         value={body.content}
@@ -521,7 +584,19 @@ export function MagazineForm({
 
                             {/* 클로징 (Closing) */}
                             <div className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
-                                <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
+                                <div className="flex justify-between items-center pb-1">
+                                    <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setActiveTextareaId('closing')}
+                                        className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                    >
+                                        <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                                        보관함 이미지 삽입
+                                    </Button>
+                                </div>
                                 <p className="text-[11px] text-slate-500 pb-1">기사의 맺음말이나 결론을 작성해주세요.</p>
                                 <Textarea
                                     id="closing"
@@ -641,7 +716,7 @@ export function MagazineForm({
                 )}
 
                 {/* Form Buttons */}
-                <div className="flex justify-end gap-3 pt-6 border-t">
+                <div className="flex justify-end gap-3 pt-6 border-t mt-6">
                     <Button
                         type="button"
                         variant="outline"
@@ -666,6 +741,12 @@ export function MagazineForm({
                     </Button>
                 </div>
             </form>
+
+            <StorageImageSelectorModal
+                isOpen={activeTextareaId !== null}
+                onClose={() => setActiveTextareaId(null)}
+                onSelect={handleImageSelect}
+            />
         </div>
     );
 }
@@ -680,6 +761,39 @@ function HighlightedText({ text }: { text: string }) {
     return (
         <>
             {lines.map((line, lineIdx) => {
+                // 1. Markdown 이미지 형식 매칭 (![alt](url))
+                const imgMatch = line.trim().match(/^!\[(.*?)\]\((.*?)\)$/);
+                if (imgMatch) {
+                    const alt = imgMatch[1];
+                    const url = imgMatch[2];
+                    return (
+                        <span key={lineIdx} className="block my-6 text-center">
+                            <img 
+                                src={url} 
+                                alt={alt} 
+                                className="mx-auto rounded-zi-card max-h-[300px] object-contain shadow-sm border border-zi-surface-container" 
+                            />
+                            {alt && <span className="block text-xs text-slate-400 mt-2 italic">{alt}</span>}
+                        </span>
+                    );
+                }
+
+                // 2. Raw 이미지 URL 형식 매칭 (Vercel Blob 등 이미지 링크 단독 행)
+                const rawUrlMatch = line.trim().match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
+                if (rawUrlMatch) {
+                    const url = rawUrlMatch[0];
+                    return (
+                        <span key={lineIdx} className="block my-6 text-center">
+                            <img 
+                                src={url} 
+                                alt="Image" 
+                                className="mx-auto rounded-zi-card max-h-[300px] object-contain shadow-sm border border-zi-surface-container" 
+                            />
+                        </span>
+                    );
+                }
+
+                // 기존의 강조 처리
                 const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*)/g);
                 return (
                     <span key={lineIdx} className="block mb-4 last:mb-0">

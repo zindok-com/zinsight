@@ -143,6 +143,39 @@ function HighlightedText({ text }: { text: string }) {
     return (
         <>
             {lines.map((line, lineIdx) => {
+                // 1. Markdown 이미지 형식 매칭 (![alt](url))
+                const imgMatch = line.trim().match(/^!\[(.*?)\]\((.*?)\)$/);
+                if (imgMatch) {
+                    const alt = imgMatch[1];
+                    const url = imgMatch[2];
+                    return (
+                        <span key={lineIdx} className="block my-6 text-center">
+                            <img 
+                                src={url} 
+                                alt={alt} 
+                                className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
+                            />
+                            {alt && <span className="block text-xs text-zi-outline-variant mt-2 italic">{alt}</span>}
+                        </span>
+                    );
+                }
+
+                // 2. Raw 이미지 URL 형식 매칭 (Vercel Blob 등 이미지 링크 단독 행)
+                const rawUrlMatch = line.trim().match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
+                if (rawUrlMatch) {
+                    const url = rawUrlMatch[0];
+                    return (
+                        <span key={lineIdx} className="block my-6 text-center">
+                            <img 
+                                src={url} 
+                                alt="Image" 
+                                className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
+                            />
+                        </span>
+                    );
+                }
+
+                // 기존의 강조 처리
                 const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*)/g);
                 return (
                     <span key={lineIdx} className="block mb-4 last:mb-0">

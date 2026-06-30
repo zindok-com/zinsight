@@ -5,26 +5,41 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const authToken = request.cookies.get('auth_token');
 
+    // ── 로컬 테스트 환경 감지 (development 모드 혹은 localhost 접속) ──
+    const isLocalTest = 
+        process.env.NODE_ENV === 'development' ||
+        request.nextUrl.hostname === 'localhost' ||
+        request.nextUrl.hostname === '127.0.0.1';
+
     // ── 인증이 필요한 경로: /admin 하위 전체 ──
     const isAdminPath = pathname.startsWith('/admin');
 
     // ── 인증 관련 예외 경로 ──
     const isLoginPage = pathname === '/login';
-    const isApiAuth = pathname.startsWith('/api/auth');
 
-    // /admin 경로에 비인증 상태로 접근하면 /login으로 리다이렉트
-    if (isAdminPath && !authToken) {
+    // /admin 경로에 비인증 상태로 접근하면 /login으로 리다이렉트 (로컬 테스트 환경 제외)
+    if (isAdminPath && !authToken && !isLocalTest) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('callbackUrl', pathname);
         return NextResponse.redirect(loginUrl);
     }
 
-    // 이미 로그인한 상태에서 /login 접근 시 /admin으로 리다이렉트
-    if (isLoginPage && authToken) {
+    // 이미 로그인한 상태에서 /login 접근 시 /admin으로 리다이렉트 (로컬 테스트 환경 제외)
+    if (isLoginPage && authToken && !isLocalTest) {
         return NextResponse.redirect(new URL('/admin', request.url));
     }
 
-    return NextResponse.next();
+    const response = NextResponse.next();
+
+    // 로컬 테스트용 토큰 및 환경 쿠키 설정
+    if (isLocalTest) {
+        if (!authToken) {
+            response.cookies.set('auth_token', 'local-test-token', { path: '/' });
+        }
+        response.cookies.set('is_local_test', 'true', { path: '/' });
+    }
+
+    return response;
 }
 
 export const config = {

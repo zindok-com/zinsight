@@ -6,6 +6,7 @@ import { Upload, X, ImageIcon, Loader2 } from 'lucide-react';
 import { uploadThumbnail } from '@/actions/upload-actions';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 
 interface ImageUploadProps {
     value?: string;
@@ -16,6 +17,7 @@ interface ImageUploadProps {
 
 export function ImageUpload({ value, onChange, onRemove, validateWidth = true }: ImageUploadProps) {
     const [isUploading, setIsUploading] = useState(false);
+    const [isSelectorOpen, setIsSelectorOpen] = useState(false);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -98,11 +100,11 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
                 ) : (
                     <div className="w-40 h-40 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center bg-slate-50 text-slate-400">
                         <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-                        <span className="text-xs">이미지 없음</span>
+                        <span className="text-xs font-semibold">이미지 없음</span>
                     </div>
                 )}
 
-                <div className="flex-1">
+                <div className="flex-1 space-y-2">
                     <input
                         type="file"
                         id="thumbnail-upload"
@@ -111,34 +113,53 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
                         onChange={handleUpload}
                         disabled={isUploading}
                     />
-                    <label htmlFor="thumbnail-upload">
+                    <div className="flex flex-wrap gap-2 items-center">
+                        <label htmlFor="thumbnail-upload" className="cursor-pointer">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="pointer-events-none"
+                                disabled={isUploading}
+                            >
+                                <span>
+                                    {isUploading ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            업로드 중...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="w-4 h-4 mr-2" />
+                                            이미지 업로드
+                                        </>
+                                    )}
+                                </span>
+                            </Button>
+                        </label>
+
                         <Button
                             type="button"
                             variant="outline"
-                            className="cursor-pointer"
-                            asChild
+                            onClick={() => setIsSelectorOpen(true)}
                             disabled={isUploading}
+                            className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 font-semibold"
                         >
-                            <span>
-                                {isUploading ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                        업로드 중...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Upload className="w-4 h-4 mr-2" />
-                                        이미지 업로드
-                                    </>
-                                )}
-                            </span>
+                            <ImageIcon className="w-4 h-4 mr-2 text-indigo-600" />
+                            보관함에서 선택
                         </Button>
-                    </label>
-                    <p className="text-[10px] text-slate-500 mt-2">
+                    </div>
+                    
+                    <p className="text-[10px] text-slate-500 mt-2 font-medium">
                         {validateWidth ? '필수 사이즈: 가로 1200px 이상 (5MB 이하)' : '권장 사이즈: 1:1 비율 (5MB 이하)'}
                     </p>
                 </div>
             </div>
+
+            <StorageImageSelectorModal
+                isOpen={isSelectorOpen}
+                onClose={() => setIsSelectorOpen(false)}
+                onSelect={(url) => onChange(url)}
+            />
         </div>
     );
 }
