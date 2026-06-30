@@ -230,8 +230,7 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                             <TableHead>제목</TableHead>
                             <TableHead>연결 산업군</TableHead>
                             <TableHead>상태</TableHead>
-                            <TableHead>유료 여부</TableHead>
-                            <TableHead>외부 배포</TableHead>
+                            <TableHead>발행자</TableHead>
                             <TableHead>조회수</TableHead>
                             <TableHead>등록일</TableHead>
                             <TableHead className="text-right">관리</TableHead>
@@ -276,7 +275,6 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                 </TableCell>
                                 <TableCell className="font-medium max-w-xs">
                                     <div className="truncate">{post.title}</div>
-                                    <div className="text-[11px] text-slate-400 mt-0.5">By {post.authorName || 'Zinsight 편집부'}</div>
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex flex-wrap gap-1">
@@ -302,22 +300,10 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                     </Badge>
                                 </TableCell>
                                 <TableCell>
-                                    {post.isPaid ? (
-                                        <div className="flex flex-col gap-0.5">
-                                            <Badge className="bg-rose-100 text-rose-700 hover:bg-rose-100/80 border-rose-200 text-[10px] w-fit font-semibold">유료</Badge>
-                                            {post.price > 0 && <span className="text-[10px] text-slate-500 font-medium pl-0.5">{post.price.toLocaleString()}원</span>}
-                                        </div>
-                                    ) : (
-                                        <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 text-[10px] font-medium">무료</Badge>
-                                    )}
-                                </TableCell>
-                                <TableCell>
-                                    {post.isCrossPosted ? (
-                                        <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100/80 border-indigo-200 text-[10px] font-semibold">배포됨</Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="bg-slate-50 text-slate-400 border-slate-200 text-[10px] font-medium">로컬</Badge>
-                                    )}
-                                </TableCell>
+                                     <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[10px] font-medium">
+                                         {post.authorName || 'Zinsight 편집부'}
+                                     </Badge>
+                                 </TableCell>
                                 <TableCell>
                                     <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                         <Eye className="w-3 h-3" />
