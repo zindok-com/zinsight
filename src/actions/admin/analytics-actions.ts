@@ -99,23 +99,16 @@ export async function getPostsWithAnalytics() {
         const totalRawViews = post.analytics.reduce((sum, a) => sum + a.rawViews, 0);
         const totalUniqueViews = post.analytics.reduce((sum, a) => sum + a.uniqueViews, 0);
         
-        // Use accumulated raw views if post.viewCount is smaller (fallback) or use post.viewCount
         const views = Math.max(post.viewCount, totalRawViews);
         const ctr = totalImpressions > 0 ? ((views / totalImpressions) * 100).toFixed(2) : '0.00';
 
         return {
-            id: post.id,
-            title: post.title,
-            slug: post.slug,
-            category: post.category,
-            status: post.status,
-            createdAt: post.createdAt,
+            ...post,
             authorName: post.author?.name || post.authorName,
             views,
             uniqueViews: totalUniqueViews,
             impressions: totalImpressions,
-            ctr: Number(ctr),
-            industry: post.industries[0]?.industry?.name || 'N/A'
+            ctr: Number(ctr)
         };
     });
 }
