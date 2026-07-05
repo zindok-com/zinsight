@@ -231,7 +231,9 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                             <TableHead>연결 산업군</TableHead>
                             <TableHead>상태</TableHead>
                             <TableHead>발행자</TableHead>
-                            <TableHead>조회수</TableHead>
+                            <TableHead className="text-right">노출수</TableHead>
+                            <TableHead className="text-right">조회수<br/><span className="text-[10px] text-muted-foreground font-normal tracking-tight">(전체/순)</span></TableHead>
+                            <TableHead className="text-right">CTR</TableHead>
                             <TableHead>등록일</TableHead>
                             <TableHead className="text-right">관리</TableHead>
                         </TableRow>
@@ -304,11 +306,21 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                          {post.authorName || 'Zinsight 편집부'}
                                      </Badge>
                                  </TableCell>
-                                <TableCell>
-                                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                        <Eye className="w-3 h-3" />
-                                        {post.viewCount}
+                                <TableCell className="text-right">
+                                    <span className="text-sm font-medium text-slate-700">
+                                        {post.impressions?.toLocaleString() || 0}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <div className="flex flex-col items-end gap-0.5">
+                                        <span className="text-sm font-medium text-slate-700">{post.views?.toLocaleString() || post.viewCount || 0}</span>
+                                        <span className="text-[10px] text-muted-foreground tracking-tight">{post.uniqueViews?.toLocaleString() || 0}</span>
                                     </div>
+                                </TableCell>
+                                <TableCell className="text-right">
+                                    <Badge variant="outline" className={Number(post.ctr) > 5 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}>
+                                        {post.ctr || '0.00'}%
+                                    </Badge>
                                 </TableCell>
                                 <TableCell className="text-slate-500 text-xs font-medium whitespace-nowrap">
                                     {new Date(post.createdAt).toLocaleDateString('ko-KR', {

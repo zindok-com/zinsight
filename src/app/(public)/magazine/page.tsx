@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarIndustries } from '@/actions/insight-radar-actions';
 import MagazineAeoCTA from '@/components/public/MagazineAeoCTA';
+import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 
@@ -125,16 +126,18 @@ export default async function MagazinePage() {
                             </span>
                         </div>
                         {featuredPost ? (
-                            <Link href={`/magazine/${featuredPost.slug}`} className="group block cursor-pointer">
-                                <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors">
-                                    {featuredPost.title}
-                                </h2>
-                                <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
-                                    <HighlightedText 
-                                        text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
-                                    />
-                                </p>
-                            </Link>
+                            <ImpressionTracker postId={featuredPost.id}>
+                                <Link href={`/magazine/${featuredPost.slug}`} className="group block cursor-pointer">
+                                    <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors">
+                                        {featuredPost.title}
+                                    </h2>
+                                    <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
+                                        <HighlightedText 
+                                            text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
+                                        />
+                                    </p>
+                                </Link>
+                            </ImpressionTracker>
                         ) : (
                             <>
                                 <h2 className="font-h1 text-h1 text-zi-on-surface mb-6">
@@ -201,33 +204,35 @@ export default async function MagazinePage() {
                                 const industryName = article.industries?.[0]?.industry?.name || '인사이트';
                                 
                                 return (
-                                    <Link href={`/magazine/${article.slug}`} key={article.id} className="flex flex-col group cursor-pointer">
-                                        <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
-                                            {article.thumbnailUrl ? (
-                                                <Image 
-                                                    src={article.thumbnailUrl} 
-                                                    alt={article.title}
-                                                    fill
-                                                    className="object-cover transition-all duration-500 group-hover:scale-105"
-                                                />
-                                            ) : (
-                                                <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
-                                            )}
-                                        </div>
-                                        <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                            {industryName}
-                                        </span>
-                                        <h4 className="mb-3 sm:mb-4 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
-                                            {article.title}
-                                        </h4>
-                                        <p className="mb-6 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant">
-                                            <HighlightedText text={article.summary || ''} />
-                                        </p>
-                                        <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
-                                            <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
-                                            <ArrowRight className="h-4 w-4" />
-                                        </div>
-                                    </Link>
+                                    <ImpressionTracker postId={article.id} key={article.id}>
+                                        <Link href={`/magazine/${article.slug}`} className="flex flex-col group cursor-pointer h-full">
+                                            <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                                {article.thumbnailUrl ? (
+                                                    <Image 
+                                                        src={article.thumbnailUrl} 
+                                                        alt={article.title}
+                                                        fill
+                                                        className="object-cover transition-all duration-500 group-hover:scale-105"
+                                                    />
+                                                ) : (
+                                                    <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                                )}
+                                            </div>
+                                            <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
+                                                {industryName}
+                                            </span>
+                                            <h4 className="mb-3 sm:mb-4 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
+                                                {article.title}
+                                            </h4>
+                                            <p className="mb-6 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant">
+                                                <HighlightedText text={article.summary || ''} />
+                                            </p>
+                                            <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
+                                                <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
+                                                <ArrowRight className="h-4 w-4" />
+                                            </div>
+                                        </Link>
+                                    </ImpressionTracker>
                                 );
                             })
                         ) : (
@@ -252,19 +257,21 @@ export default async function MagazinePage() {
                                     More Headlines
                                 </h3>
                                 {sideArticles.map((article) => (
-                                    <Link href={`/magazine/${(article as any).slug}`} key={article.id} className="group cursor-pointer block">
-                                        <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
-                                            {article.title}
-                                        </h4>
-                                        <p className="mb-3 line-clamp-2 text-[13px] text-zi-on-surface-variant leading-relaxed">
-                                            <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
-                                        </p>
-                                        <div className="flex items-center gap-2 text-zi-outline text-[12px]">
-                                            <span>{(article as any).industries?.[0]?.industry?.name || '인사이트'}</span>
-                                            <span>•</span>
-                                            <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
-                                        </div>
-                                    </Link>
+                                    <ImpressionTracker postId={article.id} key={article.id}>
+                                        <Link href={`/magazine/${(article as any).slug}`} className="group cursor-pointer block">
+                                            <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
+                                                {article.title}
+                                            </h4>
+                                            <p className="mb-3 line-clamp-2 text-[13px] text-zi-on-surface-variant leading-relaxed">
+                                                <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
+                                            </p>
+                                            <div className="flex items-center gap-2 text-zi-outline text-[12px]">
+                                                <span>{(article as any).industries?.[0]?.industry?.name || '인사이트'}</span>
+                                                <span>•</span>
+                                                <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
+                                            </div>
+                                        </Link>
+                                    </ImpressionTracker>
                                 ))}
                             </div>
                         ) : (

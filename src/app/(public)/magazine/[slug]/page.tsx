@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { Metadata } from 'next';
+import { ViewTracker } from '@/components/public/analytics/ViewTracker';
 
 function getCategoryLabel(category: string) {
     switch (category) {
@@ -308,6 +309,7 @@ export default async function MagazinePostDetailPage({ params }: { params: Promi
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface pb-24">
+            <ViewTracker postId={post.id} />
             {/* SEO 구조화 데이터 주입 */}
             <script
                 type="application/ld+json"

@@ -10,9 +10,12 @@ export const metadata: Metadata = {
     description: '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
 };
 
+import { VisitorTracker } from '@/components/public/analytics/VisitorTracker';
+
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex min-h-screen flex-col bg-zi-surface">
+            <VisitorTracker />
             <PublicNavbar />
             <main className="flex-1">{children}</main>
             <PublicFooter />
