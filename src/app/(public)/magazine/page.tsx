@@ -258,16 +258,18 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                                     <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
                                                 )}
                                             </div>
-                                            <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                                {article.region?.name ? `${article.region.name} • ${industryName}` : industryName}
-                                            </span>
-                                            <h4 className="mb-3 sm:mb-4 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
-                                                {article.title}
-                                            </h4>
-                                            <p className="mb-6 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant">
-                                                <HighlightedText text={article.summary || ''} />
-                                            </p>
-                                            <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-outline text-ui-label">
+                                            <div className="flex-1 flex flex-col justify-start">
+                                                <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
+                                                    {article.region?.name ? `${article.region.name} • ${industryName}` : industryName}
+                                                </span>
+                                                <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
+                                                    {article.title}
+                                                </h4>
+                                                <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
+                                                    <HighlightedText text={article.summary || ''} />
+                                                </p>
+                                            </div>
+                                            <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
                                                 <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>
