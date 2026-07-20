@@ -238,7 +238,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                 {/* ─────────────────────────────── */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-start">
                     {/* 메인 리스트 */}
-                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12">
+                    <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 self-start">
                         {gridArticles.length > 0 ? (
                             gridArticles.map((article) => {
                                 const industryName = article.industries?.[0]?.industry?.name || '인사이트';
@@ -289,7 +289,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                         )}
                     </div>
                     {/* 사이드바 */}
-                    <div className="lg:col-span-4 flex flex-col gap-8 sm:gap-12">
+                    <div className="lg:col-span-4 flex flex-col gap-8 sm:gap-12 self-start">
                         <MagazineAeoCTA />
  
                         {/* 트렌딩 사이드바 */}
