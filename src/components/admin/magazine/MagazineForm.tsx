@@ -18,10 +18,12 @@ import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
 export function MagazineForm({ 
     industries, 
     authors = [], 
+    regions = [],
     post 
 }: { 
     industries: any[], 
     authors?: any[], 
+    regions?: any[],
     post?: any 
 }) {
     const router = useRouter();
@@ -129,7 +131,9 @@ export function MagazineForm({
         category: post?.category || 'NEWSLETTER',
         status: post?.status || 'PUBLISHED',
         authorId: post?.authorId || null,
-        authorName: post?.authorName || 'Zinsight 편집부'
+        authorName: post?.authorName || 'Zinsight 편집부',
+        regionId: post?.regionId || null,
+        targetKeywords: post?.targetKeywords || ''
     });
 
     // Real-time slug generation (Only when creating a new post)
@@ -175,11 +179,6 @@ export function MagazineForm({
         const validBodies = formData.bodies.filter((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
         if (validBodies.length === 0) {
             toast.error('최소 하나의 본문 섹션을 입력해주세요.');
-            return;
-        }
-
-        if (selectedIndustries.length === 0) {
-            toast.error('최소 하나 이상의 산업군을 선택해주세요.');
             return;
         }
 
@@ -229,9 +228,10 @@ export function MagazineForm({
     // Preview Meta Information Helper
     const categoryLabel = (() => {
         switch (formData.category) {
-            case 'INTELLIGENCE_REPORT': return 'Zinsight Original';
-            case 'TECH_AUDIT': return 'Tech Audit';
-            case 'SALES_SCENARIO': return 'Sales Guide';
+            case 'INTELLIGENCE_REPORT': return 'Digital Marketing';
+            case 'VALLEY_NOW': return 'Valley Now';
+            case 'LOCAL_SME': return 'Local SME';
+            case 'MARKET_FLASH': return 'Market Flash';
             case 'NEWSLETTER':
             default:
                 return 'Newsletter';
@@ -283,7 +283,13 @@ export function MagazineForm({
                                 <Select
                                     value={formData.category}
                                     onValueChange={(val) => {
-                                        setFormData({ ...formData, category: val });
+                                        setFormData({ 
+                                            ...formData, 
+                                            category: val,
+                                            regionId: ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(val) 
+                                                ? formData.regionId 
+                                                : null
+                                        });
                                         if (val === 'NEWSLETTER' && selectedIndustries.length > 1) {
                                             setSelectedIndustries([selectedIndustries[0]]);
                                         }
@@ -293,13 +299,37 @@ export function MagazineForm({
                                         <SelectValue placeholder="카테고리 선택" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="NEWSLETTER">뉴스레터</SelectItem>
-                                        <SelectItem value="INTELLIGENCE_REPORT">Zinsight 오리지널</SelectItem>
-                                        <SelectItem value="TECH_AUDIT">무료 진단 사례</SelectItem>
-                                        <SelectItem value="SALES_SCENARIO">세일즈 가이드</SelectItem>
+                                        <SelectItem value="NEWSLETTER">뉴스레터 (Tech/Mkt)</SelectItem>
+                                        <SelectItem value="INTELLIGENCE_REPORT">디지털 마케팅 (Tech/Mkt)</SelectItem>
+                                        <SelectItem value="VALLEY_NOW">밸리 나우 (로컬)</SelectItem>
+                                        <SelectItem value="LOCAL_SME">로컬 SME 그로스 (로컬)</SelectItem>
+                                        <SelectItem value="MARKET_FLASH">마켓 플래시 (로컬)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
+                            {['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(formData.category) && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="regionSelect">연계 지역</Label>
+                                    <Select
+                                        value={formData.regionId ? String(formData.regionId) : 'none'}
+                                        onValueChange={(val) => {
+                                            setFormData({ ...formData, regionId: val === 'none' ? null : Number(val) });
+                                        }}
+                                    >
+                                        <SelectTrigger id="regionSelect" className="bg-white">
+                                            <SelectValue placeholder="지역 선택" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">선택 없음</SelectItem>
+                                            {regions.map((reg: any) => (
+                                                <SelectItem key={reg.id} value={String(reg.id)}>
+                                                    {reg.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label htmlFor="authorSelect">작성자(발행자)</Label>
                                 <Select
@@ -342,27 +372,51 @@ export function MagazineForm({
                         </div>
 
                         {/* 카테고리 안내 가이드 */}
-                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2.5 text-xs text-slate-600 shadow-sm">
-                            <p className="font-semibold text-slate-800 flex items-center gap-1.5 text-sm">
-                                <Info className="w-4 h-4 text-indigo-500" />
-                                카테고리 안내 가이드
+                        <div className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs">
+                            <p className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
+                                <Info className="w-4 h-4 text-indigo-600" />
+                                매거진 카테고리 & URL 라우팅 가이드
                             </p>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                                <div className="space-y-1">
-                                    <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[11px]">뉴스레터 (NEWSLETTER)</span>
-                                    <p className="text-slate-500 pl-1">뉴스레터</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* 테크 & 마케팅 지면 그룹 */}
+                                <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
+                                    <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                                        Core 테크 지면 (URL: <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded text-[11px]">/magazine/tech-marketing/*</code>)
+                                    </h4>
+                                    <div className="space-y-3 pl-3 border-l border-slate-100">
+                                        <div className="space-y-1">
+                                            <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">뉴스레터 (NEWSLETTER)</span>
+                                            <p className="text-slate-500">주 단위 기술 트렌드 및 요약 분석 지면</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[10px]">디지털 마케팅 (INTELLIGENCE_REPORT)</span>
+                                            <p className="text-slate-500">SEO, GEO를 활용한 디지털 마케팅 분석 리포트</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[11px]">Zinsight 오리지널 (INTELLIGENCE_REPORT)</span>
-                                    <p className="text-slate-500 pl-1">Zinsight 오리지널 (SEO/GEO 최적화 기업 분석)</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">무료 진단 사례 (TECH_AUDIT)</span>
-                                    <p className="text-slate-500 pl-1">AEO/SEO 무료 진단 사례 아카이빙</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <span className="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-[11px]">세일즈 가이드 (SALES_SCENARIO)</span>
-                                    <p className="text-slate-500 pl-1">실전 섭외 명분 및 세일즈 가이드</p>
+
+                                {/* 로컬 비즈니스 지면 그룹 */}
+                                <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
+                                    <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                        로컬 비즈니스 지면 (URL: <code className="text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded text-[11px]">/magazine/local/[지자체]/*</code>)
+                                    </h4>
+                                    <div className="space-y-3 pl-3 border-l border-slate-100">
+                                        <div className="space-y-1">
+                                            <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">밸리 나우 (VALLEY_NOW)</span>
+                                            <p className="text-slate-500">지자체 정책 정보, 스타트업 소식 및 인프라 소개</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px]">로컬 SME 그로스 (LOCAL_SME)</span>
+                                            <p className="text-slate-500">지역 소상공인 디지털 혁신 및 전통기업 그로스 케이스</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded text-[10px]">마켓 플래시 (MARKET_FLASH)</span>
+                                            <p className="text-slate-500">핫플레이스, 오프라인 이벤트 및 관내 신규 사업 보도자료</p>
+                                        </div>
+                                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 3종 기사는 반드시 '연계 지역'을 지정해야 합니다.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -406,7 +460,7 @@ export function MagazineForm({
                             <div className="space-y-6">
                                 <div className="space-y-3">
                                     <Label className="text-sm font-bold flex items-center gap-2">
-                                        연결 산업군
+                                        연결 산업군 <span className="text-xs text-slate-400 font-normal">(선택)</span>
                                         {formData.category === 'NEWSLETTER' && (
                                             <Badge variant="outline" className="text-[10px] font-normal border-blue-200 text-blue-600">단일 선택</Badge>
                                         )}
@@ -467,6 +521,20 @@ export function MagazineForm({
                                         onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
                                         onRemove={() => setFormData({ ...formData, thumbnailUrl: '' })}
                                     />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="targetKeywords" className="font-bold">핵심 키워드 태그 (쉼표로 구분)</Label>
+                                    <Input
+                                        id="targetKeywords"
+                                        placeholder="예: 인공지능, GEO 마케팅, SEO 최적화"
+                                        value={formData.targetKeywords || ''}
+                                        onChange={(e) => setFormData({ ...formData, targetKeywords: e.target.value })}
+                                        className="bg-white pr-4 font-normal text-sm border-2 focus-visible:ring-indigo-500"
+                                    />
+                                    <p className="text-[11px] text-slate-500 italic">
+                                        기사 상세 페이지 하단에 검색 가능한 태그로 출력됩니다.
+                                    </p>
                                 </div>
                             </div>
                         </div>

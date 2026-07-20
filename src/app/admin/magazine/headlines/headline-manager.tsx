@@ -60,9 +60,8 @@ export function HeadlineManager({ initialPosts }: { initialPosts: any[] }) {
                                     <div className="flex-1">
                                         <p className="text-sm font-bold line-clamp-2 mb-2">{post.title}</p>
                                         <p className="text-[10px] text-slate-500">
-                                            {post.category === 'INTELLIGENCE_REPORT' ? 'Zinsight 오리지널' :
-                                             post.category === 'TECH_AUDIT' ? '무료 진단 사례' :
-                                             post.category === 'SALES_SCENARIO' ? '세일즈 가이드' : '뉴스레터'}
+                                            {post.category === 'INTELLIGENCE_REPORT' ? '디지털 마케팅' :
+                                             ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) ? '로컬 지자체 기사' : '뉴스레터'}
                                         </p>
                                     </div>
                                 ) : (
@@ -94,14 +93,12 @@ export function HeadlineManager({ initialPosts }: { initialPosts: any[] }) {
                                         variant="outline" 
                                         className={
                                             post.category === 'INTELLIGENCE_REPORT' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                            post.category === 'TECH_AUDIT' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                            post.category === 'SALES_SCENARIO' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                                            ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) ? 'bg-sky-50 text-sky-700 border-sky-200' :
                                             'bg-blue-50 text-blue-700 border-blue-200'
                                         }
                                     >
-                                        {post.category === 'INTELLIGENCE_REPORT' ? 'Zinsight 오리지널' :
-                                         post.category === 'TECH_AUDIT' ? '무료 진단 사례' :
-                                         post.category === 'SALES_SCENARIO' ? '세일즈 가이드' : '뉴스레터'}
+                                        {post.category === 'INTELLIGENCE_REPORT' ? '디지털 마케팅' :
+                                         ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) ? '로컬 지자체 기사' : '뉴스레터'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="font-medium truncate max-w-[400px]">

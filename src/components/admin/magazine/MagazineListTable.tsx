@@ -266,11 +266,19 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                 </TableCell>
                                 <TableCell>
                                     {post.category === 'INTELLIGENCE_REPORT' ? (
-                                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Zinsight 오리지널</Badge>
-                                    ) : post.category === 'TECH_AUDIT' ? (
-                                        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">무료 진단 사례</Badge>
-                                    ) : post.category === 'SALES_SCENARIO' ? (
-                                        <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">세일즈 가이드</Badge>
+                                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">디지털 마케팅</Badge>
+                                    ) : post.category === 'VALLEY_NOW' ? (
+                                        <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">
+                                            {post.region?.name ? `${post.region.name} 밸리 나우` : '밸리 나우'}
+                                        </Badge>
+                                    ) : post.category === 'LOCAL_SME' ? (
+                                        <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">
+                                            {post.region?.name ? `${post.region.name} SME` : '로컬 SME'}
+                                        </Badge>
+                                    ) : post.category === 'MARKET_FLASH' ? (
+                                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
+                                            {post.region?.name ? `${post.region.name} 플래시` : '마켓 플래시'}
+                                        </Badge>
                                     ) : (
                                         <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">뉴스레터</Badge>
                                     )}
@@ -397,16 +405,18 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                                     </SelectTrigger>
                                                     <SelectContent>
                                                         <SelectItem value="NEWSLETTER">뉴스레터</SelectItem>
-                                                        <SelectItem value="INTELLIGENCE_REPORT">Zinsight 오리지널</SelectItem>
-                                                        <SelectItem value="TECH_AUDIT">무료 진단 사례</SelectItem>
-                                                        <SelectItem value="SALES_SCENARIO">세일즈 가이드</SelectItem>
+                                                        <SelectItem value="INTELLIGENCE_REPORT">디지털 마케팅</SelectItem>
+                                                        <SelectItem value="VALLEY_NOW">밸리 나우</SelectItem>
+                                                        <SelectItem value="LOCAL_SME">로컬 SME 그로스</SelectItem>
+                                                        <SelectItem value="MARKET_FLASH">마켓 플래시</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
-                                                    {selectedPost.category === 'INTELLIGENCE_REPORT' ? 'Zinsight 오리지널' :
-                                                        selectedPost.category === 'TECH_AUDIT' ? '무료 진단 사례' :
-                                                            selectedPost.category === 'SALES_SCENARIO' ? '세일즈 가이드' : '뉴스레터'}
+                                                    {selectedPost.category === 'INTELLIGENCE_REPORT' ? '디지털 마케팅' :
+                                                     selectedPost.category === 'VALLEY_NOW' ? '밸리 나우' :
+                                                     selectedPost.category === 'LOCAL_SME' ? '로컬 SME 그로스' :
+                                                     selectedPost.category === 'MARKET_FLASH' ? '마켓 플래시' : '뉴스레터'}
                                                 </div>
                                             )}
                                         </div>
@@ -488,16 +498,13 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                             </p>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                                                 <div>
-                                                    <span className="font-bold text-blue-600">뉴스레터</span>: 뉴스레터 (산업 동향 주기적 발행)
+                                                    <span className="font-bold text-blue-600">뉴스레터</span>: 주간 기술 및 트렌드 분석
                                                 </div>
                                                 <div>
-                                                    <span className="font-bold text-purple-600">Zinsight 오리지널</span>: SEO/GEO 최적화 기업 분석
+                                                    <span className="font-bold text-purple-600">디지털 마케팅</span>: SEO, GEO를 활용한 디지털 마케팅 분석
                                                 </div>
-                                                <div>
-                                                    <span className="font-bold text-emerald-600">무료 진단 사례</span>: AEO/SEO 무료 진단 사례 아카이빙
-                                                </div>
-                                                <div>
-                                                    <span className="font-bold text-amber-600">세일즈 가이드</span>: 실전 섭외 명분 및 세일즈 가이드
+                                                <div className="sm:col-span-2">
+                                                    <span className="font-bold text-emerald-600">로컬 3종 (밸리 나우 / SME 그로스 / 마켓 플래시)</span>: 지자체 소식 및 스타트업 인터뷰 (지역 선택 필수)
                                                 </div>
                                             </div>
                                         </div>

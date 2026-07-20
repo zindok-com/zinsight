@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { MagazineCategory } from '@prisma/client';
 
 function processMagazineContent(content: string, providedSummary?: string) {
     let sections: any = {
@@ -76,15 +77,17 @@ export async function getMagazinePosts() {
 export async function createMagazinePost(data: {
     title: string;
     content: string;
-    category?: 'NEWSLETTER' | 'INTELLIGENCE_REPORT' | 'TECH_AUDIT' | 'SALES_SCENARIO';
+    category?: MagazineCategory;
     slug?: string;
     thumbnailUrl?: string;
-    industryIds: number[];
+    industryIds?: number[];
     organizationIds?: number[];
     status?: string;
+    regionId?: number | null;
+    targetKeywords?: string | null;
 }) {
     try {
-        const { industryIds, organizationIds = [], slug: providedSlug, category = 'NEWSLETTER', lead, bodies, closing, ...postData } = data as any;
+        const { industryIds = [], organizationIds = [], slug: providedSlug, category = 'NEWSLETTER', regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
         
         let slug = providedSlug;
 
@@ -126,6 +129,8 @@ export async function createMagazinePost(data: {
                 summary: extractedSummary,
                 category,
                 slug,
+                regionId,
+                targetKeywords,
                 industries: {
                     create: industryIds.map((id: number) => ({
                         industryId: id
@@ -153,15 +158,17 @@ export async function createMagazinePost(data: {
 export async function updateMagazinePost(id: number, data: {
     title: string;
     content: string;
-    category: 'NEWSLETTER' | 'INTELLIGENCE_REPORT' | 'TECH_AUDIT' | 'SALES_SCENARIO';
+    category: MagazineCategory;
     slug: string;
     thumbnailUrl?: string;
-    industryIds: number[];
+    industryIds?: number[];
     organizationIds?: number[];
     status?: string;
+    regionId?: number | null;
+    targetKeywords?: string | null;
 }) {
     try {
-        const { industryIds, organizationIds = [], lead, bodies, closing, ...postData } = data as any;
+        const { industryIds = [], organizationIds = [], regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
 
         // Content processing: Extract summary from lead and clean markers
         const { summary: extractedSummary, cleanedContent } = processMagazineContent(postData.content, (postData as any).summary);
@@ -172,6 +179,8 @@ export async function updateMagazinePost(id: number, data: {
                 ...postData,
                 content: cleanedContent,
                 summary: extractedSummary,
+                regionId,
+                targetKeywords,
                 industries: {
                     deleteMany: {},
                     create: industryIds.map((id: number) => ({
