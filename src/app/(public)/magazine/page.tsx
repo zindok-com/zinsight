@@ -236,7 +236,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                 {/* ─────────────────────────────── */}
                 {/* 서브 섹션 (그리드 + 사이드바) */}
                 {/* ─────────────────────────────── */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-start">
                     {/* 메인 리스트 */}
                     <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12">
                         {gridArticles.length > 0 ? (
