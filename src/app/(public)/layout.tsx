@@ -11,12 +11,25 @@ export const metadata: Metadata = {
 };
 
 import { VisitorTracker } from '@/components/public/analytics/VisitorTracker';
+import { prisma } from '@/lib/db';
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default async function PublicLayout({ children }: { children: React.ReactNode }) {
+    let regions: any[] = [];
+    
+    try {
+        regions = await prisma.region.findMany({
+            where: { isActive: true },
+            orderBy: { name: 'asc' }
+        });
+    } catch (error) {
+        console.error('[PublicLayout] Failed to query active regions, using empty array fallback:', error);
+        regions = [];
+    }
+
     return (
         <div className="flex min-h-screen flex-col bg-zi-surface">
             <VisitorTracker />
-            <PublicNavbar />
+            <PublicNavbar regions={regions} />
             <main className="flex-1">{children}</main>
             <PublicFooter />
         </div>

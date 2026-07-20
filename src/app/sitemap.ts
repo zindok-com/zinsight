@@ -28,11 +28,37 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'daily',
             priority: 0.9,
         },
+        {
+            url: `${baseUrl}/magazine/tech-marketing`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/magazine/local`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.8,
+        },
     ];
 
-    // Dynamic magazine routes
     let magazineRoutes: MetadataRoute.Sitemap = [];
+    let regionRoutes: MetadataRoute.Sitemap = [];
+    
     try {
+        // Fetch active regions for sitemap inclusion
+        const regions = await prisma.region.findMany({
+            where: { isActive: true },
+            select: { slug: true, updatedAt: true }
+        });
+
+        regionRoutes = regions.map((reg) => ({
+            url: `${baseUrl}/magazine/local/${reg.slug}`,
+            lastModified: reg.updatedAt,
+            changeFrequency: 'daily' as const,
+            priority: 0.8,
+        }));
+
         const magazinePosts = await prisma.magazinePost.findMany({
             where: {
                 status: 'PUBLISHED',
@@ -42,21 +68,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 slug: true,
                 updatedAt: true,
                 createdAt: true,
+                category: true,
+                region: {
+                    select: { slug: true }
+                }
             },
             orderBy: {
                 updatedAt: 'desc',
             },
         });
 
-        magazineRoutes = magazinePosts.map((post) => ({
-            url: `${baseUrl}/magazine/${post.slug}`,
-            lastModified: post.updatedAt,
-            changeFrequency: 'weekly' as const,
-            priority: 0.7,
-        }));
+        magazineRoutes = magazinePosts.map((post) => {
+            const path = ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region 
+                ? `/magazine/local/${post.region.slug}/${post.slug}`
+                : `/magazine/tech-marketing/${post.slug}`;
+            return {
+                url: `${baseUrl}${path}`,
+                lastModified: post.updatedAt,
+                changeFrequency: 'weekly' as const,
+                priority: 0.7,
+            };
+        });
     } catch (error) {
-        console.error('[sitemap] DB 조회 실패, 빈 매거진 목록으로 진행:', error);
+        console.error('[sitemap] DB 조회 실패, 기본 목록으로 진행:', error);
     }
 
-    return [...staticRoutes, ...magazineRoutes];
+    return [...staticRoutes, ...regionRoutes, ...magazineRoutes];
 }

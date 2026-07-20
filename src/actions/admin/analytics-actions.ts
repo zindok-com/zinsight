@@ -87,7 +87,8 @@ export async function getPostsWithAnalytics() {
             },
             industries: {
                 include: { industry: true }
-            }
+            },
+            region: true
         },
         orderBy: {
             createdAt: 'desc'

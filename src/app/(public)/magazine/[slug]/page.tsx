@@ -1,449 +1,83 @@
-import { notFound } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { Metadata } from 'next';
-import { ViewTracker } from '@/components/public/analytics/ViewTracker';
+import type { Metadata } from 'next';
 
-function getCategoryLabel(category: string) {
-    switch (category) {
-        case 'INTELLIGENCE_REPORT': return 'Zinsight Original';
-        case 'TECH_AUDIT': return 'Tech Audit';
-        case 'SALES_SCENARIO': return 'Sales Guide';
-        case 'NEWSLETTER':
-        default:
-            return 'Newsletter';
-    }
+export const revalidate = 0; // 동적 리다이렉트를 실시간으로 처리하기 위해 캐싱을 비활성화하거나 ISR 최소화
+export const dynamic = 'force-dynamic';
+
+interface PageProps {
+    params: Promise<{ slug: string }>;
 }
 
-export const revalidate = 3600; // 1시간마다 점진적 정적 재생성(ISR)
-export const dynamicParams = true; // 빌드 타임에 생성되지 않은 새 포스트도 온디맨드로 정적 생성
-
-export async function generateStaticParams() {
-    const posts = await prisma.magazinePost.findMany({
-        where: {
-            status: 'PUBLISHED',
-            deletedAt: null,
-        },
-        select: {
-            slug: true,
-        },
-    });
-
-    return posts.map((post) => ({
-        slug: post.slug,
-    }));
-}
-
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+// 메타데이터 요청 단계에서도 동일하게 리다이렉트를 가로채 처리합니다.
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
-    const baseUrl = `https://${domain}`;
 
+    // 1. 우선 기사가 데이터베이스에 존재하는지 확인
     const post = await prisma.magazinePost.findUnique({
         where: { slug },
-        include: {
-            industries: { include: { industry: true } },
-            organizations: { include: { organization: true } },
-            author: true
-        }
+        include: { region: true }
     });
 
-    // 존재하지 않거나 삭제된 포스트
-    if (!post || post.deletedAt !== null) {
-        return {
-            title: 'Not Found',
-            robots: { index: false, follow: false },
-        };
-    }
-
-    // PUBLISHED가 아닌 포스트(DRAFT 등)는 검색엔진 색인 제외
-    if (post.status !== 'PUBLISHED') {
-        return {
-            title: post.title,
-            robots: { index: false, follow: false },
-        };
-    }
-
-    const title = `${post.title} | Zinsight Magazine`;
-
-    // description 우선순위:
-    // 1) post.summary (편집자가 작성한 요약)
-    // 2) parsedContent.lead (JSON 포맷 본문의 리드 문장)
-    // 3) content 앞부분 (단, JSON 형태인 경우 제외)
-    let description = post.summary || '';
-    if (!description) {
-        try {
-            if (post.content.trim().startsWith('{')) {
-                const parsed = JSON.parse(post.content);
-                description = parsed.lead?.slice(0, 160) || '';
-            }
-        } catch {}
-        if (!description && !post.content.trim().startsWith('{')) {
-            description = post.content.slice(0, 160).trim();
+    if (post && post.deletedAt === null && post.status === 'PUBLISHED') {
+        if (['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region) {
+            permanentRedirect(`/magazine/local/${post.region.slug}/${post.slug}`);
+        } else {
+            permanentRedirect(`/magazine/tech-marketing/${post.slug}`);
         }
-        if (!description) description = `${post.title} — Zinsight Magazine 리서치 콘텐츠`;
     }
-    // **마크다운 강조 기호 제거**
-    description = description.replace(/\*\*/g, '').replace(/\*\{.*?\}\*/g, '').slice(0, 160);
 
-    const ogImage = post.thumbnailUrl || `${baseUrl}/img/zinsight_icon.png`;
-    const tags = [
-        ...post.industries.map(pi => pi.industry.name),
-        ...post.organizations.map(po => po.organization.company_name)
-    ];
+    // 2. 존재하지 않는다면 리다이렉트 맵핑 테이블 검사
+    const currentPath = `/magazine/${slug}`;
+    const redirectRecord = await prisma.redirect.findUnique({
+        where: { sourcePath: currentPath }
+    });
+
+    if (redirectRecord) {
+        if (redirectRecord.permanent) {
+            permanentRedirect(redirectRecord.targetPath);
+        } else {
+            redirect(redirectRecord.targetPath);
+        }
+    }
 
     return {
-        title,
-        description,
-        alternates: {
-            canonical: `${baseUrl}/magazine/${post.slug}`,
-        },
-        robots: {
-            index: true,
-            follow: true,
-            googleBot: {
-                index: true,
-                follow: true,
-                'max-video-preview': -1,
-                'max-image-preview': 'large',
-                'max-snippet': -1,
-            },
-        },
-        openGraph: {
-            title,
-            description,
-            type: 'article',
-            url: `${baseUrl}/magazine/${post.slug}`,
-            publishedTime: post.createdAt.toISOString(),
-            modifiedTime: post.updatedAt.toISOString(),
-            section: getCategoryLabel(post.category),
-            authors: [post.author?.name || post.authorName || 'Zinsight 편집부'],
-            tags: tags.length > 0 ? tags : undefined,
-            locale: 'ko_KR',
-            siteName: 'Zinsight',
-            images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
-        },
-        twitter: {
-            card: 'summary_large_image',
-            title,
-            description,
-            images: [ogImage],
-        },
+        title: 'Not Found',
+        robots: { index: false, follow: false },
     };
 }
 
-// 텍스트 강조 처리를 위한 컴포넌트
-function HighlightedText({ text }: { text: string }) {
-    if (!text) return null;
-    
-    // 줄바꿈 처리
-    const lines = text.split('\n');
-    
-    return (
-        <>
-            {lines.map((line, lineIdx) => {
-                // 1. Markdown 이미지 형식 매칭 (![alt](url))
-                const imgMatch = line.trim().match(/^!\[(.*?)\]\((.*?)\)$/);
-                if (imgMatch) {
-                    const alt = imgMatch[1];
-                    const url = imgMatch[2];
-                    return (
-                        <span key={lineIdx} className="block my-6 text-center">
-                            <img 
-                                src={url} 
-                                alt={alt} 
-                                className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
-                            />
-                            {alt && <span className="block text-xs text-zi-outline-variant mt-2 italic">{alt}</span>}
-                        </span>
-                    );
-                }
-
-                // 2. Raw 이미지 URL 형식 매칭 (Vercel Blob 등 이미지 링크 단독 행)
-                const rawUrlMatch = line.trim().match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
-                if (rawUrlMatch) {
-                    const url = rawUrlMatch[0];
-                    return (
-                        <span key={lineIdx} className="block my-6 text-center">
-                            <img 
-                                src={url} 
-                                alt="Image" 
-                                className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
-                            />
-                        </span>
-                    );
-                }
-
-                // 기존의 강조 및 링크 처리
-                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
-                return (
-                    <span key={lineIdx} className="block mb-4 last:mb-0">
-                        {parts.map((part, i) => {
-                            if (part.startsWith('**{') && part.endsWith('}**')) {
-                                const content = part.slice(3, -3);
-                                return <span key={i} className="font-bold text-zi-blue underline decoration-zi-blue/30 underline-offset-4">{content}</span>;
-                            }
-                            if (part.startsWith('**') && part.endsWith('**')) {
-                                const content = part.slice(2, -2);
-                                return <span key={i} className="font-bold text-zi-blue">{content}</span>;
-                            }
-                            if (part.startsWith('[') && part.endsWith(')')) {
-                                const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
-                                if (match) {
-                                    const linkText = match[1];
-                                    const url = match[2];
-                                    return (
-                                        <a 
-                                            key={i} 
-                                            href={url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="text-indigo-600 hover:text-indigo-800 underline underline-offset-4 decoration-indigo-300 font-semibold transition-colors"
-                                        >
-                                            {linkText}
-                                        </a>
-                                    );
-                                }
-                            }
-                            return part;
-                        })}
-                    </span>
-                );
-            })}
-        </>
-    );
-}
-
-export default async function MagazinePostDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function LegacyPostRedirectPage({ params }: PageProps) {
     const { slug } = await params;
-    
-    if (!slug) {
-        notFound();
-    }
 
+    // 1. 기사 존재 여부 및 새 카테고리 경로 판별
     const post = await prisma.magazinePost.findUnique({
         where: { slug },
-        include: {
-            industries: {
-                include: {
-                    industry: true
-                }
-            },
-            organizations: {
-                include: {
-                    organization: true
-                }
-            },
-            author: true
-        }
+        include: { region: true }
     });
 
-    if (!post || post.deletedAt !== null || post.status !== 'PUBLISHED') {
-        notFound();
-    }
-
-    // JSON 형태인지 확인하고 파싱
-    let parsedContent: {
-        lead?: string;
-        bodies?: { title: string; content: string }[];
-        closing?: string;
-    } | null = null;
-
-    try {
-        if (post.content.trim().startsWith('{')) {
-            parsedContent = JSON.parse(post.content);
+    if (post && post.deletedAt === null && post.status === 'PUBLISHED') {
+        if (['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region) {
+            permanentRedirect(`/magazine/local/${post.region.slug}/${post.slug}`);
+        } else {
+            permanentRedirect(`/magazine/tech-marketing/${post.slug}`);
         }
-    } catch (e) {
-        console.error("Failed to parse content JSON:", e);
     }
 
-    const categoryLabel = getCategoryLabel(post.category);
-    const mainIndustry = post.industries?.[0]?.industry?.name || '인사이트';
+    // 2. 관리자 직접 지정 리다이렉트 규칙 검사
+    const currentPath = `/magazine/${slug}`;
+    const redirectRecord = await prisma.redirect.findUnique({
+        where: { sourcePath: currentPath }
+    });
 
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
-    const baseUrl = `https://${domain}`;
+    if (redirectRecord) {
+        if (redirectRecord.permanent) {
+            permanentRedirect(redirectRecord.targetPath);
+        } else {
+            redirect(redirectRecord.targetPath);
+        }
+    }
 
-    // JSON-LD 구조화 데이터 구축 (Article Schema)
-    const jsonLd = {
-        '@context': 'https://schema.org',
-        '@type': 'TechArticle',
-        'headline': post.title,
-        'description': post.summary || (post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content),
-        // TODO: (주의) 현재 동적 이미지 리사이징/크롭 CDN이 없으므로, 원본 썸네일에 쿼리 파라미터를 붙여 구글 스키마의 다중 비율(16:9, 4:3, 1:1) 요건을 가상으로 맞춤.
-        // 완벽한 최적화를 위해서는 추후 이미지 리사이징 서버를 연동하고 쿼리 파라미터가 실제 해당 비율의 이미지를 반환하도록 서버 설정이 필요함.
-        'image': post.thumbnailUrl ? [
-            `${post.thumbnailUrl}?ar=16:9`,
-            `${post.thumbnailUrl}?ar=4:3`,
-            `${post.thumbnailUrl}?ar=1:1`
-        ] : [
-            `${baseUrl}/img/zinsight_icon.png?ar=16:9`,
-            `${baseUrl}/img/zinsight_icon.png?ar=4:3`,
-            `${baseUrl}/img/zinsight_icon.png?ar=1:1`
-        ],
-        'datePublished': post.createdAt.toISOString(),
-        'dateModified': post.updatedAt.toISOString(),
-        'author': {
-            '@type': 'Person',
-            'name': post.author?.name || post.authorName || 'Zinsight 편집부',
-        },
-        'publisher': {
-            '@type': 'Organization',
-            'name': 'Zinsight',
-            'logo': {
-                '@type': 'ImageObject',
-                'url': `${baseUrl}/img/zinsight_icon.png`,
-            },
-        },
-        'mainEntityOfPage': {
-            '@type': 'WebPage',
-            '@id': `${baseUrl}/magazine/${post.slug}`,
-        },
-        'keywords': [
-            getCategoryLabel(post.category),
-            ...post.industries.map(pi => pi.industry.name),
-            ...post.organizations.map(po => po.organization.company_name),
-        ].join(', '),
-    };
-
-    return (
-        <div className="min-h-screen bg-zi-surface text-zi-on-surface pb-24">
-            <ViewTracker postId={post.id} />
-            {/* SEO 구조화 데이터 주입 */}
-            <script
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            <main className="mx-auto max-w-[1024px] px-6 pt-12">
-                {/* ─────────────────────────────── */}
-                {/* 내비게이션 & 메타 정보 */}
-                {/* ─────────────────────────────── */}
-                <div className="mb-12">
-                    <Link href="/magazine" className="inline-flex items-center gap-2 text-ui-label font-ui-label font-semibold text-zi-outline-variant hover:text-zi-primary transition-colors mb-8">
-                        <ArrowLeft className="w-4 h-4" />
-                        BACK TO MAGAZINE
-                    </Link>
-                    
-                    <div className="flex items-center gap-3 mb-6">
-                        <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1.5 rounded-full text-zi-blue font-bold">
-                            {categoryLabel}
-                        </span>
-                        <span className="text-zi-outline font-ui-label text-ui-label font-semibold uppercase tracking-widest">
-                            {mainIndustry}
-                        </span>
-                    </div>
-                    
-                    <h1 className="font-h1 text-[36px] md:text-[42px] leading-[1.2] text-zi-primary mb-6 tracking-tight">
-                        {post.title}
-                    </h1>
-
-                    <div className="flex items-center justify-between border-y border-zi-divider py-4 mt-8">
-                        <div className="flex items-center gap-4 text-zi-outline font-ui-label text-[13px]">
-                            <span className="text-zi-on-surface font-semibold">
-                                By{' '}
-                                {post.author ? (
-                                    <Link 
-                                        href={`/author/${post.author.slug}`} 
-                                        className="hover:text-indigo-600 underline underline-offset-4 decoration-indigo-300 transition-colors"
-                                    >
-                                        {post.author.name}
-                                    </Link>
-                                ) : (
-                                    post.authorName || 'Zinsight 편집부'
-                                )}
-                            </span>
-                            <span>•</span>
-                            <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-                        </div>
-                        <div className="flex gap-2">
-                            {/* 향후 공유 버튼 등을 위한 공간 */}
-                        </div>
-                    </div>
-                </div>
-
-                {/* ─────────────────────────────── */}
-                {/* 썸네일 */}
-                {/* ─────────────────────────────── */}
-                {post.thumbnailUrl && (
-                    <div className="w-full aspect-[16/9] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative mb-16 shadow-sm">
-                        <Image 
-                            src={post.thumbnailUrl} 
-                            alt={post.title}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                )}
-
-                {/* ─────────────────────────────── */}
-                {/* 본문 영역 */}
-                {/* ─────────────────────────────── */}
-                <article className="prose prose-lg max-w-none prose-headings:text-zi-primary prose-p:text-zi-on-surface-variant prose-p:leading-[1.8] prose-p:font-body-md">
-                    {parsedContent ? (
-                        <div className="flex flex-col gap-12">
-                            {/* 리드 (Lead) */}
-                            {parsedContent.lead && (
-                                <div className="text-[18px] leading-[1.7] font-body-lg text-zi-on-surface border-l-4 border-zi-blue pl-6 py-2 bg-gradient-to-r from-zi-blue/5 to-transparent rounded-r-lg">
-                                    <HighlightedText text={parsedContent.lead} />
-                                </div>
-                            )}
-
-                            {/* 바디 (Bodies) */}
-                            {parsedContent.bodies && parsedContent.bodies.map((body, idx) => (
-                                <section key={idx} className="flex flex-col gap-6 scroll-mt-24" id={`section-${idx}`}>
-                                    {body.title && (
-                                        <h2 className="font-h2 text-h2 text-zi-primary border-b border-zi-divider pb-4 flex items-center gap-3">
-                                            <span className="text-zi-blue text-h3 opacity-50 font-serif italic">{(idx + 1).toString().padStart(2, '0')}.</span>
-                                            {body.title}
-                                        </h2>
-                                    )}
-                                    <div className="text-[16px]">
-                                        <HighlightedText text={body.content} />
-                                    </div>
-                                </section>
-                            ))}
-
-                            {/* 클로징 (Closing) */}
-                            {parsedContent.closing && (
-                                <div className="mt-8 p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[16px]">
-                                    <div className="flex items-center gap-2 mb-4">
-                                        <div className="w-2 h-2 rounded-full bg-zi-blue" />
-                                        <span className="font-ui-label text-ui-label font-bold text-zi-secondary uppercase tracking-widest">
-                                            Closing Thoughts
-                                        </span>
-                                    </div>
-                                    <HighlightedText text={parsedContent.closing} />
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        /* 구형 데이터 포맷 (단순 텍스트) */
-                        <div className="text-[16px]">
-                            <HighlightedText text={post.content} />
-                        </div>
-                    )}
-                </article>
-
-                {/* ─────────────────────────────── */}
-                {/* 관련 태그 (Tags) */}
-                {/* ─────────────────────────────── */}
-                {(post.industries.length > 0 || post.organizations.length > 0) && (
-                    <div className="mt-16 pt-8 border-t border-zi-divider flex flex-wrap gap-2">
-                        {post.industries.map(pi => (
-                            <span key={`ind-${pi.industry.id}`} className="px-3 py-1.5 bg-zi-surface-container-low text-zi-on-surface-variant rounded-full text-[13px] font-medium border border-zi-divider/50">
-                                # {pi.industry.name}
-                            </span>
-                        ))}
-                        {post.organizations.map(po => (
-                            <span key={`org-${po.organization.id}`} className="px-3 py-1.5 bg-zi-surface-container-low text-zi-on-surface-variant rounded-full text-[13px] font-medium border border-zi-divider/50">
-                                # {po.organization.company_name}
-                            </span>
-                        ))}
-                    </div>
-                )}
-            </main>
-        </div>
-    );
+    // 매칭되는 기사도 리다이렉트 룰도 없다면 404 응답
+    notFound();
 }

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Newspaper, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarIndustries } from '@/actions/insight-radar-actions';
@@ -51,9 +51,6 @@ export const metadata: Metadata = {
 function HighlightedText({ text }: { text: string }) {
     if (!text) return null;
     
-    // **{text}** 또는 **text** 패턴을 찾아 강조 처리
-    // 1. **{...}** 패턴 처리
-    // 2. **...** 패턴 처리
     const parts = text.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*)/g);
     
     return (
@@ -73,22 +70,38 @@ function HighlightedText({ text }: { text: string }) {
     );
 }
 
-export default async function MagazinePage() {
+// 기사 카테고리/지역 구성에 맞춰 동적 URL을 가져오는 헬퍼 함수
+const getPostUrl = (post: any) => {
+    if (['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region?.slug) {
+        return `/magazine/local/${post.region.slug}/${post.slug}`;
+    }
+    return `/magazine/tech-marketing/${post.slug}`;
+};
+
+interface PageProps {
+    searchParams: Promise<{ q?: string; keyword?: string }>;
+}
+
+export default async function MagazinePage({ searchParams }: PageProps) {
+    const params = await searchParams;
+    const keyword = params.q || params.keyword || '';
+    const isSearchMode = !!keyword;
+
     const [allPosts, industries] = await Promise.all([
-        getPublicMagazinePosts(),
+        getPublicMagazinePosts(keyword),
         getRadarIndustries(),
     ]);
 
-    // 1번: 피처드 스토리
-    const featuredPost = allPosts.find(p => p.headlinePriority === 1) || allPosts[0] || null;
+    // 1번: 피처드 스토리 (Hero) - 검색 모드가 아닐 때만 노출
+    const featuredPost = !isSearchMode ? (allPosts.find(p => p.headlinePriority === 1) || allPosts[0] || null) : null;
     
-    // 2~5번: 트렌딩 사이드바 (More Headlines)
-    const sideArticles = allPosts
+    // 2~5번: 트렌딩 사이드바 (More Headlines) - 검색 모드가 아닐 때만 노출
+    const sideArticles = !isSearchMode ? allPosts
         .filter(p => p.headlinePriority >= 2 && p.headlinePriority <= 5)
-        .sort((a, b) => a.headlinePriority - b.headlinePriority);
+        .sort((a, b) => a.headlinePriority - b.headlinePriority) : [];
         
     // 0번: 메인 리스트 (최신순)
-    const gridArticles = allPosts.filter(p => p.headlinePriority === 0);
+    const gridArticles = isSearchMode ? allPosts : allPosts.filter(p => p.headlinePriority === 0);
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
@@ -99,35 +112,42 @@ export default async function MagazinePage() {
                 <div className="mb-8 sm:mb-16 flex flex-col md:flex-row items-start sm:items-end justify-between border-b border-zi-divider pb-5 sm:pb-8 gap-3 sm:gap-0">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest">
-                            최신 에디션
+                            {isSearchMode ? `키워드 검색 결과 (${allPosts.length}건)` : '최신 에디션'}
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
-                            Zinsight Magazine
+                            {isSearchMode ? `"${keyword}" 검색` : 'Zinsight Magazine'}
                         </h1>
                     </div>
-                    <div className="hidden text-right md:block">
-                        <p className="max-w-sm text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
-                            데이터의 깊이와 저널리즘의 통찰이 만난 곳,<br />
-                            마케팅의 격을 높이는 프리미엄 미디어
-                        </p>
-                    </div>
+                    {isSearchMode ? (
+                        <Link href="/magazine" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-4">
+                            전체 에디션 보기
+                        </Link>
+                    ) : (
+                        <div className="hidden text-right md:block">
+                            <p className="max-w-sm text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
+                                데이터의 깊이와 저널리즘의 통찰이 만난 곳,<br />
+                                마케팅의 격을 높이는 프리미엄 미디어
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* ─────────────────────────────── */}
                 {/* 피처드 스토리 (Hero) */}
                 {/* ─────────────────────────────── */}
-                <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 mb-12 sm:mb-24 items-center">
-                    <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
-                        <div className="mb-4">
-                            <span className="font-ui-label text-[10px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
-                                {featuredPost?.category === 'INTELLIGENCE_REPORT' ? 'Zinsight Original' :
-                                 featuredPost?.category === 'TECH_AUDIT' ? 'Tech Audit' :
-                                 featuredPost?.category === 'SALES_SCENARIO' ? 'Sales Guide' : 'Newsletter'}
-                            </span>
-                        </div>
-                        {featuredPost ? (
+                {featuredPost && (
+                    <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 mb-12 sm:mb-16 items-center">
+                        <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
+                            <div className="mb-4">
+                                <span className="font-ui-label text-[10px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
+                                    {featuredPost.category === 'VALLEY_NOW' && featuredPost.region ? `${featuredPost.region.name} 밸리 나우` :
+                                     featuredPost.category === 'LOCAL_SME' && featuredPost.region ? `${featuredPost.region.name} SME` :
+                                     featuredPost.category === 'MARKET_FLASH' && featuredPost.region ? `${featuredPost.region.name} 플래시` :
+                                     featuredPost.category === 'INTELLIGENCE_REPORT' ? 'Digital Marketing' : 'Newsletter'}
+                                </span>
+                            </div>
                             <ImpressionTracker postId={featuredPost.id}>
-                                <Link href={`/magazine/${featuredPost.slug}`} className="group block cursor-pointer">
+                                <Link href={getPostUrl(featuredPost)} className="group block cursor-pointer">
                                     <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors">
                                         {featuredPost.title}
                                     </h2>
@@ -138,37 +158,26 @@ export default async function MagazinePage() {
                                     </p>
                                 </Link>
                             </ImpressionTracker>
-                        ) : (
-                            <>
-                                <h2 className="font-h1 text-h1 text-zi-on-surface mb-6">
-                                    등록된 주요 기사가 없습니다.
-                                </h2>
-                                <p className="font-body-lg text-body-lg text-zi-on-surface-variant mb-8">
-                                    새로운 인사이트를 준비 중입니다.
-                                </p>
-                            </>
-                        )}
-                        <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
-                            <span className="text-zi-on-surface font-semibold">
-                                By{' '}
-                                {featuredPost?.author ? (
-                                    <Link 
-                                        href={`/author/${featuredPost.author.slug}`} 
-                                        className="hover:text-indigo-600 underline underline-offset-4 decoration-indigo-300 transition-colors"
-                                    >
-                                        {featuredPost.author.name}
-                                    </Link>
-                                ) : (
-                                    featuredPost?.authorName || 'Zinsight 편집부'
-                                )}
-                            </span>
-                            <span>•</span>
-                            <span>{featuredPost ? new Date(featuredPost.createdAt).toLocaleDateString() : ''}</span>
+                            <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
+                                <span className="text-zi-on-surface font-semibold">
+                                    By{' '}
+                                    {featuredPost.author ? (
+                                        <Link 
+                                            href={`/author/${featuredPost.author.slug}`} 
+                                            className="hover:text-indigo-600 underline underline-offset-4 decoration-indigo-300 transition-colors"
+                                        >
+                                            {featuredPost.author.name}
+                                        </Link>
+                                    ) : (
+                                        featuredPost.authorName || 'Zinsight 편집부'
+                                    )}
+                                </span>
+                                <span>•</span>
+                                <span>{new Date(featuredPost.createdAt).toLocaleDateString()}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div className="lg:col-span-6 aspect-[4/3] w-full order-1 lg:order-2">
-                        {featuredPost ? (
-                            <Link href={`/magazine/${featuredPost.slug}`} className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative block group">
+                        <div className="lg:col-span-6 aspect-[4/3] w-full order-1 lg:order-2">
+                            <Link href={getPostUrl(featuredPost)} className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative block group">
                                 {featuredPost.thumbnailUrl ? (
                                     <Image 
                                         src={featuredPost.thumbnailUrl} 
@@ -183,15 +192,46 @@ export default async function MagazinePage() {
                                     </div>
                                 )}
                             </Link>
-                        ) : (
-                            <div className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative block group">
-                                <div className="absolute inset-0 bg-gradient-to-br from-zi-primary/10 to-zi-secondary/5 flex items-center justify-center text-zi-outline-variant italic">
-                                    No Image Available
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </section>
+                        </div>
+                    </section>
+                )}
+
+                {/* ─────────────────────────────── */}
+                {/* 섹션 바로가기 네비게이션 */}
+                {/* ─────────────────────────────── */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+                    <Link href="/magazine/tech-marketing" className="group p-6 sm:p-8 rounded-zi-card border border-zi-divider bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                            <Newspaper className="w-32 h-32 text-white transform rotate-12 translate-x-8 -translate-y-4" />
+                        </div>
+                        <div className="relative z-10">
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-300">CORE JOURNALISM</span>
+                            <h3 className="text-xl sm:text-2xl font-bold mt-2 mb-3">테크 · 마케팅 저널</h3>
+                            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-sm">
+                                데이터와 AI 기술을 융합하여 실질적인 비즈니스 성장 전략과 테크니컬 마케팅 가이드를 제시하는 프리미엄 기술 지면입니다.
+                            </p>
+                            <span className="mt-6 flex items-center text-xs font-semibold text-indigo-300 group-hover:text-indigo-200 transition-colors">
+                                테크·마케팅 지면 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                            </span>
+                        </div>
+                    </Link>
+
+                    <Link href="/magazine/local" className="group p-6 sm:p-8 rounded-zi-card border border-indigo-100 bg-gradient-to-tr from-indigo-50/50 to-sky-50/30 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
+                            <Building2 className="w-32 h-32 text-indigo-900 transform rotate-12 translate-x-8 -translate-y-4" />
+                        </div>
+                        <div className="relative z-10">
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-600">B2G & SME SYNERGY</span>
+                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-3">로컬 비즈니스 허브</h3>
+                            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-sm">
+                                전국 주요 지자체의 육성 사업 소식, 관내 테크 스타트업 성공 사례 및 소상공인과의 디지털 상생 기획 기사를 모아보는 특화 지면입니다.
+                            </p>
+                            <span className="mt-6 flex items-center text-xs font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">
+                                로컬 비즈니스 허브 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                            </span>
+                        </div>
+                    </Link>
+                </div>
 
                 {/* ─────────────────────────────── */}
                 {/* 서브 섹션 (그리드 + 사이드바) */}
@@ -205,7 +245,7 @@ export default async function MagazinePage() {
                                 
                                 return (
                                     <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={`/magazine/${article.slug}`} className="flex flex-col group cursor-pointer h-full">
+                                        <Link href={getPostUrl(article)} className="flex flex-col group cursor-pointer h-full">
                                             <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
                                                 {article.thumbnailUrl ? (
                                                     <Image 
@@ -219,7 +259,7 @@ export default async function MagazinePage() {
                                                 )}
                                             </div>
                                             <span className="mb-3 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                                {industryName}
+                                                {article.region?.name ? `${article.region.name} • ${industryName}` : industryName}
                                             </span>
                                             <h4 className="mb-3 sm:mb-4 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors">
                                                 {article.title}
@@ -258,7 +298,7 @@ export default async function MagazinePage() {
                                 </h3>
                                 {sideArticles.map((article) => (
                                     <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={`/magazine/${(article as any).slug}`} className="group cursor-pointer block">
+                                        <Link href={getPostUrl(article)} className="group cursor-pointer block">
                                             <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
                                                 {article.title}
                                             </h4>
