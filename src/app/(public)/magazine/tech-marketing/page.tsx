@@ -46,8 +46,8 @@ function HighlightedText({ text }: { text: string }) {
 export default async function TechMarketingPage() {
     const allPosts = await getTechMarketingPosts();
 
-    // 1번: 헤드라인
-    const featuredPost = allPosts.find(p => p.headlinePriority === 1) || allPosts[0] || null;
+    // 1번: 헤드라인 (테크 마케팅 전용 헤드라인 지정)
+    const featuredPost = allPosts.find(p => p.techHeadlinePriority === 1) || allPosts[0] || null;
     
     // 일반 기사 리스트
     const gridArticles = featuredPost 
