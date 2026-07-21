@@ -163,6 +163,7 @@ model MagazinePost {
   viewCount       Int       @default(0)       // 조회수
   headlinePriority Int      @default(0)       // 0: 일반, 1-5: 헤드라인 우선순위
   localHeadlinePriority Int @default(0)       // 0: 일반, 1: 로컬 전용 헤드라인 (대표)
+  techHeadlinePriority  Int @default(0)       // 0: 일반, 1: 테크/마케팅 전용 헤드라인 (대표)
   
   // 비즈니스 모델(BM) 관련 필드
   isPaid          Boolean   @default(false)   // 유료 기사 여부 (8만원 모델)

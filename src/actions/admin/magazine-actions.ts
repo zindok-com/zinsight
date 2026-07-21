@@ -403,6 +403,36 @@ export async function updateLocalHeadlinePriority(id: number, priority: number) 
     }
 }
 
+export async function updateTechHeadlinePriority(id: number, priority: number) {
+    try {
+        await prisma.$transaction(async (tx) => {
+            // 만약 새로 설정하려는 테크 헤드라인 우선순위가 1(대표)이면
+            // 다른 모든 테크 기사의 techHeadlinePriority를 0으로 초기화
+            if (priority > 0) {
+                await tx.magazinePost.updateMany({
+                    where: { 
+                        techHeadlinePriority: priority,
+                        id: { not: id }
+                    },
+                    data: { techHeadlinePriority: 0 }
+                });
+            }
+
+            // 현재 포스트의 테크 헤드라인 우선순위 업데이트
+            await tx.magazinePost.update({
+                where: { id },
+                data: { techHeadlinePriority: priority }
+            });
+        });
+
+        await revalidateMagazinePostPaths(id);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Failed to update tech headline priority:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 export async function getMagazineCategories() {
     try {
         return await prisma.magazineCategory.findMany({
