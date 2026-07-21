@@ -62,7 +62,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                     <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
                         <div className="mb-4">
                             <span className="font-ui-label text-[10px] uppercase tracking-widest bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-emerald-700 font-bold">
-                                {regionName} 대표 스포트라이트
+                                이달의 {regionName} 기업 스포트라이트
                             </span>
                         </div>
                         <ImpressionTracker postId={localHeadline.id}>

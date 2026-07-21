@@ -102,7 +102,7 @@ export default async function LocalRegionPage({ params }: PageProps) {
                     </div>
                     <div className="max-w-md text-right hidden md:block">
                         <p className="text-xs text-zi-on-surface-variant leading-relaxed">
-                            {region.name} 관내 혁신 기업들의 생생한 소식과 정부·지자체 지원 정보를 가장 알기 쉽게 요약 정리해 드리는 비즈니스 미디어입니다.
+                            {region.name} 관내 혁신 기업들의 생생한 소식과 정부·지자체 지원 정보를 진사이트가 알기 쉽게 요약 정리해 전달하는 비즈니스 미디어입니다.
                         </p>
                     </div>
                 </div>
