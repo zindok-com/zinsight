@@ -139,8 +139,9 @@ model CompanyArticle {
 // 매거진 포스트 (MagazinePost)
 // AI의 먹이가 될 고도화된 마케팅 기사 데이터를 담는 테이블입니다.
 model MagazinePost {
-  id              Int       @id @default(autoincrement())
-  category        MagazineCategory @default(NEWSLETTER)
+  id              Int              @id @default(autoincrement())
+  categoryId      Int              @map("category_id")
+  category        MagazineCategory @relation(fields: [categoryId], references: [id])
   
   // 콘텐츠 기본 정보
   title           String    @db.VarChar(255)
@@ -161,6 +162,7 @@ model MagazinePost {
   status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   viewCount       Int       @default(0)       // 조회수
   headlinePriority Int      @default(0)       // 0: 일반, 1-5: 헤드라인 우선순위
+  localHeadlinePriority Int @default(0)       // 0: 일반, 1: 로컬 전용 헤드라인 (대표)
   
   // 비즈니스 모델(BM) 관련 필드
   isPaid          Boolean   @default(false)   // 유료 기사 여부 (8만원 모델)
@@ -209,12 +211,15 @@ model MagazinePostOrganization {
   @@map("magazine_post_organizations")
 }
 
-enum MagazineCategory {
-  NEWSLETTER
-  INTELLIGENCE_REPORT
-  VALLEY_NOW
-  LOCAL_SME
-  MARKET_FLASH
+model MagazineCategory {
+  id          Int            @id @default(autoincrement())
+  name        String         @db.VarChar(255) // 예: '기업 스포트라이트'
+  slug        String         @unique @db.VarChar(255) // 예: 'spotlight'
+  description String?        @db.Text
+  isLocal     Boolean        @default(false)
+  posts       MagazinePost[]
+
+  @@map("magazine_categories")
 }
 
 model ConsultingRequest {
