@@ -13,15 +13,15 @@ export default async function HeadlinesPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">헤드라인 설정</h1>
-                <p className="text-muted-foreground">매거진 홈 화면에 노출될 헤드라인 기사의 우선순위를 설정합니다. (0: 일반, 1~5: 헤드라인)</p>
+                <h1 className="text-3xl font-bold tracking-tight">지면 대표 기사 설정</h1>
+                <p className="text-muted-foreground">홈 화면 캐러셀, 포털 메인/사이드바 및 각 지면별 대표 피처드 기사를 노출 위치에 맞춰 편리하게 설정합니다.</p>
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>헤드라인 관리</CardTitle>
+                    <CardTitle>지면 노출 관리</CardTitle>
                     <CardDescription>
-                        우선순위가 높은 순서대로(1 &rarr; 5) 메인 영역에 강조되어 표시됩니다. 0은 일반 목록에만 표시됩니다.
+                        각 탭을 이동하며 홈 화면, 포털 홈, 테크, 로컬 지면의 레이아웃 목적에 맞게 기사 노출 상태를 직접 지정할 수 있습니다.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
