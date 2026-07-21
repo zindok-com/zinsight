@@ -30,12 +30,27 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
 
     const scroll = (direction: 'left' | 'right') => {
         if (scrollRef.current) {
-            const { scrollLeft, clientWidth } = scrollRef.current;
+            const { scrollLeft, clientWidth, scrollWidth } = scrollRef.current;
             const cardWidth = scrollRef.current.querySelector('div')?.clientWidth || clientWidth;
             const gap = 48; // gap-12
-            const scrollTo = direction === 'left' 
-                ? scrollLeft - (cardWidth + gap)
-                : scrollLeft + (cardWidth + gap);
+            const step = cardWidth + gap;
+            
+            let scrollTo = 0;
+            if (direction === 'left') {
+                // 맨 왼쪽에 닿았을 때 왼쪽 클릭 시 맨 오른쪽 끝으로 이동
+                if (scrollLeft <= 20) {
+                    scrollTo = scrollWidth - clientWidth;
+                } else {
+                    scrollTo = scrollLeft - step;
+                }
+            } else {
+                // 맨 오른쪽에 닿았을 때 오른쪽 클릭 시 맨 왼쪽 시작으로 이동
+                if (scrollLeft + clientWidth >= scrollWidth - 20) {
+                    scrollTo = 0;
+                } else {
+                    scrollTo = scrollLeft + step;
+                }
+            }
             
             scrollRef.current.scrollTo({
                 left: scrollTo,
@@ -156,40 +171,6 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                 </div>
                             </article>
                         </Link>
-                    </div>
-                ))}
-                
-                {/* 빈 카드 플레이스홀더 (PC 전용) */}
-                {[1, 2].map((i) => (
-                    <div 
-                        key={`placeholder-${i}`} 
-                        className="hidden lg:block w-[82vw] flex-shrink-0 snap-start sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-32px)] lg:flex-shrink-0 opacity-50 select-none"
-                    >
-                        <article className="flex h-full flex-col">
-                            {/* 이미지 영역 */}
-                            <div className="relative mb-4 sm:mb-6 aspect-[4/3] overflow-hidden rounded-zi-card bg-slate-100 border-2 border-dashed border-slate-200 flex items-center justify-center">
-                                <span className="text-slate-400 text-sm font-medium tracking-widest">COMING SOON</span>
-                            </div>
-
-                            {/* 카테고리 레이블 */}
-                            <div className="mb-2 sm:mb-3 h-4 w-20 bg-slate-100 rounded animate-pulse"></div>
-
-                            {/* 제목 */}
-                            <div className="mb-3 sm:mb-4 h-6 w-3/4 bg-slate-100 rounded animate-pulse"></div>
-
-                            {/* 요약 */}
-                            <div className="space-y-2 mb-4">
-                                <div className="h-3.5 w-full bg-slate-100 rounded animate-pulse"></div>
-                                <div className="h-3.5 w-5/6 bg-slate-100 rounded animate-pulse"></div>
-                                <div className="h-3.5 w-4/6 bg-slate-100 rounded animate-pulse"></div>
-                            </div>
-                            
-                            {/* 메타 정보 */}
-                            <div className="mt-auto flex items-center justify-between border-t border-slate-100 pt-4">
-                                <div className="h-3 w-16 bg-slate-100 rounded animate-pulse"></div>
-                                <div className="h-3 w-16 bg-slate-100 rounded animate-pulse"></div>
-                            </div>
-                        </article>
                     </div>
                 ))}
             </div>
