@@ -71,7 +71,7 @@ export default async function LocalHubPage() {
                     </div>
                     <div className="max-w-sm text-right hidden md:block">
                         <p className="text-xs text-zi-on-surface-variant leading-relaxed">
-                            지자체와 소상공인의 디지털 상생, 스타트업 육성 스토리 및 공익적 명분을 만족하는 특화 섹션입니다.
+                            지자체와 소상공인의 디지털 상생, 스타트업 육성 스토리 및 공익적 목적에 부합하는 특화 섹션입니다.
                         </p>
                     </div>
                 </div>
