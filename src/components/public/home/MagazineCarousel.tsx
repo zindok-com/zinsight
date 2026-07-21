@@ -107,13 +107,24 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                     style={{ backgroundColor: placeholderColors[index % 3] }}
                                 >
                                     {post.thumbnailUrl ? (
-                                        <Image
-                                            src={post.thumbnailUrl}
-                                            alt={post.title}
-                                            fill
-                                            sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 33vw"
-                                            className="object-cover transition-all duration-500 group-hover/card:scale-105"
-                                        />
+                                        <>
+                                            {/* Blurred ambient background to handle different aspect ratios nicely */}
+                                            <Image
+                                                src={post.thumbnailUrl}
+                                                alt=""
+                                                fill
+                                                sizes="10px"
+                                                className="object-cover blur-md scale-110 opacity-30 select-none pointer-events-none"
+                                            />
+                                            {/* Sharp foreground image using object-contain */}
+                                            <Image
+                                                src={post.thumbnailUrl}
+                                                alt={post.title}
+                                                fill
+                                                sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 33vw"
+                                                className="object-contain p-2 transition-all duration-500 group-hover/card:scale-105"
+                                            />
+                                        </>
                                     ) : (
                                         <div className="h-full w-full transition-all duration-500 group-hover/card:scale-105" />
                                     )}
