@@ -87,8 +87,11 @@ export function HeadlineManager({ initialPosts }: { initialPosts: any[] }) {
         p.category?.isLocal && p.regionId !== null
     );
 
-    // 메인 기사 필터링 (메인 헤드라인 용)
-    const mainPosts = posts.filter(p => !p.category?.isLocal);
+    // 메인 기사 필터링 (메인 헤드라인 용: 로컬/테크 모두 허용)
+    const mainPosts = posts;
+
+    // 테크 기사 필터링 (테크/마케팅 전용 헤드라인 용)
+    const techPosts = posts.filter(p => !p.category?.isLocal);
 
     // 카테고리 표시 라벨 매퍼
     const getCategoryDisplay = (cat: any) => {
@@ -109,7 +112,7 @@ export function HeadlineManager({ initialPosts }: { initialPosts: any[] }) {
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
-    const sortedTechPosts = [...mainPosts].sort((a, b) => {
+    const sortedTechPosts = [...techPosts].sort((a, b) => {
         if (a.techHeadlinePriority > 0 && b.techHeadlinePriority === 0) return -1;
         if (a.techHeadlinePriority === 0 && b.techHeadlinePriority > 0) return 1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -258,7 +261,7 @@ export function HeadlineManager({ initialPosts }: { initialPosts: any[] }) {
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                         {[1].map((p) => {
-                            const post = mainPosts.find(item => item.techHeadlinePriority === p);
+                            const post = techPosts.find(item => item.techHeadlinePriority === p);
                             return (
                                 <Card key={p} className={`border-2 ${post ? 'border-purple-200 bg-purple-50/30' : 'border-dashed border-slate-200 bg-slate-50/50'}`}>
                                     <div className="p-4 flex flex-col h-full">
