@@ -94,7 +94,7 @@ export default async function LocalRegionPage({ params }: PageProps) {
                 <div className="mb-12 flex flex-col md:flex-row items-start sm:items-end justify-between border-b border-zi-divider pb-5 gap-3">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest flex items-center gap-1.5">
-                            <Building2 className="w-4 h-4" /> {region.name} 기업 지원 정보 피드
+                            <Building2 className="w-4 h-4" /> {region.name} 관내 기업 소식 & 지원 정보
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
                             {region.name} 비즈니스 허브
@@ -102,7 +102,7 @@ export default async function LocalRegionPage({ params }: PageProps) {
                     </div>
                     <div className="max-w-md text-right hidden md:block">
                         <p className="text-xs text-zi-on-surface-variant leading-relaxed">
-                            {region.name} 관내 기업을 위해 관련 시 산하 진흥원의 공고를 알기 쉽게 요약 정리해 드리는 민간 경제 매체입니다.
+                            {region.name} 관내 혁신 기업들의 생생한 소식과 정부·지자체 지원 정보를 가장 알기 쉽게 요약 정리해 드리는 비즈니스 미디어입니다.
                         </p>
                     </div>
                 </div>
