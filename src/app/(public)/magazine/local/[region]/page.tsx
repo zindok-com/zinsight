@@ -76,7 +76,7 @@ export default async function LocalRegionPage({ params }: PageProps) {
     }
 
     const posts = await getLocalPosts(regionSlug);
-    const localHeadline = posts.find(p => p.localHeadlinePriority === 1) || null;
+    const localHeadline = posts.find(p => p.isLocalFeatured) || null;
     const regularPosts = localHeadline ? posts.filter(p => p.id !== localHeadline.id) : posts;
 
     return (

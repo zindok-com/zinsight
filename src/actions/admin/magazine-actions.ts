@@ -277,32 +277,60 @@ export async function deleteMagazinePost(id: number) {
     }
 }
 
-export async function updateHeadlinePriority(id: number, priority: number) {
+export async function updateHomeSectionStatus(id: number, active: boolean) {
     try {
-        await prisma.$transaction(async (tx) => {
-            // 만약 새로 설정하려는 우선순위가 0보다 크다면, 
-            // 이미 해당 우선순위를 가진 다른 포스트가 있는지 확인하고 0으로 초기화
-            if (priority > 0) {
-                await tx.magazinePost.updateMany({
-                    where: { 
-                        headlinePriority: priority,
-                        id: { not: id }
-                    },
-                    data: { headlinePriority: 0 }
-                });
-            }
-
-            // 현재 포스트의 우선순위 업데이트
-            await tx.magazinePost.update({
-                where: { id },
-                data: { headlinePriority: priority }
-            });
+        await prisma.magazinePost.update({
+            where: { id },
+            data: { isInHomeSection: active }
         });
-
         await revalidateMagazinePostPaths(id);
         return { success: true };
     } catch (error: any) {
-        console.error('Failed to update headline priority:', error);
+        console.error('Failed to update home section status:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updatePortalFeaturedStatus(id: number, active: boolean) {
+    try {
+        await prisma.$transaction(async (tx) => {
+            if (active) {
+                await tx.magazinePost.updateMany({
+                    where: { isPortalFeatured: true, id: { not: id } },
+                    data: { isPortalFeatured: false }
+                });
+            }
+            await tx.magazinePost.update({
+                where: { id },
+                data: { isPortalFeatured: active }
+            });
+        });
+        await revalidateMagazinePostPaths(id);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Failed to update portal featured status:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function updatePortalSidePriority(id: number, priority: number) {
+    try {
+        await prisma.$transaction(async (tx) => {
+            if (priority > 0) {
+                await tx.magazinePost.updateMany({
+                    where: { portalSidePriority: priority, id: { not: id } },
+                    data: { portalSidePriority: 0 }
+                });
+            }
+            await tx.magazinePost.update({
+                where: { id },
+                data: { portalSidePriority: priority }
+            });
+        });
+        await revalidateMagazinePostPaths(id);
+        return { success: true };
+    } catch (error: any) {
+        console.error('Failed to update portal side priority:', error);
         return { success: false, error: error.message };
     }
 }
@@ -363,72 +391,53 @@ export async function updateMultipleMagazinePostsStatus(ids: number[], status: s
     }
 }
 
-export async function updateLocalHeadlinePriority(id: number, priority: number) {
+export async function updateTechFeaturedStatus(id: number, active: boolean) {
     try {
-        const post = await prisma.magazinePost.findUnique({
-            where: { id },
-            select: { regionId: true, slug: true }
-        });
-
-        if (!post) {
-            return { success: false, error: '기사를 찾을 수 없습니다.' };
-        }
-
         await prisma.$transaction(async (tx) => {
-            // 만약 새로 설정하려는 로컬 헤드라인 우선순위가 1(대표)이고, 기사에 연계 지역이 지정되어 있다면
-            // 동일 지역의 다른 모든 로컬 기사의 localHeadlinePriority를 0으로 초기화
-            if (priority > 0 && post.regionId) {
+            if (active) {
                 await tx.magazinePost.updateMany({
-                    where: { 
-                        regionId: post.regionId,
-                        localHeadlinePriority: priority,
-                        id: { not: id }
-                    },
-                    data: { localHeadlinePriority: 0 }
+                    where: { isTechFeatured: true, id: { not: id } },
+                    data: { isTechFeatured: false }
                 });
             }
-
-            // 현재 포스트의 로컬 헤드라인 우선순위 업데이트
             await tx.magazinePost.update({
                 where: { id },
-                data: { localHeadlinePriority: priority }
+                data: { isTechFeatured: active }
             });
         });
-
         await revalidateMagazinePostPaths(id);
         return { success: true };
     } catch (error: any) {
-        console.error('Failed to update local headline priority:', error);
+        console.error('Failed to update tech featured status:', error);
         return { success: false, error: error.message };
     }
 }
 
-export async function updateTechHeadlinePriority(id: number, priority: number) {
+export async function updateLocalFeaturedStatus(id: number, active: boolean) {
     try {
+        const post = await prisma.magazinePost.findUnique({
+            where: { id },
+            select: { regionId: true }
+        });
+        if (!post) {
+            return { success: false, error: '기사를 찾을 수 없습니다.' };
+        }
         await prisma.$transaction(async (tx) => {
-            // 만약 새로 설정하려는 테크 헤드라인 우선순위가 1(대표)이면
-            // 다른 모든 테크 기사의 techHeadlinePriority를 0으로 초기화
-            if (priority > 0) {
+            if (active && post.regionId) {
                 await tx.magazinePost.updateMany({
-                    where: { 
-                        techHeadlinePriority: priority,
-                        id: { not: id }
-                    },
-                    data: { techHeadlinePriority: 0 }
+                    where: { regionId: post.regionId, isLocalFeatured: true, id: { not: id } },
+                    data: { isLocalFeatured: false }
                 });
             }
-
-            // 현재 포스트의 테크 헤드라인 우선순위 업데이트
             await tx.magazinePost.update({
                 where: { id },
-                data: { techHeadlinePriority: priority }
+                data: { isLocalFeatured: active }
             });
         });
-
         await revalidateMagazinePostPaths(id);
         return { success: true };
     } catch (error: any) {
-        console.error('Failed to update tech headline priority:', error);
+        console.error('Failed to update local featured status:', error);
         return { success: false, error: error.message };
     }
 }

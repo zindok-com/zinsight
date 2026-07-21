@@ -93,15 +93,15 @@ export default async function MagazinePage({ searchParams }: PageProps) {
     ]);
 
     // 1번: 피처드 스토리 (Hero) - 검색 모드가 아닐 때만 노출
-    const featuredPost = !isSearchMode ? (allPosts.find(p => p.headlinePriority === 1) || allPosts[0] || null) : null;
+    const featuredPost = !isSearchMode ? (allPosts.find(p => p.isPortalFeatured) || allPosts[0] || null) : null;
     
     // 2~5번: 트렌딩 사이드바 (More Headlines) - 검색 모드가 아닐 때만 노출
     const sideArticles = !isSearchMode ? allPosts
-        .filter(p => p.headlinePriority >= 2 && p.headlinePriority <= 5)
-        .sort((a, b) => a.headlinePriority - b.headlinePriority) : [];
+        .filter(p => p.portalSidePriority >= 1 && p.portalSidePriority <= 4)
+        .sort((a, b) => a.portalSidePriority - b.portalSidePriority) : [];
         
-    // 0번: 메인 리스트 (최신순)
-    const gridArticles = isSearchMode ? allPosts : allPosts.filter(p => p.headlinePriority === 0);
+    // 0번: 메인 리스트 (최신순, 피처드 및 사이드 기사는 중복 노출되지 않도록 필터링)
+    const gridArticles = isSearchMode ? allPosts : allPosts.filter(p => !p.isPortalFeatured && p.portalSidePriority === 0);
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">

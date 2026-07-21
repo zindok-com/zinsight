@@ -43,7 +43,7 @@ export async function getHeadlineMagazinePosts() {
     const posts = await prisma.magazinePost.findMany({
         where: { 
             status: 'PUBLISHED',
-            headlinePriority: { gt: 0 },
+            isInHomeSection: true,
             deletedAt: null
         },
         include: {
@@ -56,9 +56,8 @@ export async function getHeadlineMagazinePosts() {
             author: true
         },
         orderBy: {
-            headlinePriority: 'asc'
-        },
-        take: 5
+            createdAt: 'desc'
+        }
     });
 
     return posts.map(post => ({
