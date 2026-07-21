@@ -68,7 +68,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 slug: true,
                 updatedAt: true,
                 createdAt: true,
-                category: true,
+                category: {
+                    select: { isLocal: true }
+                },
                 region: {
                     select: { slug: true }
                 }
@@ -79,7 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
 
         magazineRoutes = magazinePosts.map((post) => {
-            const path = ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region 
+            const path = post.category?.isLocal && post.region 
                 ? `/magazine/local/${post.region.slug}/${post.slug}`
                 : `/magazine/tech-marketing/${post.slug}`;
             return {

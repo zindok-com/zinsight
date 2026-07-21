@@ -11,7 +11,7 @@ interface PageProps {
     params: Promise<{ region: string; slug: string }>;
 }
 
-const localCategories = ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'];
+
 
 // 지자체별 지리 정보 사전 맵핑 (Geotagging 용)
 const regionGeoMap: Record<string, { lat: number; lng: number; address: string }> = {
@@ -26,7 +26,7 @@ export async function generateStaticParams() {
             where: {
                 status: 'PUBLISHED',
                 deletedAt: null,
-                category: { in: localCategories as any },
+                category: { isLocal: true },
                 regionId: { not: null }
             },
             include: {
@@ -56,10 +56,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         post = await prisma.magazinePost.findFirst({
             where: { 
                 slug,
-                category: { in: localCategories as any },
+                category: { isLocal: true },
                 region: { slug: regionSlug }
             },
             include: {
+                category: true,
                 industries: { include: { industry: true } },
                 organizations: { include: { organization: true } },
                 author: true,
@@ -141,10 +142,11 @@ export default async function LocalDetailPage({ params }: PageProps) {
         post = await prisma.magazinePost.findFirst({
             where: { 
                 slug,
-                category: { in: localCategories as any },
+                category: { isLocal: true },
                 region: { slug: regionSlug }
             },
             include: {
+                category: true,
                 industries: {
                     include: {
                         industry: true
@@ -259,7 +261,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
                     '@id': `${baseUrl}/magazine/local/${regionSlug}/${post.slug}`,
                 },
                 'keywords': [
-                    post.category,
+                    post.category?.name || '로컬',
                     post.region?.name || '로컬',
                     ...post.industries.map((pi: any) => pi.industry.name),
                 ].join(', '),

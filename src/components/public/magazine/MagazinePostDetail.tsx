@@ -84,13 +84,13 @@ function HighlightedText({ text }: HighlightedTextProps) {
     );
 }
 
-function getCategoryLabel(category: string) {
-    switch (category) {
-        case 'INTELLIGENCE_REPORT': return 'Digital Marketing';
-        case 'VALLEY_NOW': return 'Valley Now';
-        case 'LOCAL_SME': return 'Local SME';
-        case 'MARKET_FLASH': return 'Market Flash';
-        case 'NEWSLETTER':
+function getCategoryLabel(category: any) {
+    if (!category) return 'Newsletter';
+    switch (category.slug) {
+        case 'tech-marketing': return 'Digital Marketing';
+        case 'spotlight': return 'Spotlight';
+        case 'briefing': return 'Briefing';
+        case 'newsletter':
         default:
             return 'Newsletter';
     }

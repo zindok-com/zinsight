@@ -72,7 +72,7 @@ function HighlightedText({ text }: { text: string }) {
 
 // 기사 카테고리/지역 구성에 맞춰 동적 URL을 가져오는 헬퍼 함수
 const getPostUrl = (post: any) => {
-    if (['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region?.slug) {
+    if (post.category?.isLocal && post.region?.slug) {
         return `/magazine/local/${post.region.slug}/${post.slug}`;
     }
     return `/magazine/tech-marketing/${post.slug}`;
@@ -140,10 +140,9 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                         <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
                             <div className="mb-4">
                                 <span className="font-ui-label text-[10px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
-                                    {featuredPost.category === 'VALLEY_NOW' && featuredPost.region ? `${featuredPost.region.name} 밸리 나우` :
-                                     featuredPost.category === 'LOCAL_SME' && featuredPost.region ? `${featuredPost.region.name} SME` :
-                                     featuredPost.category === 'MARKET_FLASH' && featuredPost.region ? `${featuredPost.region.name} 플래시` :
-                                     featuredPost.category === 'INTELLIGENCE_REPORT' ? 'Digital Marketing' : 'Newsletter'}
+                                    {featuredPost.category?.isLocal && featuredPost.region 
+                                        ? `${featuredPost.region.name} ${featuredPost.category.name}` 
+                                        : (featuredPost.category?.slug === 'tech-marketing' ? 'Digital Marketing' : 'Newsletter')}
                                 </span>
                             </div>
                             <ImpressionTracker postId={featuredPost.id}>
@@ -245,7 +244,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                 
                                 return (
                                     <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={getPostUrl(article)} className="flex flex-col group cursor-pointer h-full">
+                                        <Link href={getPostUrl(article)} className="flex flex-col group cursor-pointer">
                                             <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
                                                 {article.thumbnailUrl ? (
                                                     <Image 
@@ -269,7 +268,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                                     <HighlightedText text={article.summary || ''} />
                                                 </p>
                                             </div>
-                                            <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
+                                            <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
                                                 <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>

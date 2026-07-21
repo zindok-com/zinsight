@@ -42,14 +42,7 @@ function HighlightedText({ text }: { text: string }) {
     );
 }
 
-function getLocalCategoryLabel(category: string) {
-    switch (category) {
-        case 'VALLEY_NOW': return '밸리 나우';
-        case 'LOCAL_SME': return '로컬 SME 그로스';
-        case 'MARKET_FLASH': return '마켓 플래시';
-        default: return '로컬 소식';
-    }
-}
+
 
 export default async function LocalHubPage() {
     const [regions, localPosts] = await Promise.all([
@@ -117,7 +110,7 @@ export default async function LocalHubPage() {
                             localPosts.map((article) => {
                                 return (
                                     <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={`/magazine/local/${article.region?.slug || 'unknown'}/${article.slug}`} className="flex flex-col group cursor-pointer h-full">
+                                        <Link href={`/magazine/local/${article.region?.slug || 'unknown'}/${article.slug}`} className="flex flex-col group cursor-pointer">
                                             <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
                                                 {article.thumbnailUrl ? (
                                                     <Image 
@@ -135,7 +128,7 @@ export default async function LocalHubPage() {
                                                     <span>{article.region?.name || '공통'}</span>
                                                     <span>•</span>
                                                     <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
-                                                        {getLocalCategoryLabel(article.category)}
+                                                        {article.category?.name || '로컬 소식'}
                                                     </span>
                                                 </div>
                                                 <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
@@ -145,7 +138,7 @@ export default async function LocalHubPage() {
                                                     <HighlightedText text={article.summary || ''} />
                                                 </p>
                                             </div>
-                                            <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
+                                            <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
                                                 <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>

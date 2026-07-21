@@ -11,14 +11,14 @@ interface PageProps {
     params: Promise<{ slug: string }>;
 }
 
-const techCategories = ['NEWSLETTER', 'INTELLIGENCE_REPORT'];
+
 
 export async function generateStaticParams() {
     const posts = await prisma.magazinePost.findMany({
         where: {
             status: 'PUBLISHED',
             deletedAt: null,
-            category: { in: techCategories as any }
+            category: { isLocal: false }
         },
         select: {
             slug: true,
@@ -38,9 +38,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const post = await prisma.magazinePost.findFirst({
         where: { 
             slug,
-            category: { in: techCategories as any }
+            category: { isLocal: false }
         },
         include: {
+            category: true,
             industries: { include: { industry: true } },
             organizations: { include: { organization: true } },
             author: true
@@ -115,9 +116,10 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
     const post = await prisma.magazinePost.findFirst({
         where: { 
             slug,
-            category: { in: techCategories as any }
+            category: { isLocal: false }
         },
         include: {
+            category: true,
             industries: {
                 include: {
                     industry: true
@@ -207,7 +209,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
                     '@id': `${baseUrl}/magazine/tech-marketing/${post.slug}`,
                 },
                 'keywords': [
-                    post.category,
+                    post.category?.name || '뉴스레터',
                     ...post.industries.map((pi: any) => pi.industry.name),
                 ].join(', '),
             }

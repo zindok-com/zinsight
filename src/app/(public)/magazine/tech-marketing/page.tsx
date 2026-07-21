@@ -86,7 +86,7 @@ export default async function TechMarketingPage() {
                         <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
                             <div className="mb-4">
                                 <span className="font-ui-label text-[10px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
-                                    {featuredPost.category === 'INTELLIGENCE_REPORT' ? 'Digital Marketing' : 'Newsletter'}
+                                    {featuredPost.category?.slug === 'tech-marketing' ? 'Digital Marketing' : 'Newsletter'}
                                 </span>
                             </div>
                             <ImpressionTracker postId={featuredPost.id}>

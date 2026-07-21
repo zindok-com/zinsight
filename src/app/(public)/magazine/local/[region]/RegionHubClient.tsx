@@ -30,24 +30,83 @@ interface RegionHubClientProps {
     regionName: string;
     regionSlug: string;
     posts: any[];
+    localHeadline: any | null;
 }
 
-export default function RegionHubClient({ regionName, regionSlug, posts }: RegionHubClientProps) {
-    const [activeTab, setActiveTab] = useState<'VALLEY_NOW' | 'LOCAL_SME' | 'MARKET_FLASH'>('VALLEY_NOW');
+export default function RegionHubClient({ regionName, regionSlug, posts, localHeadline }: RegionHubClientProps) {
+    const [activeTab, setActiveTab] = useState<'spotlight' | 'briefing'>('spotlight');
 
     // 카테고리별 필터링
-    const filteredPosts = posts.filter(p => p.category === activeTab);
+    const filteredPosts = posts.filter(p => p.category?.slug === activeTab);
 
     const tabs = [
-        { id: 'VALLEY_NOW' as const, label: `${regionName} 밸리 나우`, desc: '관내 테크 스타트업 인터뷰 및 지자체 소식', icon: Newspaper },
-        { id: 'LOCAL_SME' as const, label: '로컬 SME 그로스', desc: '소상공인 디지털 상생 및 전통기업 그로스', icon: Building2 },
-        { id: 'MARKET_FLASH' as const, label: '마켓 플래시', desc: '프랜차이즈, 신상 핫플 및 이벤트 보도자료', icon: Store },
+        { 
+            id: 'spotlight' as const, 
+            label: `${regionName} 기업 스포트라이트`, 
+            desc: '관내 스타트업, 소상공인, 전통기업 심층 인터뷰 및 성장 성공사례', 
+            icon: Newspaper 
+        },
+        { 
+            id: 'briefing' as const, 
+            label: '지원사업 · 정책 브리핑', 
+            desc: `${regionName}시 및 경기도 산하 진흥원의 지원사업, 정책자금 공고 요약`, 
+            icon: Building2 
+        },
     ];
 
     return (
-        <div className="space-y-12">
+        <div className="space-y-16">
+            {/* 로컬 대표 헤드라인 기사 노출 영역 */}
+            {localHeadline && (
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 mb-4 items-center">
+                    <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
+                        <div className="mb-4">
+                            <span className="font-ui-label text-[10px] uppercase tracking-widest bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-emerald-700 font-bold">
+                                {regionName} 대표 스포트라이트
+                            </span>
+                        </div>
+                        <ImpressionTracker postId={localHeadline.id}>
+                            <Link href={`/magazine/local/${regionSlug}/${localHeadline.slug}`} className="group block cursor-pointer">
+                                <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-[32px] font-bold text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors leading-tight">
+                                    {localHeadline.title}
+                                </h2>
+                                <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
+                                    <HighlightedText 
+                                        text={localHeadline.summary ?? (localHeadline.content ? localHeadline.content.slice(0, 180) + '...' : '')} 
+                                    />
+                                </p>
+                            </Link>
+                        </ImpressionTracker>
+                        <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
+                            <span className="text-zi-on-surface font-semibold">
+                                By {localHeadline.author?.name || localHeadline.authorName || 'Zinsight 편집부'}
+                            </span>
+                            <span>•</span>
+                            <span>{new Date(localHeadline.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-6 aspect-[16/10] w-full order-1 lg:order-2">
+                        <Link href={`/magazine/local/${regionSlug}/${localHeadline.slug}`} className="w-full h-full bg-slate-50 border border-zi-divider/30 rounded-zi-card overflow-hidden shadow-sm relative block group">
+                            {localHeadline.thumbnailUrl ? (
+                                <Image 
+                                    src={localHeadline.thumbnailUrl} 
+                                    alt={localHeadline.title}
+                                    fill
+                                    className="object-contain transition-transform duration-700 group-hover:scale-[1.02]"
+                                    priority
+                                />
+                            ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-zi-primary/10 to-zi-secondary/5 flex items-center justify-center text-zi-outline-variant italic">
+                                    No Image Available
+                                </div>
+                            )}
+                        </Link>
+                    </div>
+                </section>
+            )}
+
             {/* 탭 네비게이션 */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-zi-divider pb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-zi-divider pb-6">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -85,7 +144,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts }: Regio
                             <ImpressionTracker postId={article.id} key={article.id}>
                                 <Link 
                                     href={`/magazine/local/${regionSlug}/${article.slug}`} 
-                                    className="flex flex-col group cursor-pointer h-full"
+                                    className="flex flex-col group cursor-pointer"
                                 >
                                     <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
                                         {article.thumbnailUrl ? (
@@ -110,7 +169,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts }: Regio
                                             <HighlightedText text={article.summary || ''} />
                                         </p>
                                     </div>
-                                    <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
+                                    <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
                                         <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
                                         <ArrowRight className="h-4 w-4" />
                                     </div>

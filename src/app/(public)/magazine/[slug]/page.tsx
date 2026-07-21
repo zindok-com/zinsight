@@ -16,11 +16,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // 1. 우선 기사가 데이터베이스에 존재하는지 확인
     const post = await prisma.magazinePost.findUnique({
         where: { slug },
-        include: { region: true }
+        include: { region: true, category: true }
     });
 
     if (post && post.deletedAt === null && post.status === 'PUBLISHED') {
-        if (['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region) {
+        if (post.category?.isLocal && post.region) {
             permanentRedirect(`/magazine/local/${post.region.slug}/${post.slug}`);
         } else {
             permanentRedirect(`/magazine/tech-marketing/${post.slug}`);
@@ -53,11 +53,11 @@ export default async function LegacyPostRedirectPage({ params }: PageProps) {
     // 1. 기사 존재 여부 및 새 카테고리 경로 판별
     const post = await prisma.magazinePost.findUnique({
         where: { slug },
-        include: { region: true }
+        include: { region: true, category: true }
     });
 
     if (post && post.deletedAt === null && post.status === 'PUBLISHED') {
-        if (['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(post.category) && post.region) {
+        if (post.category?.isLocal && post.region) {
             permanentRedirect(`/magazine/local/${post.region.slug}/${post.slug}`);
         } else {
             permanentRedirect(`/magazine/tech-marketing/${post.slug}`);
