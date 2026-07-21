@@ -9,10 +9,11 @@ import { MagazineListTable } from "@/components/admin/magazine/MagazineListTable
 export const dynamic = 'force-dynamic';
 
 export default async function MagazinePage() {
-    const [posts, industries, authors, analytics] = await Promise.all([
+    const [posts, industries, authors, categories, analytics] = await Promise.all([
         getPostsWithAnalytics(),
         prisma.industry.findMany({ where: { deleted_at: null, is_active: true }, orderBy: { name: 'asc' } }),
         prisma.author.findMany({ orderBy: { name: 'asc' } }),
+        prisma.magazineCategory.findMany({ orderBy: { id: 'asc' } }),
         getDashboardAnalytics(7)
     ]);
 
@@ -88,7 +89,12 @@ export default async function MagazinePage() {
                             등록된 포스트가 없습니다. 첫 번째 매거진 포스트를 등록해 보세요.
                         </div>
                     ) : (
-                        <MagazineListTable posts={posts as any} industries={industries} authors={authors} />
+                        <MagazineListTable 
+                            posts={posts as any} 
+                            industries={industries} 
+                            authors={authors} 
+                            categories={categories} 
+                        />
                     )}
                 </CardContent>
             </Card>

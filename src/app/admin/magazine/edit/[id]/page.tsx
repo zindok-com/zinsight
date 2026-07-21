@@ -21,8 +21,8 @@ export default async function EditMagazinePage({ params }: PageProps) {
         notFound();
     }
 
-    // Fetch active industries, authors, and regions for selection
-    const [industries, authors, regions] = await Promise.all([
+    // Fetch active industries, authors, regions, and categories for selection
+    const [industries, authors, regions, categories] = await Promise.all([
         prisma.industry.findMany({
             where: { deleted_at: null, is_active: true },
             orderBy: { name: 'asc' }
@@ -42,6 +42,12 @@ export default async function EditMagazinePage({ params }: PageProps) {
         }).catch((err) => {
             console.error('Failed to fetch regions:', err);
             return [];
+        }),
+        prisma.magazineCategory.findMany({
+            orderBy: { id: 'asc' }
+        }).catch((err) => {
+            console.error('Failed to fetch categories:', err);
+            return [];
         })
     ]);
 
@@ -60,7 +66,13 @@ export default async function EditMagazinePage({ params }: PageProps) {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <MagazineForm industries={industries} authors={authors} regions={regions} post={post} />
+                    <MagazineForm 
+                        industries={industries} 
+                        authors={authors} 
+                        regions={regions} 
+                        categories={categories}
+                        post={post} 
+                    />
                 </CardContent>
             </Card>
         </div>

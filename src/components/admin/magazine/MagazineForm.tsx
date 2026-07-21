@@ -19,11 +19,13 @@ export function MagazineForm({
     industries, 
     authors = [], 
     regions = [],
+    categories = [],
     post 
 }: { 
     industries: any[], 
     authors?: any[], 
     regions?: any[],
+    categories?: any[],
     post?: any 
 }) {
     const router = useRouter();
@@ -128,7 +130,7 @@ export function MagazineForm({
         bodies: parsedContent.bodies,
         closing: parsedContent.closing,
         thumbnailUrl: post?.thumbnailUrl || '',
-        category: post?.category || 'NEWSLETTER',
+        categoryId: post?.categoryId ? String(post.categoryId) : (categories.find(c => c.slug === 'newsletter')?.id ? String(categories.find(c => c.slug === 'newsletter').id) : ''),
         status: post?.status || 'PUBLISHED',
         authorId: post?.authorId || null,
         authorName: post?.authorName || 'Zinsight 편집부',
@@ -139,14 +141,15 @@ export function MagazineForm({
     // Real-time slug generation (Only when creating a new post)
     useEffect(() => {
         if (post) return; // Skip automatic slug generation during edit mode to prevent breaking existing URLs
-        if (formData.category === 'NEWSLETTER' && selectedIndustries.length > 0) {
+        const selectedCategory = categories.find(c => String(c.id) === String(formData.categoryId));
+        if (selectedCategory?.slug === 'newsletter' && selectedIndustries.length > 0) {
             const industry = industries.find(i => i.id === selectedIndustries[0]);
             if (industry) {
                 const autoSlug = `${year}-${month}-${industry.slug}`;
                 setFormData((prev: any) => ({ ...prev, slug: autoSlug }));
             }
         }
-    }, [formData.category, year, month, selectedIndustries, industries, post]);
+    }, [formData.categoryId, year, month, selectedIndustries, industries, post, categories]);
 
     const toggleIndustry = (id: number) => {
         if (formData.category === 'NEWSLETTER') {
@@ -193,6 +196,7 @@ export function MagazineForm({
                 // Edit Mode
                 const res = await updateMagazinePost(post.id, {
                     ...formData,
+                    categoryId: Number(formData.categoryId),
                     content: structuredContent,
                     industryIds: selectedIndustries
                 });
@@ -207,6 +211,7 @@ export function MagazineForm({
                 // Create Mode
                 const res = await createMagazinePost({
                     ...formData,
+                    categoryId: Number(formData.categoryId),
                     content: structuredContent,
                     slug: formData.slug || undefined,
                     industryIds: selectedIndustries
@@ -225,14 +230,18 @@ export function MagazineForm({
     const years = Array.from({ length: 5 }, (_, i) => String((post ? new Date(post.createdAt) : new Date()).getFullYear() - 2 + i));
     const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 
+    const selectedCategory = categories.find(c => String(c.id) === String(formData.categoryId));
+    const isLocal = selectedCategory?.isLocal || false;
+    const activeCategorySlug = selectedCategory?.slug;
+
     // Preview Meta Information Helper
     const categoryLabel = (() => {
-        switch (formData.category) {
-            case 'INTELLIGENCE_REPORT': return 'Digital Marketing';
-            case 'VALLEY_NOW': return 'Valley Now';
-            case 'LOCAL_SME': return 'Local SME';
-            case 'MARKET_FLASH': return 'Market Flash';
-            case 'NEWSLETTER':
+        if (!selectedCategory) return 'Newsletter';
+        switch (selectedCategory.slug) {
+            case 'tech-marketing': return 'Digital Marketing';
+            case 'spotlight': return 'Spotlight';
+            case 'briefing': return 'Briefing';
+            case 'newsletter':
             default:
                 return 'Newsletter';
         }
@@ -281,16 +290,16 @@ export function MagazineForm({
                             <div className="space-y-2">
                                 <Label htmlFor="category">카테고리</Label>
                                 <Select
-                                    value={formData.category}
+                                    value={formData.categoryId ? String(formData.categoryId) : ''}
                                     onValueChange={(val) => {
+                                        const selectedId = Number(val);
+                                        const selectedCat = categories.find(c => c.id === selectedId);
                                         setFormData({ 
                                             ...formData, 
-                                            category: val,
-                                            regionId: ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(val) 
-                                                ? formData.regionId 
-                                                : null
+                                            categoryId: val,
+                                            regionId: selectedCat?.isLocal ? formData.regionId : null
                                         });
-                                        if (val === 'NEWSLETTER' && selectedIndustries.length > 1) {
+                                        if (selectedCat?.slug === 'newsletter' && selectedIndustries.length > 1) {
                                             setSelectedIndustries([selectedIndustries[0]]);
                                         }
                                     }}
@@ -299,15 +308,15 @@ export function MagazineForm({
                                         <SelectValue placeholder="카테고리 선택" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="NEWSLETTER">뉴스레터 (Tech/Mkt)</SelectItem>
-                                        <SelectItem value="INTELLIGENCE_REPORT">디지털 마케팅 (Tech/Mkt)</SelectItem>
-                                        <SelectItem value="VALLEY_NOW">밸리 나우 (로컬)</SelectItem>
-                                        <SelectItem value="LOCAL_SME">로컬 SME 그로스 (로컬)</SelectItem>
-                                        <SelectItem value="MARKET_FLASH">마켓 플래시 (로컬)</SelectItem>
+                                        {categories.map((cat: any) => (
+                                            <SelectItem key={cat.id} value={String(cat.id)}>
+                                                {cat.name} ({cat.isLocal ? '로컬' : 'Tech/Mkt'})
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                            {['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH'].includes(formData.category) && (
+                            {isLocal && (
                                 <div className="space-y-2">
                                     <Label htmlFor="regionSelect">연계 지역</Label>
                                     <Select
@@ -404,25 +413,21 @@ export function MagazineForm({
                                     </h4>
                                     <div className="space-y-3 pl-3 border-l border-slate-100">
                                         <div className="space-y-1">
-                                            <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">밸리 나우 (VALLEY_NOW)</span>
-                                            <p className="text-slate-500">지자체 정책 정보, 스타트업 소식 및 인프라 소개</p>
+                                            <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">기업 스포트라이트 (VALLEY_NOW)</span>
+                                            <p className="text-slate-500">관내 스타트업, 소상공인, 전통기업 심층 인터뷰 및 성장 성공사례 (기존 '밸리 나우' + 'SME 그로스' 통합)</p>
                                         </div>
                                         <div className="space-y-1">
-                                            <span className="font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px]">로컬 SME 그로스 (LOCAL_SME)</span>
-                                            <p className="text-slate-500">지역 소상공인 디지털 혁신 및 전통기업 그로스 케이스</p>
+                                            <span className="font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px]">지원사업 · 정책 브리핑 (LOCAL_SME)</span>
+                                            <p className="text-slate-500">관내 및 도 산하 진흥원의 지원사업, 정책자금, 공모전 공고 요약 브리핑 (민간 정보 피드)</p>
                                         </div>
-                                        <div className="space-y-1">
-                                            <span className="font-bold text-orange-600 bg-orange-50 px-2 py-0.5 rounded text-[10px]">마켓 플래시 (MARKET_FLASH)</span>
-                                            <p className="text-slate-500">핫플레이스, 오프라인 이벤트 및 관내 신규 사업 보도자료</p>
-                                        </div>
-                                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 3종 기사는 반드시 '연계 지역'을 지정해야 합니다.</p>
+                                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 기사는 반드시 '연계 지역'을 지정해야 합니다.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Newsletter Specific: Year/Month */}
-                        {formData.category === 'NEWSLETTER' && (
+                        {activeCategorySlug === 'newsletter' && (
                             <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 flex flex-wrap items-center gap-6">
                                 <div className="flex items-center gap-2">
                                     <Info className="w-4 h-4 text-blue-500" />
@@ -461,7 +466,7 @@ export function MagazineForm({
                                 <div className="space-y-3">
                                     <Label className="text-sm font-bold flex items-center gap-2">
                                         연결 산업군 <span className="text-xs text-slate-400 font-normal">(선택)</span>
-                                        {formData.category === 'NEWSLETTER' && (
+                                        {activeCategorySlug === 'newsletter' && (
                                             <Badge variant="outline" className="text-[10px] font-normal border-blue-200 text-blue-600">단일 선택</Badge>
                                         )}
                                     </Label>
@@ -498,14 +503,14 @@ export function MagazineForm({
                                             onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                                             className="bg-white pr-10 font-mono text-sm border-2 focus-visible:ring-indigo-500"
                                         />
-                                        {formData.category === 'NEWSLETTER' && (
+                                        {activeCategorySlug === 'newsletter' && (
                                             <div className="absolute right-3 top-2.5">
                                                 <Info className="w-4 h-4 text-indigo-400" />
                                             </div>
                                         )}
                                     </div>
                                     <p className="text-[11px] text-slate-500 italic">
-                                        {formData.category === 'NEWSLETTER'
+                                        {activeCategorySlug === 'newsletter'
                                             ? '대상 기간과 산업군에 따라 자동으로 생성됩니다. 직접 수정도 가능합니다.'
                                             : 'URL에 사용될 고유 식별자입니다.'}
                                     </p>

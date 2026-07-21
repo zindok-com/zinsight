@@ -24,7 +24,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 
-export function MagazineListTable({ posts, industries, authors = [] }: { posts: any[], industries: any[], authors?: any[] }) {
+export function MagazineListTable({ 
+    posts, 
+    industries, 
+    authors = [], 
+    categories = [] 
+}: { 
+    posts: any[], 
+    industries: any[], 
+    authors?: any[], 
+    categories?: any[] 
+}) {
     const [selectedPost, setSelectedPost] = useState<any | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [isPending, startTransition] = useTransition();
@@ -97,7 +107,7 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
         setEditForm({
             title: post.title,
             slug: post.slug,
-            category: post.category,
+            categoryId: post.categoryId,
             lead: parsedData.lead,
             bodies: parsedData.bodies,
             closing: parsedData.closing,
@@ -135,6 +145,7 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
 
             const payload = {
                 ...editForm,
+                categoryId: Number(editForm.categoryId),
                 content: structuredContent
             };
 
@@ -265,23 +276,16 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                     )}
                                 </TableCell>
                                 <TableCell>
-                                    {post.category === 'INTELLIGENCE_REPORT' ? (
-                                        <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">디지털 마케팅</Badge>
-                                    ) : post.category === 'VALLEY_NOW' ? (
-                                        <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-200">
-                                            {post.region?.name ? `${post.region.name} 밸리 나우` : '밸리 나우'}
-                                        </Badge>
-                                    ) : post.category === 'LOCAL_SME' ? (
-                                        <Badge variant="outline" className="bg-teal-50 text-teal-700 border-teal-200">
-                                            {post.region?.name ? `${post.region.name} SME` : '로컬 SME'}
-                                        </Badge>
-                                    ) : post.category === 'MARKET_FLASH' ? (
-                                        <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">
-                                            {post.region?.name ? `${post.region.name} 플래시` : '마켓 플래시'}
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">뉴스레터</Badge>
-                                    )}
+                                    <Badge 
+                                        variant="outline" 
+                                        className={
+                                            post.category?.slug === 'tech-marketing' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                            post.category?.isLocal ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                            'bg-blue-50 text-blue-700 border-blue-200'
+                                        }
+                                    >
+                                        {post.region?.name ? `${post.region.name} ` : ''}{post.category?.name || '뉴스레터'}
+                                    </Badge>
                                 </TableCell>
                                 <TableCell className="font-medium max-w-xs">
                                     <div className="truncate">{post.title}</div>
@@ -397,26 +401,21 @@ export function MagazineListTable({ posts, industries, authors = [] }: { posts: 
                                             <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">카테고리</Label>
                                             {isEditing ? (
                                                 <Select
-                                                    value={editForm.category}
-                                                    onValueChange={(val) => setEditForm({ ...editForm, category: val })}
+                                                    value={editForm.categoryId ? String(editForm.categoryId) : ''}
+                                                    onValueChange={(val) => setEditForm({ ...editForm, categoryId: Number(val) })}
                                                 >
                                                     <SelectTrigger>
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="NEWSLETTER">뉴스레터</SelectItem>
-                                                        <SelectItem value="INTELLIGENCE_REPORT">디지털 마케팅</SelectItem>
-                                                        <SelectItem value="VALLEY_NOW">밸리 나우</SelectItem>
-                                                        <SelectItem value="LOCAL_SME">로컬 SME 그로스</SelectItem>
-                                                        <SelectItem value="MARKET_FLASH">마켓 플래시</SelectItem>
+                                                        {categories.map((cat: any) => (
+                                                            <SelectItem key={cat.id} value={String(cat.id)}>{cat.name}</SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
-                                                    {selectedPost.category === 'INTELLIGENCE_REPORT' ? '디지털 마케팅' :
-                                                     selectedPost.category === 'VALLEY_NOW' ? '밸리 나우' :
-                                                     selectedPost.category === 'LOCAL_SME' ? '로컬 SME 그로스' :
-                                                     selectedPost.category === 'MARKET_FLASH' ? '마켓 플래시' : '뉴스레터'}
+                                                    {selectedPost.category?.name || '뉴스레터'}
                                                 </div>
                                             )}
                                         </div>
