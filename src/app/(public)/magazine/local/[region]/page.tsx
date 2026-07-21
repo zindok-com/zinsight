@@ -94,7 +94,7 @@ export default async function LocalRegionPage({ params }: PageProps) {
                 <div className="mb-12 flex flex-col md:flex-row items-start sm:items-end justify-between border-b border-zi-divider pb-5 gap-3">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest flex items-center gap-1.5">
-                            <Building2 className="w-4 h-4" /> {region.name}시 기업 지원 정보 피드
+                            <Building2 className="w-4 h-4" /> {region.name} 기업 지원 정보 피드
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
                             {region.name} 비즈니스 허브
