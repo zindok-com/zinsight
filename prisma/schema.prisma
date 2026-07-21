@@ -161,9 +161,11 @@ model MagazinePost {
   author          Author?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
   status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
   viewCount       Int       @default(0)       // 조회수
-  headlinePriority Int      @default(0)       // 0: 일반, 1-5: 헤드라인 우선순위
-  localHeadlinePriority Int @default(0)       // 0: 일반, 1: 로컬 전용 헤드라인 (대표)
-  techHeadlinePriority  Int @default(0)       // 0: 일반, 1: 테크/마케팅 전용 헤드라인 (대표)
+  isInHomeSection       Boolean   @default(false)   // 홈 화면 매거진 섹션 노출 여부
+  isPortalFeatured      Boolean   @default(false)   // 포털 홈 메인 피처드 (Hero) 여부
+  portalSidePriority    Int       @default(0)       // 포털 홈 사이드 헤드라인 우선순위 (1~4)
+  isTechFeatured        Boolean   @default(false)   // 테크/마케팅 지면 피처드 (대표) 여부
+  isLocalFeatured       Boolean   @default(false)   // 로컬 지면 피처드 (대표) 여부
   
   // 비즈니스 모델(BM) 관련 필드
   isPaid          Boolean   @default(false)   // 유료 기사 여부 (8만원 모델)
