@@ -176,14 +176,14 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                 <span>{new Date(featuredPost.createdAt).toLocaleDateString()}</span>
                             </div>
                         </div>
-                        <div className="lg:col-span-6 aspect-[4/3] w-full order-1 lg:order-2">
-                            <Link href={getPostUrl(featuredPost)} className="w-full h-full bg-zi-surface-container-low rounded-zi-card overflow-hidden shadow-sm relative block group">
+                        <div className="lg:col-span-6 aspect-[16/10] w-full order-1 lg:order-2">
+                            <Link href={getPostUrl(featuredPost)} className="w-full h-full bg-slate-50 border border-zi-divider/30 rounded-zi-card overflow-hidden shadow-sm relative block group">
                                 {featuredPost.thumbnailUrl ? (
                                     <Image 
                                         src={featuredPost.thumbnailUrl} 
                                         alt={featuredPost.title}
                                         fill
-                                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                                        className="object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                                         priority
                                     />
                                 ) : (

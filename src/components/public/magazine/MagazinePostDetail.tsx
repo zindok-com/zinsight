@@ -174,13 +174,13 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
 
                 {/* 썸네일 이미지 */}
                 {post.thumbnailUrl && (
-                    <div className="mb-12 aspect-[16/9] w-full bg-zi-surface-container rounded-zi-card overflow-hidden relative shadow-sm">
+                    <div className="mb-12 aspect-[16/9] w-full bg-slate-50 border border-zi-divider/30 rounded-zi-card overflow-hidden relative shadow-sm">
                         <Image 
                             src={post.thumbnailUrl} 
                             alt={post.title}
                             fill
                             priority
-                            className="object-cover"
+                            className="object-contain"
                         />
                     </div>
                 )}
