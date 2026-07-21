@@ -3,6 +3,47 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
+async function revalidateMagazinePostPaths(postId: number, oldSlug?: string) {
+    try {
+        const post = await prisma.magazinePost.findUnique({
+            where: { id: postId },
+            include: { region: true, category: true }
+        });
+
+        if (!post) return;
+
+        // 1. Revalidate listing index pages
+        revalidatePath('/magazine');
+        revalidatePath('/magazine/tech-marketing');
+        revalidatePath('/magazine/local');
+        revalidatePath('/');
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin/magazine/headlines');
+        revalidatePath('/admin');
+
+        // 2. Revalidate dynamic path
+        if (oldSlug) {
+            revalidatePath(`/magazine/${oldSlug}`);
+        }
+        revalidatePath(`/magazine/${post.slug}`);
+
+        if (post.category?.isLocal && post.region?.slug) {
+            revalidatePath(`/magazine/local/${post.region.slug}`);
+            revalidatePath(`/magazine/local/${post.region.slug}/${post.slug}`);
+            if (oldSlug) {
+                revalidatePath(`/magazine/local/${post.region.slug}/${oldSlug}`);
+            }
+        } else {
+            revalidatePath(`/magazine/tech-marketing/${post.slug}`);
+            if (oldSlug) {
+                revalidatePath(`/magazine/tech-marketing/${oldSlug}`);
+            }
+        }
+    } catch (e) {
+        console.error('Failed to revalidate magazine post paths:', e);
+    }
+}
+
 function processMagazineContent(content: string, providedSummary?: string) {
     let sections: any = {
         lead: '',
@@ -149,10 +190,7 @@ export async function createMagazinePost(data: {
             }
         });
 
-        revalidatePath('/magazine');
-        revalidatePath('/');
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin');
+        await revalidateMagazinePostPaths(post.id);
         return { success: true, post };
     } catch (error: any) {
         console.error('Failed to create magazine post:', error);
@@ -173,6 +211,11 @@ export async function updateMagazinePost(id: number, data: {
     targetKeywords?: string | null;
 }) {
     try {
+        const oldPost = await prisma.magazinePost.findUnique({
+            where: { id },
+            select: { slug: true }
+        });
+
         const { industryIds = [], organizationIds = [], regionId = null, targetKeywords = null, categoryId, lead, bodies, closing, ...postData } = data as any;
 
         // Content processing: Extract summary from lead and clean markers
@@ -202,11 +245,7 @@ export async function updateMagazinePost(id: number, data: {
             }
         });
 
-        revalidatePath('/magazine');
-        revalidatePath('/');
-        revalidatePath(`/magazine/${post.slug}`);
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin');
+        await revalidateMagazinePostPaths(post.id, oldPost?.slug);
         return { success: true, post };
     } catch (error: any) {
         console.error('Failed to update magazine post:', error);
@@ -216,17 +255,21 @@ export async function updateMagazinePost(id: number, data: {
 
 export async function deleteMagazinePost(id: number) {
     try {
+        const postBeforeDelete = await prisma.magazinePost.findUnique({
+            where: { id },
+            include: { region: true, category: true }
+        });
+
         const post = await prisma.magazinePost.update({
             where: { id },
             data: {
                 deletedAt: new Date()
             }
         });
-        revalidatePath('/magazine');
-        revalidatePath('/');
-        revalidatePath(`/magazine/${post.slug}`);
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin');
+        
+        if (postBeforeDelete) {
+            await revalidateMagazinePostPaths(id, postBeforeDelete.slug);
+        }
         return { success: true };
     } catch (error: any) {
         console.error('Failed to delete magazine post:', error);
@@ -256,11 +299,7 @@ export async function updateHeadlinePriority(id: number, priority: number) {
             });
         });
 
-        revalidatePath('/magazine');
-        revalidatePath('/');
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin/magazine/headlines');
-        revalidatePath('/admin');
+        await revalidateMagazinePostPaths(id);
         return { success: true };
     } catch (error: any) {
         console.error('Failed to update headline priority:', error);
@@ -303,7 +342,7 @@ export async function updateMultipleMagazinePostsStatus(ids: number[], status: s
     try {
         const posts = await prisma.magazinePost.findMany({
             where: { id: { in: ids } },
-            select: { slug: true }
+            select: { id: true, slug: true }
         });
 
         await prisma.magazinePost.updateMany({
@@ -314,13 +353,9 @@ export async function updateMultipleMagazinePostsStatus(ids: number[], status: s
                 status
             }
         });
-        revalidatePath('/magazine');
-        revalidatePath('/');
         for (const post of posts) {
-            revalidatePath(`/magazine/${post.slug}`);
+            await revalidateMagazinePostPaths(post.id);
         }
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin');
         return { success: true };
     } catch (error: any) {
         console.error('Failed to update multiple posts status:', error);
@@ -360,18 +395,7 @@ export async function updateLocalHeadlinePriority(id: number, priority: number) 
             });
         });
 
-        revalidatePath('/magazine');
-        revalidatePath('/magazine/local');
-        if (post.regionId) {
-            const region = await prisma.region.findUnique({ where: { id: post.regionId } });
-            if (region) {
-                revalidatePath(`/magazine/local/${region.slug}`);
-            }
-        }
-        revalidatePath('/');
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin/magazine/headlines');
-        revalidatePath('/admin');
+        await revalidateMagazinePostPaths(id);
         return { success: true };
     } catch (error: any) {
         console.error('Failed to update local headline priority:', error);
