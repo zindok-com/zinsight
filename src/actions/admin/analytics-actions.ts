@@ -78,6 +78,7 @@ export async function getPostsWithAnalytics() {
         },
         include: {
             author: true,
+            category: true,
             analytics: {
                 select: {
                     impressions: true,

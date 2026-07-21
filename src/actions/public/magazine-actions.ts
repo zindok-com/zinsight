@@ -1,7 +1,6 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { MagazineCategory } from '@prisma/client';
 
 export async function getPublicMagazinePosts(keyword?: string) {
     const where: any = { 
@@ -20,6 +19,7 @@ export async function getPublicMagazinePosts(keyword?: string) {
     return await prisma.magazinePost.findMany({
         where,
         include: {
+            category: true,
             industries: {
                 include: {
                     industry: true
@@ -47,6 +47,7 @@ export async function getHeadlineMagazinePosts() {
             deletedAt: null
         },
         include: {
+            category: true,
             industries: {
                 include: {
                     industry: true
@@ -82,10 +83,14 @@ export async function getTechMarketingPosts() {
             status: 'PUBLISHED',
             deletedAt: null,
             category: {
-                in: ['NEWSLETTER', 'INTELLIGENCE_REPORT']
+                slug: {
+                    in: ['newsletter', 'tech-marketing']
+                }
             }
         },
         include: {
+            category: true,
+            region: true,
             industries: {
                 include: {
                     industry: true
@@ -109,7 +114,9 @@ export async function getLocalPosts(regionSlug?: string) {
         status: 'PUBLISHED',
         deletedAt: null,
         category: {
-            in: ['VALLEY_NOW', 'LOCAL_SME', 'MARKET_FLASH']
+            slug: {
+                in: ['spotlight', 'briefing']
+            }
         }
     };
 
@@ -122,6 +129,7 @@ export async function getLocalPosts(regionSlug?: string) {
     return await prisma.magazinePost.findMany({
         where: whereClause,
         include: {
+            category: true,
             industries: {
                 include: {
                     industry: true

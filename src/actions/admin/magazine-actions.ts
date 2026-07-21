@@ -2,7 +2,6 @@
 
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { MagazineCategory } from '@prisma/client';
 
 function processMagazineContent(content: string, providedSummary?: string) {
     let sections: any = {
@@ -57,6 +56,8 @@ export async function getMagazinePosts() {
             deletedAt: null
         },
         include: {
+            category: true,
+            region: true,
             industries: {
                 include: {
                     industry: true
@@ -77,7 +78,7 @@ export async function getMagazinePosts() {
 export async function createMagazinePost(data: {
     title: string;
     content: string;
-    category?: MagazineCategory;
+    categoryId: number;
     slug?: string;
     thumbnailUrl?: string;
     industryIds?: number[];
@@ -87,12 +88,16 @@ export async function createMagazinePost(data: {
     targetKeywords?: string | null;
 }) {
     try {
-        const { industryIds = [], organizationIds = [], slug: providedSlug, category = 'NEWSLETTER', regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
+        const { industryIds = [], organizationIds = [], slug: providedSlug, categoryId, regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
         
         let slug = providedSlug;
 
+        const categoryRecord = await prisma.magazineCategory.findUnique({
+            where: { id: categoryId }
+        });
+
         // Auto-slug for NEWSLETTER if not provided
-        if (!slug && category === 'NEWSLETTER' && industryIds.length > 0) {
+        if (!slug && categoryRecord?.slug === 'newsletter' && industryIds.length > 0) {
             const industry = await prisma.industry.findUnique({
                 where: { id: industryIds[0] },
                 select: { slug: true }
@@ -127,7 +132,7 @@ export async function createMagazinePost(data: {
                 ...postData,
                 content: cleanedContent,
                 summary: extractedSummary,
-                category,
+                categoryId,
                 slug,
                 regionId,
                 targetKeywords,
@@ -158,7 +163,7 @@ export async function createMagazinePost(data: {
 export async function updateMagazinePost(id: number, data: {
     title: string;
     content: string;
-    category: MagazineCategory;
+    categoryId: number;
     slug: string;
     thumbnailUrl?: string;
     industryIds?: number[];
@@ -168,7 +173,7 @@ export async function updateMagazinePost(id: number, data: {
     targetKeywords?: string | null;
 }) {
     try {
-        const { industryIds = [], organizationIds = [], regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
+        const { industryIds = [], organizationIds = [], regionId = null, targetKeywords = null, categoryId, lead, bodies, closing, ...postData } = data as any;
 
         // Content processing: Extract summary from lead and clean markers
         const { summary: extractedSummary, cleanedContent } = processMagazineContent(postData.content, (postData as any).summary);
@@ -179,6 +184,7 @@ export async function updateMagazinePost(id: number, data: {
                 ...postData,
                 content: cleanedContent,
                 summary: extractedSummary,
+                categoryId,
                 regionId,
                 targetKeywords,
                 industries: {
@@ -319,5 +325,67 @@ export async function updateMultipleMagazinePostsStatus(ids: number[], status: s
     } catch (error: any) {
         console.error('Failed to update multiple posts status:', error);
         return { success: false, error: error.message };
+    }
+}
+
+export async function updateLocalHeadlinePriority(id: number, priority: number) {
+    try {
+        const post = await prisma.magazinePost.findUnique({
+            where: { id },
+            select: { regionId: true, slug: true }
+        });
+
+        if (!post) {
+            return { success: false, error: '기사를 찾을 수 없습니다.' };
+        }
+
+        await prisma.$transaction(async (tx) => {
+            // 만약 새로 설정하려는 로컬 헤드라인 우선순위가 1(대표)이고, 기사에 연계 지역이 지정되어 있다면
+            // 동일 지역의 다른 모든 로컬 기사의 localHeadlinePriority를 0으로 초기화
+            if (priority > 0 && post.regionId) {
+                await tx.magazinePost.updateMany({
+                    where: { 
+                        regionId: post.regionId,
+                        localHeadlinePriority: priority,
+                        id: { not: id }
+                    },
+                    data: { localHeadlinePriority: 0 }
+                });
+            }
+
+            // 현재 포스트의 로컬 헤드라인 우선순위 업데이트
+            await tx.magazinePost.update({
+                where: { id },
+                data: { localHeadlinePriority: priority }
+            });
+        });
+
+        revalidatePath('/magazine');
+        revalidatePath('/magazine/local');
+        if (post.regionId) {
+            const region = await prisma.region.findUnique({ where: { id: post.regionId } });
+            if (region) {
+                revalidatePath(`/magazine/local/${region.slug}`);
+            }
+        }
+        revalidatePath('/');
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin/magazine/headlines');
+        revalidatePath('/admin');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Failed to update local headline priority:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function getMagazineCategories() {
+    try {
+        return await prisma.magazineCategory.findMany({
+            orderBy: { id: 'asc' }
+        });
+    } catch (error: any) {
+        console.error('Failed to get magazine categories:', error);
+        return [];
     }
 }
