@@ -135,7 +135,8 @@ export function MagazineForm({
         authorId: post?.authorId || null,
         authorName: post?.authorName || 'Zinsight 편집부',
         regionId: post?.regionId || null,
-        targetKeywords: post?.targetKeywords || ''
+        targetKeywords: post?.targetKeywords || '',
+        isPaid: post?.isPaid || false
     });
 
     // Real-time slug generation (Only when creating a new post)
@@ -540,6 +541,46 @@ export function MagazineForm({
                                     <p className="text-[11px] text-slate-500 italic">
                                         기사 상세 페이지 하단에 검색 가능한 태그로 출력됩니다.
                                     </p>
+                                </div>
+
+                                {/* 파트너 콘텐츠 토글 */}
+                                <div className="space-y-2 p-4 rounded-xl border-2 transition-colors duration-200"
+                                    style={{
+                                        borderColor: formData.isPaid ? '#fbbf24' : '#e2e8f0',
+                                        backgroundColor: formData.isPaid ? '#fffbeb' : '#f8fafc'
+                                    }}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <Label className="font-bold text-sm flex items-center gap-2">
+                                                <span style={{ color: formData.isPaid ? '#b45309' : '#64748b' }}>✦</span>
+                                                파트너 콘텐츠 (유료 기사)
+                                            </Label>
+                                            <p className="text-[11px] text-slate-500 mt-0.5">
+                                                활성화 시 기사 상단·카드에 &apos;파트너&apos; 배지가 표시됩니다.
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={formData.isPaid}
+                                            onClick={() => setFormData({ ...formData, isPaid: !formData.isPaid })}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${
+                                                formData.isPaid ? 'bg-amber-400' : 'bg-slate-200'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                                    formData.isPaid ? 'translate-x-6' : 'translate-x-1'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                    {formData.isPaid && (
+                                        <p className="text-[11px] text-amber-700 font-medium pt-1 border-t border-amber-200">
+                                            ✓ 파트너 배지 활성화 — 기사 헤더 및 카드 목록에 표시됩니다.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                         </div>

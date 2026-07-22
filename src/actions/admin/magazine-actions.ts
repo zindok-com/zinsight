@@ -127,6 +127,7 @@ export async function createMagazinePost(data: {
     status?: string;
     regionId?: number | null;
     targetKeywords?: string | null;
+    isPaid?: boolean;
 }) {
     try {
         const { industryIds = [], organizationIds = [], slug: providedSlug, categoryId, regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
@@ -209,6 +210,7 @@ export async function updateMagazinePost(id: number, data: {
     status?: string;
     regionId?: number | null;
     targetKeywords?: string | null;
+    isPaid?: boolean;
 }) {
     try {
         const oldPost = await prisma.magazinePost.findUnique({
