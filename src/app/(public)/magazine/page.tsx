@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     title: {
         absolute: 'Zinsight Magazine - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트 (Zinsight)',
     },
-    description: '데이터의 깊이와 저널리즘의 통찰을 결합하여 마케팅의 격을 높이는 진사이트(Zinsight) 매거진의 프리미엄 디지털 콘텐츠 영역입니다.',
+    description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
     alternates: {
         canonical: `${baseUrl}/magazine`,
     },
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     },
     openGraph: {
         title: 'Zinsight Magazine - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트 (Zinsight)',
-        description: '데이터의 깊이와 저널리즘의 통찰을 결합하여 마케팅의 격을 높이는 프리미엄 디지털 미디어.',
+        description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
         url: `${baseUrl}/magazine`,
         type: 'website',
         locale: 'ko_KR',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     twitter: {
         card: 'summary_large_image',
         title: 'Zinsight Magazine - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트 (Zinsight)',
-        description: '데이터의 깊이와 저널리즘의 통찰을 결합하여 마케팅의 격을 높이는 프리미엄 디지털 미디어.',
+        description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
         images: ['/img/zinsight_icon.png'],
     },
 };
@@ -207,7 +207,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                             <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-300">CORE JOURNALISM</span>
                             <h3 className="text-xl sm:text-2xl font-bold mt-2 mb-3">테크 · 마케팅 저널</h3>
                             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                데이터와 AI 기술을 융합하여 실질적인 비즈니스 성장 전략과 테크니컬 마케팅 가이드를 제시하는 프리미엄 기술 지면입니다.
+                                기업의 테크·마케팅 성공 사례와 전략 인사이트를 파트너십 및 자체 리서치 기반으로 다루는 진사이트의 콘텐츠 코너입니다.
                             </p>
                             <span className="mt-6 flex items-center text-xs font-semibold text-indigo-300 group-hover:text-indigo-200 transition-colors">
                                 테크·마케팅 지면 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
@@ -255,6 +255,11 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                                     />
                                                 ) : (
                                                     <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                                )}
+                                                {(article as any).isPaid && (
+                                                    <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
+                                                        파트너
+                                                    </div>
                                                 )}
                                             </div>
                                             <div className="flex-1 flex flex-col justify-start">

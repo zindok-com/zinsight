@@ -153,6 +153,11 @@ export default async function TechMarketingPage() {
                                                 ) : (
                                                     <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
                                                 )}
+                                                {article.isPaid && (
+                                                    <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
+                                                        파트너
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="flex-1 flex flex-col justify-start">
                                                 <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
