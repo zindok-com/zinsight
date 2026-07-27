@@ -101,8 +101,9 @@ export default async function LocalRegionPage({ params }: PageProps) {
                         </h1>
                     </div>
                     <div className="max-w-md text-right hidden md:block">
-                        <p className="text-xs text-zi-on-surface-variant leading-relaxed break-keep">
-                            {region.name} 관내 기업·스타트업 소식과 지자체 지원 정보를 진사이트가 기획·제작하는 파트너 미디어 코너입니다. 수록 기업 정보는 제휴 계약 또는 공개 자료를 기반으로 합니다.
+                        <p className="text-xs text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
+                            {region.name} 관내 기업·스타트업 소식과 지원 정보를 요약 전달하는<br />
+                            진사이트 기획 파트너 미디어 코너입니다.
                         </p>
                     </div>
                 </div>

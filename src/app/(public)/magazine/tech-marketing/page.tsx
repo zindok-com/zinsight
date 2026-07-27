@@ -73,9 +73,10 @@ export default async function TechMarketingPage() {
                             테크 · 마케팅 저널
                         </h1>
                     </div>
-                    <div className="max-w-sm text-right hidden md:block">
-                        <p className="text-xs text-zi-on-surface-variant leading-relaxed break-keep">
-                            AI 시대의 고품격 B2B 리서치 보고서 및 최신 검색 최적화 기술 동향.
+                    <div className="max-w-md text-right hidden md:block">
+                        <p className="text-xs text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
+                            AI 시대의 고품격 B2B 리서치 보고서 및<br />
+                            최신 검색 최적화(GEO·SEO) 기술 동향.
                         </p>
                     </div>
                 </div>

@@ -126,7 +126,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                     {tab.label}
                                 </span>
                             </div>
-                            <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+                            <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed break-keep [text-wrap:balance]">
                                 {tab.desc}
                             </p>
                         </button>
