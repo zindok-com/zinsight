@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { ViewTracker } from '@/components/public/analytics/ViewTracker';
 
 interface HighlightedTextProps {
@@ -200,9 +199,9 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                         <div className="space-y-12">
                             {/* 리드 섹션 */}
                             {parsedContent.lead && (
-                                <div className="p-6 sm:p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[17px] sm:text-[18px] leading-relaxed font-medium text-zi-on-surface-variant italic">
+                                <h2 className="font-sans m-0 p-6 sm:p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[17px] sm:text-[18px] leading-relaxed font-medium text-zi-on-surface-variant italic">
                                     <HighlightedText text={parsedContent.lead} />
-                                </div>
+                                </h2>
                             )}
 
                             {/* 본문 섹션들 */}
