@@ -242,6 +242,7 @@ export function MagazineForm({
             case 'tech-marketing': return 'Digital Marketing';
             case 'spotlight': return 'Spotlight';
             case 'briefing': return 'Briefing';
+            case 'edu-collab': return '산학협력 · 교육';
             case 'newsletter':
             default:
                 return 'Newsletter';
@@ -421,7 +422,11 @@ export function MagazineForm({
                                             <span className="font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px]">지원사업 · 정책 브리핑 (LOCAL_SME)</span>
                                             <p className="text-slate-500">관내 및 도 산하 진흥원의 지원사업, 정책자금, 공모전 공고 요약 브리핑 (민간 정보 피드)</p>
                                         </div>
-                                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 기사는 반드시 '연계 지역'을 지정해야 합니다.</p>
+                                        <div className="space-y-1">
+                                            <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded text-[10px]">산학협력 · 교육 (EDU_COLLAB)</span>
+                                            <p className="text-slate-500">관내 대학 및 산학협력단의 협력 사업, 인재양성 프로그램 소식. isPaid 시 &apos;협력 기관&apos; 배지 표시.</p>
+                                        </div>
+                                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 기사는 반드시 &apos;연계 지역&apos;을 지정해야 합니다.</p>
                                     </div>
                                 </div>
                             </div>
@@ -557,7 +562,8 @@ export function MagazineForm({
                                                 파트너 콘텐츠 (유료 기사)
                                             </Label>
                                             <p className="text-[11px] text-slate-500 mt-0.5">
-                                                활성화 시 기사 상단·카드에 &apos;파트너&apos; 배지가 표시됩니다.
+                                                활성화 시 기사 상단·카드에 배지 표시.
+                                                ‘산학협력·교육’ 카테고리는 ‘협력 기관’, 나머지 카테고리는 ‘파트너’ 배지로 자동 적용됩니다.
                                             </p>
                                         </div>
                                         <button
