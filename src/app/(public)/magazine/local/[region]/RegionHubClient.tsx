@@ -49,7 +49,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
         { 
             id: 'briefing' as const, 
             label: '지원사업 · 정책 브리핑', 
-            desc: `${regionName}시 및 경기도 산하 진흥원의 지원사업, 정책자금 공고 요약`, 
+            desc: `${regionName}${regionName.endsWith('시') ? '' : '시'} 및 경기도 산하 진흥원의 지원사업, 정책자금 공고 요약`, 
             icon: Building2 
         },
         {
