@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createMagazinePost, updateMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
@@ -31,6 +31,7 @@ export function MagazineForm({
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
+    const [guideOpen, setGuideOpen] = useState(false);
     const [activeTextareaId, setActiveTextareaId] = useState<string | null>(null);
     const [activeLinkTextareaId, setActiveLinkTextareaId] = useState<string | null>(null);
 
@@ -287,149 +288,185 @@ export function MagazineForm({
             <form onSubmit={handleSubmit} className="space-y-8">
                 {activeTab === 'edit' ? (
                     <div className="space-y-8">
-                        {/* Category & Basic Info */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                            <div className="space-y-2">
-                                <Label htmlFor="category">카테고리</Label>
-                                <Select
-                                    value={formData.categoryId ? String(formData.categoryId) : ''}
-                                    onValueChange={(val) => {
-                                        const selectedId = Number(val);
-                                        const selectedCat = categories.find(c => c.id === selectedId);
-                                        setFormData({ 
-                                            ...formData, 
-                                            categoryId: val,
-                                            regionId: selectedCat?.isLocal ? formData.regionId : null
-                                        });
-                                        if (selectedCat?.slug === 'newsletter' && selectedIndustries.length > 1) {
-                                            setSelectedIndustries([selectedIndustries[0]]);
-                                        }
-                                    }}
-                                >
-                                    <SelectTrigger id="category" className="bg-white">
-                                        <SelectValue placeholder="카테고리 선택" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categories.map((cat: any) => (
-                                            <SelectItem key={cat.id} value={String(cat.id)}>
-                                                {cat.name} ({cat.isLocal ? '로컬' : 'Tech/Mkt'})
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            {isLocal && (
+                        {/* 기본 정보 및 메타데이터 카드 */}
+                        <div className="p-6 bg-slate-50/50 border border-slate-200 rounded-2xl space-y-6">
+                            <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 pb-3 border-b border-slate-200/60">
+                                <FileText className="w-4.5 h-4.5 text-slate-500" />
+                                기본 정보 및 메타데이터
+                            </h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
                                 <div className="space-y-2">
-                                    <Label htmlFor="regionSelect">연계 지역</Label>
+                                    <Label htmlFor="category" className="text-xs font-semibold text-slate-600">카테고리</Label>
                                     <Select
-                                        value={formData.regionId ? String(formData.regionId) : 'none'}
+                                        value={formData.categoryId ? String(formData.categoryId) : ''}
                                         onValueChange={(val) => {
-                                            setFormData({ ...formData, regionId: val === 'none' ? null : Number(val) });
+                                            const selectedId = Number(val);
+                                            const selectedCat = categories.find(c => c.id === selectedId);
+                                            setFormData({ 
+                                                ...formData, 
+                                                categoryId: val,
+                                                regionId: selectedCat?.isLocal ? formData.regionId : null
+                                            });
+                                            if (selectedCat?.slug === 'newsletter' && selectedIndustries.length > 1) {
+                                                setSelectedIndustries([selectedIndustries[0]]);
+                                            }
                                         }}
                                     >
-                                        <SelectTrigger id="regionSelect" className="bg-white">
-                                            <SelectValue placeholder="지역 선택" />
+                                        <SelectTrigger id="category" className="bg-white border-slate-200">
+                                            <SelectValue placeholder="카테고리 선택" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="none">선택 없음</SelectItem>
-                                            {regions.map((reg: any) => (
-                                                <SelectItem key={reg.id} value={String(reg.id)}>
-                                                    {reg.name}
+                                            {categories.map((cat: any) => (
+                                                <SelectItem key={cat.id} value={String(cat.id)}>
+                                                    {cat.name} ({cat.isLocal ? '로컬' : 'Tech/Mkt'})
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            )}
-                            <div className="space-y-2">
-                                <Label htmlFor="authorSelect">작성자(발행자)</Label>
-                                <Select
-                                    value={formData.authorId ? String(formData.authorId) : 'default'}
-                                    onValueChange={(val) => {
-                                        if (val === 'default') {
-                                            setFormData({ ...formData, authorId: null, authorName: 'Zinsight 편집부' });
-                                        } else {
-                                            const selectedAuthor = authors.find(a => String(a.id) === val);
-                                            if (selectedAuthor) {
-                                                setFormData({ ...formData, authorId: selectedAuthor.id, authorName: selectedAuthor.name });
+                                {isLocal && (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="regionSelect" className="text-xs font-semibold text-slate-600">연계 지역</Label>
+                                        <Select
+                                            value={formData.regionId ? String(formData.regionId) : 'none'}
+                                            onValueChange={(val) => {
+                                                setFormData({ ...formData, regionId: val === 'none' ? null : Number(val) });
+                                            }}
+                                        >
+                                            <SelectTrigger id="regionSelect" className="bg-white border-slate-200">
+                                                <SelectValue placeholder="지역 선택" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">선택 없음</SelectItem>
+                                                {regions.map((reg: any) => (
+                                                    <SelectItem key={reg.id} value={String(reg.id)}>
+                                                        {reg.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                                <div className="space-y-2">
+                                    <Label htmlFor="authorSelect" className="text-xs font-semibold text-slate-600">작성자(발행자)</Label>
+                                    <Select
+                                        value={formData.authorId ? String(formData.authorId) : 'default'}
+                                        onValueChange={(val) => {
+                                            if (val === 'default') {
+                                                setFormData({ ...formData, authorId: null, authorName: 'Zinsight 편집부' });
+                                            } else {
+                                                const selectedAuthor = authors.find(a => String(a.id) === val);
+                                                if (selectedAuthor) {
+                                                    setFormData({ ...formData, authorId: selectedAuthor.id, authorName: selectedAuthor.name });
+                                                }
                                             }
-                                        }
-                                    }}
-                                >
-                                    <SelectTrigger id="authorSelect" className="bg-white">
-                                        <SelectValue placeholder="작성자 선택" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
-                                        {authors.map((author: any) => (
-                                            <SelectItem key={author.id} value={String(author.id)}>
-                                                {author.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                        }}
+                                    >
+                                        <SelectTrigger id="authorSelect" className="bg-white border-slate-200">
+                                            <SelectValue placeholder="작성자 선택" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
+                                            {authors.map((author: any) => (
+                                                <SelectItem key={author.id} value={String(author.id)}>
+                                                    {author.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="status" className="text-xs font-semibold text-slate-600">발행 상태</Label>
+                                    <Select
+                                        value={formData.status}
+                                        onValueChange={(val) => setFormData({ ...formData, status: val })}
+                                    >
+                                        <SelectTrigger id="status" className="bg-white border-slate-200">
+                                            <SelectValue placeholder="상태 선택" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="PUBLISHED">발행 완료 (Published)</SelectItem>
+                                            <SelectItem value="DRAFT">임시 저장 (Draft)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="title">제목</Label>
+
+                            {/* 제목 - 단독 행 전체 너비 */}
+                            <div className="space-y-2 pt-2">
+                                <Label htmlFor="title" className="text-xs font-semibold text-slate-600">제목</Label>
                                 <Input
                                     id="title"
                                     placeholder="기사 제목을 입력하세요"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    className="bg-white"
+                                    className="bg-white border-slate-200 text-base py-5 font-semibold focus-visible:ring-indigo-500"
                                     required
                                 />
                             </div>
                         </div>
 
                         {/* 카테고리 안내 가이드 */}
-                        <div className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs">
-                            <p className="font-semibold text-slate-800 flex items-center gap-2 text-sm">
-                                <Info className="w-4 h-4 text-indigo-600" />
-                                매거진 카테고리 & URL 라우팅 가이드
-                            </p>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* 테크 & 마케팅 지면 그룹 */}
-                                <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
-                                    <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
-                                        Core 테크 지면 (URL: <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded text-[11px]">/magazine/tech-marketing/*</code>)
-                                    </h4>
-                                    <div className="space-y-3 pl-3 border-l border-slate-100">
-                                        <div className="space-y-1">
-                                            <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">뉴스레터 (NEWSLETTER)</span>
-                                            <p className="text-slate-500">주 단위 기술 트렌드 및 요약 분석 지면</p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[10px]">디지털 마케팅 (INTELLIGENCE_REPORT)</span>
-                                            <p className="text-slate-500">SEO, GEO를 활용한 디지털 마케팅 분석 리포트</p>
+                        <div className="p-4 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs">
+                            <button
+                                type="button"
+                                onClick={() => setGuideOpen(!guideOpen)}
+                                className="w-full flex items-center justify-between font-semibold text-slate-800 text-sm hover:text-indigo-600 transition-colors focus:outline-none"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <Info className="w-4 h-4 text-indigo-600" />
+                                    매거진 카테고리 & URL 라우팅 가이드
+                                </span>
+                                {guideOpen ? (
+                                    <ChevronUp className="w-4 h-4 text-slate-400" />
+                                ) : (
+                                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                                )}
+                            </button>
+                            {guideOpen && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-200/60">
+                                    {/* 테크 & 마케팅 지면 그룹 */}
+                                    <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
+                                        <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                                            Core 테크 지면 (URL: <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded text-[11px]">/magazine/tech-marketing/*</code>)
+                                        </h4>
+                                        <div className="space-y-3 pl-3 border-l border-slate-100">
+                                            <div className="space-y-1">
+                                                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">뉴스레터 (NEWSLETTER)</span>
+                                                <p className="text-slate-500">주 단위 기술 트렌드 및 요약 분석 지면</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[10px]">디지털 마케팅 (INTELLIGENCE_REPORT)</span>
+                                                <p className="text-slate-500">SEO, GEO를 활용한 디지털 마케팅 분석 리포트</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* 로컬 비즈니스 지면 그룹 */}
-                                <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
-                                    <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                                        로컬 비즈니스 지면 (URL: <code className="text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded text-[11px]">/magazine/local/[지자체]/*</code>)
-                                    </h4>
-                                    <div className="space-y-3 pl-3 border-l border-slate-100">
-                                        <div className="space-y-1">
-                                            <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">기업 스포트라이트 (VALLEY_NOW)</span>
-                                            <p className="text-slate-500">관내 스타트업, 소상공인, 전통기업 심층 인터뷰 및 성장 성공사례 (기존 '밸리 나우' + 'SME 그로스' 통합)</p>
+                                    {/* 로컬 비즈니스 지면 그룹 */}
+                                    <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
+                                        <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                            로컬 비즈니스 지면 (URL: <code className="text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded text-[11px]">/magazine/local/[지자체]/*</code>)
+                                        </h4>
+                                        <div className="space-y-3 pl-3 border-l border-slate-100">
+                                            <div className="space-y-1">
+                                                <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">기업 스포트라이트 (VALLEY_NOW)</span>
+                                                <p className="text-slate-500">관내 스타트업, 소상공인, 전통기업 심층 인터뷰 및 성장 성공사례 (기존 '밸리 나우' + 'SME 그로스' 통합)</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px]">지원사업 · 정책 브리핑 (LOCAL_SME)</span>
+                                                <p className="text-slate-500">관내 및 도 산하 진흥원의 지원사업, 정책자금, 공모전 공고 요약 브리핑 (민간 정보 피드)</p>
+                                            </div>
+                                            <div className="space-y-1">
+                                                <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded text-[10px]">산학협력 · 교육 (EDU_COLLAB)</span>
+                                                <p className="text-slate-500">관내 대학 및 산학협력단의 협력 사업, 인재양성 프로그램 소식. isPaid 시 &apos;협력 기관&apos; 배지 표시.</p>
+                                            </div>
+                                            <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 기사는 반드시 &apos;연계 지역&apos;을 지정해야 합니다.</p>
                                         </div>
-                                        <div className="space-y-1">
-                                            <span className="font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px]">지원사업 · 정책 브리핑 (LOCAL_SME)</span>
-                                            <p className="text-slate-500">관내 및 도 산하 진흥원의 지원사업, 정책자금, 공모전 공고 요약 브리핑 (민간 정보 피드)</p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded text-[10px]">산학협력 · 교육 (EDU_COLLAB)</span>
-                                            <p className="text-slate-500">관내 대학 및 산학협력단의 협력 사업, 인재양성 프로그램 소식. isPaid 시 &apos;협력 기관&apos; 배지 표시.</p>
-                                        </div>
-                                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 기사는 반드시 &apos;연계 지역&apos;을 지정해야 합니다.</p>
                                     </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
 
                         {/* Newsletter Specific: Year/Month */}
@@ -476,7 +513,7 @@ export function MagazineForm({
                                             <Badge variant="outline" className="text-[10px] font-normal border-blue-200 text-blue-600">단일 선택</Badge>
                                         )}
                                     </Label>
-                                    <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-white shadow-sm min-h-[200px] content-start">
+                                    <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-white shadow-sm max-h-[180px] overflow-y-auto content-start">
                                         {industries.map((ind) => (
                                             <div
                                                 key={ind.id}
@@ -628,7 +665,7 @@ export function MagazineForm({
                                 <Textarea
                                     id="lead"
                                     placeholder="리드 내용을 작성하세요..."
-                                    className="min-h-[100px] bg-white border-indigo-200 focus-visible:ring-indigo-500 text-sm leading-relaxed"
+                                    className="min-h-[130px] bg-white border-indigo-200 focus-visible:ring-indigo-500 text-sm leading-relaxed"
                                     value={formData.lead}
                                     onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
                                     required
@@ -636,7 +673,7 @@ export function MagazineForm({
                             </div>
 
                             {/* 본문 섹션 (Bodies) */}
-                            <div className="space-y-4">
+                            <div className="space-y-4 p-6 bg-slate-50/50 border border-slate-200 rounded-2xl">
                                 <div className="flex items-center justify-between pb-2">
                                     <div>
                                         <Label className="font-bold text-slate-800 text-sm">본문 섹션</Label>
@@ -723,7 +760,7 @@ export function MagazineForm({
                                                     <Textarea
                                                         id={`body-${index}`}
                                                         placeholder="본문 내용을 작성하세요..."
-                                                        className="min-h-[150px] bg-slate-50/50 text-sm leading-relaxed"
+                                                        className="min-h-[260px] bg-slate-50/50 text-sm leading-relaxed"
                                                         value={body.content}
                                                         onChange={(e) => {
                                                             const newBodies = [...formData.bodies];
@@ -770,7 +807,7 @@ export function MagazineForm({
                                 <Textarea
                                     id="closing"
                                     placeholder="클로징 내용을 작성하세요..."
-                                    className="min-h-[100px] bg-white text-sm leading-relaxed"
+                                    className="min-h-[130px] bg-white text-sm leading-relaxed"
                                     value={formData.closing}
                                     onChange={(e) => setFormData({ ...formData, closing: e.target.value })}
                                     required
@@ -889,7 +926,29 @@ export function MagazineForm({
                     <p className="text-xs text-slate-400 hidden sm:block">
                         {post ? '기존 포스트를 수정합니다.' : '새 매거진 포스트를 발행합니다.'}
                     </p>
-                    <div className="flex gap-3 ml-auto">
+                    <div className="flex items-center gap-3 ml-auto">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            className="h-11 px-4 text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 flex items-center gap-1.5"
+                            onClick={() => {
+                                setActiveTab(activeTab === 'edit' ? 'preview' : 'edit');
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                        >
+                            {activeTab === 'edit' ? (
+                                <>
+                                    <Eye className="w-4 h-4 text-slate-500" />
+                                    미리보기로 전환
+                                </>
+                            ) : (
+                                <>
+                                    <Edit3 className="w-4 h-4 text-slate-500" />
+                                    에디터로 전환
+                                </>
+                            )}
+                        </Button>
+                        <div className="w-px h-6 bg-slate-200"></div>
                         <Button
                             type="button"
                             variant="outline"
