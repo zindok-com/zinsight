@@ -52,10 +52,10 @@ export default async function EditMagazinePage({ params }: PageProps) {
     ]);
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Edit Post</h1>
-                <p className="text-muted-foreground mt-1">Modify marketing content for the Zinsight Magazine.</p>
+                <h1 className="text-3xl font-bold tracking-tight">매거진 포스트 수정</h1>
+                <p className="text-muted-foreground mt-1">진사이트 매거진의 기존 포스트를 수정합니다.</p>
             </div>
 
             <Card>
