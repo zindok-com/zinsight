@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Newspaper, Building2, Store } from 'lucide-react';
+import { ArrowRight, Newspaper, Building2, GraduationCap } from 'lucide-react';
 import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 function HighlightedText({ text }: { text: string }) {
@@ -34,7 +34,7 @@ interface RegionHubClientProps {
 }
 
 export default function RegionHubClient({ regionName, regionSlug, posts, localHeadline }: RegionHubClientProps) {
-    const [activeTab, setActiveTab] = useState<'spotlight' | 'briefing'>('spotlight');
+    const [activeTab, setActiveTab] = useState<'spotlight' | 'briefing' | 'edu-collab'>('spotlight');
 
     // 카테고리별 필터링
     const filteredPosts = posts.filter(p => p.category?.slug === activeTab);
@@ -51,6 +51,12 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
             label: '지원사업 · 정책 브리핑', 
             desc: `${regionName}시 및 경기도 산하 진흥원의 지원사업, 정책자금 공고 요약`, 
             icon: Building2 
+        },
+        {
+            id: 'edu-collab' as const,
+            label: '산학협력 · 교육',
+            desc: '관내 대학 및 산학협력단의 협력 사업, 인재양성 프로그램 소식을 전하는 코너입니다.',
+            icon: GraduationCap
         },
     ];
 
@@ -106,7 +112,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
             )}
 
             {/* 탭 네비게이션 */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-zi-divider pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-zi-divider pb-6">
                 {tabs.map((tab) => {
                     const Icon = tab.icon;
                     const isActive = activeTab === tab.id;
@@ -159,7 +165,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                         )}
                                         {article.isPaid && (
                                             <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
-                                                파트너
+                                                {article.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
                                             </div>
                                         )}
                                     </div>

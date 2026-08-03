@@ -114,7 +114,7 @@ export async function getLocalPosts(regionSlug?: string) {
         deletedAt: null,
         category: {
             slug: {
-                in: ['spotlight', 'briefing']
+                in: ['spotlight', 'briefing', 'edu-collab']
             }
         }
     };
