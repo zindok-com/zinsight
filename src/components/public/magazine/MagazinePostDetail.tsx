@@ -162,7 +162,8 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                             <>
                                 <span className="text-zi-outline text-ui-label">•</span>
                                 <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
-                                    <span aria-hidden="true">✦</span> 파트너
+                                    <span aria-hidden="true">✦</span>
+                                    {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
                                 </span>
                             </>
                         )}
@@ -254,7 +255,10 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                 {/* isPaid 기사 하단 편집 독립성 고지 */}
                 {post.isPaid && (
                     <p className="mt-8 text-[11px] text-zi-outline leading-relaxed border-t border-zi-divider pt-5 italic">
-                        본 콘텐츠는 진사이트와 제휴 계약을 체결한 파트너사의 의뢰로 제작된 스폰서드 콘텐츠입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.
+                        {post.category?.slug === 'edu-collab'
+                            ? '본 콘텐츠는 진사이트와 협력 관계에 있는 기관의 의뢰로 제작된 콘텐츠입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.'
+                            : '본 콘텐츠는 진사이트와 제휴 계약을 체결한 파트너사의 의뢰로 제작된 스폰서드 콘텐츠입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.'
+                        }
                     </p>
                 )}
             </main>

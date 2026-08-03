@@ -264,7 +264,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
                 ],
                 'datePublished': post.createdAt.toISOString(),
                 'dateModified': post.updatedAt.toISOString(),
-                'articleSection': '로컬 비즈니스',
+                'articleSection': post.category?.slug === 'edu-collab' ? '산학협력 · 교육' : '로컬 비즈니스',
                 'keywords': ldKeywords.join(', '),
                 'spatialCoverage': {
                     '@type': 'Place',
@@ -283,14 +283,19 @@ export default async function LocalDetailPage({ params }: PageProps) {
                 'mentions': [
                     ...(post.region ? [{ '@type': 'Place', 'name': post.region.name }] : []),
                     ...post.organizations.map((po: any) => ({
-                        '@type': 'Organization',
+                        // 산학협력 카테고리는 EducationalOrganization 타입으로 마크업
+                        '@type': post.category?.slug === 'edu-collab'
+                            ? 'EducationalOrganization'
+                            : 'Organization',
                         'name': po.organization.company_name,
                     })),
                 ],
                 ...(post.isPaid && post.organizations.length > 0 ? {
                     'isAccessibleForFree': true,
                     'sponsor': {
-                        '@type': 'Organization',
+                        '@type': post.category?.slug === 'edu-collab'
+                            ? 'EducationalOrganization'
+                            : 'Organization',
                         'name': post.organizations[0].organization.company_name,
                     },
                 } : {}),
