@@ -584,7 +584,7 @@ export function MagazineForm({
                                     </div>
                                     {formData.isPaid && (
                                         <p className="text-[11px] text-amber-700 font-medium pt-1 border-t border-amber-200">
-                                            ✓ 파트너 배지 활성화 — 기사 헤더 및 카드 목록에 표시됩니다.
+                                            ✓ {activeCategorySlug === 'edu-collab' ? '협력 기관' : '파트너'} 배지 활성화 — 기사 헤더 및 카드 목록에 표시됩니다.
                                         </p>
                                     )}
                                 </div>
@@ -884,30 +884,35 @@ export function MagazineForm({
                     </div>
                 )}
 
-                {/* Form Buttons */}
-                <div className="flex justify-end gap-3 pt-6 border-t mt-6">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="h-11 px-8 bg-white"
-                        onClick={() => router.back()}
-                        disabled={isPending}
-                    >
-                        취소
-                    </Button>
-                    <Button
-                        type="submit"
-                        className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
-                        disabled={isPending}
-                    >
-                        {isPending ? (
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : post ? (
-                            '수정 완료'
-                        ) : (
-                            '매거진 포스트 발행'
-                        )}
-                    </Button>
+                {/* Form Buttons — sticky 하단 고정 */}
+                <div className="sticky bottom-0 z-30 flex justify-between items-center gap-3 px-6 py-4 mt-6 bg-white/90 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] -mx-6">
+                    <p className="text-xs text-slate-400 hidden sm:block">
+                        {post ? '기존 포스트를 수정합니다.' : '새 매거진 포스트를 발행합니다.'}
+                    </p>
+                    <div className="flex gap-3 ml-auto">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="h-11 px-8 bg-white"
+                            onClick={() => router.back()}
+                            disabled={isPending}
+                        >
+                            취소
+                        </Button>
+                        <Button
+                            type="submit"
+                            className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
+                            disabled={isPending}
+                        >
+                            {isPending ? (
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            ) : post ? (
+                                '수정 완료'
+                            ) : (
+                                '매거진 포스트 발행'
+                            )}
+                        </Button>
+                    </div>
                 </div>
             </form>
 
