@@ -125,7 +125,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         title,
         description,
         // 포스트별 동적 키워드
-        keywords: tags.join(', '),
+        keywords: tags,
         alternates: {
             canonical: `${baseUrl}/magazine/local/${regionSlug}/${post.slug}`,
         },
