@@ -13,7 +13,12 @@ export default async function EditMagazinePage({ params }: PageProps) {
     const post = await prisma.magazinePost.findUnique({
         where: { id: Number(id) },
         include: {
-            industries: true
+            industries: true,
+            organizations: {
+                include: {
+                    organization: true
+                }
+            }
         }
     });
 

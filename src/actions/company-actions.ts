@@ -87,3 +87,48 @@ export async function toggleCompanyFeatured(id: number, is_featured: boolean) {
   }
 }
 
+export async function searchOrganizations(query: string) {
+  try {
+    const orgs = await prisma.organization.findMany({
+      where: {
+        company_name: {
+          contains: query
+        }
+      },
+      select: {
+        id: true,
+        company_name: true
+      },
+      take: 15
+    });
+    return orgs;
+  } catch (error) {
+    console.error('Failed to search organizations:', error);
+    return [];
+  }
+}
+
+export async function createOrganizationInline(data: {
+  company_name: string;
+  ceo_name?: string;
+  founded_year?: string;
+  hq_location?: string;
+  entity_type?: string;
+}) {
+  try {
+    const newOrg = await prisma.organization.create({
+      data: {
+        company_name: data.company_name,
+        ceo_name: data.ceo_name || null,
+        founded_year: data.founded_year || null,
+        hq_location: data.hq_location || null,
+        entity_type: data.entity_type || '기업',
+      }
+    });
+    return { success: true, organization: newOrg };
+  } catch (error: any) {
+    console.error('Failed to create inline organization:', error);
+    return { success: false, error: error.message };
+  }
+}
+

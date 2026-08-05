@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
+import OrganizationSelector from '@/components/admin/magazine/OrganizationSelector';
 
 export function MagazineForm({ 
     industries, 
@@ -120,6 +121,16 @@ export function MagazineForm({
         return [];
     });
 
+    const [selectedOrganizations, setSelectedOrganizations] = useState<any[]>(() => {
+        if (post && post.organizations) {
+            return post.organizations.map((po: any) => ({
+                id: po.organization.id,
+                company_name: po.organization.company_name
+            }));
+        }
+        return [];
+    });
+
     const initialDate = post ? new Date(post.createdAt) : new Date();
     const [year, setYear] = useState(String(initialDate.getFullYear()));
     const [month, setMonth] = useState(String(initialDate.getMonth() + 1).padStart(2, '0'));
@@ -200,7 +211,8 @@ export function MagazineForm({
                     ...formData,
                     categoryId: Number(formData.categoryId),
                     content: structuredContent,
-                    industryIds: selectedIndustries
+                    industryIds: selectedIndustries,
+                    organizationIds: selectedOrganizations.map(o => o.id)
                 });
 
                 if (res.success) {
@@ -216,7 +228,8 @@ export function MagazineForm({
                     categoryId: Number(formData.categoryId),
                     content: structuredContent,
                     slug: formData.slug || undefined,
-                    industryIds: selectedIndustries
+                    industryIds: selectedIndustries,
+                    organizationIds: selectedOrganizations.map(o => o.id)
                 });
 
                 if (res.success) {
@@ -534,6 +547,16 @@ export function MagazineForm({
                                             </div>
                                         ))}
                                     </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <Label className="text-sm font-bold flex items-center gap-2">
+                                        연결된 조직 (인사이트 레이더) <span className="text-xs text-slate-400 font-normal">(선택)</span>
+                                    </Label>
+                                    <OrganizationSelector
+                                        selected={selectedOrganizations}
+                                        onChange={setSelectedOrganizations}
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
