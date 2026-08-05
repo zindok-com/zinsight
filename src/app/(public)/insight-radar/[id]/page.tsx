@@ -329,17 +329,24 @@ function TimelineItem({
     summary: string;
     url?: string;
 }) {
+    const isMagazine = category === 'ZINSIGHT_MAGAZINE';
     return (
         <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-4">
             {/* 도트 마커 */}
-            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-white bg-zi-blue text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 ${isMagazine ? 'bg-amber-500' : 'bg-zi-blue'}`}>
                 <div className="w-2 h-2 bg-white rounded-full"></div>
             </div>
             
             {/* 컨텐츠 카드 */}
-            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-xl border border-zi-divider shadow-sm transition-all hover:shadow-md">
+            <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-xl border shadow-sm transition-all hover:shadow-md ${isMagazine ? 'border-amber-200 bg-amber-50/5' : 'border-zi-divider'}`}>
                 <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold uppercase text-zi-blue bg-blue-50 px-2 py-1 rounded">{category}</span>
+                    {isMagazine ? (
+                        <span className="text-xs font-extrabold uppercase text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded border border-amber-200 flex items-center gap-1">
+                            <span aria-hidden="true">✦</span> ZINSIGHT PARTNER
+                        </span>
+                    ) : (
+                        <span className="text-xs font-bold uppercase text-zi-blue bg-blue-50 px-2 py-1 rounded">{category}</span>
+                    )}
                     <time className="text-xs font-semibold text-slate-400">{date}</time>
                 </div>
                 <h3 className="mb-3 text-base font-bold text-zi-primary leading-snug">{title}</h3>
@@ -347,15 +354,25 @@ function TimelineItem({
                     <p className="line-clamp-2 text-sm text-slate-500 mb-4 leading-relaxed">{summary}</p>
                 )}
                 {url && (
-                    <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-zi-primary hover:text-zi-blue transition-colors"
-                    >
-                        원문 보기
-                        <ExternalLink className="h-3 w-3" />
-                    </a>
+                    isMagazine ? (
+                        <Link
+                            href={url}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-650 hover:text-indigo-800 transition-colors"
+                        >
+                            매거진 기사 보기
+                            <ExternalLink className="h-3 w-3 text-indigo-500" />
+                        </Link>
+                    ) : (
+                        <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-zi-primary hover:text-zi-blue transition-colors"
+                        >
+                            원문 보기
+                            <ExternalLink className="h-3 w-3" />
+                        </a>
+                    )
                 )}
             </div>
         </div>

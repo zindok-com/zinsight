@@ -344,13 +344,84 @@ export async function getRadarCompanyDetail(companyId: number) {
                 orderBy: { article: { pub_date: 'desc' } },
                 take: 10,
             },
-            _count: { select: { company_articles: true } },
+            magazinePosts: {
+                where: {
+                    magazinePost: {
+                        status: 'PUBLISHED',
+                        deletedAt: null
+                    }
+                },
+                include: {
+                    magazinePost: {
+                        include: {
+                            category: true,
+                            region: true
+                        }
+                    }
+                },
+                orderBy: { magazinePost: { createdAt: 'desc' } },
+                take: 10
+            },
+            _count: { 
+                select: { 
+                    company_articles: true,
+                    magazinePosts: true
+                } 
+            },
         },
     });
 
     if (!company) return null;
 
     const firstCI = company.industries[0] || {};
+
+    const externalArticles = company.company_articles.map((ca: any) => ({
+        id: ca.article.id,
+        title: ca.article.title,
+        pub_date: ca.article.pub_date,
+        source: ca.article.source || 'NAVER_NEWS',
+        link: ca.article.link,
+        description: ca.article.description,
+        isMagazine: false
+    }));
+
+    const magazineArticles = company.magazinePosts.map((mp: any) => {
+        const post = mp.magazinePost;
+        const regionSlug = post.region?.slug || '';
+        const isLocal = post.category?.isLocal || false;
+        const link = isLocal 
+            ? `/magazine/local/${regionSlug}/${post.slug}` 
+            : `/magazine/tech-marketing/${post.slug}`;
+        
+        let parsedLead = '';
+        try {
+            if (post.content.trim().startsWith('{')) {
+                const parsed = JSON.parse(post.content);
+                parsedLead = parsed.lead || '';
+            }
+        } catch {}
+        if (!parsedLead && !post.content.trim().startsWith('{')) {
+            parsedLead = post.content;
+        }
+
+        return {
+            id: post.id,
+            title: post.title,
+            pub_date: post.createdAt,
+            source: 'ZINSIGHT_MAGAZINE',
+            link: link,
+            description: post.summary || parsedLead,
+            isMagazine: true
+        };
+    });
+
+    const combinedArticles = [...externalArticles, ...magazineArticles]
+        .sort((a, b) => {
+            const dateA = a.pub_date ? new Date(a.pub_date).getTime() : 0;
+            const dateB = b.pub_date ? new Date(b.pub_date).getTime() : 0;
+            return dateB - dateA;
+        })
+        .slice(0, 10);
 
     return {
         id: company.id,
@@ -367,12 +438,8 @@ export async function getRadarCompanyDetail(companyId: number) {
             recent_status: ci.recent_status ?? null,
             recent_keywords: ci.recent_keywords ?? null,
         })),
-        recentArticles: company.company_articles.map((ca: any) => ({
-            ...ca.article,
-            url: ca.article.link,           // link → url 별칭
-            summary: ca.article.description, // description → summary 별칭
-        })),
-        articleCount: company._count.company_articles,
+        recentArticles: combinedArticles,
+        articleCount: company._count.company_articles + company._count.magazinePosts,
         company_url: company.company_url,
         founded_year: company.founded_year,
         hq_location: company.hq_location,

@@ -252,6 +252,31 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                     </div>
                 )}
 
+                {/* 연결된 인사이트 레이더 조직 카드 */}
+                {post.organizations && post.organizations.length > 0 && (
+                    <div className="mt-8 space-y-3">
+                        {post.organizations.map((po: any) => (
+                            <div key={po.organization.id} className="p-5 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-2xs">
+                                <div className="space-y-1">
+                                    <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-600"></span>
+                                        {po.organization.company_name}
+                                    </h4>
+                                    <p className="text-xs text-slate-500">
+                                        이 조직의 최신 투자 유치, 특허, GEO 마케팅 인덱스를 인사이트 레이더에서 실시간으로 확인해보세요.
+                                    </p>
+                                </div>
+                                <Link 
+                                    href={`/insight-radar/${po.organization.id}`}
+                                    className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors shrink-0"
+                                >
+                                    인사이트 레이더에서 프로필 보기 →
+                                </Link>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
                 {/* isPaid 기사 하단 편집 독립성 고지 */}
                 {post.isPaid && (
                     <p className="mt-8 text-[11px] text-zi-outline leading-relaxed border-t border-zi-divider pt-5 italic">
