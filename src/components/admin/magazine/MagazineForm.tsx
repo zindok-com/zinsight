@@ -17,13 +17,11 @@ import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
 import OrganizationSelector from '@/components/admin/magazine/OrganizationSelector';
 
 export function MagazineForm({ 
-    industries, 
     authors = [], 
     regions = [],
     categories = [],
     post 
 }: { 
-    industries: any[], 
     authors?: any[], 
     regions?: any[],
     categories?: any[],
@@ -114,12 +112,7 @@ export function MagazineForm({
         };
     })();
 
-    const [selectedIndustries, setSelectedIndustries] = useState<number[]>(() => {
-        if (post && post.industries) {
-            return post.industries.map((pi: any) => pi.industryId);
-        }
-        return [];
-    });
+
 
     const [selectedOrganizations, setSelectedOrganizations] = useState<any[]>(() => {
         if (post && post.organizations) {
@@ -155,24 +148,11 @@ export function MagazineForm({
     useEffect(() => {
         if (post) return; // Skip automatic slug generation during edit mode to prevent breaking existing URLs
         const selectedCategory = categories.find(c => String(c.id) === String(formData.categoryId));
-        if (selectedCategory?.slug === 'newsletter' && selectedIndustries.length > 0) {
-            const industry = industries.find(i => i.id === selectedIndustries[0]);
-            if (industry) {
-                const autoSlug = `${year}-${month}-${industry.slug}`;
-                setFormData((prev: any) => ({ ...prev, slug: autoSlug }));
-            }
+        if (selectedCategory?.slug === 'newsletter') {
+            const autoSlug = `${year}-${month}-newsletter`;
+            setFormData((prev: any) => ({ ...prev, slug: autoSlug }));
         }
-    }, [formData.categoryId, year, month, selectedIndustries, industries, post, categories]);
-
-    const toggleIndustry = (id: number) => {
-        if (formData.category === 'NEWSLETTER') {
-            setSelectedIndustries([id]);
-        } else {
-            setSelectedIndustries(prev =>
-                prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
-            );
-        }
-    };
+    }, [formData.categoryId, year, month, post, categories]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -211,7 +191,6 @@ export function MagazineForm({
                     ...formData,
                     categoryId: Number(formData.categoryId),
                     content: structuredContent,
-                    industryIds: selectedIndustries,
                     organizationIds: selectedOrganizations.map(o => o.id)
                 });
 
@@ -228,7 +207,6 @@ export function MagazineForm({
                     categoryId: Number(formData.categoryId),
                     content: structuredContent,
                     slug: formData.slug || undefined,
-                    industryIds: selectedIndustries,
                     organizationIds: selectedOrganizations.map(o => o.id)
                 });
 
@@ -263,10 +241,7 @@ export function MagazineForm({
         }
     })();
 
-    const selectedIndustryNames = selectedIndustries
-        .map(id => industries.find(i => i.id === id)?.name)
-        .filter(Boolean)
-        .join(', ');
+
 
     return (
         <div className="space-y-6">
@@ -320,9 +295,6 @@ export function MagazineForm({
                                                 categoryId: val,
                                                 regionId: selectedCat?.isLocal ? formData.regionId : null
                                             });
-                                            if (selectedCat?.slug === 'newsletter' && selectedIndustries.length > 1) {
-                                                setSelectedIndustries([selectedIndustries[0]]);
-                                            }
                                         }}
                                     >
                                         <SelectTrigger id="category" className="bg-white border-slate-200">
@@ -407,10 +379,14 @@ export function MagazineForm({
 
                             {/* 제목 - 단독 행 전체 너비 */}
                             <div className="space-y-2 pt-2">
-                                <Label htmlFor="title" className="text-xs font-semibold text-slate-600">제목</Label>
+                                <div className="flex items-center gap-1.5 mb-1.5">
+                                    <Label htmlFor="title" className="text-xs font-semibold text-slate-600">제목</Label>
+                                    <span title="기사 제목을 입력하세요" className="cursor-help inline-flex items-center">
+                                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                                    </span>
+                                </div>
                                 <Input
                                     id="title"
-                                    placeholder="기사 제목을 입력하세요"
                                     value={formData.title}
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     className="bg-white border-slate-200 text-base py-5 font-semibold focus-visible:ring-indigo-500"
@@ -519,35 +495,7 @@ export function MagazineForm({
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Left Column: Industry & Slug */}
                             <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-bold flex items-center gap-2">
-                                        연결 산업군 <span className="text-xs text-slate-400 font-normal">(선택)</span>
-                                        {activeCategorySlug === 'newsletter' && (
-                                            <Badge variant="outline" className="text-[10px] font-normal border-blue-200 text-blue-600">단일 선택</Badge>
-                                        )}
-                                    </Label>
-                                    <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-white shadow-sm max-h-[180px] overflow-y-auto content-start">
-                                        {industries.map((ind) => (
-                                            <div
-                                                key={ind.id}
-                                                className={`flex items-center space-x-2 p-2 rounded transition-colors ${selectedIndustries.includes(ind.id) ? 'bg-indigo-50 border-indigo-100' : 'hover:bg-slate-50'
-                                                    }`}
-                                            >
-                                                <Checkbox
-                                                    id={`ind-${ind.id}`}
-                                                    checked={selectedIndustries.includes(ind.id)}
-                                                    onCheckedChange={() => toggleIndustry(ind.id)}
-                                                />
-                                                <label
-                                                    htmlFor={`ind-${ind.id}`}
-                                                    className="text-sm font-medium leading-none cursor-pointer flex-1"
-                                                >
-                                                    {ind.name}
-                                                </label>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+
 
                                 <div className="space-y-3">
                                     <Label className="text-sm font-bold flex items-center gap-2">
@@ -556,15 +504,20 @@ export function MagazineForm({
                                     <OrganizationSelector
                                         selected={selectedOrganizations}
                                         onChange={setSelectedOrganizations}
+                                        currentRegionId={formData.regionId ?? undefined}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
+                                <div className="flex items-center gap-1.5 mb-1.5">
                                     <Label htmlFor="slug" className="font-bold">슬러그 (URL)</Label>
+                                    <span title="URL에 사용될 고유 식별자입니다. 영문 소문자와 하이픈(-)만 사용 가능합니다. (예: my-article-slug)" className="cursor-help inline-flex items-center">
+                                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                                    </span>
+                                </div>
                                     <div className="relative">
                                         <Input
                                             id="slug"
-                                            placeholder="my-article-slug"
                                             value={formData.slug}
                                             onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                                             className="bg-white pr-10 font-mono text-sm border-2 focus-visible:ring-indigo-500"
@@ -595,10 +548,14 @@ export function MagazineForm({
                                 </div>
 
                                 <div className="space-y-2">
+                                <div className="flex items-center gap-1.5 mb-1.5">
                                     <Label htmlFor="targetKeywords" className="font-bold">핵심 키워드 태그 (쉼표로 구분)</Label>
+                                    <span title="기사 상세 페이지 하단에 검색 가능한 태그로 출력됩니다. (예: 인공지능, GEO 마케팅, SEO 최적화)" className="cursor-help inline-flex items-center">
+                                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                                    </span>
+                                </div>
                                     <Input
                                         id="targetKeywords"
-                                        placeholder="예: 인공지능, GEO 마케팅, SEO 최적화"
                                         value={formData.targetKeywords || ''}
                                         onChange={(e) => setFormData({ ...formData, targetKeywords: e.target.value })}
                                         className="bg-white pr-4 font-normal text-sm border-2 focus-visible:ring-indigo-500"
@@ -684,10 +641,14 @@ export function MagazineForm({
                                         </Button>
                                     </div>
                                 </div>
-                                <p className="text-[11px] text-indigo-600/80 pb-1">기사의 도입부나 요약을 작성해주세요. **텍스트** 또는 **{`{텍스트}`}**로 강조할 수 있습니다. 이미지는 단독 줄에 URL을 입력하거나 `![설명](주소)` 형식으로 삽입됩니다.</p>
+                                <div className="flex items-center gap-1.5 pb-1">
+                                    <p className="text-[11px] text-indigo-600/80">기사의 도입부나 요약을 작성해주세요. **텍스트** 또는 **{`{텍스트}`}**로 강조할 수 있습니다. 이미지는 단독 줄에 URL을 입력하거나 `![설명](주소)` 형식으로 삽입됩니다.</p>
+                                    <span title="기사의 도입부(리드) 내용을 작성하세요." className="cursor-help inline-flex items-center">
+                                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                                    </span>
+                                </div>
                                 <Textarea
                                     id="lead"
-                                    placeholder="리드 내용을 작성하세요..."
                                     className="min-h-[130px] bg-white border-indigo-200 focus-visible:ring-indigo-500 text-sm leading-relaxed"
                                     value={formData.lead}
                                     onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
@@ -742,9 +703,13 @@ export function MagazineForm({
                                             </div>
                                             <div className="space-y-4">
                                                 <div className="space-y-1.5">
-                                                    <Label className="text-xs font-semibold text-slate-600">소제목</Label>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <Label className="text-xs font-semibold text-slate-600">소제목</Label>
+                                                        <span title="섹션의 소제목을 입력하세요" className="cursor-help inline-flex items-center">
+                                                            <Info className="w-3.5 h-3.5 text-slate-400" />
+                                                        </span>
+                                                    </div>
                                                     <Input
-                                                        placeholder="섹션의 소제목을 입력하세요"
                                                         value={body.title}
                                                         onChange={(e) => {
                                                             const newBodies = [...formData.bodies];
@@ -782,7 +747,6 @@ export function MagazineForm({
                                                     </div>
                                                     <Textarea
                                                         id={`body-${index}`}
-                                                        placeholder="본문 내용을 작성하세요..."
                                                         className="min-h-[260px] bg-slate-50/50 text-sm leading-relaxed"
                                                         value={body.content}
                                                         onChange={(e) => {
@@ -791,6 +755,7 @@ export function MagazineForm({
                                                             setFormData({ ...formData, bodies: newBodies });
                                                         }}
                                                         required={index === 0}
+                                                        title="본문 내용을 작성하세요..."
                                                     />
                                                 </div>
                                             </div>
@@ -826,10 +791,14 @@ export function MagazineForm({
                                         </Button>
                                     </div>
                                 </div>
-                                <p className="text-[11px] text-slate-500 pb-1">기사의 맺음말이나 결론을 작성해주세요.</p>
+                                <div className="flex items-center gap-1.5 pb-1">
+                                    <p className="text-[11px] text-slate-500">기사의 맺음말이나 결론을 작성해주세요.</p>
+                                    <span title="클로징 내용을 작성하세요..." className="cursor-help inline-flex items-center">
+                                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                                    </span>
+                                </div>
                                 <Textarea
                                     id="closing"
-                                    placeholder="클로징 내용을 작성하세요..."
                                     className="min-h-[130px] bg-white text-sm leading-relaxed"
                                     value={formData.closing}
                                     onChange={(e) => setFormData({ ...formData, closing: e.target.value })}
@@ -847,11 +816,6 @@ export function MagazineForm({
                                 <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1.5 rounded-full text-zi-blue font-bold">
                                     {categoryLabel}
                                 </span>
-                                {selectedIndustryNames && (
-                                    <span className="text-zi-outline font-ui-label text-xs font-semibold uppercase tracking-widest">
-                                        {selectedIndustryNames}
-                                    </span>
-                                )}
                             </div>
 
                             <h1 className="font-h1 text-[32px] md:text-[38px] leading-[1.2] text-zi-primary tracking-tight font-serif font-bold">

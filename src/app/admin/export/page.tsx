@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { getIndustries } from '@/actions/industry-actions';
+import { getRegions } from '@/actions/admin/region-actions';
 import { generateConsolidatedSnapshot, listSnapshots, type SnapshotInfo } from '@/actions/export-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Download, FileJson, Loader2, Star, CheckSquare, Square } from 'lucide-react';
+import { Download, FileJson, Loader2, Star } from 'lucide-react';
 
-type Industry = Awaited<ReturnType<typeof getIndustries>>[number];
+type Region = { id: number; name: string; slug: string; isActive: boolean };
 
 function monthOptions() {
     const opts = [];
@@ -23,11 +23,11 @@ function monthOptions() {
 }
 
 export default function ExportPage() {
-    const [industries, setIndustries] = useState<Industry[]>([]);
+    const [regions, setRegions] = useState<Region[]>([]);
     const [snapshotLoading, setSnapshotLoading] = useState(false);
     
     // Consolidated snapshot states
-    const [consolidatedIndustries, setConsolidatedIndustries] = useState<number[]>([]);
+    const [consolidatedRegions, setConsolidatedRegions] = useState<number[]>([]);
     const [consolidatedMonth, setConsolidatedMonth] = useState(monthOptions()[0].value);
     const [consolidatedFilterType, setConsolidatedFilterType] = useState<'pub_date' | 'created_at'>('pub_date');
     const [consolidatedGenerating, setConsolidatedGenerating] = useState(false);
@@ -36,11 +36,13 @@ export default function ExportPage() {
     const months = monthOptions();
 
     useEffect(() => {
-        getIndustries(false).then(data => {
-            setIndustries(data);
-            if (data.length > 0) {
-                // 기본으로 모든 산업 선택
-                setConsolidatedIndustries(data.map(i => i.id));
+        getRegions().then(result => {
+            if (result.success && result.data) {
+                setRegions(result.data);
+                if (result.data.length > 0) {
+                    // 기본으로 모든 지역 선택
+                    setConsolidatedRegions(result.data.map((r: Region) => r.id));
+                }
             }
         });
         loadSnapshots();
@@ -60,14 +62,14 @@ export default function ExportPage() {
     }
 
     async function handleGenerateConsolidated() {
-        if (consolidatedIndustries.length === 0) {
-            toast.error('하나 이상의 산업을 선택하세요.');
+        if (consolidatedRegions.length === 0) {
+            toast.error('하나 이상의 지역을 선택하세요.');
             return;
         }
         setConsolidatedGenerating(true);
         toast.info('통합 Snapshot 생성 중...');
         try {
-            const result = await generateConsolidatedSnapshot(consolidatedIndustries, consolidatedMonth, consolidatedFilterType);
+            const result = await generateConsolidatedSnapshot(consolidatedRegions, consolidatedMonth, consolidatedFilterType);
             if (result.success) {
                 toast.success(result.message);
                 loadSnapshots();
@@ -88,11 +90,11 @@ export default function ExportPage() {
         return `${(b / 1024 / 1024).toFixed(1)} MB`;
     }
 
-    const toggleAllIndustries = () => {
-        if (consolidatedIndustries.length === industries.length) {
-            setConsolidatedIndustries([]);
+    const toggleAllRegions = () => {
+        if (consolidatedRegions.length === regions.length) {
+            setConsolidatedRegions([]);
         } else {
-            setConsolidatedIndustries(industries.map(i => i.id));
+            setConsolidatedRegions(regions.map((r: Region) => r.id));
         }
     };
 
@@ -102,7 +104,7 @@ export default function ExportPage() {
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                     <Download className="h-8 w-8 text-zi-primary" /> 통합 Snapshot
                 </h1>
-                <p className="text-muted-foreground mt-1">여러 산업 분야의 데이터를 하나로 묶어 월간 스냅샷을 생성하고 관리합니다.</p>
+                <p className="text-muted-foreground mt-1">지역별 데이터를 하나로 묶어 월간 스냅샷을 생성하고 관리합니다.</p>
             </div>
 
             {/* Consolidated Snapshot Generator */}
@@ -114,35 +116,35 @@ export default function ExportPage() {
                 </CardHeader>
                 <CardContent className="space-y-6 pt-6">
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Industry Selection */}
+                        {/* Region Selection */}
                         <div className="lg:col-span-1 space-y-3">
                             <div className="flex items-center justify-between">
-                                <label className="text-sm font-semibold text-zi-primary uppercase tracking-wider">대상 산업</label>
+                                <label className="text-sm font-semibold text-zi-primary uppercase tracking-wider">대상 지역</label>
                                 <Button 
                                     variant="ghost" 
                                     size="sm" 
                                     className="h-7 px-2 text-[11px] font-bold"
-                                    onClick={toggleAllIndustries}
+                                    onClick={toggleAllRegions}
                                 >
-                                    {consolidatedIndustries.length === industries.length ? '전체 해제' : '전체 선택'}
+                                    {consolidatedRegions.length === regions.length ? '전체 해제' : '전체 선택'}
                                 </Button>
                             </div>
                             <div className="border border-zi-divider rounded-md p-2 max-h-[220px] overflow-y-auto space-y-1 bg-zi-surface/50">
-                                {industries.map(ex => (
-                                    <label key={`cons-${ex.id}`} className="flex items-center gap-2.5 text-sm cursor-pointer hover:bg-zi-primary/5 p-1.5 rounded-sm transition-colors">
+                                {regions.map((reg: Region) => (
+                                    <label key={`cons-${reg.id}`} className="flex items-center gap-2.5 text-sm cursor-pointer hover:bg-zi-primary/5 p-1.5 rounded-sm transition-colors">
                                         <input
                                             type="checkbox"
                                             className="rounded border-zi-divider text-zi-primary focus:ring-zi-primary"
-                                            checked={consolidatedIndustries.includes(ex.id)}
+                                            checked={consolidatedRegions.includes(reg.id)}
                                             onChange={(e) => {
                                                 if (e.target.checked) {
-                                                    setConsolidatedIndustries([...consolidatedIndustries, ex.id]);
+                                                    setConsolidatedRegions([...consolidatedRegions, reg.id]);
                                                 } else {
-                                                    setConsolidatedIndustries(consolidatedIndustries.filter(id => id !== ex.id));
+                                                    setConsolidatedRegions(consolidatedRegions.filter(id => id !== reg.id));
                                                 }
                                             }}
                                         />
-                                        <span className="font-medium text-zi-on-surface">{ex.name}</span>
+                                        <span className="font-medium text-zi-on-surface">{reg.name}</span>
                                     </label>
                                 ))}
                             </div>
@@ -181,7 +183,7 @@ export default function ExportPage() {
                             <div className="pt-4 border-t border-zi-divider flex flex-col sm:flex-row items-center gap-4">
                                 <Button 
                                     onClick={handleGenerateConsolidated} 
-                                    disabled={consolidatedGenerating || consolidatedIndustries.length === 0} 
+                                    disabled={consolidatedGenerating || consolidatedRegions.length === 0} 
                                     size="lg"
                                     className="w-full sm:w-auto px-8 bg-zi-primary hover:bg-zi-primary/90 text-white font-bold rounded-zi-btn shadow-lg transition-all active:scale-95"
                                 >
@@ -189,7 +191,7 @@ export default function ExportPage() {
                                     통합 Snapshot 생성
                                 </Button>
                                 <div className="text-xs text-muted-foreground bg-zi-surface px-3 py-2 rounded border border-zi-divider flex-1">
-                                    <strong className="text-zi-primary">안내:</strong> {consolidatedIndustries.length}개의 산업 분야 기사를 묶어 {consolidatedMonth} 스냅샷을 생성합니다. 
+                                    <strong className="text-zi-primary">안내:</strong> {consolidatedRegions.length}개의 지역 기사를 묶어 {consolidatedMonth} 스냅샷을 생성합니다. 
                                     기존 파일이 있는 경우 덮어쓰지 않고 새로운 버전으로 저장됩니다.
                                 </div>
                             </div>

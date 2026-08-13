@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Search, Plus, X, Building2, Loader2 } from 'lucide-react';
+import { Search, Plus, X, Building2, Loader2, Info } from 'lucide-react';
 import { searchOrganizations, createOrganizationInline } from '@/actions/company-actions';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,9 +18,10 @@ interface Organization {
 interface OrganizationSelectorProps {
     selected: Organization[];
     onChange: (selected: Organization[]) => void;
+    currentRegionId?: number;
 }
 
-export default function OrganizationSelector({ selected, onChange }: OrganizationSelectorProps) {
+export default function OrganizationSelector({ selected, onChange, currentRegionId }: OrganizationSelectorProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<Organization[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -33,7 +34,8 @@ export default function OrganizationSelector({ selected, onChange }: Organizatio
         ceo_name: '',
         founded_year: '',
         hq_location: '',
-        entity_type: '기업'
+        entity_type: '기업',
+        region_id: currentRegionId || 1
     });
 
     // 디바운스 검색 구현
@@ -104,7 +106,8 @@ export default function OrganizationSelector({ selected, onChange }: Organizatio
                     ceo_name: '',
                     founded_year: '',
                     hq_location: '',
-                    entity_type: '기업'
+                    entity_type: '기업',
+                    region_id: currentRegionId || 1
                 });
             } else {
                 toast.error(res.error || '조직 등록에 실패했습니다.');
@@ -216,10 +219,14 @@ export default function OrganizationSelector({ selected, onChange }: Organizatio
 
                         <div className="space-y-4 py-4">
                             <div className="space-y-1.5">
-                                <Label htmlFor="company_name" className="text-xs font-bold text-slate-700">회사명/기관명 <span className="text-red-500">*</span></Label>
+                                <div className="flex items-center gap-1.5">
+                                    <Label htmlFor="company_name" className="text-xs font-bold text-slate-700">회사명/기관명 <span className="text-red-500">*</span></Label>
+                                    <span title="조직의 정식 명칭을 입력하세요. (예: 삼성전자, 한국과학기술연구원)" className="cursor-help inline-flex items-center">
+                                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                                    </span>
+                                </div>
                                 <Input
                                     id="company_name"
-                                    placeholder="예: 조지컴퍼니"
                                     value={newOrg.company_name}
                                     onChange={(e) => setNewOrg({ ...newOrg, company_name: e.target.value })}
                                     required
@@ -229,20 +236,28 @@ export default function OrganizationSelector({ selected, onChange }: Organizatio
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="ceo_name" className="text-xs font-bold text-slate-700">대표자</Label>
+                                    <div className="flex items-center gap-1.5">
+                                        <Label htmlFor="ceo_name" className="text-xs font-bold text-slate-700">대표자</Label>
+                                        <span title="조직을 대표하는 인물의 이름을 입력하세요. (예: 홍길동)" className="cursor-help inline-flex items-center">
+                                            <Info className="w-3.5 h-3.5 text-slate-400" />
+                                        </span>
+                                    </div>
                                     <Input
                                         id="ceo_name"
-                                        placeholder="홍길동"
                                         value={newOrg.ceo_name}
                                         onChange={(e) => setNewOrg({ ...newOrg, ceo_name: e.target.value })}
                                         className="bg-white border-slate-200"
                                     />
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="founded_year" className="text-xs font-bold text-slate-700">설립연도</Label>
+                                    <div className="flex items-center gap-1.5">
+                                        <Label htmlFor="founded_year" className="text-xs font-bold text-slate-700">설립연도</Label>
+                                        <span title="조직이 설립된 연도를 4자리 숫자로 기입하세요. (예: 2024)" className="cursor-help inline-flex items-center">
+                                            <Info className="w-3.5 h-3.5 text-slate-400" />
+                                        </span>
+                                    </div>
                                     <Input
                                         id="founded_year"
-                                        placeholder="예: 2024"
                                         value={newOrg.founded_year}
                                         onChange={(e) => setNewOrg({ ...newOrg, founded_year: e.target.value })}
                                         className="bg-white border-slate-200"
@@ -251,10 +266,14 @@ export default function OrganizationSelector({ selected, onChange }: Organizatio
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="hq_location" className="text-xs font-bold text-slate-700">소재지 (주소)</Label>
+                                <div className="flex items-center gap-1.5">
+                                    <Label htmlFor="hq_location" className="text-xs font-bold text-slate-700">소재지 (주소)</Label>
+                                    <span title="조직의 본사나 주요 위치를 간략히 입력하세요. (예: 서울시 강남구)" className="cursor-help inline-flex items-center">
+                                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                                    </span>
+                                </div>
                                 <Input
                                     id="hq_location"
-                                    placeholder="예: 경기도 안양시 동안구 시민대로..."
                                     value={newOrg.hq_location}
                                     onChange={(e) => setNewOrg({ ...newOrg, hq_location: e.target.value })}
                                     className="bg-white border-slate-200"

@@ -3,15 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { MagazineForm } from "@/components/admin/magazine/MagazineForm";
 
 export default async function NewMagazinePage() {
-    // Fetch active industries, authors, regions, and categories for selection
-    const [industries, authors, regions, categories] = await Promise.all([
-        prisma.industry.findMany({
-            where: { deleted_at: null, is_active: true },
-            orderBy: { name: 'asc' }
-        }).catch((err) => {
-            console.error('Failed to fetch industries:', err);
-            return [];
-        }),
+    // Fetch active authors, regions, and categories for selection
+    const [authors, regions, categories] = await Promise.all([
         prisma.author.findMany({
             orderBy: { name: 'asc' }
         }).catch((err) => {
@@ -49,7 +42,6 @@ export default async function NewMagazinePage() {
                 </CardHeader>
                 <CardContent>
                     <MagazineForm 
-                        industries={industries} 
                         authors={authors} 
                         regions={regions} 
                         categories={categories} 

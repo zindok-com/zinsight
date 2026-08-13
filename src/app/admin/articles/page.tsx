@@ -2,21 +2,27 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getIndustries } from '@/actions/industry-actions';
+import { getRegions } from '@/actions/admin/region-actions';
 import { Newspaper, AlertTriangle } from 'lucide-react';
 
-type Industry = Awaited<ReturnType<typeof getIndustries>>[number];
+type Region = Awaited<ReturnType<typeof getRegions>>['data'][0];
 
 export default function ArticlesIndexPage() {
     const router = useRouter();
-    const [industries, setIndustries] = useState<Industry[]>([]);
+    const [regions, setRegions] = useState<Region[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getIndustries(false)
-            .then(data => setIndustries(data))
-            .catch(() => setError('산업 목록을 불러오는 중 오류가 발생했습니다.'))
+        getRegions()
+            .then(res => {
+                if (res.success && res.data) {
+                    setRegions(res.data);
+                } else {
+                    setError('지역 목록을 불러오는 중 오류가 발생했습니다.');
+                }
+            })
+            .catch(() => setError('지역 목록을 불러오는 중 오류가 발생했습니다.'))
             .finally(() => setLoading(false));
     }, []);
 
@@ -40,10 +46,10 @@ export default function ArticlesIndexPage() {
                 <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                     <Newspaper className="h-8 w-8" /> Articles
                 </h1>
-                <p className="text-muted-foreground mt-1">산업를 선택하여 기사를 수집하고 조회하세요.</p>
+                <p className="text-muted-foreground mt-1">지역을 선택하여 기사를 수집하고 조회하세요.</p>
             </div>
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {industries.map(ex => (
+                {regions.map(ex => (
                     <button
                         key={ex.id}
                         onClick={() => router.push(`/admin/articles/${ex.id}`)}
@@ -55,15 +61,11 @@ export default function ArticlesIndexPage() {
                             <span className="mx-1">·</span>
                             <span className="font-mono text-slate-400">{ex.slug}</span>
                         </p>
-                        {ex.description && <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{ex.description}</p>}
-                        <p className="text-xs text-slate-400 mt-2">
-                            키워드 {ex._count.keywords}개 · 수집 {ex._count.ingestions}건
-                        </p>
                     </button>
                 ))}
-                {industries.length === 0 && (
+                {regions.length === 0 && (
                     <p className="col-span-full text-center py-12 text-muted-foreground">
-                        등록된 산업가 없습니다. 먼저 <strong>Industries</strong>에서 산업를 등록하세요.
+                        등록된 지역이 없습니다. 먼저 <strong>Regions</strong>에서 지역을 등록하세요.
                     </p>
                 )}
             </div>

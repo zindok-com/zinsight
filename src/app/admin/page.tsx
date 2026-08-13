@@ -108,12 +108,12 @@ export default async function Home() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card className="hover:-translate-y-1 hover:shadow-md transition-all duration-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-600">등록 산업군</CardTitle>
+                            <CardTitle className="text-sm font-medium text-slate-600">등록 지역</CardTitle>
                             <Building2 className="h-4 w-4 text-slate-400" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-slate-800">{stats.industryCount}</div>
-                            <p className="text-xs text-muted-foreground mt-1">활성 산업 카테고리 수</p>
+                            <div className="text-2xl font-bold text-slate-800">{stats.regionCount}</div>
+                            <p className="text-xs text-muted-foreground mt-1">활성 지역 카테고리 수</p>
                         </CardContent>
                     </Card>
 

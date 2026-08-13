@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { getIndustries } from '@/actions/industry-actions';
+import { getRegions } from '@/actions/admin/region-actions';
 import {
     getKeywords,
     createKeyword,
@@ -21,9 +21,9 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Tags, Plus, Pencil, Trash2, RotateCcw, Eye, EyeOff } from 'lucide-react';
+import { Tags, Plus, Pencil, Trash2, RotateCcw, Eye, EyeOff, Info } from 'lucide-react';
 
-type Industry = Awaited<ReturnType<typeof getIndustries>>[number];
+type Region = Awaited<ReturnType<typeof getRegions>>['data'][0];
 type Keyword = Awaited<ReturnType<typeof getKeywords>>[number];
 
 const KEYWORD_TYPES = ['SME', 'PUBLIC', 'OTHER'];
@@ -53,12 +53,16 @@ function KeywordForm({
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-                <label className="text-sm font-medium">키워드 *</label>
+                <div className="flex items-center gap-1.5 mb-1">
+                    <label className="text-sm font-medium">키워드 *</label>
+                    <span title="수집 및 검색에 사용할 구체적인 대상 키워드를 입력하세요. (예: LED 스마트 중소기업)" className="cursor-help inline-flex items-center">
+                        <Info className="w-3.5 h-3.5 text-slate-400" />
+                    </span>
+                </div>
                 <input
-                    className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    className="w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
                     value={keywordText}
                     onChange={e => setKeywordText(e.target.value)}
-                    placeholder="예: LED 스마트 중소기업"
                     required
                 />
             </div>
@@ -92,34 +96,36 @@ function KeywordForm({
 }
 
 export default function KeywordsPage() {
-    const [industries, setIndustries] = useState<Industry[]>([]);
-    const [selectedIndustryId, setSelectedIndustryId] = useState<number | null>(null);
+    const [regions, setRegions] = useState<Region[]>([]);
+    const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
     const [keywords, setKeywords] = useState<Keyword[]>([]);
     const [showDeleted, setShowDeleted] = useState(false);
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editTarget, setEditTarget] = useState<Keyword | null>(null);
 
     useEffect(() => {
-        getIndustries(false).then(data => {
-            setIndustries(data);
-            if (data.length > 0) setSelectedIndustryId(data[0].id);
+        getRegions().then(res => {
+            if (res.success && res.data) {
+                setRegions(res.data);
+                if (res.data.length > 0) setSelectedRegionId(res.data[0].id);
+            }
         });
     }, []);
 
     useEffect(() => {
-        if (selectedIndustryId != null) reload();
-    }, [selectedIndustryId, showDeleted]); // eslint-disable-line
+        if (selectedRegionId != null) reload();
+    }, [selectedRegionId, showDeleted]); // eslint-disable-line
 
     async function reload() {
-        if (selectedIndustryId == null) return;
-        const data = await getKeywords(selectedIndustryId, showDeleted);
+        if (selectedRegionId == null) return;
+        const data = await getKeywords(selectedRegionId, showDeleted);
         setKeywords(data);
     }
 
     async function handleCreate(data: { keyword_text: string; keyword_type?: string; is_active: boolean }) {
-        if (selectedIndustryId == null) return;
+        if (selectedRegionId == null) return;
         try {
-            await createKeyword({ ...data, industry_id: selectedIndustryId });
+            await createKeyword({ ...data, region_id: selectedRegionId });
             toast.success('키워드가 추가되었습니다.');
             setDialogOpen(false);
             reload();
@@ -170,31 +176,31 @@ export default function KeywordsPage() {
                     <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
                         <Tags className="h-8 w-8" /> Keywords
                     </h1>
-                    <p className="text-muted-foreground mt-1">산업별 검색 키워드 관리</p>
+                    <p className="text-muted-foreground mt-1">지역별 검색 키워드 관리</p>
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" onClick={() => setShowDeleted(v => !v)}>
                         {showDeleted ? <><EyeOff className="h-4 w-4 mr-1" />삭제 항목 숨기기</> : <><Eye className="h-4 w-4 mr-1" />삭제 항목 보기</>}
                     </Button>
-                    <Button onClick={() => { setEditTarget(null); setDialogOpen(true); }} disabled={!selectedIndustryId}>
+                    <Button onClick={() => { setEditTarget(null); setDialogOpen(true); }} disabled={!selectedRegionId}>
                         <Plus className="h-4 w-4 mr-1" /> 키워드 추가
                     </Button>
                 </div>
             </div>
 
-            {/* Industry selector */}
+            {/* Region selector */}
             <Card>
                 <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">산업 선택</CardTitle>
+                    <CardTitle className="text-sm font-medium">지역 선택</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-wrap gap-2">
-                        {industries.map(ex => (
+                        {regions.map(ex => (
                             <button
                                 key={ex.id}
-                                onClick={() => setSelectedIndustryId(ex.id)}
+                                onClick={() => setSelectedRegionId(ex.id)}
                                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors border
-                                    ${selectedIndustryId === ex.id
+                                    ${selectedRegionId === ex.id
                                         ? 'bg-slate-900 text-white border-slate-900'
                                         : 'bg-white text-slate-700 border-slate-300 hover:border-slate-500'
                                     }`}
@@ -202,14 +208,14 @@ export default function KeywordsPage() {
                                 {ex.name}
                             </button>
                         ))}
-                        {industries.length === 0 && (
-                            <p className="text-sm text-muted-foreground">산업가 없습니다. 먼저 산업를 등록해 주세요.</p>
+                        {regions.length === 0 && (
+                            <p className="text-sm text-muted-foreground">지역이 없습니다. 먼저 지역을 등록해 주세요.</p>
                         )}
                     </div>
                 </CardContent>
             </Card>
 
-            {selectedIndustryId && (
+            {selectedRegionId && (
                 <>
                     <div className="space-y-3">
                         {activeKws.map(kw => (

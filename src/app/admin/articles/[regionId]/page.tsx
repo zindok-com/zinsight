@@ -3,10 +3,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { getIndustryById } from '@/actions/industry-actions';
+import { getRegionById } from '@/actions/admin/region-actions';
 import { getKeywords } from '@/actions/keyword-actions';
 import { getArticles, deleteArticlesByDate } from '@/actions/article-actions';
-import { ingestByIndustry, ingestByKeyword, type IngestReport } from '@/actions/ingest-actions';
+import { ingestByRegion, ingestByKeyword, type IngestReport } from '@/actions/ingest-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +16,8 @@ import {
     CheckCircle, AlertTriangle, ExternalLink, X, FileJson, Trash2
 } from 'lucide-react';
 
-type Industry = NonNullable<Awaited<ReturnType<typeof getIndustryById>>>;
+// Awaited type for Region is needed, we can define it directly
+type Region = { id: number; name: string; slug: string; isActive: boolean; createdAt: Date; updatedAt: Date };
 type Keyword = Awaited<ReturnType<typeof getKeywords>>[number];
 type ArticlePage = Awaited<ReturnType<typeof getArticles>>;
 type ArticleItem = ArticlePage['articles'][number];
@@ -211,12 +212,12 @@ function ArticleDrawer({ article, onClose }: { article: ArticleItem; onClose: ()
 }
 
 // ─── 메인 페이지 ──────────────────────────────────────────────────────────────
-export default function ArticlesByIndustryPage() {
+export default function ArticlesByRegionPage() {
     const params = useParams();
     const router = useRouter();
-    const industryId = Number(params.industryId);
+    const regionId = Number(params.regionId);
 
-    const [industry, setIndustry] = useState<Industry | null>(null);
+    const [region, setRegion] = useState<Region | null>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [initialLoading, setInitialLoading] = useState(true);
     const [keywords, setKeywords] = useState<Keyword[]>([]);
@@ -230,7 +231,7 @@ export default function ArticlesByIndustryPage() {
     const [loadingArticles, setLoadingArticles] = useState(false);
     const [drawerArticle, setDrawerArticle] = useState<ArticleItem | null>(null);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [confirmType, setConfirmType] = useState<'industry' | 'keyword'>('industry');
+    const [confirmType, setConfirmType] = useState<'region' | 'keyword'>('region');
     const [ingestDisplay, setIngestDisplay] = useState<number>(10);
     const [ingestSort, setIngestSort] = useState<'sim' | 'date'>('date');
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -244,33 +245,33 @@ export default function ArticlesByIndustryPage() {
     const [deleteLoading, setDeleteLoading] = useState(false);
 
     useEffect(() => {
-        if (!industryId || isNaN(industryId)) {
-            setLoadError('잘못된 산업 ID입니다.');
+        if (!regionId || isNaN(regionId)) {
+            setLoadError('잘못된 지역 ID입니다.');
             setInitialLoading(false);
             return;
         }
-        getIndustryById(industryId)
-            .then(ex => {
+        getRegionById(regionId)
+            .then((ex: any) => {
                 if (!ex) {
-                    setLoadError(`산업(ID: ${industryId})를 찾을 수 없습니다.`);
+                    setLoadError(`지역(ID: ${regionId})을 찾을 수 없습니다.`);
                 } else {
-                    setIndustry(ex);
+                    setRegion(ex);
                     return getKeywords(ex.id, false).then(setKeywords);
                 }
             })
             .catch(err => {
                 console.error(err);
-                setLoadError('산업 정보를 불러오는 중 오류가 발생했습니다.');
+                setLoadError('지역 정보를 불러오는 중 오류가 발생했습니다.');
             })
             .finally(() => setInitialLoading(false));
-    }, [industryId]);
+    }, [regionId]);
 
     const loadArticles = useCallback(async (p = 1) => {
-        if (!industry) return;
+        if (!region) return;
         setLoadingArticles(true);
         try {
             const data = await getArticles({
-                industryId: industry.id,
+                regionId: region.id,
                 keywordId: selectedKeywordId ? Number(selectedKeywordId) : undefined,
                 createdMonth: createdMonth || undefined,
                 pubMonth: pubMonth || undefined,
@@ -285,13 +286,13 @@ export default function ArticlesByIndustryPage() {
         } finally {
             setLoadingArticles(false);
         }
-    }, [industry, selectedKeywordId, createdMonth, pubMonth]);
+    }, [region, selectedKeywordId, createdMonth, pubMonth]);
 
     useEffect(() => {
-        if (industry) loadArticles(1);
-    }, [industry, loadArticles]);
+        if (region) loadArticles(1);
+    }, [region, loadArticles]);
 
-    function openConfirmModal(type: 'industry' | 'keyword') {
+    function openConfirmModal(type: 'region' | 'keyword') {
         if (type === 'keyword' && !selectedKeywordId) {
             toast.error('키워드를 선택하세요.');
             return;
@@ -302,19 +303,19 @@ export default function ArticlesByIndustryPage() {
 
     async function executeIngest() {
         setIsConfirmOpen(false);
-        if (confirmType === 'industry') {
-            await handleIngestIndustry();
+        if (confirmType === 'region') {
+            await handleIngestRegion();
         } else {
             await handleIngestKeyword();
         }
     }
 
-    async function handleIngestIndustry() {
-        if (!industry) return;
+    async function handleIngestRegion() {
+        if (!region) return;
         setIngestLoading(true);
         setIngestReport(null);
-        toast.info('산업 단위 수집 중...');
-        const report = await ingestByIndustry(industry.id, ingestDisplay, ingestSort);
+        toast.info('지역 단위 수집 중...');
+        const report = await ingestByRegion(region.id, ingestDisplay, ingestSort);
         setIngestReport(report);
         setIngestLoading(false);
         if (report.success) toast.success(report.message);
@@ -339,7 +340,7 @@ export default function ArticlesByIndustryPage() {
         if (!articleData || articleData.articles.length === 0) { toast.error('내보낼 기사가 없습니다.'); return; }
         const payload = {
             export_at: new Date().toISOString(),
-            industry: industry?.name,
+            region: region?.name,
             filters: { keyword_id: selectedKeywordId, createdMonth, pubMonth },
             count: articleData.total,
             articles: articleData.articles.map((a: ArticleItem) => ({
@@ -358,7 +359,7 @@ export default function ArticlesByIndustryPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `articles_ex${industryId}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.download = `articles_region${regionId}_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
         URL.revokeObjectURL(url);
         toast.success('JSON 내보내기 완료');
@@ -371,21 +372,21 @@ export default function ArticlesByIndustryPage() {
         }
 
         const confirmFirst = window.confirm(
-            `정말로 ${deleteDate}에 수집된 이 산업군의 모든 기사를 데이터베이스에서 영구 삭제하시겠습니까?\n이 작업은 즉시 실행되며 복구할 수 없습니다.`
+            `정말로 ${deleteDate}에 수집된 이 지역의 모든 기사를 데이터베이스에서 영구 삭제하시겠습니까?\n이 작업은 즉시 실행되며 복구할 수 없습니다.`
         );
         if (!confirmFirst) return;
 
         setDeleteLoading(true);
         try {
-            const res = await deleteArticlesByDate(deleteDate, industry?.id);
+            const res = await deleteArticlesByDate(deleteDate, region?.id);
             if (res.success) {
                 toast.success(res.message);
                 setIsDeleteModalOpen(false);
                 loadArticles(1);
             } else {
-                toast.error(res.error || '기사 삭제 실패');
+                toast.error('기사 삭제 실패');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err);
             toast.error('기사 삭제 중 오류가 발생했습니다.');
         } finally {
@@ -398,16 +399,16 @@ export default function ArticlesByIndustryPage() {
         return (
             <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-8 w-8 animate-spin" />
-                <span>산업 정보 불러오는 중...</span>
+                <span>지역 정보 불러오는 중...</span>
             </div>
         );
     }
 
-    if (loadError || !industry) {
+    if (loadError || !region) {
         return (
             <div className="py-20 flex flex-col items-center gap-4">
                 <AlertTriangle className="h-10 w-10 text-red-400" />
-                <p className="text-muted-foreground">{loadError ?? '산업를 찾을 수 없습니다.'}</p>
+                <p className="text-muted-foreground">{loadError ?? '지역을 찾을 수 없습니다.'}</p>
                 <Button variant="outline" onClick={() => router.push('/admin/articles')}>
                     <ArrowLeft className="h-4 w-4 mr-2" /> 목록으로
                 </Button>
@@ -424,8 +425,8 @@ export default function ArticlesByIndustryPage() {
                         <ArrowLeft className="h-5 w-5" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{industry.name}</h1>
-                        <p className="text-xs text-muted-foreground">ID: {industry.id} · slug: {industry.slug}</p>
+                        <h1 className="text-2xl font-bold tracking-tight">{region.name}</h1>
+                        <p className="text-xs text-muted-foreground">ID: {region.id} · slug: {region.slug}</p>
                     </div>
                 </div>
 
@@ -473,9 +474,9 @@ export default function ArticlesByIndustryPage() {
                                 <RefreshCw className={`h-4 w-4 mr-1 ${loadingArticles ? 'animate-spin' : ''}`} />
                                 조회
                             </Button>
-                            <Button onClick={() => openConfirmModal('industry')} disabled={ingestLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            <Button onClick={() => openConfirmModal('region')} disabled={ingestLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
                                 {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-                                산업 단위 수집
+                                지역 단위 수집
                             </Button>
                             <Button onClick={() => openConfirmModal('keyword')} disabled={ingestLoading || !selectedKeywordId} variant="outline">
                                 {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
@@ -607,7 +608,7 @@ export default function ArticlesByIndustryPage() {
                     <DialogHeader>
                         <DialogTitle>새 기사 수집</DialogTitle>
                         <DialogDescription>
-                            {confirmType === 'industry'
+                            {confirmType === 'region'
                                 ? '모든 활성 키워드를 대상으로 네이버 뉴스 API를 호출하여 기사를 수집하시겠습니까? (API 호출량이 많을 수 있습니다)'
                                 : '선택한 키워드에 대해 네이버 뉴스 API를 호출하여 기사를 수집하시겠습니까?'}
                         </DialogDescription>
@@ -657,7 +658,7 @@ export default function ArticlesByIndustryPage() {
                             수집일 기준 기사 삭제
                         </DialogTitle>
                         <DialogDescription>
-                            선택한 수집일(created_at)에 수집된 이 산업군의 기사들을 데이터베이스에서 영구 삭제합니다. (소프트 삭제 미적용)
+                            선택한 수집일(created_at)에 수집된 이 지역의 기사들을 데이터베이스에서 영구 삭제합니다. (소프트 삭제 미적용)
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">

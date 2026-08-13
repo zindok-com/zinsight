@@ -26,12 +26,10 @@ import { ImageUpload } from '@/components/ui/image-upload';
 
 export function MagazineListTable({ 
     posts, 
-    industries, 
     authors = [], 
     categories = [] 
 }: { 
     posts: any[], 
-    industries: any[], 
     authors?: any[], 
     categories?: any[] 
 }) {
@@ -114,8 +112,7 @@ export function MagazineListTable({
             thumbnailUrl: post.thumbnailUrl || '',
             status: post.status,
             authorId: post.authorId || null,
-            authorName: post.authorName || 'Zinsight 편집부',
-            industryIds: post.industries.map((mi: any) => mi.industryId)
+            authorName: post.authorName || 'Zinsight 편집부'
         });
     };
 
@@ -153,25 +150,13 @@ export function MagazineListTable({
             if (res.success) {
                 toast.success('포스트가 수정되었습니다.');
                 setSelectedPost({
-                    ...selectedPost, ...editForm, industries: editForm.industryIds.map((id: number) => ({
-                        industryId: id,
-                        industry: industries.find(ind => ind.id === id)
-                    }))
+                    ...selectedPost, ...editForm
                 });
                 setIsEditing(false);
             } else {
                 toast.error('수정 실패: ' + res.error);
             }
         });
-    };
-
-    const toggleIndustry = (id: number) => {
-        setEditForm((prev: any) => ({
-            ...prev,
-            industryIds: prev.industryIds.includes(id)
-                ? prev.industryIds.filter((i: number) => i !== id)
-                : [...prev.industryIds, id]
-        }));
     };
 
     return (
@@ -239,7 +224,6 @@ export function MagazineListTable({
                             <TableHead>썸네일</TableHead>
                             <TableHead>카테고리</TableHead>
                             <TableHead>제목</TableHead>
-                            <TableHead>연결 산업군</TableHead>
                             <TableHead>상태</TableHead>
                             <TableHead>발행자</TableHead>
                             <TableHead className="text-right">노출수</TableHead>
@@ -289,15 +273,6 @@ export function MagazineListTable({
                                 </TableCell>
                                 <TableCell className="font-medium max-w-xs">
                                     <div className="truncate">{post.title}</div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="flex flex-wrap gap-1">
-                                        {post.industries.map((mi: any) => (
-                                            <Badge key={mi.industryId} variant="outline" className="text-[10px]">
-                                                {mi.industry.name}
-                                            </Badge>
-                                        ))}
-                                    </div>
                                 </TableCell>
                                 <TableCell>
                                     <Badge
@@ -554,34 +529,7 @@ export function MagazineListTable({
                                         )}
                                     </div>
 
-                                    {/* Industries */}
-                                    <div className="space-y-2">
-                                        <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">연결 산업군</Label>
-                                        {isEditing ? (
-                                            <div className="grid grid-cols-2 gap-2 p-4 border rounded-md bg-white">
-                                                {industries.map((ind) => (
-                                                    <div key={ind.id} className="flex items-center space-x-2">
-                                                        <Checkbox
-                                                            id={`edit-ind-${ind.id}`}
-                                                            checked={editForm.industryIds.includes(ind.id)}
-                                                            onCheckedChange={() => toggleIndustry(ind.id)}
-                                                        />
-                                                        <label htmlFor={`edit-ind-${ind.id}`} className="text-xs font-medium cursor-pointer">
-                                                            {ind.name}
-                                                        </label>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="flex flex-wrap gap-2">
-                                                {selectedPost.industries.map((mi: any) => (
-                                                    <Badge key={mi.industryId} variant="secondary" className="px-3 py-1">
-                                                        {mi.industry.name}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+
 
                                     {/* Content */}
                                     <div className="space-y-2">

@@ -26,7 +26,6 @@ const TOP_MENU_ITEMS = [
 ];
 
 const INSIGHT_RADAR_ITEMS = [
-    { name: '산업 관리', href: '/admin/industries', icon: Building2 },
     { name: '조직 관리', href: '/admin/companies', icon: Briefcase },
     { name: '키워드 관리', href: '/admin/keywords', icon: Tags },
     { name: '기사 관리', href: '/admin/articles', icon: Newspaper },
