@@ -114,19 +114,17 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
                                 </div>
                             </div>
 
-                            {/* Industries */}
+                            {/* Region */}
                             <div className="flex flex-wrap gap-1.5 mt-2">
-                                {company.allIndustries && company.allIndustries.length > 0 ? (
-                                    company.allIndustries.map((ind) => (
-                                        <span key={ind.id} className="text-[12px] font-medium text-zi-on-surface-variant bg-zi-surface px-2.5 py-1 rounded-md border border-zi-divider hover:bg-zi-surface-high transition-colors">
-                                            {ind.name}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <span className="text-[12px] font-medium text-zi-on-surface-variant bg-zi-surface px-2.5 py-1 rounded-md border border-zi-divider">
-                                        {company.industry?.name || '알 수 없음'}
+                                {company.region ? (
+                                    <span className="text-[12px] font-medium text-zi-on-surface-variant bg-zi-surface px-2.5 py-1 rounded-md border border-zi-divider hover:bg-zi-surface-high transition-colors">
+                                        {company.region.name}
                                     </span>
-                                )}
+                                ) : company.hq_location ? (
+                                    <span className="text-[12px] font-medium text-zi-on-surface-variant bg-zi-surface px-2.5 py-1 rounded-md border border-zi-divider hover:bg-zi-surface-high transition-colors">
+                                        {company.hq_location}
+                                    </span>
+                                ) : null}
                             </div>
                         </div>
 

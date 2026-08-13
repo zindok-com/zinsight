@@ -6,7 +6,7 @@ import {
     ChevronRight,
 } from 'lucide-react';
 import {
-    getRadarIndustries,
+    getRadarRegions,
     getRadarTotalStats,
     getRadarCompanies,
     getRadarLatestArticles,
@@ -19,7 +19,7 @@ export const revalidate = 3600;
 
 export const metadata: Metadata = {
     title: {
-        absolute: 'Insight Radar - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트 (Zinsight)',
+        absolute: '관내 기업 및 기관 프로필 데이터베이스 | 인사이트 레이더 | 진사이트 (Zinsight)',
     },
     description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 진사이트(Zinsight)의 리스트형 데이터 센터입니다.',
     alternates: {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
 };
 
 interface PageParams {
-    industryId?: string;
+    regionId?: string;
     entityType?: string;
     q?: string;
     page?: string;
@@ -66,28 +66,28 @@ export default async function InsightRadarPage({
     searchParams: Promise<PageParams>;
 }) {
     const params = await searchParams;
-    const selectedIndustryId = params.industryId ? parseInt(params.industryId) : undefined;
+    const selectedRegionId = params.regionId ? parseInt(params.regionId) : undefined;
     const selectedEntityType = params.entityType;
     const searchQuery = params.q;
     const currentPage = params.page ? parseInt(params.page) : 1;
     const pageSize = 15;
 
-    const isInitialState = !selectedIndustryId && !selectedEntityType && !searchQuery;
+    const isInitialState = !selectedRegionId && !selectedEntityType && !searchQuery;
 
     // 데이터 페칭
-    const [industries, totalStats, { companies, total, totalPages }, latestArticles] = await Promise.all([
-        getRadarIndustries(),
+    const [regions, totalStats, { companies, total, totalPages }, latestArticles] = await Promise.all([
+        getRadarRegions(),
         getRadarTotalStats(),
         getRadarCompanies(
             {
-                industryId: selectedIndustryId,
+                regionId: selectedRegionId,
                 entityType: selectedEntityType,
                 searchQuery,
             },
             currentPage,
             pageSize
         ),
-        getRadarLatestArticles({ industryId: selectedIndustryId }, 5),
+        getRadarLatestArticles({}, 5),
     ]);
 
     return (
@@ -99,8 +99,8 @@ export default async function InsightRadarPage({
 
                 {/* ── 통합 검색 및 필터 섹션 ── */}
                 <RadarSearchBar 
-                    industries={industries} 
-                    currentIndustryId={selectedIndustryId} 
+                    regions={regions} 
+                    currentRegionId={selectedRegionId} 
                     currentQuery={searchQuery} 
                 />
 
@@ -167,7 +167,7 @@ export default async function InsightRadarPage({
 
 function buildPageHref(params: PageParams, page: number): string {
     const sp = new URLSearchParams();
-    if (params.industryId) sp.set('industryId', params.industryId);
+    if (params.regionId) sp.set('regionId', params.regionId);
     if (params.entityType) sp.set('entityType', params.entityType);
     if (params.q) sp.set('q', params.q);
     sp.set('page', String(page));

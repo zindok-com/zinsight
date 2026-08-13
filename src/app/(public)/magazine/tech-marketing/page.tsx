@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { ArrowRight, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import { getTechMarketingPosts } from '@/actions/public/magazine-actions';
-import { getRadarIndustries } from '@/actions/insight-radar-actions';
 import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
@@ -138,7 +137,7 @@ export default async function TechMarketingPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
                         {gridArticles.length > 0 ? (
                             gridArticles.map((article) => {
-                                const industryName = article.industries?.[0]?.industry?.name || '인사이트';
+                                const industryName = article.region?.name || '인사이트';
                                 
                                 return (
                                     <ImpressionTracker postId={article.id} key={article.id}>

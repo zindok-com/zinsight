@@ -6,11 +6,11 @@ import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { RadarIndustryWithStats } from '@/actions/insight-radar-actions';
+import type { RadarRegionWithStats } from '@/actions/insight-radar-actions';
 
 interface RadarFilterBarProps {
-    industries: RadarIndustryWithStats[];
-    selectedIndustryId?: number;
+    regions: RadarRegionWithStats[];
+    selectedRegionId?: number;
     selectedEntityType?: string;
     searchQuery?: string;
 }
@@ -22,8 +22,8 @@ const ENTITY_TYPES = [
 ];
 
 export function RadarFilterBar({
-    industries,
-    selectedIndustryId,
+    regions,
+    selectedRegionId,
     selectedEntityType,
     searchQuery = '',
 }: RadarFilterBarProps) {
@@ -63,7 +63,7 @@ export function RadarFilterBar({
         });
     }
 
-    const hasActiveFilter = selectedIndustryId || selectedEntityType || searchQuery;
+    const hasActiveFilter = selectedRegionId || selectedEntityType || searchQuery;
 
     return (
         <div className="space-y-4">
@@ -88,33 +88,33 @@ export function RadarFilterBar({
                 </Button>
             </form>
 
-            {/* 산업 필터 */}
+            {/* 지역 필터 */}
             <div>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    산업 분야
+                    지역
                 </p>
                 <div className="flex flex-wrap gap-2">
                     <Badge
-                        id="filter-industry-all"
-                        variant={!selectedIndustryId ? 'default' : 'outline'}
+                        id="filter-region-all"
+                        variant={!selectedRegionId ? 'default' : 'outline'}
                         className="cursor-pointer select-none"
-                        onClick={() => updateParams({ industryId: undefined })}
+                        onClick={() => updateParams({ regionId: undefined })}
                     >
                         전체
                     </Badge>
-                    {industries.map((industry) => (
+                    {regions.map((region) => (
                         <Badge
-                            id={`filter-industry-${industry.id}`}
-                            key={industry.id}
-                            variant={selectedIndustryId === industry.id ? 'default' : 'outline'}
+                            id={`filter-region-${region.id}`}
+                            key={region.id}
+                            variant={selectedRegionId === region.id ? 'default' : 'outline'}
                             className="cursor-pointer select-none"
                             onClick={() =>
-                                updateParams({ industryId: String(industry.id) })
+                                updateParams({ regionId: String(region.id) })
                             }
                         >
-                            {industry.name}
+                            {region.name}
                             <span className="ml-1 text-xs opacity-60">
-                                {industry.companyCount}
+                                {region.organizationCount}
                             </span>
                         </Badge>
                     ))}

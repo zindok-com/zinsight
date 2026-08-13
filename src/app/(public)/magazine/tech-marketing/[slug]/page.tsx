@@ -55,7 +55,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         },
         include: {
             category: true,
-            industries: { include: { industry: true } },
             organizations: { include: { organization: true } },
             author: true
         }
@@ -90,7 +89,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const tags = [
         categoryLabel,
         ...(post.isPaid ? ['파트너'] : []),
-        ...post.industries.map((pi: any) => pi.industry.name),
         ...post.organizations.map((po: any) => po.organization.company_name),
         ...(post.targetKeywords
             ? post.targetKeywords.split(',').map((t: string) => t.trim()).filter(Boolean)
@@ -142,11 +140,6 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
         },
         include: {
             category: true,
-            industries: {
-                include: {
-                    industry: true
-                }
-            },
             organizations: {
                 include: {
                     organization: true
@@ -168,7 +161,6 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
     const ldKeywords = [
         ldCategoryLabel,
         ...(post.isPaid ? ['파트너', 'Sponsored Content'] : []),
-        ...post.industries.map((pi: any) => pi.industry.name),
         ...post.organizations.map((po: any) => po.organization.company_name),
         ...(post.targetKeywords
             ? post.targetKeywords.split(',').map((t: string) => t.trim()).filter(Boolean)

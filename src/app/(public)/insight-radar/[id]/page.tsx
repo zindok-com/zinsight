@@ -8,14 +8,63 @@ interface PageProps {
     params: Promise<{ id: string }>;
 }
 
+// 지자체별 지리 정보 사전 맵핑 (Geotagging 용)
+const regionGeoMap: Record<string, { lat: number; lng: number; address: string }> = {
+    anyang: { lat: 37.3943, lng: 126.9568, address: 'South Korea, Gyeonggi-do, Anyang-si' },
+    seongnam: { lat: 37.4200, lng: 127.1265, address: 'South Korea, Gyeonggi-do, Seongnam-si' },
+    busan: { lat: 35.1796, lng: 129.0756, address: 'South Korea, Busan' }
+};
+
 // 동적 메타데이터 생성
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
     const company = await getRadarCompanyDetail(Number(id));
     if (!company) return { title: '조직을 찾을 수 없습니다' };
+
+    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const baseUrl = `https://${domain}`;
+    const url = `${baseUrl}/insight-radar/${company.id}`;
+    
+    let description = company.business_summary;
+    const coreKw = parseKeywords(company.core_keywords);
+    
+    if (!description) {
+        const products = coreKw?.products?.join(', ') || '';
+        const tech = coreKw?.technology?.join(', ') || '';
+        description = `${company.region?.name || '지역'}에 위치한 ${company.company_name}의 ${products ? products + ' 및 ' : ''}${tech ? tech + ' ' : ''}비즈니스 전문 프로필과 마켓 인사이트를 확인하세요.`;
+    }
+
+    const title = `${company.company_name} 비즈니스 프로필 및 기술 정보 | ${company.region?.name || 'Zinsight'}`;
+    
+    const tags = [
+        company.company_name,
+        ...(company.aliases ? JSON.parse(JSON.stringify(company.aliases)) : []),
+        company.region?.name,
+        ...(coreKw?.technology || []),
+        ...(coreKw?.target_market || [])
+    ].filter(Boolean);
+
     return {
-        title: company.company_name,
-        description: company.business_summary ?? `${company.company_name}의 Zinsight 조직 분석 리포트`,
+        title,
+        description,
+        keywords: tags,
+        alternates: { canonical: url },
+        openGraph: {
+            title,
+            description,
+            type: 'profile',
+            url,
+            siteName: 'Zinsight',
+            locale: 'ko_KR',
+            // company_logo가 있다면 images에 추가할 수 있지만 현재 없으므로 기본 로고 사용
+            images: [{ url: `${baseUrl}/img/zinsight_icon.png`, width: 1200, height: 630, alt: company.company_name }]
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [`${baseUrl}/img/zinsight_icon.png`]
+        }
     };
 }
 
@@ -41,9 +90,68 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     if (!company) notFound();
 
     const coreKw = parseKeywords(company.core_keywords);
+    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const baseUrl = `https://${domain}`;
+    const url = `${baseUrl}/insight-radar/${company.id}`;
+    
+    const geoData = (company.region && regionGeoMap[company.region.slug]) || { lat: 37.5665, lng: 126.9780, address: 'Seoul, South Korea' };
+
+    // JSON-LD 구조화 데이터 생성
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@graph': [
+            {
+                '@type': 'BreadcrumbList',
+                '@id': `${url}#breadcrumb`,
+                'itemListElement': [
+                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': baseUrl },
+                    { '@type': 'ListItem', 'position': 2, 'name': 'Insight Radar', 'item': `${baseUrl}/insight-radar` },
+                    { '@type': 'ListItem', 'position': 3, 'name': company.region?.name || 'Region', 'item': `${baseUrl}/insight-radar?region=${company.region?.id}` },
+                    { '@type': 'ListItem', 'position': 4, 'name': company.company_name, 'item': url }
+                ]
+            },
+            {
+                '@type': company.entity_type === '대학/교육기관' ? 'EducationalOrganization' : 'Organization',
+                '@id': `${url}#organization`,
+                'name': company.company_name,
+                'alternateName': company.aliases ? JSON.parse(JSON.stringify(company.aliases)) : undefined,
+                'url': company.company_url || url,
+                'foundingDate': company.founded_year || undefined,
+                'founder': company.ceo_name ? { '@type': 'Person', 'name': company.ceo_name } : undefined,
+                'address': company.hq_location ? {
+                    '@type': 'PostalAddress',
+                    'addressLocality': company.region?.name || '',
+                    'streetAddress': company.hq_location,
+                    'addressCountry': 'KR'
+                } : undefined,
+                'location': company.region ? {
+                    '@type': 'Place',
+                    'name': company.region.name,
+                    'geo': {
+                        '@type': 'GeoCoordinates',
+                        'latitude': geoData.lat,
+                        'longitude': geoData.lng
+                    }
+                } : undefined,
+                'knowsAbout': coreKw?.technology?.join(', ') || undefined,
+                'makesOffer': coreKw?.products?.join(', ') || undefined,
+                'seeks': coreKw?.target_market?.join(', ') || undefined,
+                'subjectOf': company.recentArticles?.map((article: any) => ({
+                    '@type': 'Article',
+                    'headline': article.title,
+                    'url': article.url || undefined
+                }))
+            }
+        ]
+    };
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
+            {/* JSON-LD 삽입 */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <main className="mx-auto max-w-zi-container px-6 py-12">
                 {/* ── 뒤로가기 ── */}
                 <Link
@@ -67,15 +175,9 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
                                 {/* 산업 태그 */}
                                 <div className="flex flex-wrap gap-2.5">
-                                    {company.allIndustries && company.allIndustries.length > 0 ? (
-                                        company.allIndustries.map((ind) => (
-                                            <span key={ind.id} className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-zi-secondary bg-teal-50 border border-teal-100 rounded-lg">
-                                                <Tag size={14} /> {ind.name}
-                                            </span>
-                                        ))
-                                    ) : company.industry && (
+                                    {company.region && (
                                         <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-zi-secondary bg-teal-50 border border-teal-100 rounded-lg">
-                                            <Tag size={14} /> {company.industry.name}
+                                            <Tag size={14} /> {company.region.name}
                                         </span>
                                     )}
                                 </div>
@@ -205,26 +307,17 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             <Zap className="h-4 w-4" /> 최근 전략 키워드
                         </h4>
                         <div className="flex flex-col gap-4">
-                            {company.industryDetails && company.industryDetails.length > 0 ? (
-                                company.industryDetails.map((detail, idx) => (
-                                    <div key={idx}>
-                                        <div className="text-[11px] font-bold text-blue-500/80 mb-2">[{detail.industry.name}] 특화</div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {Array.isArray(detail.recent_keywords) && detail.recent_keywords.length > 0 ? (
-                                                (detail.recent_keywords as string[]).map((rk, i) => (
-                                                    <span key={i} className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm font-bold border border-blue-200 shadow-sm">
-                                                        {rk}
-                                                    </span>
-                                                ))
-                                            ) : (
-                                                <span className="text-sm text-slate-500 italic">키워드 데이터가 없습니다.</span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <span className="text-sm text-slate-500 italic">산업 정보가 없습니다.</span>
-                            )}
+                            <div className="flex flex-wrap gap-2">
+                                {company.core_keywords && Array.isArray((company.core_keywords as any).recent_keywords) && (company.core_keywords as any).recent_keywords.length > 0 ? (
+                                    ((company.core_keywords as any).recent_keywords as string[]).map((rk, i) => (
+                                        <span key={i} className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm font-bold border border-blue-200 shadow-sm">
+                                            {rk}
+                                        </span>
+                                    ))
+                                ) : (
+                                    <span className="text-sm text-slate-500 italic">최근 키워드 데이터가 없습니다.</span>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -244,24 +337,16 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             <h3 className="font-serif text-3xl font-bold mb-8">최근 동향 및 현황</h3>
                             
                             <div className="space-y-8 max-w-4xl">
-                                {company.industryDetails && company.industryDetails.length > 0 ? (
-                                    company.industryDetails.map((detail, idx) => (
-                                        <div key={idx} className="relative pl-4 before:absolute before:left-0 before:top-1.5 before:bottom-1 before:w-1 before:bg-blue-500/50 before:rounded-full">
-                                            <h4 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-wide">
-                                                [{detail.industry.name}] 분야
-                                            </h4>
-                                            <div className="prose prose-invert max-w-none">
-                                                <p className="text-lg leading-relaxed text-slate-200 font-medium">
-                                                    {detail.recent_status || '최신 비즈니스 동향 정보를 수집 중입니다.'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p className="text-lg leading-relaxed text-slate-200 font-medium">
-                                        최신 비즈니스 동향 정보를 수집 중입니다.
-                                    </p>
-                                )}
+                                <div className="relative pl-4 before:absolute before:left-0 before:top-1.5 before:bottom-1 before:w-1 before:bg-blue-500/50 before:rounded-full">
+                                    <h4 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-wide">
+                                        비즈니스 요약
+                                    </h4>
+                                    <div className="prose prose-invert max-w-none">
+                                        <p className="text-lg leading-relaxed text-slate-200 font-medium">
+                                            {company.business_summary || '최신 비즈니스 동향 정보를 수집 중입니다.'}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -296,8 +381,8 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                     }
                                     category={article.source ?? 'News'}
                                     title={article.title}
-                                    summary={article.description?.slice(0, 150) ?? ''}
-                                    url={article.link ?? undefined}
+                                    summary={article.summary?.slice(0, 150) ?? ''}
+                                    url={article.url ?? undefined}
                                 />
                             ))
                         ) : (

@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { ArrowRight, Newspaper, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
-import { getRadarIndustries } from '@/actions/insight-radar-actions';
+import { getRadarRegions } from '@/actions/insight-radar-actions';
 import MagazineAeoCTA from '@/components/public/MagazineAeoCTA';
 import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
@@ -87,9 +87,9 @@ export default async function MagazinePage({ searchParams }: PageProps) {
     const keyword = params.q || params.keyword || '';
     const isSearchMode = !!keyword;
 
-    const [allPosts, industries] = await Promise.all([
+    const [allPosts, regions] = await Promise.all([
         getPublicMagazinePosts(keyword),
-        getRadarIndustries(),
+        getRadarRegions(),
     ]);
 
     // 1번: 피처드 스토리 (Hero) - 검색 모드가 아닐 때만 노출
@@ -240,7 +240,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                     <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 self-start">
                         {gridArticles.length > 0 ? (
                             gridArticles.map((article) => {
-                                const industryName = article.industries?.[0]?.industry?.name || '인사이트';
+                                const categoryLabel = article.category?.name || '인사이트';
                                 
                                 return (
                                     <ImpressionTracker postId={article.id} key={article.id}>
@@ -264,7 +264,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             </div>
                                             <div className="flex-1 flex flex-col justify-start">
                                                 <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                                    {article.region?.name ? `${article.region.name} • ${industryName}` : industryName}
+                                                    {article.region?.name ? `${article.region.name} • ${categoryLabel}` : categoryLabel}
                                                 </span>
                                                 <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
                                                     {article.title}

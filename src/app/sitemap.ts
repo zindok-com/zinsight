@@ -91,6 +91,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 priority: 0.7,
             };
         });
+
+        // Fetch active organizations for sitemap inclusion
+        const organizations = await prisma.organization.findMany({
+            select: { id: true, updated_at: true },
+            orderBy: { updated_at: 'desc' }
+        });
+
+        const orgRoutes: MetadataRoute.Sitemap = organizations.map((org) => ({
+            url: `${baseUrl}/insight-radar/${org.id}`,
+            lastModified: org.updated_at,
+            changeFrequency: 'weekly' as const,
+            priority: 0.6,
+        }));
+
+        return [...staticRoutes, ...regionRoutes, ...magazineRoutes, ...orgRoutes];
     } catch (error) {
         console.error('[sitemap] DB 조회 실패, 기본 목록으로 진행:', error);
     }

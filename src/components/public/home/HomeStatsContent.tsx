@@ -104,7 +104,7 @@ interface HomeStatsContentProps {
     totalStats: {
         totalCompanies: number;
         totalArticles: number;
-        totalIndustries: number;
+        totalRegions: number;
         totalKeywords: number;
     };
 }
@@ -125,16 +125,16 @@ export function HomeStatsContent({ totalStats }: HomeStatsContentProps) {
         },
         { 
             icon: <LottieIcon name="chart" size={36} speed={0.7} hover={true} />, 
-            label: '산업 분야', 
-            value: totalStats.totalIndustries, 
+            label: '지역', 
+            value: totalStats.totalRegions, 
             unit: '개' 
         },
         { 
-            icon: <LottieIcon name="bulb" size={36} speed={0.7} hover={true} />, 
-            label: '추적 키워드', 
+            icon: <LottieIcon name="document" size={36} speed={0.7} hover={true} />, 
+            label: '모니터링 키워드', 
             value: totalStats.totalKeywords, 
             unit: '개' 
-        },
+        }
     ];
 
     return (

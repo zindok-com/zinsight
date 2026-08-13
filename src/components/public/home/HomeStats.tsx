@@ -26,7 +26,7 @@ interface HomeStatsProps {
     totalStats: {
         totalCompanies: number;
         totalArticles: number;
-        totalIndustries: number;
+        totalRegions: number;
         totalKeywords: number;
     };
 }

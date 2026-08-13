@@ -27,10 +27,7 @@ export function RadarArticleFeed({ articles }: RadarArticleFeedProps) {
                 >
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1 space-y-1.5">
-                            {/* 산업 뱃지 */}
-                            <Badge variant="outline" className="text-xs">
-                                {article.industryName}
-                            </Badge>
+
 
                             {/* 제목 */}
                             {article.url ? (

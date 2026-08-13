@@ -103,7 +103,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                         {author.posts.map((post) => {
-                            const industryLabel = post.industries?.[0]?.industry?.name || '인사이트';
+                            const categoryLabel = post.category?.name || '인사이트';
                             return (
                                 <Link 
                                     href={`/magazine/${post.slug}`} 
@@ -125,7 +125,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                                         )}
                                     </div>
                                     <span className="mb-3.5 block text-ui-label font-ui-label font-bold uppercase tracking-wider text-indigo-500">
-                                        {industryLabel}
+                                        {categoryLabel}
                                     </span>
                                     <h3 className="mb-3 font-h3 text-h3 text-zi-primary group-hover:text-indigo-600 transition-colors leading-snug">
                                         {post.title}
