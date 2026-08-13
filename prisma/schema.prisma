@@ -6,28 +6,10 @@ datasource db {
   provider = "mysql"
 }
 
-model Industry {
-  id          Int                @id @default(autoincrement())
-  name        String             @db.VarChar(255)
-  slug        String             @unique @db.VarChar(255)
-  description String?            @db.Text
-  is_active   Boolean            @default(true)
-  deleted_at  DateTime?
-  created_at  DateTime           @default(now())
-  updated_at  DateTime           @updatedAt
-
-  keywords      SearchKeyword[]
-  ingestions    ArticleIngestion[]
-  companies     CompanyIndustry[]
-  magazinePosts MagazinePostIndustry[]
-
-  @@index([slug, deleted_at])
-  @@map("industries")
-}
-
+// ─── 검색 키워드 (지역 기반으로 전환) ───────────────────────────────
 model SearchKeyword {
   id              Int                @id @default(autoincrement())
-  industry_id     Int
+  region_id       Int
   keyword_text    String             @db.VarChar(255)
   keyword_type    String?            @db.VarChar(50)
   is_active       Boolean            @default(true)
@@ -36,13 +18,14 @@ model SearchKeyword {
   created_at      DateTime           @default(now())
   updated_at      DateTime           @updatedAt
 
-  industry    Industry           @relation(fields: [industry_id], references: [id])
+  region      Region             @relation(fields: [region_id], references: [id])
   ingestions  ArticleIngestion[]
 
-  @@index([industry_id, is_active, deleted_at])
+  @@index([region_id, is_active, deleted_at])
   @@map("search_keywords")
 }
 
+// ─── 기사 원본 ───────────────────────────────────────────────────────
 model Article {
   id             Int                @id @default(autoincrement())
   canonical_link String             @unique @db.VarChar(2048)
@@ -64,24 +47,33 @@ model Article {
   @@map("articles")
 }
 
+// ─── 기사 수집 로그 (지역 + 조직 기반으로 재설계) ───────────────────
+// source 값: 'REGION_CRAWL' (지역 키워드 기반), 'MANUAL_ORG' (조직 우선 수집)
 model ArticleIngestion {
-  id            Int           @id @default(autoincrement())
-  article_id    Int
-  industry_id   Int
-  keyword_id    Int
-  fetched_at    DateTime      @default(now())
-  is_duplicate  Boolean       @default(false)
+  id              Int           @id @default(autoincrement())
+  article_id      Int
+  region_id       Int
+  keyword_id      Int?          // REGION_CRAWL은 채움, MANUAL_ORG는 null
+  organization_id Int?          // MANUAL_ORG는 채움, REGION_CRAWL 초기값은 null
+  source          String        @default("REGION_CRAWL") @db.VarChar(50)
+  fetched_at      DateTime      @default(now())
+  is_duplicate    Boolean       @default(false)
 
-  article    Article       @relation(fields: [article_id], references: [id])
-  industry   Industry      @relation(fields: [industry_id], references: [id])
-  keyword    SearchKeyword @relation(fields: [keyword_id], references: [id])
+  article      Article        @relation(fields: [article_id], references: [id])
+  region       Region         @relation(fields: [region_id], references: [id])
+  keyword      SearchKeyword? @relation(fields: [keyword_id], references: [id])
+  organization Organization?  @relation(fields: [organization_id], references: [id])
 
+  // REGION_CRAWL 중복 방지 (keyword_id not null인 경우 DB 레벨 unique)
+  // MANUAL_ORG 중복 방지는 application 레벨에서 처리 (MySQL NULL unique 특성)
   @@unique([article_id, keyword_id])
-  @@index([industry_id])
+  @@index([region_id])
+  @@index([organization_id])
   @@index([keyword_id])
   @@map("article_ingestions")
 }
 
+// ─── 조직 (지역 직접 연결) ───────────────────────────────────────────
 model Organization {
   id               Int      @id @default(autoincrement())
   company_name     String   @db.VarChar(255)
@@ -89,38 +81,27 @@ model Organization {
   entity_type      String   @default("기업") @db.VarChar(50)
   company_url      String?  @db.VarChar(255)
   business_summary String?  @db.Text
-  core_keywords    Json?    
+  core_keywords    Json?
   founded_year     String?  @db.VarChar(10)
   hq_location      String?  @db.VarChar(255)
   ceo_name         String?  @db.VarChar(100)
-  key_references   Json?    
+  key_references   Json?
   is_featured      Boolean  @default(false)
+  region_id        Int      @map("region_id")
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  industries       CompanyIndustry[]
+  region           Region                    @relation(fields: [region_id], references: [id])
   company_articles CompanyArticle[]
   magazinePosts    MagazinePostOrganization[]
+  ingestions       ArticleIngestion[]
 
   @@unique([company_name])
+  @@index([region_id])
   @@map("companies")
 }
 
-model CompanyIndustry {
-  company_id      Int
-  industry_id     Int
-  recent_keywords Json?
-  recent_status   String?  @db.Text
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-
-  company  Organization @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  industry Industry     @relation(fields: [industry_id], references: [id], onDelete: Cascade)
-
-  @@id([company_id, industry_id])
-  @@map("company_industries")
-}
-
+// ─── 조직-기사 직접 연결 ─────────────────────────────────────────────
 model CompanyArticle {
   id         Int      @id @default(autoincrement())
   company_id Int
@@ -136,25 +117,24 @@ model CompanyArticle {
   @@map("company_articles")
 }
 
-// 매거진 포스트 (MagazinePost)
-// AI의 먹이가 될 고도화된 마케팅 기사 데이터를 담는 테이블입니다.
+// ─── 매거진 포스트 ────────────────────────────────────────────────────
 model MagazinePost {
   id              Int              @id @default(autoincrement())
   categoryId      Int              @map("category_id")
   category        MagazineCategory @relation(fields: [categoryId], references: [id])
-  
+
   // 콘텐츠 기본 정보
   title           String    @db.VarChar(255)
   slug            String    @unique @db.VarChar(255) // SEO 최적화 URL
   content         String    @db.LongText            // 기사 본문
   summary         String?   @db.Text                // AI 요약 및 메타 설명 (SEO/AEO용)
   thumbnailUrl    String?   @db.VarChar(512)
-  
+
   // AEO/GEO 최적화 핵심 필드
   structuredData  Json?     // Schema.org(JSON-LD) 등 AI가 읽기 좋은 구조화 데이터
   faqData         Json?     // AI 에이전트 답변 생성을 위한 Q&A 데이터 세트
   targetKeywords  String?   // AEO/GEO를 위해 집중 타겟팅한 핵심 키워드 목록
-  
+
   // 작성 및 상태 관리
   authorName      String?   // 대학 기자단 실명 혹은 AI 작성 여부
   authorId        Int?      // 발행자 관계 ID
@@ -166,15 +146,15 @@ model MagazinePost {
   portalSidePriority    Int       @default(0)       // 포털 홈 사이드 헤드라인 우선순위 (1~4)
   isTechFeatured        Boolean   @default(false)   // 테크/마케팅 지면 피처드 (대표) 여부
   isLocalFeatured       Boolean   @default(false)   // 로컬 지면 피처드 (대표) 여부
-  
+
   // 비즈니스 모델(BM) 관련 필드
   isPaid          Boolean   @default(false)   // 유료 기사 여부 (8만원 모델)
   price           Int       @default(0)       // 실제 결제 금액 (할인 적용 등 기록용)
-  
+
   // 외부 배포 추적 (업셀링 고정수입 관리용)
   isCrossPosted   Boolean   @default(false)   // 고객사 워드프레스/블로그 배포 여부
   externalLinks   Json?     // 배포된 외부 채널(WP, Blog, Post) URL 리스트
-  
+
   deletedAt       DateTime? // 소프트 삭제 일시 기록용 (null 이면 활성 상태)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -183,30 +163,17 @@ model MagazinePost {
   region          Region?   @relation(fields: [regionId], references: [id], onDelete: SetNull)
 
   // Relationships (Many-to-Many via join tables)
-  industries      MagazinePostIndustry[]
   organizations   MagazinePostOrganization[]
   analytics       PostDailyAnalytics[]
 
   @@map("magazine_posts")
 }
 
-// 매거진 포스트 - 산업 연결 테이블 (Many-to-Many)
-model MagazinePostIndustry {
-  magazinePostId Int
-  industryId     Int
-  
-  magazinePost   MagazinePost @relation(fields: [magazinePostId], references: [id], onDelete: Cascade)
-  industry       Industry     @relation(fields: [industryId], references: [id], onDelete: Cascade)
-
-  @@id([magazinePostId, industryId])
-  @@map("magazine_post_industries")
-}
-
-// 매거진 포스트 - 조직 연결 테이블 (Many-to-Many)
+// ─── 매거진 포스트 - 조직 연결 테이블 ──────────────────────────────
 model MagazinePostOrganization {
   magazinePostId Int
   organizationId Int
-  
+
   magazinePost   MagazinePost @relation(fields: [magazinePostId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -214,6 +181,7 @@ model MagazinePostOrganization {
   @@map("magazine_post_organizations")
 }
 
+// ─── 매거진 카테고리 ─────────────────────────────────────────────────
 model MagazineCategory {
   id          Int            @id @default(autoincrement())
   name        String         @db.VarChar(255) // 예: '기업 스포트라이트'
@@ -225,6 +193,7 @@ model MagazineCategory {
   @@map("magazine_categories")
 }
 
+// ─── 컨설팅 요청 (industry 필드는 단순 문자열이므로 유지) ──────────
 model ConsultingRequest {
   id              Int      @id @default(autoincrement())
   email           String   @db.VarChar(255)
@@ -237,10 +206,11 @@ model ConsultingRequest {
   @@map("consulting_requests")
 }
 
+// ─── 스냅샷 (지역 기반으로 slug 활용) ───────────────────────────────
 model Snapshot {
   id           Int      @id @default(autoincrement())
   filename     String   @unique @db.VarChar(255)
-  slug         String   @db.VarChar(100) // 'consolidated' or industry slug
+  slug         String   @db.VarChar(100) // 'consolidated' or region slug
   month        String   @db.VarChar(7)   // YYYY-MM
   content      Json                      // the snapshot data
   size_bytes   Int
@@ -250,6 +220,7 @@ model Snapshot {
   @@map("snapshots")
 }
 
+// ─── 저자 ────────────────────────────────────────────────────────────
 model Author {
   id          Int            @id @default(autoincrement())
   name        String         @unique @db.VarChar(100)
@@ -263,6 +234,7 @@ model Author {
   @@map("authors")
 }
 
+// ─── 관리자 ──────────────────────────────────────────────────────────
 model Admin {
   id                 Int      @id @default(autoincrement())
   username           String   @unique @db.VarChar(100)
@@ -276,6 +248,7 @@ model Admin {
   @@map("admins")
 }
 
+// ─── 포스트 일별 분석 ────────────────────────────────────────────────
 model PostDailyAnalytics {
   id                Int          @id @default(autoincrement())
   postId            Int          @map("post_id")
@@ -284,7 +257,7 @@ model PostDailyAnalytics {
   rawViews          Int          @default(0) @map("raw_views")
   uniqueViews       Int          @default(0) @map("unique_views")
   aiFeedImpressions Int          @default(0) @map("ai_feed_impressions")
-  
+
   post              MagazinePost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([postId, date])
@@ -292,6 +265,7 @@ model PostDailyAnalytics {
   @@map("post_daily_analytics")
 }
 
+// ─── 방문자 로그 ─────────────────────────────────────────────────────
 model VisitorLog {
   id         Int      @id @default(autoincrement())
   visitorId  String   @map("visitor_id") @db.VarChar(100)
@@ -303,6 +277,7 @@ model VisitorLog {
   @@map("visitor_logs")
 }
 
+// ─── 지역 (분류 축 핵심 테이블) ─────────────────────────────────────
 model Region {
   id        Int            @id @default(autoincrement())
   name      String         @unique @db.VarChar(100)
@@ -310,11 +285,16 @@ model Region {
   isActive  Boolean        @default(true) @map("is_active")
   createdAt DateTime       @default(now()) @map("created_at")
   updatedAt DateTime       @updatedAt @map("updated_at")
-  posts     MagazinePost[]
+
+  posts         MagazinePost[]
+  organizations Organization[]
+  keywords      SearchKeyword[]
+  ingestions    ArticleIngestion[]
 
   @@map("regions")
 }
 
+// ─── 리디렉트 ────────────────────────────────────────────────────────
 model Redirect {
   id         Int      @id @default(autoincrement())
   sourcePath String   @unique @map("source_path") @db.VarChar(255)
