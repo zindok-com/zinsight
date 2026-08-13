@@ -6,15 +6,11 @@ import { prisma } from '@/lib/db';
 // 타입 정의
 // ─────────────────────────────────────────────
 
-export interface RadarIndustryWithStats {
+export interface RadarRegionWithStats {
     id: number;
     name: string;
     slug: string;
-    description: string | null;
-    keywordCount: number;
-    articleCount: number;
-    companyCount: number;
-    latestArticleDate: Date | null;
+    organizationCount: number;
 }
 
 export interface RadarCompanyCard {
@@ -22,11 +18,9 @@ export interface RadarCompanyCard {
     company_name: string;
     entity_type: string | null;
     business_summary: string | null;
-    recent_status: string | null;
     core_keywords: unknown;
-    recent_keywords: any;
-    industry: { id: number; name: string; slug: string } | null;
-    allIndustries?: { id: number; name: string; slug: string }[];
+    region: { id: number; name: string; slug: string } | null;
+    hq_location: string | null;
     articleCount: number;
     latestArticleDate: Date | null;
 }
@@ -36,16 +30,8 @@ export interface RadarCompanyDetail {
     company_name: string;
     entity_type: string | null;
     business_summary: string | null;
-    recent_status: string | null;
     core_keywords: any;
-    recent_keywords: any;
-    industry: { id: number; name: string; slug: string } | null;
-    allIndustries?: { id: number; name: string; slug: string }[];
-    industryDetails?: {
-        industry: { id: number; name: string; slug: string };
-        recent_status: string | null;
-        recent_keywords: any;
-    }[];
+    region: { id: number; name: string; slug: string } | null;
     recentArticles: RadarArticleItem[];
     articleCount: number;
     company_url?: string | null;
@@ -61,67 +47,41 @@ export interface RadarArticleItem {
     title: string;
     source: string | null;
     pub_date: Date | null;
-    /** 원문 링크 (Article.link 필드) */
+    /** 원문 링크 */
     url: string | null;
-    /** 기사 요약 (Article.description 필드) */
+    /** 기사 요약 */
     summary: string | null;
     keywords: { id: number; keyword_text: string }[];
-    industryName: string;
+    isMagazine?: boolean;
 }
 
 export interface RadarFilterOptions {
-    industryId?: number;
-    keywordId?: number;
+    regionId?: number;
     entityType?: string;
     searchQuery?: string;
 }
 
 // ─────────────────────────────────────────────
-// 산업별 통계 포함 목록 조회 (사이드바/필터용)
+// 지역 목록 조회 (사이드바/필터용)
 // ─────────────────────────────────────────────
 
-export async function getRadarIndustries(): Promise<RadarIndustryWithStats[]> {
-    const industries = await prisma.industry.findMany({
-        where: { deleted_at: null, is_active: true },
+export async function getRadarRegions(): Promise<RadarRegionWithStats[]> {
+    const regions = await prisma.region.findMany({
+        where: { isActive: true },
         include: {
             _count: {
-                select: {
-                    keywords: { where: { deleted_at: null } },
-                    ingestions: true,
-                },
+                select: { organizations: true },
             },
         },
-        orderBy: { created_at: 'desc' },
+        orderBy: { name: 'asc' },
     });
 
-    // 각 산업별 기업 수 및 최신 기사 수집일 집계
-    const industryStats = await Promise.all(
-        industries.map(async (industry: typeof industries[number]) => {
-            const [companyCount, latestIngestion] = await Promise.all([
-                prisma.companyIndustry.count({
-                    where: { industry_id: industry.id },
-                }),
-                prisma.articleIngestion.findFirst({
-                    where: { industry_id: industry.id },
-                    orderBy: { fetched_at: 'desc' },
-                    select: { fetched_at: true },
-                }),
-            ]);
-
-            return {
-                id: industry.id,
-                name: industry.name,
-                slug: industry.slug,
-                description: industry.description,
-                keywordCount: industry._count.keywords,
-                articleCount: industry._count.ingestions,
-                companyCount,
-                latestArticleDate: latestIngestion?.fetched_at ?? null,
-            };
-        })
-    );
-
-    return industryStats;
+    return regions.map((r) => ({
+        id: r.id,
+        name: r.name,
+        slug: r.slug,
+        organizationCount: r._count.organizations,
+    }));
 }
 
 // ─────────────────────────────────────────────
@@ -129,18 +89,18 @@ export async function getRadarIndustries(): Promise<RadarIndustryWithStats[]> {
 // ─────────────────────────────────────────────
 
 export async function getRadarTotalStats() {
-    const [totalCompanies, totalArticles, totalIndustries, totalKeywords] = await Promise.all([
+    const [totalCompanies, totalArticles, totalRegions, totalKeywords] = await Promise.all([
         prisma.organization.count(),
         prisma.article.count(),
-        prisma.industry.count({ where: { deleted_at: null, is_active: true } }),
-        prisma.searchKeyword.count({ where: { deleted_at: null, is_active: true } }),
+        prisma.region.count({ where: { isActive: true } }),
+        prisma.searchKeyword.count({ where: { deleted_at: null, is_active: true } })
     ]);
 
-    return { totalCompanies, totalArticles, totalIndustries, totalKeywords };
+    return { totalCompanies, totalArticles, totalRegions, totalKeywords };
 }
 
 // ─────────────────────────────────────────────
-// 기업 카드 목록 조회 (산업/키워드/검색어 필터)
+// 기업 카드 목록 조회 (지역/검색어 필터)
 // ─────────────────────────────────────────────
 
 export async function getRadarCompanies(
@@ -148,21 +108,20 @@ export async function getRadarCompanies(
     page = 1,
     pageSize = 12
 ): Promise<{ companies: RadarCompanyCard[]; total: number; totalPages: number }> {
-    const { industryId, entityType, searchQuery } = filter;
+    const { regionId, entityType, searchQuery } = filter;
 
-    // 필터가 하나도 없으면 초기 상태 -> 피처드 기업만 노출
-    const isInitialState = !industryId && !entityType && !searchQuery;
+    // 필터 없으면 피처드 기업만 노출
+    const isInitialState = !regionId && !entityType && !searchQuery;
 
-    const where = {
+    const where: any = {
         ...(isInitialState ? { is_featured: true } : {}),
-        ...(industryId ? { industries: { some: { industry_id: industryId } } } : {}),
+        ...(regionId ? { region_id: regionId } : {}),
         ...(entityType ? { entity_type: entityType } : {}),
         ...(searchQuery
             ? {
                   OR: [
                       { company_name: { contains: searchQuery } },
                       { business_summary: { contains: searchQuery } },
-                      { industries: { some: { recent_status: { contains: searchQuery } } } },
                   ],
               }
             : {}),
@@ -172,22 +131,14 @@ export async function getRadarCompanies(
         prisma.organization.findMany({
             where,
             include: {
-                industries: {
-                    include: {
-                        industry: {
-                            select: { id: true, name: true, slug: true },
-                        },
-                    },
-                    // 필터가 있으면 해당 산업군을 우선적으로 가져오도록 할 수도 있으나 
-                    // 현재는 모든 연결된 산업군을 가져옴
+                region: {
+                    select: { id: true, name: true, slug: true },
                 },
                 company_articles: {
                     include: {
                         article: { select: { id: true, pub_date: true } },
                     },
-                    orderBy: {
-                        article: { pub_date: 'desc' },
-                    },
+                    orderBy: { article: { pub_date: 'desc' } },
                     take: 1,
                 },
                 _count: {
@@ -201,26 +152,17 @@ export async function getRadarCompanies(
         prisma.organization.count({ where }),
     ]);
 
-    const companies: RadarCompanyCard[] = rawCompanies.map((c: any) => {
-        // 현재 필터된 산업군 정보 또는 첫 번째 산업군 정보 선택
-        const targetCI = industryId 
-            ? c.industries.find((ci: any) => ci.industry_id === industryId) || c.industries[0]
-            : c.industries[0];
-
-        return {
-            id: c.id,
-            company_name: c.company_name,
-            entity_type: c.entity_type,
-            business_summary: c.business_summary,
-            recent_status: targetCI?.recent_status ?? null,
-            core_keywords: c.core_keywords,
-            recent_keywords: targetCI?.recent_keywords ?? null,
-            industry: targetCI?.industry ?? null,
-            allIndustries: c.industries.map((ci: any) => ci.industry),
-            articleCount: c._count.company_articles,
-            latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
-        };
-    });
+    const companies: RadarCompanyCard[] = rawCompanies.map((c: any) => ({
+        id: c.id,
+        company_name: c.company_name,
+        entity_type: c.entity_type,
+        business_summary: c.business_summary,
+        core_keywords: c.core_keywords,
+        region: c.region ?? null,
+        hq_location: c.hq_location ?? null,
+        articleCount: c._count.company_articles,
+        latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
+    }));
 
     return {
         companies,
@@ -231,38 +173,35 @@ export async function getRadarCompanies(
 
 // ─────────────────────────────────────────────
 // 최신 기사 목록 조회 (뉴스 피드용)
-// Article.link → url, Article.description → summary 로 매핑
 // ─────────────────────────────────────────────
 
 export async function getRadarLatestArticles(
     filter: RadarFilterOptions = {},
     limit = 10
 ): Promise<RadarArticleItem[]> {
-    const { industryId, keywordId, searchQuery } = filter;
+    const { regionId, searchQuery } = filter;
 
-    const ingestionWhere = {
-        ...(industryId ? { industry_id: industryId } : {}),
-        ...(keywordId ? { keyword_id: keywordId } : {}),
+    const where: any = {
+        ...(regionId
+            ? { ingestions: { some: { region_id: regionId } } }
+            : {}),
+        ...(searchQuery
+            ? {
+                  OR: [
+                      { title: { contains: searchQuery } },
+                      { description: { contains: searchQuery } },
+                  ],
+              }
+            : {}),
     };
 
     const articles = await prisma.article.findMany({
-        where: {
-            ingestions: { some: ingestionWhere },
-            ...(searchQuery
-                ? {
-                      OR: [
-                          { title: { contains: searchQuery } },
-                          { description: { contains: searchQuery } },
-                      ],
-                  }
-                : {}),
-        },
+        where,
         include: {
             ingestions: {
-                where: ingestionWhere,
+                where: regionId ? { region_id: regionId } : {},
                 include: {
                     keyword: { select: { id: true, keyword_text: true } },
-                    industry: { select: { id: true, name: true } },
                 },
                 take: 3,
             },
@@ -271,63 +210,58 @@ export async function getRadarLatestArticles(
         take: limit,
     });
 
-    return articles.map((a: typeof articles[number]) => ({
+    return articles.map((a: any) => ({
         id: a.id,
         title: a.title,
         source: a.source,
         pub_date: a.pub_date,
-        url: a.link,                  // Article.link → url
-        summary: a.description,       // Article.description → summary
+        url: a.link,
+        summary: a.description,
         keywords: a.ingestions
-            .map((ing: typeof a.ingestions[number]) => ing.keyword)
-            .filter((k: typeof a.ingestions[number]['keyword']): k is { id: number; keyword_text: string } => k !== null),
-        industryName: a.ingestions[0]?.industry?.name ?? '기타',
+            .map((ing: any) => ing.keyword)
+            .filter((k: any): k is { id: number; keyword_text: string } => k !== null),
     }));
 }
 
 // ─────────────────────────────────────────────
-// 트렌드 키워드 Top N 조회 (기사 수 기준)
+// 트렌드 키워드 Top N (기사 수 기준)
 // ─────────────────────────────────────────────
 
 export async function getRadarTrendingKeywords(
-    industryId?: number,
+    regionId?: number,
     limit = 20
-): Promise<{ id: number; keyword_text: string; count: number; industryName: string }[]> {
+): Promise<{ id: number; keyword_text: string; count: number; regionName: string }[]> {
     const keywords = await prisma.searchKeyword.findMany({
         where: {
             deleted_at: null,
             is_active: true,
-            ...(industryId ? { industry_id: industryId } : {}),
+            ...(regionId ? { region_id: regionId } : {}),
         },
         include: {
             _count: { select: { ingestions: true } },
-            industry: { select: { name: true } },
+            region: { select: { name: true } },
         },
         orderBy: { ingestions: { _count: 'desc' } },
         take: limit,
     });
 
-    return keywords.map((k: typeof keywords[number]) => ({
+    return keywords.map((k: any) => ({
         id: k.id,
         keyword_text: k.keyword_text,
         count: k._count.ingestions,
-        industryName: k.industry?.name ?? '기타',
+        regionName: k.region?.name ?? '기타',
     }));
 }
 
 // ─────────────────────────────────────────────
-// 개별 기업 상세 조회 (모달/상세 카드용)
+// 개별 기업 상세 조회
 // ─────────────────────────────────────────────
 
 export async function getRadarCompanyDetail(companyId: number) {
     const company = await prisma.organization.findUnique({
         where: { id: companyId },
         include: {
-            industries: {
-                include: {
-                    industry: true,
-                }
-            },
+            region: { select: { id: true, name: true, slug: true } },
             company_articles: {
                 include: {
                     article: {
@@ -336,63 +270,96 @@ export async function getRadarCompanyDetail(companyId: number) {
                             title: true,
                             pub_date: true,
                             source: true,
-                            link: true,         // url 역할
-                            description: true,  // summary 역할
+                            link: true,
+                            description: true,
                         },
                     },
                 },
                 orderBy: { article: { pub_date: 'desc' } },
                 take: 10,
             },
+            // 조직 우선 수집(MANUAL_ORG) 기사도 포함
+            ingestions: {
+                where: { organization_id: companyId },
+                include: {
+                    article: {
+                        select: {
+                            id: true,
+                            title: true,
+                            pub_date: true,
+                            source: true,
+                            link: true,
+                            description: true,
+                        },
+                    },
+                },
+                orderBy: { fetched_at: 'desc' },
+                take: 10,
+            },
             magazinePosts: {
                 where: {
                     magazinePost: {
                         status: 'PUBLISHED',
-                        deletedAt: null
-                    }
+                        deletedAt: null,
+                    },
                 },
                 include: {
                     magazinePost: {
                         include: {
                             category: true,
-                            region: true
-                        }
-                    }
+                            region: true,
+                        },
+                    },
                 },
                 orderBy: { magazinePost: { createdAt: 'desc' } },
-                take: 10
+                take: 10,
             },
-            _count: { 
-                select: { 
+            _count: {
+                select: {
                     company_articles: true,
-                    magazinePosts: true
-                } 
+                    magazinePosts: true,
+                },
             },
         },
     });
 
     if (!company) return null;
 
-    const firstCI = company.industries[0] || {};
-
+    // CompanyArticle 경유 기사
     const externalArticles = company.company_articles.map((ca: any) => ({
         id: ca.article.id,
         title: ca.article.title,
         pub_date: ca.article.pub_date,
         source: ca.article.source || 'NAVER_NEWS',
-        link: ca.article.link,
-        description: ca.article.description,
-        isMagazine: false
+        url: ca.article.link,
+        summary: ca.article.description,
+        keywords: [],
+        isMagazine: false,
     }));
 
+    // MANUAL_ORG 수집 기사 (ArticleIngestion.organization_id 경유)
+    const orgIngestionArticles = company.ingestions
+        .filter((ing: any) => ing.article)
+        .map((ing: any) => ({
+            id: ing.article.id,
+            title: ing.article.title,
+            pub_date: ing.article.pub_date,
+            source: ing.article.source || 'NAVER_NEWS',
+            url: ing.article.link,
+            summary: ing.article.description,
+            keywords: [],
+            isMagazine: false,
+        }));
+
+    // 매거진 포스트 기사
     const magazineArticles = company.magazinePosts.map((mp: any) => {
         const post = mp.magazinePost;
         const regionSlug = post.region?.slug || '';
         const isLocal = post.category?.isLocal || false;
-        const link = isLocal 
-            ? `/magazine/local/${regionSlug}/${post.slug}` 
+        const link = isLocal
+            ? `/magazine/local/${regionSlug}/${post.slug}`
             : `/magazine/tech-marketing/${post.slug}`;
-        
+
         let parsedLead = '';
         try {
             if (post.content.trim().startsWith('{')) {
@@ -409,13 +376,22 @@ export async function getRadarCompanyDetail(companyId: number) {
             title: post.title,
             pub_date: post.createdAt,
             source: 'ZINSIGHT_MAGAZINE',
-            link: link,
-            description: post.summary || parsedLead,
-            isMagazine: true
+            url: link,
+            summary: post.summary || parsedLead,
+            keywords: [],
+            isMagazine: true,
         };
     });
 
-    const combinedArticles = [...externalArticles, ...magazineArticles]
+    // 중복 제거 후 날짜 정렬 (company_articles와 ingestions 간 중복 가능)
+    const seenIds = new Set<number>();
+    const allExternal = [...externalArticles, ...orgIngestionArticles].filter((a) => {
+        if (seenIds.has(a.id)) return false;
+        seenIds.add(a.id);
+        return true;
+    });
+
+    const combinedArticles = [...allExternal, ...magazineArticles]
         .sort((a, b) => {
             const dateA = a.pub_date ? new Date(a.pub_date).getTime() : 0;
             const dateB = b.pub_date ? new Date(b.pub_date).getTime() : 0;
@@ -426,18 +402,11 @@ export async function getRadarCompanyDetail(companyId: number) {
     return {
         id: company.id,
         company_name: company.company_name,
+        aliases: company.aliases,
         entity_type: company.entity_type,
         business_summary: company.business_summary,
-        recent_status: firstCI.recent_status ?? null,
         core_keywords: company.core_keywords,
-        recent_keywords: firstCI.recent_keywords ?? null,
-        industry: firstCI.industry ?? null,
-        allIndustries: company.industries.map((ci: any) => ci.industry),
-        industryDetails: company.industries.map((ci: any) => ({
-            industry: ci.industry,
-            recent_status: ci.recent_status ?? null,
-            recent_keywords: ci.recent_keywords ?? null,
-        })),
+        region: company.region ?? null,
         recentArticles: combinedArticles,
         articleCount: company._count.company_articles + company._count.magazinePosts,
         company_url: company.company_url,
@@ -445,5 +414,6 @@ export async function getRadarCompanyDetail(companyId: number) {
         hq_location: company.hq_location,
         ceo_name: company.ceo_name,
         key_references: company.key_references,
+        latestArticleDate: company.company_articles[0]?.article?.pub_date ?? null,
     };
 }

@@ -29,7 +29,7 @@ export interface IngestReport {
     dupCount: number;
     failCount: number;
     perKeyword: Array<{
-        keywordId: number;
+        keywordId: number | null;
         keywordText: string;
         newCount: number;
         dupCount: number;
@@ -56,38 +56,32 @@ async function fetchNaverNews(keyword: string, display: number = 10, sort: 'sim'
             'X-Naver-Client-Id': NAVER_CLIENT_ID,
             'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
         },
-        params: {
-            query: keyword,
-            display,
-            sort,
-        },
+        params: { query: keyword, display, sort },
     });
     return response.data?.items ?? [];
 }
 
 async function ingestItems(
     items: NaverNewsItem[],
-    industryId: number,
-    keywordId: number
+    regionId: number,
+    keywordId: number | null,
+    organizationId?: number
 ): Promise<{ newCount: number; dupCount: number; failCount: number }> {
     let newCount = 0;
     let dupCount = 0;
     let failCount = 0;
     const now = new Date();
+    const source = organizationId ? 'MANUAL_ORG' : 'REGION_CRAWL';
 
     for (const item of items) {
-        // 1. Determine canonical_link: originallink preferred
         const canonical_link = item.originallink?.trim() || item.link?.trim();
-        if (!canonical_link) {
-            failCount++;
-            continue;
-        }
+        if (!canonical_link) { failCount++; continue; }
 
         try {
             const existing = await prisma.article.findUnique({ where: { canonical_link } });
 
             if (!existing) {
-                // New article
+                // 신규 기사 생성
                 const article = await prisma.article.create({
                     data: {
                         canonical_link,
@@ -101,53 +95,62 @@ async function ingestItems(
                     }
                 });
 
-                // Check ingestion uniqueness
-                const ingestExists = await prisma.articleIngestion.findUnique({
-                    where: { article_id_keyword_id: { article_id: article.id, keyword_id: keywordId } }
-                });
-                if (!ingestExists) {
-                    await prisma.articleIngestion.create({
-                        data: {
-                            article_id: article.id,
-                            industry_id: industryId,
-                            keyword_id: keywordId,
-                            fetched_at: now,
-                            is_duplicate: false,
-                        }
+                // MANUAL_ORG: organization_id 기반 중복 체크 (app 레벨)
+                if (organizationId) {
+                    const orgIngestExists = await prisma.articleIngestion.findFirst({
+                        where: { article_id: article.id, organization_id: organizationId }
                     });
+                    if (!orgIngestExists) {
+                        await prisma.articleIngestion.create({
+                            data: { article_id: article.id, region_id: regionId, keyword_id: null, organization_id: organizationId, source, fetched_at: now, is_duplicate: false }
+                        });
+                    }
+                } else if (keywordId) {
+                    // REGION_CRAWL: keyword 기반 unique (DB 레벨)
+                    const ingestExists = await prisma.articleIngestion.findUnique({
+                        where: { article_id_keyword_id: { article_id: article.id, keyword_id: keywordId } }
+                    });
+                    if (!ingestExists) {
+                        await prisma.articleIngestion.create({
+                            data: { article_id: article.id, region_id: regionId, keyword_id: keywordId, organization_id: null, source, fetched_at: now, is_duplicate: false }
+                        });
+                    }
                 }
                 newCount++;
             } else {
-                // Duplicate: update timestamp + fill empty fields
+                // 기존 기사 업데이트
                 await prisma.article.update({
                     where: { id: existing.id },
                     data: {
                         updated_at: now,
-                        // Supplement empty title/description if needed
                         ...((!existing.title || existing.title === '') ? { title: stripHtml(item.title) } : {}),
                         ...((!existing.description || existing.description === '') ? { description: stripHtml(item.description) } : {}),
                     }
                 });
 
-                // Ingestion log (even for duplicates)
-                const ingestExists = await prisma.articleIngestion.findUnique({
-                    where: { article_id_keyword_id: { article_id: existing.id, keyword_id: keywordId } }
-                });
-                if (!ingestExists) {
-                    await prisma.articleIngestion.create({
-                        data: {
-                            article_id: existing.id,
-                            industry_id: industryId,
-                            keyword_id: keywordId,
-                            fetched_at: now,
-                            is_duplicate: true,
-                        }
+                if (organizationId) {
+                    const orgIngestExists = await prisma.articleIngestion.findFirst({
+                        where: { article_id: existing.id, organization_id: organizationId }
                     });
-                } else {
-                    await prisma.articleIngestion.update({
-                        where: { article_id_keyword_id: { article_id: existing.id, keyword_id: keywordId } },
-                        data: { fetched_at: now, is_duplicate: true }
+                    if (!orgIngestExists) {
+                        await prisma.articleIngestion.create({
+                            data: { article_id: existing.id, region_id: regionId, keyword_id: null, organization_id: organizationId, source, fetched_at: now, is_duplicate: true }
+                        });
+                    }
+                } else if (keywordId) {
+                    const ingestExists = await prisma.articleIngestion.findUnique({
+                        where: { article_id_keyword_id: { article_id: existing.id, keyword_id: keywordId } }
                     });
+                    if (!ingestExists) {
+                        await prisma.articleIngestion.create({
+                            data: { article_id: existing.id, region_id: regionId, keyword_id: keywordId, organization_id: null, source, fetched_at: now, is_duplicate: true }
+                        });
+                    } else {
+                        await prisma.articleIngestion.update({
+                            where: { article_id_keyword_id: { article_id: existing.id, keyword_id: keywordId } },
+                            data: { fetched_at: now, is_duplicate: true }
+                        });
+                    }
                 }
                 dupCount++;
             }
@@ -160,6 +163,7 @@ async function ingestItems(
     return { newCount, dupCount, failCount };
 }
 
+// 키워드 단건 수집
 export async function ingestByKeyword(keywordId: number, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
@@ -177,29 +181,26 @@ export async function ingestByKeyword(keywordId: number, display: number = 10, s
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: `Naver API error: ${err}` };
     }
 
-    const { newCount, dupCount, failCount } = await ingestItems(items, keyword.industry_id, keyword.id);
+    const { newCount, dupCount, failCount } = await ingestItems(items, keyword.region_id, keyword.id);
 
     await prisma.searchKeyword.update({ where: { id: keywordId }, data: { last_fetched_at: new Date() } });
-
     revalidatePath(`/articles`);
 
     return {
-        success: true,
-        newCount,
-        dupCount,
-        failCount,
+        success: true, newCount, dupCount, failCount,
         perKeyword: [{ keywordId: keyword.id, keywordText: keyword.keyword_text, newCount, dupCount, failCount }],
         message: `키워드 "${keyword.keyword_text}": 신규 ${newCount}, 중복 ${dupCount}, 실패 ${failCount}`
     };
 }
 
-export async function ingestByIndustry(industryId: number, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<IngestReport> {
+// 지역 단위 수집 (지역에 연결된 모든 활성 키워드로 수집)
+export async function ingestByRegion(regionId: number, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
 
     const keywords = await prisma.searchKeyword.findMany({
-        where: { industry_id: industryId, is_active: true, deleted_at: null }
+        where: { region_id: regionId, is_active: true, deleted_at: null }
     });
 
     if (keywords.length === 0) {
@@ -213,7 +214,7 @@ export async function ingestByIndustry(industryId: number, display: number = 10,
     for (const kw of keywords) {
         try {
             const items = await fetchNaverNews(kw.keyword_text, display, sort);
-            const { newCount, dupCount, failCount } = await ingestItems(items, industryId, kw.id);
+            const { newCount, dupCount, failCount } = await ingestItems(items, regionId, kw.id);
             await prisma.searchKeyword.update({ where: { id: kw.id }, data: { last_fetched_at: now } });
             totalNew += newCount;
             totalDup += dupCount;
@@ -230,10 +231,56 @@ export async function ingestByIndustry(industryId: number, display: number = 10,
 
     return {
         success: true,
-        newCount: totalNew,
-        dupCount: totalDup,
-        failCount: totalFail,
+        newCount: totalNew, dupCount: totalDup, failCount: totalFail,
         perKeyword,
-        message: `산업 단위 수집 완료: 신규 ${totalNew}, 중복 ${totalDup}, 실패 ${totalFail}`
+        message: `지역 단위 수집 완료: 신규 ${totalNew}, 중복 ${totalDup}, 실패 ${totalFail}`
+    };
+}
+
+// 조직 우선 수집 (조직명 + 지역명으로 뉴스 검색, 오탐 필터 적용)
+export async function ingestByOrganization(
+    organizationId: number,
+    display: number = 10,
+    sort: 'sim' | 'date' = 'date'
+): Promise<IngestReport> {
+    if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
+        return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
+    }
+
+    const org = await prisma.organization.findUnique({
+        where: { id: organizationId },
+        include: { region: true }
+    });
+
+    if (!org) {
+        return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: '조직을 찾을 수 없습니다.' };
+    }
+
+    // 검색 쿼리: 조직명 + 지역명 조합
+    const searchQuery = `${org.company_name} ${org.region.name}`;
+
+    let items: NaverNewsItem[] = [];
+    try {
+        items = await fetchNaverNews(searchQuery, display, sort);
+    } catch (err) {
+        return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: `Naver API error: ${err}` };
+    }
+
+    // 오탐 필터: 제목 또는 설명에 조직명(또는 별칭) 포함 여부 확인
+    const aliases: string[] = Array.isArray(org.aliases) ? (org.aliases as string[]) : [];
+    const names = [org.company_name, ...aliases];
+    const filtered = items.filter(item => {
+        const text = `${item.title} ${item.description}`.toLowerCase();
+        return names.some(name => text.includes(name.toLowerCase()));
+    });
+
+    const { newCount, dupCount, failCount } = await ingestItems(
+        filtered, org.region_id, null, organizationId
+    );
+
+    return {
+        success: true, newCount, dupCount, failCount,
+        perKeyword: [{ keywordId: null, keywordText: searchQuery, newCount, dupCount, failCount }],
+        message: `조직 "${org.company_name}" 수집 완료: 신규 ${newCount}, 중복 ${dupCount}, 실패 ${failCount} (필터 전 ${items.length}건 → 필터 후 ${filtered.length}건)`
     };
 }

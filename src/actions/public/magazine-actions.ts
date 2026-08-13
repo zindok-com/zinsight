@@ -20,11 +20,6 @@ export async function getPublicMagazinePosts(keyword?: string) {
         where,
         include: {
             category: true,
-            industries: {
-                include: {
-                    industry: true
-                }
-            },
             organizations: {
                 include: {
                     organization: true
@@ -48,12 +43,13 @@ export async function getHeadlineMagazinePosts() {
         },
         include: {
             category: true,
-            industries: {
+            organizations: {
                 include: {
-                    industry: true
+                    organization: true
                 }
             },
-            author: true
+            author: true,
+            region: true
         },
         orderBy: {
             createdAt: 'desc'
@@ -66,7 +62,6 @@ export async function getHeadlineMagazinePosts() {
         summary: post.summary,
         slug: post.slug,
         thumbnailUrl: post.thumbnailUrl,
-        industryName: post.industries[0]?.industry?.name ?? '기타',
         authorName: post.authorName,
         author: post.author ? {
             name: post.author.name,
@@ -90,11 +85,6 @@ export async function getTechMarketingPosts() {
         include: {
             category: true,
             region: true,
-            industries: {
-                include: {
-                    industry: true
-                }
-            },
             organizations: {
                 include: {
                     organization: true
@@ -129,11 +119,6 @@ export async function getLocalPosts(regionSlug?: string) {
         where: whereClause,
         include: {
             category: true,
-            industries: {
-                include: {
-                    industry: true
-                }
-            },
             organizations: {
                 include: {
                     organization: true

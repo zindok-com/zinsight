@@ -3,32 +3,32 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-export async function getKeywords(industryId: number, includeDeleted = false) {
+export async function getKeywords(regionId: number, includeDeleted = false) {
     return prisma.searchKeyword.findMany({
         where: {
-            industry_id: industryId,
+            region_id: regionId,
             ...(includeDeleted ? {} : { deleted_at: null }),
         },
         orderBy: { created_at: 'asc' },
     });
 }
 
-export async function getActiveKeywordsForIndustry(industryId: number) {
+export async function getActiveKeywordsForRegion(regionId: number) {
     return prisma.searchKeyword.findMany({
-        where: { industry_id: industryId, is_active: true, deleted_at: null },
+        where: { region_id: regionId, is_active: true, deleted_at: null },
         orderBy: { created_at: 'asc' },
     });
 }
 
 export async function createKeyword(data: {
-    industry_id: number;
+    region_id: number;
     keyword_text: string;
     keyword_type?: string;
     is_active?: boolean;
 }) {
     const keyword = await prisma.searchKeyword.create({
         data: {
-            industry_id: data.industry_id,
+            region_id: data.region_id,
             keyword_text: data.keyword_text,
             keyword_type: data.keyword_type,
             is_active: data.is_active ?? true,

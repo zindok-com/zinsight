@@ -4,16 +4,16 @@ import { prisma } from '@/lib/db';
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const industry_id = data.industry_id;
+    const region_id = data.region_id;
     const leads = data.leads;
 
-    if (!industry_id || !leads || !Array.isArray(leads)) {
-      return NextResponse.json({ error: 'Invalid data format: industry_id and leads array are required' }, { status: 400 });
+    if (!region_id || !leads || !Array.isArray(leads)) {
+      return NextResponse.json({ error: 'Invalid data format: region_id and leads array are required' }, { status: 400 });
     }
 
     const allLeads = leads.map(lead => ({
       ...lead,
-      industry_id: lead.industry_id || industry_id
+      region_id: lead.region_id || region_id
     }));
 
     const results = {
@@ -23,10 +23,10 @@ export async function POST(request: Request) {
     };
 
     for (const lead of allLeads) {
-      const industry_id = lead.industry_id;
+      const region_id = lead.region_id;
       
-      if (!industry_id) {
-        console.warn(`Skipping lead ${lead.company_name}: No industry_id provided.`);
+      if (!region_id) {
+        console.warn(`Skipping lead ${lead.company_name}: No region_id provided.`);
         continue;
       }
 
@@ -70,13 +70,7 @@ export async function POST(request: Request) {
             hq_location: lead.hq_location || null,
             ceo_name: lead.ceo_name || null,
             key_references: lead.key_references || null,
-            industries: {
-              create: {
-                industry_id,
-                recent_keywords: lead.recent_keywords || null,
-                recent_status: lead.recent_status || null,
-              }
-            }
+            region_id: region_id,
           },
         });
         results.addedCompanies++;
@@ -89,25 +83,7 @@ export async function POST(request: Request) {
             hq_location: lead.hq_location || company.hq_location,
             ceo_name: lead.ceo_name || company.ceo_name,
             key_references: lead.key_references || company.key_references,
-            industries: {
-              upsert: {
-                where: {
-                  company_id_industry_id: {
-                    company_id: company.id,
-                    industry_id,
-                  }
-                },
-                create: {
-                  industry_id,
-                  recent_keywords: lead.recent_keywords || null,
-                  recent_status: lead.recent_status || null,
-                },
-                update: {
-                  recent_keywords: lead.recent_keywords || undefined,
-                  recent_status: lead.recent_status || undefined,
-                }
-              }
-            }
+            region_id: region_id,
           }
         });
         results.updatedCompanies++;

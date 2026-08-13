@@ -16,6 +16,14 @@ export async function getRegionsAdmin() {
     }
 }
 
+// getRegions: alias for getRegionsAdmin (for import compatibility)
+export const getRegions = getRegionsAdmin;
+
+export async function getRegionById(id: number) {
+    return prisma.region.findUnique({ where: { id } });
+}
+
+
 // 신규 지자체 등록
 export async function createRegionAdmin(name: string, slug: string) {
     try {

@@ -86,9 +86,6 @@ export async function getPostsWithAnalytics() {
                     uniqueViews: true,
                 }
             },
-            industries: {
-                include: { industry: true }
-            },
             region: true
         },
         orderBy: {

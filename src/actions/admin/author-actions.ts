@@ -151,11 +151,8 @@ export async function getPublicAuthorBySlug(slug: string) {
                         createdAt: 'desc'
                     },
                     include: {
-                        industries: {
-                            include: {
-                                industry: true
-                            }
-                        }
+                        category: true,
+                        region: true,
                     }
                 }
             }

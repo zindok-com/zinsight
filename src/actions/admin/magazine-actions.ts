@@ -99,11 +99,6 @@ export async function getMagazinePosts() {
         include: {
             category: true,
             region: true,
-            industries: {
-                include: {
-                    industry: true
-                }
-            },
             organizations: {
                 include: {
                     organization: true
@@ -122,7 +117,6 @@ export async function createMagazinePost(data: {
     categoryId: number;
     slug?: string;
     thumbnailUrl?: string;
-    industryIds?: number[];
     organizationIds?: number[];
     status?: string;
     regionId?: number | null;
@@ -130,7 +124,7 @@ export async function createMagazinePost(data: {
     isPaid?: boolean;
 }) {
     try {
-        const { industryIds = [], organizationIds = [], slug: providedSlug, categoryId, regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
+        const { organizationIds = [], slug: providedSlug, categoryId, regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
         
         let slug = providedSlug;
 
@@ -139,22 +133,16 @@ export async function createMagazinePost(data: {
         });
 
         // Auto-slug for NEWSLETTER if not provided
-        if (!slug && categoryRecord?.slug === 'newsletter' && industryIds.length > 0) {
-            const industry = await prisma.industry.findUnique({
-                where: { id: industryIds[0] },
-                select: { slug: true }
-            });
-            if (industry) {
-                const now = new Date();
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                slug = `${year}-${month}-${industry.slug}`;
-                
-                // Check if slug exists, if so append random
-                const existing = await prisma.magazinePost.findUnique({ where: { slug } });
-                if (existing) {
-                    slug += '-' + Math.random().toString(36).substring(2, 5);
-                }
+        if (!slug && categoryRecord?.slug === 'newsletter') {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            slug = `${year}-${month}-newsletter`;
+            
+            // Check if slug exists, if so append random
+            const existing = await prisma.magazinePost.findUnique({ where: { slug } });
+            if (existing) {
+                slug += '-' + Math.random().toString(36).substring(2, 5);
             }
         }
 
@@ -178,11 +166,6 @@ export async function createMagazinePost(data: {
                 slug,
                 regionId,
                 targetKeywords,
-                industries: {
-                    create: industryIds.map((id: number) => ({
-                        industryId: id
-                    }))
-                },
                 organizations: {
                     create: organizationIds.map((id: number) => ({
                         organizationId: id
@@ -205,7 +188,6 @@ export async function updateMagazinePost(id: number, data: {
     categoryId: number;
     slug: string;
     thumbnailUrl?: string;
-    industryIds?: number[];
     organizationIds?: number[];
     status?: string;
     regionId?: number | null;
@@ -218,7 +200,7 @@ export async function updateMagazinePost(id: number, data: {
             select: { slug: true }
         });
 
-        const { industryIds = [], organizationIds = [], regionId = null, targetKeywords = null, categoryId, lead, bodies, closing, ...postData } = data as any;
+        const { organizationIds = [], regionId = null, targetKeywords = null, categoryId, lead, bodies, closing, ...postData } = data as any;
 
         // Content processing: Extract summary from lead and clean markers
         const { summary: extractedSummary, cleanedContent } = processMagazineContent(postData.content, (postData as any).summary);
@@ -232,12 +214,6 @@ export async function updateMagazinePost(id: number, data: {
                 categoryId,
                 regionId,
                 targetKeywords,
-                industries: {
-                    deleteMany: {},
-                    create: industryIds.map((id: number) => ({
-                        industryId: id
-                    }))
-                },
                 organizations: {
                     deleteMany: {},
                     create: organizationIds.map((id: number) => ({

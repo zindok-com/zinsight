@@ -9,19 +9,19 @@ function formatDate(date: Date): string {
     return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
-export async function generateConsolidatedSnapshot(industryIds: number[], month: string, filterType: 'pub_date' | 'created_at'): Promise<{
+export async function generateConsolidatedSnapshot(regionIds: number[], month: string, filterType: 'pub_date' | 'created_at'): Promise<{
     success: boolean;
     filename?: string;
     articleCount?: number;
     message: string;
 }> {
-    if (industryIds.length === 0) {
-        return { success: false, message: '하나 이상의 산업을 선택해야 합니다.' };
+    if (regionIds.length === 0) {
+        return { success: false, message: '하나 이상의 지역을 선택해야 합니다.' };
     }
 
-    const industries = await prisma.industry.findMany({ where: { id: { in: industryIds } } });
-    const articles = await getConsolidatedArticlesForExport(industryIds, month, filterType);
-    
+    const regions = await prisma.region.findMany({ where: { id: { in: regionIds } } });
+    const articles = await getConsolidatedArticlesForExport(regionIds, month, filterType);
+
     const now = new Date();
     const todayStr = formatDate(now);
     const filename = `snapshot_consolidated_${month}_generated_${todayStr}_${now.getTime()}.json`;
@@ -31,22 +31,22 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
         month,
         generated_at: now.toISOString(),
         filters: {
-            industry_ids: industryIds,
+            region_ids: regionIds,
             month,
             source_field: filterType,
         },
         total_article_count: articles.length,
-        industries: industries.map((ind: typeof industries[number]) => {
-            const industryArticles = articles.filter((a: typeof articles[number]) => 
-                a.ingestions.some((ing: typeof a.ingestions[number]) => ing.industry_id === ind.id)
+        regions: regions.map((reg: typeof regions[number]) => {
+            const regionArticles = articles.filter((a: typeof articles[number]) =>
+                a.ingestions.some((ing: typeof a.ingestions[number]) => ing.region_id === reg.id)
             );
-            
+
             return {
-                id: ind.id,
-                name: ind.name,
-                slug: ind.slug,
-                article_count: industryArticles.length,
-                articles: industryArticles.map((a: typeof industryArticles[number]) => ({
+                id: reg.id,
+                name: reg.name,
+                slug: reg.slug,
+                article_count: regionArticles.length,
+                articles: regionArticles.map((a: typeof regionArticles[number]) => ({
                     id: a.id,
                     canonical_link: a.canonical_link,
                     link: a.link,
@@ -57,7 +57,7 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
                     source: a.source,
                     created_at: a.created_at,
                     updated_at: a.updated_at,
-                    keyword_id: a.ingestions.find((ing: typeof a.ingestions[number]) => ing.industry_id === ind.id)?.keyword_id,
+                    keyword_id: a.ingestions.find((ing: typeof a.ingestions[number]) => ing.region_id === reg.id)?.keyword_id,
                 })),
             };
         }),
@@ -73,7 +73,7 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
             month,
             content: snapshot as any,
             size_bytes: sizeBytes,
-        }
+        },
     });
 
     return {
@@ -86,48 +86,38 @@ export async function generateConsolidatedSnapshot(industryIds: number[], month:
 
 export interface SnapshotInfo {
     filename: string;
-    industrySlug: string;
+    regionSlug: string;
     month: string;
-    generatedAt: string;        // date part from filename
+    generatedAt: string;
     sizeBytes: number;
     isLatest?: boolean;
 }
 
-export async function listSnapshots(industrySlug?: string, month?: string): Promise<SnapshotInfo[]> {
+export async function listSnapshots(regionSlug?: string, month?: string): Promise<SnapshotInfo[]> {
     const dbSnapshots = await prisma.snapshot.findMany({
         where: {
-            ...(industrySlug ? { slug: industrySlug } : {}),
+            ...(regionSlug ? { slug: regionSlug } : {}),
             ...(month ? { month } : {}),
         },
-        orderBy: {
-            filename: 'desc'
-        }
+        orderBy: { filename: 'desc' },
     });
 
-    const snapshots: SnapshotInfo[] = dbSnapshots.map(s => {
-        // Pattern: snapshot_{slug}_{YYYY-MM}_generated_{YYYY-MM-DD}_{ts}.json
+    const snapshots: SnapshotInfo[] = dbSnapshots.map((s) => {
         const match = s.filename.match(/^snapshot_(.+?)_(\d{4}-\d{2})_generated_(\d{4}-\d{2}-\d{2})_\d+\.json$/);
         const genDate = match ? match[3] : s.created_at.toISOString().split('T')[0];
 
         return {
             filename: s.filename,
-            industrySlug: s.slug,
+            regionSlug: s.slug,
             month: s.month,
             generatedAt: genDate,
             sizeBytes: s.size_bytes,
         };
     });
 
-    // Mark latest per (industrySlug, month) group
-    const seen = new Set<string>();
-    for (const s of snapshots) {
-        const key = `${s.industrySlug}_${s.month}`;
-        if (!seen.has(key)) {
-            s.isLatest = true;
-            seen.add(key);
-        }
-    }
-
     return snapshots;
 }
 
+export async function getSnapshotContent(filename: string) {
+    return prisma.snapshot.findUnique({ where: { filename } });
+}
