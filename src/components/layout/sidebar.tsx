@@ -20,6 +20,7 @@ import { useState } from 'react';
 
 const TOP_MENU_ITEMS = [
     { name: '대시보드', href: '/admin', icon: LayoutDashboard },
+    { name: '지역(지자체) 관리', href: '/admin/magazine/regions', icon: Building2 },
     { name: '보안 설정', href: '/admin/settings', icon: ShieldCheck },
     { name: '리다이렉트 관리', href: '/admin/settings/redirects', icon: ShieldCheck },
     { name: '이미지 보관함', href: '/admin/storage', icon: Image },
@@ -36,7 +37,6 @@ const MAGAZINE_ITEMS = [
     { name: '매거진 포스트', href: '/admin/magazine', icon: Newspaper },
     { name: '헤드라인 설정', href: '/admin/magazine/headlines', icon: LayoutDashboard },
     { name: '발행자 관리', href: '/admin/magazine/authors', icon: Users },
-    { name: '지역(지자체) 관리', href: '/admin/magazine/regions', icon: Building2 },
     { name: '리포트 신청 목록', href: '/admin/magazine/requests', icon: Tags },
 ];
 
