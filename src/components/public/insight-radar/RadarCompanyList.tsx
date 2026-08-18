@@ -96,7 +96,7 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
                 return (
                     <Link
                         key={company.id}
-                        href={`/insight-radar/${company.id}`}
+                        href={`/insight-radar/${company.slug || company.id}`}
                         className={`group flex flex-col border border-zi-divider bg-white rounded-zi-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-zi-primary/40 border-t-[4px] ${theme.border}`}
                     >
                         {/* Header Section */}

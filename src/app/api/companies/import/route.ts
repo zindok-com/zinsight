@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { slugifyOrganization } from '@/actions/company-actions';
 
 export async function POST(request: Request) {
   try {
@@ -58,9 +59,11 @@ export async function POST(request: Request) {
 
       if (!company) {
         // 신규 기업 추가
+        const slugValue = lead.slug ? slugifyOrganization(lead.slug) : slugifyOrganization(company_name);
         company = await prisma.organization.create({
           data: {
             company_name: lead.company_name,
+            slug: slugValue || null,
             aliases: lead.aliases || null,
             company_url: lead.company_url || null,
             entity_type: lead.entity_type || '기업',

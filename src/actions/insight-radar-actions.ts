@@ -16,6 +16,7 @@ export interface RadarRegionWithStats {
 export interface RadarCompanyCard {
     id: number;
     company_name: string;
+    slug: string | null;
     entity_type: string | null;
     business_summary: string | null;
     core_keywords: unknown;
@@ -28,6 +29,7 @@ export interface RadarCompanyCard {
 export interface RadarCompanyDetail {
     id: number;
     company_name: string;
+    slug: string | null;
     entity_type: string | null;
     business_summary: string | null;
     core_keywords: any;
@@ -158,6 +160,7 @@ export async function getRadarCompanies(
     const companies: RadarCompanyCard[] = rawCompanies.map((c: any) => ({
         id: c.id,
         company_name: c.company_name,
+        slug: c.slug ?? null,
         entity_type: c.entity_type,
         business_summary: c.business_summary,
         core_keywords: c.core_keywords,
@@ -260,9 +263,18 @@ export async function getRadarTrendingKeywords(
 // 개별 기업 상세 조회
 // ─────────────────────────────────────────────
 
-export async function getRadarCompanyDetail(companyId: number) {
-    const company = await prisma.organization.findUnique({
-        where: { id: companyId },
+export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
+    const isNum = typeof companyIdOrSlug === 'number' || (!isNaN(Number(companyIdOrSlug)) && String(Number(companyIdOrSlug)) === String(companyIdOrSlug));
+    const numericId = isNum ? Number(companyIdOrSlug) : -1;
+    const stringSlug = String(companyIdOrSlug);
+
+    const company = await prisma.organization.findFirst({
+        where: {
+            OR: [
+                ...(isNum ? [{ id: numericId }] : []),
+                { slug: stringSlug },
+            ],
+        },
         include: {
             region: { select: { id: true, name: true, slug: true } },
             company_articles: {
@@ -281,9 +293,7 @@ export async function getRadarCompanyDetail(companyId: number) {
                 orderBy: { article: { pub_date: 'desc' } },
                 take: 10,
             },
-            // 조직 우선 수집(MANUAL_ORG) 기사도 포함
             ingestions: {
-                where: { organization_id: companyId },
                 include: {
                     article: {
                         select: {
@@ -405,6 +415,7 @@ export async function getRadarCompanyDetail(companyId: number) {
     return {
         id: company.id,
         company_name: company.company_name,
+        slug: company.slug ?? null,
         aliases: company.aliases,
         entity_type: company.entity_type,
         business_summary: company.business_summary,

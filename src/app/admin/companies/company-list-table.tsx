@@ -106,6 +106,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
 
     setEditForm({
       company_name: selectedCompany.company_name || '',
+      slug: selectedCompany.slug || '',
       entity_type: selectedCompany.entity_type || '기업',
       company_url: selectedCompany.company_url || '',
       business_summary: selectedCompany.business_summary || '',
@@ -132,6 +133,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
 
       const res = await updateCompany(selectedCompany.id, editForm.active_region_id, {
         company_name: editForm.company_name,
+        slug: editForm.slug,
         entity_type: editForm.entity_type,
         company_url: editForm.company_url,
         business_summary: editForm.business_summary,
@@ -392,22 +394,39 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                         </div>
                       )}
 
-                      {!isEditing && selectedCompany.company_url && (
-                        <div className="flex items-center gap-2 text-sm text-blue-500">
-                          <ExternalLink className="w-3.5 h-3.5" />
-                          <a href={selectedCompany.company_url} target="_blank" rel="noreferrer" className="hover:underline">
-                            {selectedCompany.company_url}
-                          </a>
+                      {!isEditing ? (
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                          <span>프로필 URL: <a href={`/insight-radar/${selectedCompany.slug || selectedCompany.id}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-mono">/insight-radar/{selectedCompany.slug || selectedCompany.id}</a></span>
+                          {selectedCompany.company_url && (
+                            <>
+                              <span>•</span>
+                              <a href={selectedCompany.company_url} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
+                                <ExternalLink className="w-3 h-3" /> 홈페이지
+                              </a>
+                            </>
+                          )}
                         </div>
-                      ) || isEditing && (
-                        <div className="flex items-center gap-2 max-w-md w-full">
-                          <Label className="shrink-0 text-sm font-medium">홈페이지 URL</Label>
-                          <Input
-                            value={editForm.company_url}
-                            onChange={(e) => setEditForm({ ...editForm, company_url: e.target.value })}
-                            title="조직의 공식 웹사이트 주소를 입력하세요. (예: https://example.com)"
-                            className="flex-1"
-                          />
+                      ) : (
+                        <div className="flex flex-col sm:flex-row gap-3 max-w-xl w-full">
+                          <div className="flex-1 flex items-center gap-2">
+                            <Label className="shrink-0 text-sm font-medium">URL 슬러그</Label>
+                            <Input
+                              value={editForm.slug}
+                              onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
+                              placeholder="영문, 숫자, 한글, 하이픈 (비우면 자동생성)"
+                              title="인사이트 레이더 URL 슬러그 (예: kakao-corp)"
+                              className="flex-1 font-mono text-xs"
+                            />
+                          </div>
+                          <div className="flex-1 flex items-center gap-2">
+                            <Label className="shrink-0 text-sm font-medium">홈페이지 URL</Label>
+                            <Input
+                              value={editForm.company_url}
+                              onChange={(e) => setEditForm({ ...editForm, company_url: e.target.value })}
+                              title="조직의 공식 웹사이트 주소를 입력하세요."
+                              className="flex-1"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>

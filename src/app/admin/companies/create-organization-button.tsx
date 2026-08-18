@@ -18,6 +18,7 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
 
     const [newOrg, setNewOrg] = useState({
         company_name: '',
+        slug: '',
         ceo_name: '',
         founded_year: '',
         hq_location: '',
@@ -40,6 +41,7 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
                 setIsOpen(false);
                 setNewOrg({
                     company_name: '',
+                    slug: '',
                     ceo_name: '',
                     founded_year: '',
                     hq_location: '',
@@ -89,6 +91,22 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
                                 onChange={(e) => setNewOrg({ ...newOrg, company_name: e.target.value })}
                                 required
                                 className="bg-white border-slate-200"
+                            />
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5">
+                                <Label htmlFor="slug" className="text-xs font-bold text-slate-700">URL 슬러그</Label>
+                                <span title="인사이트 레이더 고유 주소에 사용됩니다. (입력하지 않으면 자동 생성)" className="cursor-help inline-flex items-center">
+                                    <Info className="w-3.5 h-3.5 text-slate-400" />
+                                </span>
+                            </div>
+                            <Input
+                                id="slug"
+                                value={newOrg.slug}
+                                onChange={(e) => setNewOrg({ ...newOrg, slug: e.target.value })}
+                                placeholder="비워둘 경우 회사명 기반으로 자동 생성됩니다."
+                                className="bg-white border-slate-200 font-mono text-xs"
                             />
                         </div>
 

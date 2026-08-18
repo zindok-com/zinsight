@@ -18,12 +18,12 @@ const regionGeoMap: Record<string, { lat: number; lng: number; address: string }
 // 동적 메타데이터 생성
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params;
-    const company = await getRadarCompanyDetail(Number(id));
+    const company = await getRadarCompanyDetail(id);
     if (!company) return { title: '조직을 찾을 수 없습니다' };
 
     const domain = process.env.DOMAIN || 'zinsight.co.kr';
     const baseUrl = `https://${domain}`;
-    const url = `${baseUrl}/insight-radar/${company.id}`;
+    const url = `${baseUrl}/insight-radar/${company.slug || company.id}`;
     
     let description = company.business_summary;
     const coreKw = parseKeywords(company.core_keywords);
@@ -85,14 +85,14 @@ function parseKeywords(keywordsStr: any) {
 
 export default async function InsightRadarDetailPage({ params }: PageProps) {
     const { id } = await params;
-    const company = await getRadarCompanyDetail(Number(id));
+    const company = await getRadarCompanyDetail(id);
 
     if (!company) notFound();
 
     const coreKw = parseKeywords(company.core_keywords);
     const domain = process.env.DOMAIN || 'zinsight.co.kr';
     const baseUrl = `https://${domain}`;
-    const url = `${baseUrl}/insight-radar/${company.id}`;
+    const url = `${baseUrl}/insight-radar/${company.slug || company.id}`;
     
     const geoData = (company.region && regionGeoMap[company.region.slug]) || { lat: 37.5665, lng: 126.9780, address: 'Seoul, South Korea' };
 

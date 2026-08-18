@@ -94,12 +94,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
         // Fetch active organizations for sitemap inclusion
         const organizations = await prisma.organization.findMany({
-            select: { id: true, updated_at: true },
+            select: { id: true, slug: true, updated_at: true },
             orderBy: { updated_at: 'desc' }
         });
 
         const orgRoutes: MetadataRoute.Sitemap = organizations.map((org) => ({
-            url: `${baseUrl}/insight-radar/${org.id}`,
+            url: `${baseUrl}/insight-radar/${org.slug || org.id}`,
             lastModified: org.updated_at,
             changeFrequency: 'weekly' as const,
             priority: 0.6,

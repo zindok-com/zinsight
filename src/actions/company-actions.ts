@@ -3,11 +3,21 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
+export function slugifyOrganization(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣-_]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export async function updateCompany(
   id: number,
   regionId: number,
   data: {
     company_name: string;
+    slug?: string;
     entity_type?: string;
     company_url?: string;
     business_summary?: string;
@@ -21,12 +31,17 @@ export async function updateCompany(
   }
 ) {
   try {
-    const { is_featured, ...companyData } = data;
+    const { is_featured, slug, ...companyData } = data;
+
+    const formattedSlug = slug && slug.trim() !== ''
+      ? slugifyOrganization(slug)
+      : null;
 
     const updatedCompany = await prisma.organization.update({
       where: { id },
       data: {
         ...companyData,
+        slug: formattedSlug,
         is_featured,
         region_id: regionId,
       },
@@ -41,6 +56,7 @@ export async function updateCompany(
     });
 
     revalidatePath('/admin/companies');
+    revalidatePath('/insight-radar');
     return { success: true, company: updatedCompany };
   } catch (error: any) {
     console.error('Failed to update company:', error);
@@ -86,6 +102,7 @@ export async function searchOrganizations(query: string) {
 
 export async function createOrganizationInline(data: {
   company_name: string;
+  slug?: string;
   ceo_name?: string;
   founded_year?: string;
   hq_location?: string;
@@ -93,9 +110,14 @@ export async function createOrganizationInline(data: {
   region_id: number;
 }) {
   try {
+    const slugValue = data.slug && data.slug.trim() !== ''
+      ? slugifyOrganization(data.slug)
+      : slugifyOrganization(data.company_name);
+
     const newOrg = await prisma.organization.create({
       data: {
         company_name: data.company_name,
+        slug: slugValue || null,
         ceo_name: data.ceo_name || null,
         founded_year: data.founded_year || null,
         hq_location: data.hq_location || null,
@@ -103,6 +125,8 @@ export async function createOrganizationInline(data: {
         region_id: data.region_id,
       }
     });
+    revalidatePath('/admin/companies');
+    revalidatePath('/insight-radar');
     return { success: true, organization: newOrg };
   } catch (error: any) {
     console.error('Failed to create inline organization:', error);
