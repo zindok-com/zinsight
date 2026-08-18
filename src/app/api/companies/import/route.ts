@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { slugifyOrganization } from '@/actions/company-actions';
+import { slugifyOrganization } from '@/lib/utils';
 
 export async function POST(request: Request) {
   try {
