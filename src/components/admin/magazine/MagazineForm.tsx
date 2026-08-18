@@ -1051,7 +1051,7 @@ function HighlightedText({ text }: { text: string }) {
                                             href={url} 
                                             target="_blank" 
                                             rel="noopener noreferrer"
-                                            className="text-indigo-600 hover:text-indigo-800 underline underline-offset-4 decoration-indigo-300 font-semibold transition-colors"
+                                            className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
                                         >
                                             {linkText}
                                         </a>
