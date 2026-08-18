@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Edit2, Save, X, Loader2, ExternalLink, TrendingUp, Building2, Calendar, LayoutDashboard, Star, ArrowUpDown, ArrowUp, ArrowDown, Info } from 'lucide-react';
+import { Search, Edit2, Save, X, Loader2, ExternalLink, TrendingUp, Building2, Calendar, LayoutDashboard, Star, ArrowUpDown, ArrowUp, ArrowDown, Info, Newspaper } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateCompany, toggleCompanyFeatured } from '@/actions/company-actions';
+import { ingestByOrganization } from '@/actions/ingest-actions';
 import {
   Sheet,
   SheetContent,
@@ -79,6 +80,26 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
   const [isPending, startTransition] = useTransition();
+  const [isIngesting, setIsIngesting] = useState(false);
+
+  const handleIngest = async () => {
+    if (!selectedCompany) return;
+    setIsIngesting(true);
+    toast.info(`"${selectedCompany.company_name}" 연관 기사 수집 중...`);
+    try {
+      const result = await ingestByOrganization(selectedCompany.id);
+      if (result.success) {
+        toast.success(result.message);
+        window.location.reload();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (err) {
+      toast.error('수집 중 오류가 발생했습니다.');
+    } finally {
+      setIsIngesting(false);
+    }
+  };
 
   const handleEditClick = () => {
     const kw = parseKeywords(selectedCompany.core_keywords) || {};
@@ -396,9 +417,21 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
 
                   <div className="flex shrink-0 gap-2">
                     {!isEditing ? (
-                      <Button variant="outline" size="lg" className="h-11 px-6 shadow-sm" onClick={handleEditClick}>
-                        <Edit2 className="w-4 h-4 mr-2" /> 수정하기
-                      </Button>
+                      <>
+                        <Button 
+                          variant="secondary" 
+                          size="lg" 
+                          className="h-11 px-6 shadow-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-300 dark:hover:bg-indigo-900/50" 
+                          onClick={handleIngest}
+                          disabled={isIngesting}
+                        >
+                          {isIngesting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Newspaper className="w-4 h-4 mr-2" />} 
+                          기사 수집
+                        </Button>
+                        <Button variant="outline" size="lg" className="h-11 px-6 shadow-sm" onClick={handleEditClick}>
+                          <Edit2 className="w-4 h-4 mr-2" /> 수정하기
+                        </Button>
+                      </>
                     ) : (
                       <>
                         <Button variant="ghost" size="lg" className="h-11" onClick={() => setIsEditing(false)} disabled={isPending}>
