@@ -73,7 +73,7 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
             {isInitialState && companies.length > 0 && (
                 <div className="mb-4 flex items-center gap-2">
                     <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                    <h2 className="text-lg font-bold text-zi-on-surface">주목할 만한 기관 및 기업</h2>
+                    <h2 className="text-lg font-bold text-zi-on-surface">등록된 기관 및 기업 목록</h2>
                 </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

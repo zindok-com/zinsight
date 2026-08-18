@@ -110,11 +110,7 @@ export async function getRadarCompanies(
 ): Promise<{ companies: RadarCompanyCard[]; total: number; totalPages: number }> {
     const { regionId, entityType, searchQuery } = filter;
 
-    // 필터 없으면 피처드 기업만 노출
-    const isInitialState = !regionId && !entityType && !searchQuery;
-
     const where: any = {
-        ...(isInitialState ? { is_featured: true } : {}),
         ...(regionId ? { region_id: regionId } : {}),
         ...(entityType ? { entity_type: entityType } : {}),
         ...(searchQuery
@@ -142,10 +138,17 @@ export async function getRadarCompanies(
                     take: 1,
                 },
                 _count: {
-                    select: { company_articles: true },
+                    select: {
+                        company_articles: true,
+                        ingestions: true,
+                        magazinePosts: true,
+                    },
                 },
             },
-            orderBy: { created_at: 'desc' },
+            orderBy: [
+                { is_featured: 'desc' },
+                { created_at: 'desc' },
+            ],
             skip: (page - 1) * pageSize,
             take: pageSize,
         }),
@@ -160,7 +163,7 @@ export async function getRadarCompanies(
         core_keywords: c.core_keywords,
         region: c.region ?? null,
         hq_location: c.hq_location ?? null,
-        articleCount: c._count.company_articles,
+        articleCount: c._count.company_articles + c._count.ingestions + c._count.magazinePosts,
         latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
     }));
 
