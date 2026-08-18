@@ -32,25 +32,30 @@ const ENTITY_CONFIG = {
         theme: { border: 'border-t-blue-500', iconBg: 'bg-blue-50', badgeBg: 'bg-blue-50', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', articleBg: 'bg-blue-600', arrowHover: 'group-hover:text-blue-600' },
         icon: 'network' as LottieIconName
     },
+    '스타트업': {
+        theme: { border: 'border-t-orange-500', iconBg: 'bg-orange-50', badgeBg: 'bg-orange-50', badgeText: 'text-orange-700', badgeBorder: 'border-orange-200', articleBg: 'bg-orange-600', arrowHover: 'group-hover:text-orange-600' },
+        icon: 'bulb' as LottieIconName
+    },
     '기관': {
         theme: { border: 'border-t-emerald-500', iconBg: 'bg-emerald-50', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', articleBg: 'bg-emerald-600', arrowHover: 'group-hover:text-emerald-600' },
         icon: 'management' as LottieIconName
     },
-    '대학': {
-        theme: { border: 'border-t-violet-500', iconBg: 'bg-violet-50', badgeBg: 'bg-violet-50', badgeText: 'text-violet-700', badgeBorder: 'border-violet-200', articleBg: 'bg-violet-600', arrowHover: 'group-hover:text-violet-600' },
+    '학교': {
+        theme: { border: 'border-t-purple-600', iconBg: 'bg-purple-50', badgeBg: 'bg-purple-50', badgeText: 'text-purple-700', badgeBorder: 'border-purple-200', articleBg: 'bg-purple-600', arrowHover: 'group-hover:text-purple-600' },
         icon: 'rules' as LottieIconName
     },
     'default': {
-        theme: { border: 'border-t-amber-500', iconBg: 'bg-amber-50', badgeBg: 'bg-amber-50', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200', articleBg: 'bg-amber-600', arrowHover: 'group-hover:text-amber-600' },
+        theme: { border: 'border-t-cyan-500', iconBg: 'bg-cyan-50', badgeBg: 'bg-cyan-50', badgeText: 'text-cyan-700', badgeBorder: 'border-cyan-200', articleBg: 'bg-cyan-600', arrowHover: 'group-hover:text-cyan-600' },
         icon: 'team' as LottieIconName
     }
 };
 
 const getEntityConfig = (entityType?: string | null) => {
     if (!entityType) return ENTITY_CONFIG.default;
+    if (entityType.includes('스타트업')) return ENTITY_CONFIG['스타트업'];
+    if (entityType.includes('대학') || entityType.includes('학교') || entityType.includes('교육')) return ENTITY_CONFIG['학교'];
+    if (entityType.includes('기관') || entityType.includes('진흥원') || entityType.includes('센터')) return ENTITY_CONFIG['기관'];
     if (entityType.includes('기업')) return ENTITY_CONFIG['기업'];
-    if (entityType.includes('기관')) return ENTITY_CONFIG['기관'];
-    if (entityType.includes('대학')) return ENTITY_CONFIG['대학'];
     return ENTITY_CONFIG.default;
 };
 

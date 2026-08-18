@@ -169,11 +169,24 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     {/* 1. Header Section */}
                     <div className="border-b border-slate-200 pb-10 mb-8">
                         <div className="mb-6">
-                            <h1 className="text-5xl font-bold text-[#001736] font-serif mb-6 tracking-tight">
-                                {company.company_name}
-                            </h1>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
+                                    {company.company_name}
+                                </h1>
+                                {company.company_url && (
+                                    <a 
+                                        href={company.company_url.startsWith('http') ? company.company_url : `https://${company.company_url}`} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer" 
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-bold text-sm transition-all duration-200 shadow-sm shrink-0 self-start sm:self-auto group"
+                                    >
+                                        <span>홈페이지 바로가기</span>
+                                        <ExternalLink size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                    </a>
+                                )}
+                            </div>
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-                                {/* 산업 태그 */}
+                                {/* 지자체/지역 태그 */}
                                 <div className="flex flex-wrap gap-2.5">
                                     {company.region && (
                                         <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-zi-secondary bg-teal-50 border border-teal-100 rounded-lg">
@@ -181,22 +194,6 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                         </span>
                                     )}
                                 </div>
-                                
-                                {/* 홈페이지 링크 */}
-                                {company.company_url && (
-                                    <>
-                                        <div className="hidden md:block w-px h-5 bg-slate-200" />
-                                        <a 
-                                            href={company.company_url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer" 
-                                            className="inline-flex items-center gap-2 text-lg font-semibold text-zi-blue hover:underline decoration-2 underline-offset-4 transition-all"
-                                        >
-                                            <ExternalLink size={20} /> 
-                                            <span className="tracking-tight">{company.company_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
-                                        </a>
-                                    </>
-                                )}
                             </div>
                         </div>
                         
