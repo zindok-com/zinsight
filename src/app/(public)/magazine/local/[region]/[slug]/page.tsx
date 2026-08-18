@@ -5,15 +5,16 @@ import { prisma } from '@/lib/db';
 import MagazinePostDetail from '@/components/public/magazine/MagazinePostDetail';
 
 // MagazinePostDetail과 동일한 카테고리 레이블 매핑 (메타데이터 일치)
-function getCategoryLabel(category: { slug: string } | null | undefined): string {
-    if (!category) return 'Newsletter';
+function getCategoryLabel(category: { name?: string; slug: string } | null | undefined): string {
+    if (!category) return '뉴스레터';
+    if (category.name) return category.name;
     switch (category.slug) {
-        case 'tech-marketing': return 'Digital Marketing';
-        case 'spotlight': return 'Spotlight';
-        case 'briefing': return 'Briefing';
-        case 'newsletter':
+        case 'tech-marketing': return '테크 · 마케팅';
+        case 'spotlight': return '기업 스포트라이트';
+        case 'briefing': return '지원사업 브리핑';
+        case 'newsletter': return '뉴스레터';
         default:
-            return 'Newsletter';
+            return category.slug || '뉴스레터';
     }
 }
 
