@@ -71,6 +71,30 @@ function safeGetHostname(url: string | null) {
   }
 }
 
+function parseBacklinks(rawBacklinks: any, companyUrl?: string | null): Array<{ title: string; url: string }> {
+  if (Array.isArray(rawBacklinks) && rawBacklinks.length > 0) {
+    return rawBacklinks.slice(0, 3).map((item: any) => ({
+      title: item.title || '홈페이지 바로가기',
+      url: item.url || '',
+    }));
+  }
+  if (typeof rawBacklinks === 'string') {
+    try {
+      const parsed = JSON.parse(rawBacklinks);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.slice(0, 3).map((item: any) => ({
+          title: item.title || '홈페이지 바로가기',
+          url: item.url || '',
+        }));
+      }
+    } catch {}
+  }
+  if (companyUrl) {
+    return [{ title: '홈페이지 바로가기', url: companyUrl }];
+  }
+  return [];
+}
+
 export function CompanyListTable({ companies }: { companies: any[] }) {
   const [selectedCompany, setSelectedCompany] = useState<any | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -103,12 +127,14 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
 
   const handleEditClick = () => {
     const kw = parseKeywords(selectedCompany.core_keywords) || {};
+    const parsedLinks = parseBacklinks(selectedCompany.backlinks, selectedCompany.company_url);
 
     setEditForm({
       company_name: selectedCompany.company_name || '',
       slug: selectedCompany.slug || '',
       entity_type: selectedCompany.entity_type || '기업',
       company_url: selectedCompany.company_url || '',
+      backlinks: parsedLinks.length > 0 ? parsedLinks : [{ title: '홈페이지 바로가기', url: '' }],
       business_summary: selectedCompany.business_summary || '',
       founded_year: selectedCompany.founded_year || '',
       hq_location: selectedCompany.hq_location || '',
@@ -131,11 +157,19 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
         target_market: editForm.kw_target_market.split(',').map((s: string) => s.trim()).filter(Boolean),
       };
 
+      const cleanBacklinks = Array.isArray(editForm.backlinks)
+        ? editForm.backlinks
+            .filter((item: any) => item.title?.trim() !== '' && item.url?.trim() !== '')
+            .slice(0, 3)
+        : [];
+      const primaryUrl = cleanBacklinks[0]?.url || editForm.company_url || null;
+
       const res = await updateCompany(selectedCompany.id, editForm.active_region_id, {
         company_name: editForm.company_name,
         slug: editForm.slug,
         entity_type: editForm.entity_type,
-        company_url: editForm.company_url,
+        company_url: primaryUrl,
+        backlinks: cleanBacklinks,
         business_summary: editForm.business_summary,
         founded_year: editForm.founded_year,
         hq_location: editForm.hq_location,
@@ -397,35 +431,81 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                       {!isEditing ? (
                         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
                           <span>프로필 URL: <a href={`/insight-radar/${selectedCompany.slug || selectedCompany.id}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline font-mono">/insight-radar/{selectedCompany.slug || selectedCompany.id}</a></span>
-                          {selectedCompany.company_url && (
-                            <>
+                          {parseBacklinks(selectedCompany.backlinks, selectedCompany.company_url).map((bl: any, i: number) => (
+                            <span key={i} className="flex items-center gap-1">
                               <span>•</span>
-                              <a href={selectedCompany.company_url} target="_blank" rel="noreferrer" className="text-blue-500 hover:underline flex items-center gap-1">
-                                <ExternalLink className="w-3 h-3" /> 홈페이지
+                              <a href={bl.url.startsWith('http') ? bl.url : `https://${bl.url}`} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-medium flex items-center gap-1">
+                                <ExternalLink className="w-3 h-3" /> {bl.title || '링크'}
                               </a>
-                            </>
-                          )}
+                            </span>
+                          ))}
                         </div>
                       ) : (
-                        <div className="flex flex-col sm:flex-row gap-3 max-w-xl w-full">
-                          <div className="flex-1 flex items-center gap-2">
-                            <Label className="shrink-0 text-sm font-medium">URL 슬러그</Label>
+                        <div className="space-y-4 max-w-2xl w-full bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                          <div className="flex items-center gap-2">
+                            <Label className="w-20 shrink-0 text-xs font-bold text-slate-700 dark:text-slate-300">URL 슬러그</Label>
                             <Input
                               value={editForm.slug}
                               onChange={(e) => setEditForm({ ...editForm, slug: e.target.value })}
                               placeholder="영문, 숫자, 한글, 하이픈 (비우면 자동생성)"
                               title="인사이트 레이더 URL 슬러그 (예: kakao-corp)"
-                              className="flex-1 font-mono text-xs"
+                              className="flex-1 font-mono text-xs bg-white dark:bg-slate-800"
                             />
                           </div>
-                          <div className="flex-1 flex items-center gap-2">
-                            <Label className="shrink-0 text-sm font-medium">홈페이지 URL</Label>
-                            <Input
-                              value={editForm.company_url}
-                              onChange={(e) => setEditForm({ ...editForm, company_url: e.target.value })}
-                              title="조직의 공식 웹사이트 주소를 입력하세요."
-                              className="flex-1"
-                            />
+
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">외부 백링크 (최대 3개)</Label>
+                              {(editForm.backlinks || []).length < 3 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 text-xs text-indigo-600 hover:text-indigo-700 p-0"
+                                  onClick={() => setEditForm({ ...editForm, backlinks: [...(editForm.backlinks || []), { title: '', url: '' }] })}
+                                >
+                                  + 백링크 추가
+                                </Button>
+                              )}
+                            </div>
+                            {(editForm.backlinks || []).map((link: any, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2">
+                                <Input
+                                  placeholder="표시 텍스트 (예: 홈페이지 바로가기)"
+                                  value={link.title}
+                                  onChange={(e) => {
+                                    const next = [...(editForm.backlinks || [])];
+                                    next[idx] = { ...next[idx], title: e.target.value };
+                                    setEditForm({ ...editForm, backlinks: next });
+                                  }}
+                                  className="w-2/5 text-xs bg-white dark:bg-slate-800"
+                                />
+                                <Input
+                                  placeholder="연결 URL (예: https://...)"
+                                  value={link.url}
+                                  onChange={(e) => {
+                                    const next = [...(editForm.backlinks || [])];
+                                    next[idx] = { ...next[idx], url: e.target.value };
+                                    setEditForm({ ...editForm, backlinks: next });
+                                  }}
+                                  className="flex-1 text-xs bg-white dark:bg-slate-800"
+                                />
+                                {(editForm.backlinks || []).length > 1 && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-slate-400 hover:text-rose-500"
+                                    onClick={() => {
+                                      const next = (editForm.backlinks || []).filter((_: any, i: number) => i !== idx);
+                                      setEditForm({ ...editForm, backlinks: next });
+                                    }}
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
                           </div>
                         </div>
                       )}

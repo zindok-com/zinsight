@@ -93,6 +93,29 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     const domain = process.env.DOMAIN || 'zinsight.co.kr';
     const baseUrl = `https://${domain}`;
     const url = `${baseUrl}/insight-radar/${company.slug || company.id}`;
+
+    // 백링크 리스트 파싱 (최대 3개)
+    const rawBacklinks = company.backlinks;
+    let backlinksList: Array<{ title: string; url: string }> = [];
+    if (Array.isArray(rawBacklinks) && rawBacklinks.length > 0) {
+        backlinksList = rawBacklinks.slice(0, 3).map((item: any) => ({
+            title: item.title || '바로가기',
+            url: item.url || '',
+        })).filter(item => item.url.trim() !== '');
+    } else if (typeof rawBacklinks === 'string') {
+        try {
+            const parsed = JSON.parse(rawBacklinks);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                backlinksList = parsed.slice(0, 3).map((item: any) => ({
+                    title: item.title || '바로가기',
+                    url: item.url || '',
+                })).filter(item => item.url.trim() !== '');
+            }
+        } catch {}
+    }
+    if (backlinksList.length === 0 && company.company_url) {
+        backlinksList = [{ title: '홈페이지 바로가기', url: company.company_url }];
+    }
     
     const geoData = (company.region && regionGeoMap[company.region.slug]) || { lat: 37.5665, lng: 126.9780, address: 'Seoul, South Korea' };
 
@@ -173,16 +196,21 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
                                     {company.company_name}
                                 </h1>
-                                {company.company_url && (
-                                    <a 
-                                        href={company.company_url.startsWith('http') ? company.company_url : `https://${company.company_url}`} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer" 
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-bold text-sm transition-all duration-200 shadow-sm shrink-0 self-start sm:self-auto group"
-                                    >
-                                        <span>홈페이지 바로가기</span>
-                                        <ExternalLink size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                                    </a>
+                                {backlinksList.length > 0 && (
+                                    <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+                                        {backlinksList.map((link, idx) => (
+                                            <a 
+                                                key={idx}
+                                                href={link.url.startsWith('http') ? link.url : `https://${link.url}`} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-bold text-sm transition-all duration-200 shadow-sm shrink-0 group"
+                                            >
+                                                <span>{link.title || '바로가기'}</span>
+                                                <ExternalLink size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                            </a>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
                             <div className="flex flex-wrap items-center gap-x-6 gap-y-4">

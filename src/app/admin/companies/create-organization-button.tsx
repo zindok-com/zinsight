@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Loader2, Info } from 'lucide-react';
+import { Plus, Loader2, Info, X } from 'lucide-react';
 import { createOrganizationInline } from '@/actions/company-actions';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,14 +16,24 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
     const [isCreating, setIsCreating] = useState(false);
     const router = useRouter();
 
-    const [newOrg, setNewOrg] = useState({
+    const [newOrg, setNewOrg] = useState<{
+        company_name: string;
+        slug: string;
+        ceo_name: string;
+        founded_year: string;
+        hq_location: string;
+        entity_type: string;
+        region_id: number;
+        backlinks: Array<{ title: string; url: string }>;
+    }>({
         company_name: '',
         slug: '',
         ceo_name: '',
         founded_year: '',
         hq_location: '',
         entity_type: '기업',
-        region_id: 1 // Default
+        region_id: 1, // Default
+        backlinks: [{ title: '홈페이지 바로가기', url: '' }],
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -35,7 +45,14 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
 
         setIsCreating(true);
         try {
-            const res = await createOrganizationInline(newOrg);
+            const cleanBacklinks = newOrg.backlinks
+                .filter((item) => item.title.trim() !== '' && item.url.trim() !== '')
+                .slice(0, 3);
+
+            const res = await createOrganizationInline({
+                ...newOrg,
+                backlinks: cleanBacklinks,
+            });
             if (res.success && res.organization) {
                 toast.success('새 조직이 등록되었습니다.');
                 setIsOpen(false);
@@ -46,7 +63,8 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
                     founded_year: '',
                     hq_location: '',
                     entity_type: '기업',
-                    region_id: 1
+                    region_id: 1,
+                    backlinks: [{ title: '홈페이지 바로가기', url: '' }],
                 });
                 router.refresh();
             } else {
@@ -108,6 +126,62 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
                                 placeholder="비워둘 경우 회사명 기반으로 자동 생성됩니다."
                                 className="bg-white border-slate-200 font-mono text-xs"
                             />
+                        </div>
+
+                        {/* 외부 백링크 입력 (최대 3개) */}
+                        <div className="space-y-2 pt-2 border-t border-slate-100">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-xs font-bold text-slate-700">외부 백링크 (최대 3개)</Label>
+                                {newOrg.backlinks.length < 3 && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 text-[11px] text-indigo-600 hover:text-indigo-700 p-0"
+                                        onClick={() => setNewOrg({ ...newOrg, backlinks: [...newOrg.backlinks, { title: '', url: '' }] })}
+                                    >
+                                        + 추가
+                                    </Button>
+                                )}
+                            </div>
+                            {newOrg.backlinks.map((link, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                    <Input
+                                        placeholder="표시 텍스트 (예: 홈페이지)"
+                                        value={link.title}
+                                        onChange={(e) => {
+                                            const next = [...newOrg.backlinks];
+                                            next[idx] = { ...next[idx], title: e.target.value };
+                                            setNewOrg({ ...newOrg, backlinks: next });
+                                        }}
+                                        className="w-2/5 text-xs bg-white border-slate-200"
+                                    />
+                                    <Input
+                                        placeholder="URL (https://...)"
+                                        value={link.url}
+                                        onChange={(e) => {
+                                            const next = [...newOrg.backlinks];
+                                            next[idx] = { ...next[idx], url: e.target.value };
+                                            setNewOrg({ ...newOrg, backlinks: next });
+                                        }}
+                                        className="flex-1 text-xs bg-white border-slate-200"
+                                    />
+                                    {newOrg.backlinks.length > 1 && (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-7 w-7 p-0 text-slate-400 hover:text-rose-500"
+                                            onClick={() => {
+                                                const next = newOrg.backlinks.filter((_, i) => i !== idx);
+                                                setNewOrg({ ...newOrg, backlinks: next });
+                                            }}
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </Button>
+                                    )}
+                                </div>
+                            ))}
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
