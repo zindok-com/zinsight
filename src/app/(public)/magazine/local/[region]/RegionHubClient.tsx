@@ -33,6 +33,18 @@ interface RegionHubClientProps {
     localHeadline: any | null;
 }
 
+function getHeadlineBadgeText(categorySlug: string | undefined, regionName: string) {
+    switch (categorySlug) {
+        case 'edu-collab':
+            return `이달의 ${regionName} 산학협력 스포트라이트`;
+        case 'briefing':
+            return `이달의 ${regionName} 관내 소식`;
+        case 'spotlight':
+        default:
+            return `이달의 ${regionName} 기업 스포트라이트`;
+    }
+}
+
 export default function RegionHubClient({ regionName, regionSlug, posts, localHeadline }: RegionHubClientProps) {
     const [activeTab, setActiveTab] = useState<'spotlight' | 'briefing' | 'edu-collab'>('spotlight');
 
@@ -48,8 +60,8 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
         },
         { 
             id: 'briefing' as const, 
-            label: '지원사업 · 정책 브리핑', 
-            desc: `${regionName}${regionName.endsWith('시') ? '' : '시'} 및 경기도 산하 진흥원의 지원사업, 정책자금 공고 요약`, 
+            label: '관내 소식', 
+            desc: `${regionName}${regionName.endsWith('시') ? '' : '시'} 및 안양산업진흥원 등 관내 공공기관 소식, 정책 자금 공고 요약`, 
             icon: Building2 
         },
         {
@@ -68,7 +80,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                     <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
                         <div className="mb-4">
                             <span className="font-ui-label text-[10px] uppercase tracking-widest bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-emerald-700 font-bold">
-                                이달의 {regionName} 기업 스포트라이트
+                                {getHeadlineBadgeText(localHeadline.category?.slug, regionName)}
                             </span>
                         </div>
                         <ImpressionTracker postId={localHeadline.id}>
@@ -144,7 +156,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
                 {filteredPosts.length > 0 ? (
                     filteredPosts.map((article) => {
-                        const industryName = article.industries?.[0]?.industry?.name || '인사이트';
+                        const categoryName = article.category?.name || '로컬 소식';
                         
                         return (
                             <ImpressionTracker postId={article.id} key={article.id}>
@@ -171,7 +183,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                     </div>
                                     <div className="flex-1 flex flex-col justify-start">
                                         <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                            {industryName}
+                                            {categoryName}
                                         </span>
                                         <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
                                             {article.title}

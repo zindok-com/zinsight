@@ -312,7 +312,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                                 <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
                                             </p>
                                             <div className="flex items-center gap-2 text-zi-outline text-[12px]">
-                                                <span>{(article as any).industries?.[0]?.industry?.name || '인사이트'}</span>
+                                                <span>{article.category?.name || article.region?.name || '소식'}</span>
                                                 <span>•</span>
                                                 <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
                                             </div>
