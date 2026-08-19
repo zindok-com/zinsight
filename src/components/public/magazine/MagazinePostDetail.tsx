@@ -90,7 +90,7 @@ function getCategoryLabel(category: any) {
     switch (category.slug) {
         case 'tech-marketing': return '테크 · 마케팅';
         case 'spotlight': return '기업 스포트라이트';
-        case 'briefing': return '지원사업 브리핑';
+        case 'briefing': return '관내 소식';
         case 'newsletter': return '뉴스레터';
         default:
             return category.slug || '뉴스레터';
