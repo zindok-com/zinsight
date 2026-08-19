@@ -41,6 +41,7 @@ export interface RadarCompanyDetail {
     hq_location?: string | null;
     ceo_name?: string | null;
     key_references?: any | null;
+    backlinks?: any | null;
     latestArticleDate: Date | null;
 }
 
@@ -428,6 +429,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         hq_location: company.hq_location,
         ceo_name: company.ceo_name,
         key_references: company.key_references,
+        backlinks: company.backlinks,
         latestArticleDate: company.company_articles[0]?.article?.pub_date ?? null,
     };
 }

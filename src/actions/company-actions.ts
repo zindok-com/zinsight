@@ -19,6 +19,7 @@ export async function updateCompany(
     ceo_name?: string;
     key_references?: any;
     aliases?: any;
+    backlinks?: any;
     is_featured?: boolean;
   }
 ) {
@@ -100,6 +101,7 @@ export async function createOrganizationInline(data: {
   hq_location?: string;
   entity_type?: string;
   region_id: number;
+  backlinks?: any;
 }) {
   try {
     const slugValue = data.slug && data.slug.trim() !== ''
@@ -115,6 +117,7 @@ export async function createOrganizationInline(data: {
         hq_location: data.hq_location || null,
         entity_type: data.entity_type || '기업',
         region_id: data.region_id,
+        backlinks: data.backlinks || null,
       }
     });
     revalidatePath('/admin/companies');

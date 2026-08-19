@@ -87,6 +87,7 @@ model Organization {
   hq_location      String?  @db.VarChar(255)
   ceo_name         String?  @db.VarChar(100)
   key_references   Json?
+  backlinks        Json?    // 외부 백링크 리스트 (최대 3개: [{ title, url }])
   is_featured      Boolean  @default(false)
   region_id        Int      @map("region_id")
   created_at       DateTime @default(now())

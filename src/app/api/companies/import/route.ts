@@ -73,6 +73,7 @@ export async function POST(request: Request) {
             hq_location: lead.hq_location || null,
             ceo_name: lead.ceo_name || null,
             key_references: lead.key_references || null,
+            backlinks: lead.backlinks || null,
             region_id: region_id,
           },
         });
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
             hq_location: lead.hq_location || company.hq_location,
             ceo_name: lead.ceo_name || company.ceo_name,
             key_references: lead.key_references || company.key_references,
+            backlinks: lead.backlinks || company.backlinks,
             region_id: region_id,
           }
         });
