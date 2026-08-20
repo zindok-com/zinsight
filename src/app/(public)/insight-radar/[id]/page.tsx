@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, User, Target, Zap, Briefcase, Tag } from 'lucide-react';
 import { getRadarCompanyDetail } from '@/actions/insight-radar-actions';
@@ -88,6 +88,11 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     const company = await getRadarCompanyDetail(id);
 
     if (!company) notFound();
+
+    // slug가 존재하고, 현재 URL 파라미터(id)가 slug와 다른 경우 (숫자 ID 등으로 접근 시) 301 영구 리다이렉트
+    if (company.slug && id !== company.slug) {
+        permanentRedirect(`/insight-radar/${company.slug}`);
+    }
 
     const coreKw = parseKeywords(company.core_keywords);
     const domain = process.env.DOMAIN || 'zinsight.co.kr';
