@@ -3,27 +3,34 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ImportButton } from './import-button';
 import { CompanyListTable } from './company-list-table';
 import { CreateOrganizationButton } from './create-organization-button';
+import { InviteLinkPanel } from './InviteLinkPanel';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { ClipboardList } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CompaniesPage() {
-  const companies = await prisma.organization.findMany({
-    include: {
-      region: true,
-      company_articles: {
-        include: {
-          article: true,
-        },
+  const [companies, regions, invites] = await Promise.all([
+    prisma.organization.findMany({
+      include: {
+        region: true,
+        company_articles: { include: { article: true } },
       },
-    },
-    orderBy: {
-      created_at: 'desc',
-    },
-  });
+      orderBy: { created_at: 'desc' },
+    }),
+    prisma.region.findMany({ orderBy: { name: 'asc' }, where: { isActive: true } }),
+    prisma.organizationInvite.findMany({
+      orderBy: { created_at: 'desc' },
+      take: 10,
+      include: {
+        region: { select: { id: true, name: true } },
+        submissions: { select: { id: true, status: true } },
+      },
+    }),
+  ]);
 
-  const regions = await prisma.region.findMany({
-    orderBy: { name: 'asc' },
-  });
+  const pendingCount = await prisma.organizationSubmission.count({ where: { status: 'PENDING' } });
 
   return (
     <div className="space-y-6">
@@ -33,10 +40,24 @@ export default async function CompaniesPage() {
           <p className="text-muted-foreground">기업, 기관, 센터 정보를 관리하고, 레이더 리포트를 등록합니다.</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/admin/companies/submissions" className="flex items-center gap-2">
+              <ClipboardList className="w-4 h-4" />
+              신청 목록
+              {pendingCount > 0 && (
+                <span className="ml-1 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                  {pendingCount}
+                </span>
+              )}
+            </Link>
+          </Button>
           <CreateOrganizationButton regions={regions} />
           <ImportButton />
         </div>
       </div>
+
+      {/* 초대 링크 관리 패널 */}
+      <InviteLinkPanel regions={regions} invites={invites} />
 
       <Card>
         <CardHeader>
