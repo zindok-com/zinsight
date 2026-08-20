@@ -287,22 +287,6 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
             orderBy: { article: { pub_date: 'desc' as const } },
             take: 10,
         },
-        ingestions: {
-            include: {
-                article: {
-                    select: {
-                        id: true,
-                        title: true,
-                        pub_date: true,
-                        source: true,
-                        link: true,
-                        description: true,
-                    },
-                },
-            },
-            orderBy: { fetched_at: 'desc' as const },
-            take: 10,
-        },
         magazinePosts: {
             where: {
                 magazinePost: {
@@ -351,7 +335,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
 
     if (!company) return null;
 
-    // CompanyArticle 경유 기사
+    // 1. 관리자가 명시적으로 연결한 외부 기사 (CompanyArticle)
     const externalArticles = company.company_articles.map((ca: any) => ({
         id: ca.article.id,
         title: ca.article.title,
@@ -363,21 +347,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         isMagazine: false,
     }));
 
-    // MANUAL_ORG 수집 기사 (ArticleIngestion.organization_id 경유)
-    const orgIngestionArticles = company.ingestions
-        .filter((ing: any) => ing.article)
-        .map((ing: any) => ({
-            id: ing.article.id,
-            title: ing.article.title,
-            pub_date: ing.article.pub_date,
-            source: ing.article.source || 'NAVER_NEWS',
-            url: ing.article.link,
-            summary: ing.article.description,
-            keywords: [],
-            isMagazine: false,
-        }));
-
-    // 매거진 포스트 기사
+    // 2. 자체 매거진 포스트 기사 (MagazinePostOrganization)
     const magazineArticles = company.magazinePosts.map((mp: any) => {
         const post = mp.magazinePost;
         const regionSlug = post.region?.slug || '';
@@ -409,15 +379,14 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         };
     });
 
-    // 중복 제거 후 날짜 정렬 (company_articles와 ingestions 간 중복 가능)
+    // 중복 제거 후 최신순 정렬
     const seenIds = new Set<number>();
-    const allExternal = [...externalArticles, ...orgIngestionArticles].filter((a) => {
-        if (seenIds.has(a.id)) return false;
-        seenIds.add(a.id);
-        return true;
-    });
-
-    const combinedArticles = [...allExternal, ...magazineArticles]
+    const combinedArticles = [...magazineArticles, ...externalArticles]
+        .filter((a) => {
+            if (seenIds.has(a.id)) return false;
+            seenIds.add(a.id);
+            return true;
+        })
         .sort((a, b) => {
             const dateA = a.pub_date ? new Date(a.pub_date).getTime() : 0;
             const dateB = b.pub_date ? new Date(b.pub_date).getTime() : 0;
@@ -442,6 +411,6 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         ceo_name: company.ceo_name,
         key_references: company.key_references,
         backlinks: company.backlinks,
-        latestArticleDate: company.company_articles[0]?.article?.pub_date ?? null,
+        latestArticleDate: combinedArticles[0]?.pub_date ?? null,
     };
 }
