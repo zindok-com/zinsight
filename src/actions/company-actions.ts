@@ -49,6 +49,7 @@ export async function updateCompany(
     });
 
     revalidatePath('/admin/companies');
+    revalidatePath(`/admin/companies/${id}`);
     revalidatePath('/insight-radar');
     return { success: true, company: updatedCompany };
   } catch (error: any) {
@@ -125,6 +126,55 @@ export async function createOrganizationInline(data: {
     return { success: true, organization: newOrg };
   } catch (error: any) {
     console.error('Failed to create inline organization:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function linkArticleToCompany(articleId: number, companyId: number) {
+  try {
+    const existing = await prisma.companyArticle.findFirst({
+      where: {
+        company_id: companyId,
+        article_id: articleId,
+      },
+    });
+
+    if (!existing) {
+      await prisma.companyArticle.create({
+        data: {
+          company_id: companyId,
+          article_id: articleId,
+        },
+      });
+    }
+
+    revalidatePath('/admin/articles');
+    revalidatePath('/admin/companies');
+    revalidatePath(`/admin/companies/${companyId}`);
+    revalidatePath('/insight-radar');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to link article to company:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function unlinkArticleFromCompany(articleId: number, companyId: number) {
+  try {
+    await prisma.companyArticle.deleteMany({
+      where: {
+        company_id: companyId,
+        article_id: articleId,
+      },
+    });
+
+    revalidatePath('/admin/articles');
+    revalidatePath('/admin/companies');
+    revalidatePath(`/admin/companies/${companyId}`);
+    revalidatePath('/insight-radar');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Failed to unlink article from company:', error);
     return { success: false, error: error.message };
   }
 }

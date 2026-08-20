@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 export interface ArticleFilter {
     regionId?: number;
     keywordId?: number;
+    source?: string;
     /** YYYY-MM 형식, 수집일(created_at) 월 필터 */
     createdMonth?: string;
     /** YYYY-MM 형식, 발행일(pub_date) 월 필터 */
@@ -22,15 +23,16 @@ function monthRange(ym: string): { gte: Date; lte: Date } {
 }
 
 export async function getArticles(filter: ArticleFilter) {
-    const { regionId, keywordId, createdMonth, pubMonth, page = 1, pageSize = 50 } = filter;
+    const { regionId, keywordId, source, createdMonth, pubMonth, page = 1, pageSize = 50 } = filter;
 
     const ingestionFilter: any = {
         ...(regionId ? { region_id: regionId } : {}),
         ...(keywordId ? { keyword_id: keywordId } : {}),
+        ...(source ? { source } : {}),
     };
 
     const where: any = {
-        ...(regionId || keywordId
+        ...(regionId || keywordId || source
             ? { ingestions: { some: ingestionFilter } }
             : {}),
         ...(createdMonth ? { created_at: monthRange(createdMonth) } : {}),
@@ -42,10 +44,18 @@ export async function getArticles(filter: ArticleFilter) {
             where,
             include: {
                 ingestions: {
-                    where: ingestionFilter,
-                    include: { keyword: { select: { id: true, keyword_text: true } } },
-                    take: 1,
+                    where: (regionId || keywordId || source) ? ingestionFilter : undefined,
+                    include: {
+                        keyword: { select: { id: true, keyword_text: true } },
+                        organization: { select: { id: true, company_name: true } },
+                    },
+                    take: 5,
                 },
+                company_articles: {
+                    include: {
+                        company: { select: { id: true, company_name: true } }
+                    }
+                }
             },
             orderBy: { created_at: 'desc' },
             skip: (page - 1) * pageSize,
@@ -118,5 +128,38 @@ export async function deleteArticlesByDate(dateString: string, regionId?: number
     } catch (err) {
         console.error('[deleteArticlesByDate]', err);
         return { success: false, deletedCount: 0, message: '삭제 중 오류가 발생했습니다.' };
+    }
+}
+
+export async function searchArticlesByTitle(query: string) {
+    if (!query || query.trim().length === 0) {
+        return [];
+    }
+
+    try {
+        const cleanQuery = query.trim();
+        const articles = await prisma.article.findMany({
+            where: {
+                OR: [
+                    { title: { contains: cleanQuery } },
+                    { description: { contains: cleanQuery } }
+                ]
+            },
+            select: {
+                id: true,
+                title: true,
+                pub_date: true,
+                source: true,
+                link: true,
+                canonical_link: true,
+            },
+            orderBy: { pub_date: 'desc' },
+            take: 20,
+        });
+
+        return articles;
+    } catch (err) {
+        console.error('[searchArticlesByTitle]', err);
+        return [];
     }
 }
