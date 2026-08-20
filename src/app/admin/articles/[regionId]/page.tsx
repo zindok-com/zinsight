@@ -7,6 +7,7 @@ import { getRegionById } from '@/actions/admin/region-actions';
 import { getKeywords } from '@/actions/keyword-actions';
 import { getArticles, deleteArticlesByDate } from '@/actions/article-actions';
 import { ingestByRegion, ingestByKeyword, type IngestReport } from '@/actions/ingest-actions';
+import { searchOrganizations, linkArticleToCompany, unlinkArticleFromCompany } from '@/actions/company-actions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -73,8 +74,14 @@ function IngestReportPanel({ report }: { report: IngestReport }) {
 }
 
 // ─── 기사 상세 Drawer ─────────────────────────────────────────────────────────
-function ArticleDrawer({ article, onClose }: { article: ArticleItem; onClose: () => void }) {
+function ArticleDrawer({ article, onClose, onRefresh }: { article: ArticleItem; onClose: () => void; onRefresh: () => void }) {
     const [showRaw, setShowRaw] = useState(false);
+    const [orgSearch, setOrgSearch] = useState('');
+    const [orgResults, setOrgResults] = useState<Array<{ id: number; company_name: string }>>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [linkedOrgs, setLinkedOrgs] = useState<Array<{ id: number; company_name: string }>>(() => {
+        return article.company_articles?.map((ca: any) => ca.company).filter(Boolean) || [];
+    });
 
     // ESC 키로 닫기
     useEffect(() => {
@@ -82,6 +89,47 @@ function ArticleDrawer({ article, onClose }: { article: ArticleItem; onClose: ()
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
     }, [onClose]);
+
+    const handleSearchOrg = async (query: string) => {
+        setOrgSearch(query);
+        if (!query.trim()) {
+            setOrgResults([]);
+            return;
+        }
+        setIsSearching(true);
+        try {
+            const results = await searchOrganizations(query);
+            setOrgResults(results);
+        } catch {
+            setOrgResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
+    const handleLinkOrg = async (orgId: number, orgName: string) => {
+        const res = await linkArticleToCompany(article.id, orgId);
+        if (res.success) {
+            toast.success(`"${orgName}" 조직 연관 기사로 연결되었습니다.`);
+            setLinkedOrgs(prev => [...prev.filter(o => o.id !== orgId), { id: orgId, company_name: orgName }]);
+            setOrgSearch('');
+            setOrgResults([]);
+            onRefresh();
+        } else {
+            toast.error('연결 실패: ' + res.error);
+        }
+    };
+
+    const handleUnlinkOrg = async (orgId: number, orgName: string) => {
+        const res = await unlinkArticleFromCompany(article.id, orgId);
+        if (res.success) {
+            toast.success(`"${orgName}" 연결이 해제되었습니다.`);
+            setLinkedOrgs(prev => prev.filter(o => o.id !== orgId));
+            onRefresh();
+        } else {
+            toast.error('해제 실패: ' + res.error);
+        }
+    };
 
     const ingestion = article.ingestions[0];
 
@@ -114,8 +162,22 @@ function ArticleDrawer({ article, onClose }: { article: ArticleItem; onClose: ()
                     {/* 메타 정보 */}
                     <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                            <p className="text-xs text-muted-foreground mb-0.5">키워드</p>
-                            <p className="font-medium">{ingestion?.keyword?.keyword_text ?? '—'}</p>
+                            <p className="text-xs text-muted-foreground mb-0.5">수집 출처 / 방식</p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                {ingestion?.source === 'MANUAL_ORG' ? (
+                                    <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100 font-bold">조직 기반 수집</Badge>
+                                ) : (
+                                    <Badge variant="outline">키워드 크롤링</Badge>
+                                )}
+                                {ingestion?.keyword?.keyword_text && (
+                                    <span className="text-xs font-semibold text-blue-600">#{ingestion.keyword.keyword_text}</span>
+                                )}
+                                {(ingestion?.organization?.company_name || linkedOrgs[0]?.company_name) && (
+                                    <span className="text-xs font-bold text-indigo-600">
+                                        🏢 {ingestion?.organization?.company_name || linkedOrgs[0]?.company_name}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div>
                             <p className="text-xs text-muted-foreground mb-0.5">중복 여부</p>
@@ -137,6 +199,62 @@ function ArticleDrawer({ article, onClose }: { article: ArticleItem; onClose: ()
                                 <p>{new Date(article.pub_date).toLocaleString('ko-KR')}</p>
                             </div>
                         )}
+                    </div>
+
+                    {/* ─── 조직 연관 기사 연결 섹션 ─── */}
+                    <div className="space-y-3 border-t pt-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">조직 연관 기사 연결</p>
+                            <span className="text-[11px] text-muted-foreground">프로필에 연관기사로 노출될 조직 선택</span>
+                        </div>
+
+                        {/* 연결된 조직 목록 */}
+                        <div className="flex flex-wrap gap-2">
+                            {linkedOrgs.length > 0 ? (
+                                linkedOrgs.map(org => (
+                                    <span key={org.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
+                                        🏢 {org.company_name}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleUnlinkOrg(org.id, org.company_name)}
+                                            className="text-indigo-400 hover:text-red-500 font-bold ml-0.5 transition-colors"
+                                            title="연결 해제"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </span>
+                                ))
+                            ) : (
+                                <p className="text-xs text-slate-400 italic">연결된 수기 조직이 없습니다.</p>
+                            )}
+                        </div>
+
+                        {/* 조직 검색 입력 */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="조직(회사) 이름으로 검색하여 연관 기사에 연결..."
+                                value={orgSearch}
+                                onChange={e => handleSearchOrg(e.target.value)}
+                                className="w-full text-xs border rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            />
+                            {isSearching && <Loader2 className="w-3.5 h-3.5 animate-spin absolute right-3 top-2.5 text-slate-400" />}
+                            {orgResults.length > 0 && (
+                                <div className="absolute left-0 right-0 top-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto z-20 divide-y">
+                                    {orgResults.map(org => (
+                                        <button
+                                            key={org.id}
+                                            type="button"
+                                            onClick={() => handleLinkOrg(org.id, org.company_name)}
+                                            className="w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center justify-between text-slate-700 font-medium"
+                                        >
+                                            <span>🏢 {org.company_name}</span>
+                                            <span className="text-[10px] text-indigo-600 font-bold bg-indigo-100 px-1.5 py-0.5 rounded">+ 연결</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* 본문 요약 */}
@@ -222,6 +340,7 @@ export default function ArticlesByRegionPage() {
     const [initialLoading, setInitialLoading] = useState(true);
     const [keywords, setKeywords] = useState<Keyword[]>([]);
     const [selectedKeywordId, setSelectedKeywordId] = useState<number | ''>('');
+    const [selectedSource, setSelectedSource] = useState<string>('');
     const [createdMonth, setCreatedMonth] = useState('');
     const [pubMonth, setPubMonth] = useState('');
     const [articleData, setArticleData] = useState<ArticlePage | null>(null);
@@ -273,6 +392,7 @@ export default function ArticlesByRegionPage() {
             const data = await getArticles({
                 regionId: region.id,
                 keywordId: selectedKeywordId ? Number(selectedKeywordId) : undefined,
+                source: selectedSource || undefined,
                 createdMonth: createdMonth || undefined,
                 pubMonth: pubMonth || undefined,
                 page: p,
@@ -286,7 +406,7 @@ export default function ArticlesByRegionPage() {
         } finally {
             setLoadingArticles(false);
         }
-    }, [region, selectedKeywordId, createdMonth, pubMonth]);
+    }, [region, selectedKeywordId, selectedSource, createdMonth, pubMonth]);
 
     useEffect(() => {
         if (region) loadArticles(1);
@@ -436,7 +556,19 @@ export default function ArticlesByRegionPage() {
                         <CardTitle className="text-sm">필터 및 수집</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground">수집 방식</label>
+                                <select
+                                    className="mt-1 w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-slate-400"
+                                    value={selectedSource}
+                                    onChange={e => setSelectedSource(e.target.value)}
+                                >
+                                    <option value="">전체 수집 방식</option>
+                                    <option value="REGION_CRAWL">키워드 크롤링 (REGION_CRAWL)</option>
+                                    <option value="MANUAL_ORG">조직 기반 수집 (MANUAL_ORG)</option>
+                                </select>
+                            </div>
                             <div>
                                 <label className="text-xs font-medium text-muted-foreground">키워드</label>
                                 <select
@@ -525,8 +657,8 @@ export default function ArticlesByRegionPage() {
                                 {/* table-fixed + 명시적 컬럼 비율 */}
                                 <table className="w-full text-sm table-fixed">
                                     <colgroup>
-                                        <col style={{ width: '60%' }} />
-                                        <col style={{ width: '13%' }} />
+                                        <col style={{ width: '55%' }} />
+                                        <col style={{ width: '18%' }} />
                                         <col style={{ width: '10%' }} />
                                         <col style={{ width: '10%' }} />
                                         <col style={{ width: '7%' }} />
@@ -534,7 +666,7 @@ export default function ArticlesByRegionPage() {
                                     <thead>
                                         <tr className="border-b text-xs text-muted-foreground">
                                             <th className="text-left py-2 pr-3 font-medium">제목</th>
-                                            <th className="text-left py-2 pr-3 font-medium">키워드</th>
+                                            <th className="text-left py-2 pr-3 font-medium">키워드 / 수집 출처</th>
                                             <th className="text-left py-2 pr-3 font-medium">수집일</th>
                                             <th className="text-left py-2 pr-3 font-medium">발행일</th>
                                             <th className="text-center py-2 font-medium">중복</th>
@@ -547,20 +679,37 @@ export default function ArticlesByRegionPage() {
                                                 className="border-b last:border-0 hover:bg-slate-50 cursor-pointer transition-colors"
                                                 onClick={() => setDrawerArticle(a)}
                                             >
-                                                {/* 제목 컬럼 — 60% */}
+                                                {/* 제목 컬럼 — 55% */}
                                                 <td className="py-2 pr-3">
                                                     <p className="font-medium line-clamp-1 text-slate-800">{a.title}</p>
                                                     {a.description && (
                                                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{a.description}</p>
                                                     )}
                                                 </td>
-                                                {/* 키워드 */}
+                                                {/* 키워드 / 수집 출처 */}
                                                 <td className="py-2 pr-3">
-                                                    {a.ingestions[0]?.keyword?.keyword_text && (
-                                                        <Badge variant="outline" className="text-xs max-w-full truncate block w-fit">
-                                                            {a.ingestions[0].keyword.keyword_text}
-                                                        </Badge>
-                                                    )}
+                                                    {(() => {
+                                                        const ing = a.ingestions[0];
+                                                        const orgName = ing?.organization?.company_name || a.company_articles?.[0]?.company?.company_name;
+
+                                                        if (ing?.source === 'MANUAL_ORG' || orgName) {
+                                                            return (
+                                                                <Badge className="text-xs max-w-full truncate block w-fit bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
+                                                                    🏢 {orgName || '조직 수집'}
+                                                                </Badge>
+                                                            );
+                                                        }
+
+                                                        if (ing?.keyword?.keyword_text) {
+                                                            return (
+                                                                <Badge variant="outline" className="text-xs max-w-full truncate block w-fit border-blue-200 bg-blue-50 text-blue-700">
+                                                                    #{ing.keyword.keyword_text}
+                                                                </Badge>
+                                                            );
+                                                        }
+
+                                                        return <span className="text-xs text-slate-400">—</span>;
+                                                    })()}
                                                 </td>
                                                 {/* 수집일 */}
                                                 <td className="py-2 pr-3 text-xs text-muted-foreground whitespace-nowrap">
@@ -600,6 +749,7 @@ export default function ArticlesByRegionPage() {
                 <ArticleDrawer
                     article={drawerArticle}
                     onClose={() => setDrawerArticle(null)}
+                    onRefresh={() => loadArticles(page)}
                 />
             )}
 

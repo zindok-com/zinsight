@@ -241,7 +241,7 @@ export async function ingestByRegion(regionId: number, display: number = 10, sor
 export async function ingestByOrganization(
     organizationId: number,
     display: number = 10,
-    sort: 'sim' | 'date' = 'date'
+    sort: 'sim' | 'date' = 'sim'
 ): Promise<IngestReport> {
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };

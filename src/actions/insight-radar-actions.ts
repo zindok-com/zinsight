@@ -269,73 +269,85 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
     const numericId = isNum ? Number(companyIdOrSlug) : -1;
     const stringSlug = String(companyIdOrSlug);
 
-    const company = await prisma.organization.findFirst({
-        where: {
-            OR: [
-                ...(isNum ? [{ id: numericId }] : []),
-                { slug: stringSlug },
-            ],
+    const commonInclude = {
+        region: { select: { id: true, name: true, slug: true } },
+        company_articles: {
+            include: {
+                article: {
+                    select: {
+                        id: true,
+                        title: true,
+                        pub_date: true,
+                        source: true,
+                        link: true,
+                        description: true,
+                    },
+                },
+            },
+            orderBy: { article: { pub_date: 'desc' as const } },
+            take: 10,
         },
-        include: {
-            region: { select: { id: true, name: true, slug: true } },
-            company_articles: {
-                include: {
-                    article: {
-                        select: {
-                            id: true,
-                            title: true,
-                            pub_date: true,
-                            source: true,
-                            link: true,
-                            description: true,
-                        },
+        ingestions: {
+            include: {
+                article: {
+                    select: {
+                        id: true,
+                        title: true,
+                        pub_date: true,
+                        source: true,
+                        link: true,
+                        description: true,
                     },
                 },
-                orderBy: { article: { pub_date: 'desc' } },
-                take: 10,
             },
-            ingestions: {
-                include: {
-                    article: {
-                        select: {
-                            id: true,
-                            title: true,
-                            pub_date: true,
-                            source: true,
-                            link: true,
-                            description: true,
-                        },
-                    },
+            orderBy: { fetched_at: 'desc' as const },
+            take: 10,
+        },
+        magazinePosts: {
+            where: {
+                magazinePost: {
+                    status: 'PUBLISHED' as const,
+                    deletedAt: null,
                 },
-                orderBy: { fetched_at: 'desc' },
-                take: 10,
             },
-            magazinePosts: {
-                where: {
-                    magazinePost: {
-                        status: 'PUBLISHED',
-                        deletedAt: null,
+            include: {
+                magazinePost: {
+                    include: {
+                        category: true,
+                        region: true,
                     },
                 },
-                include: {
-                    magazinePost: {
-                        include: {
-                            category: true,
-                            region: true,
-                        },
-                    },
-                },
-                orderBy: { magazinePost: { createdAt: 'desc' } },
-                take: 10,
             },
-            _count: {
-                select: {
-                    company_articles: true,
-                    magazinePosts: true,
-                },
+            orderBy: { magazinePost: { createdAt: 'desc' as const } },
+            take: 10,
+        },
+        _count: {
+            select: {
+                company_articles: true,
+                magazinePosts: true,
             },
         },
-    });
+    };
+
+    let company: any = null;
+    try {
+        company = await prisma.organization.findFirst({
+            where: {
+                OR: [
+                    ...(isNum ? [{ id: numericId }] : []),
+                    { slug: stringSlug },
+                ],
+            },
+            include: commonInclude,
+        });
+    } catch {
+        if (isNum) {
+            company = await prisma.organization.findUnique({
+                where: { id: numericId },
+                include: commonInclude,
+            });
+        }
+    }
 
     if (!company) return null;
 
