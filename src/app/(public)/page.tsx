@@ -131,10 +131,10 @@ export default async function PublicHomePage() {
                     {/* 핵심 서브타이틀 배지 */}
                     <div className="mb-5 sm:mb-8 flex flex-wrap justify-center gap-2">
                         <span className="inline-flex items-center rounded-full bg-zi-secondary/10 px-3.5 py-1 text-[11px] font-bold text-zi-secondary uppercase tracking-wider border border-zi-secondary/20">
-                            [차세대 마케팅 리서치]
+                            [지역 밀착형 마케팅 리서치]
                         </span>
                         <span className="inline-flex items-center rounded-full bg-zi-blue/10 px-3.5 py-1 text-[11px] font-bold text-zi-blue uppercase tracking-wider border border-zi-blue/20">
-                            [AI 검색 최적화 (GEO)]
+                            [AI 검색 최적화 (AEO·SEO·GEO)]
                         </span>
                     </div>
 
@@ -143,7 +143,7 @@ export default async function PublicHomePage() {
                         미래를 여는 데이터, <br className="hidden sm:inline" /> AI 시대를 선도하는 마케팅 분석.
                     </h1>
                     <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant max-w-3xl mx-auto mb-8 sm:mb-12 break-keep">
-                        진사이트(Zinsight)는 심층적인 산업 리서치와 차세대 검색 최적화(GEO/SEO) 트렌드를 결합하여 <br className="hidden sm:inline" /> 프리미엄 테크니컬 마케팅 통찰력을 제공합니다.
+                        진사이트(Zinsight)는 관내 기업 리서치와 차세대 검색 최적화(AEO·SEO·GEO) 트렌드를 <br className="hidden sm:inline" /> 결합하여, 지역 기업을 위한 프리미엄 마케팅 통찰력을 제공합니다.
                     </p>
 
                     {/* 통합 검색바 (인사이트 레이더 이동 버튼으로 사용되던 부분 주석 처리) */}
@@ -216,8 +216,8 @@ export default async function PublicHomePage() {
                             인사이트 레이더 현황
                         </h2>
                         <p className="mx-auto max-w-2xl text-zi-body-md text-slate-400 break-keep">
-                            Zinsight의 AI 분석 엔진이 식별한 전략 산업군 및 비즈니스 카테고리별 핵심 기업과 <br className="hidden sm:inline" />
-                            기술 인사이트를 실시간으로 모니터링합니다.
+                            Zinsight의 AI 분석 엔진이 식별한 관내 핵심 기업의 최신 동향과 성장 인사이트를 <br className="hidden sm:inline" />
+                            실시간으로 모니터링합니다.
                         </p>
                     </div>
 
