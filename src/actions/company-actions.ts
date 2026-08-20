@@ -179,3 +179,163 @@ export async function unlinkArticleFromCompany(articleId: number, companyId: num
   }
 }
 
+// ─── 조직 등록 초대 링크 생성 ──────────────────────────────────────
+export async function createOrganizationInvite(data: {
+  region_id: number;
+  label?: string;
+}) {
+  const { randomUUID } = await import('crypto');
+  const token = randomUUID().replace(/-/g, '');
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일 후
+
+  const invite = await prisma.organizationInvite.create({
+    data: {
+      token,
+      region_id: data.region_id,
+      label: data.label ?? null,
+      expires_at: expiresAt,
+    },
+  });
+
+  revalidatePath('/admin/companies');
+  return { success: true, invite };
+}
+
+export async function getOrganizationInvites() {
+  return prisma.organizationInvite.findMany({
+    orderBy: { created_at: 'desc' },
+    include: {
+      region: { select: { id: true, name: true } },
+      submissions: { select: { id: true, status: true } },
+    },
+  });
+}
+
+// ─── 공개 폼: 초대 토큰 유효성 확인 ──────────────────────────────────
+export async function getInviteByToken(token: string) {
+  const invite = await prisma.organizationInvite.findUnique({
+    where: { token },
+    include: { region: { select: { id: true, name: true } } },
+  });
+  if (!invite) return { valid: false as const, reason: 'NOT_FOUND' as const };
+  if (invite.used_at) return { valid: false as const, reason: 'USED' as const };
+  if (invite.expires_at < new Date()) return { valid: false as const, reason: 'EXPIRED' as const };
+  return { valid: true as const, invite };
+}
+
+// ─── 공개 폼: 고객 신청서 제출 ────────────────────────────────────────
+export async function submitOrganizationForm(
+  token: string,
+  formData: {
+    company_name: string;
+    entity_type: string;
+    ceo_name?: string;
+    founded_year?: string;
+    hq_location?: string;
+    company_url?: string;
+    business_summary?: string;
+    backlinks?: Array<{ title: string; url: string }>;
+    core_keywords?: string[];
+  }
+) {
+  const check = await getInviteByToken(token);
+  if (!check.valid) {
+    return { success: false, reason: check.reason };
+  }
+
+  await prisma.$transaction([
+    prisma.organizationSubmission.create({
+      data: {
+        invite_id: check.invite.id,
+        company_name: formData.company_name,
+        entity_type: formData.entity_type,
+        ceo_name: formData.ceo_name ?? null,
+        founded_year: formData.founded_year ?? null,
+        hq_location: formData.hq_location ?? null,
+        company_url: formData.company_url ?? null,
+        business_summary: formData.business_summary ?? null,
+        backlinks: formData.backlinks ?? [],
+        core_keywords: formData.core_keywords ?? [],
+      },
+    }),
+    prisma.organizationInvite.update({
+      where: { id: check.invite.id },
+      data: { used_at: new Date() },
+    }),
+  ]);
+
+  return { success: true };
+}
+
+// ─── 어드민: 신청 목록 조회 ───────────────────────────────────────────
+export async function getOrganizationSubmissions(status?: string) {
+  return prisma.organizationSubmission.findMany({
+    where: status ? { status } : undefined,
+    orderBy: { created_at: 'desc' },
+    include: {
+      invite: { include: { region: { select: { id: true, name: true } } } },
+    },
+  });
+}
+
+// ─── 어드민: 신청 승인 → 조직(companies) 등록 ──────────────────────
+export async function approveOrganizationSubmission(submissionId: number) {
+  const submission = await prisma.organizationSubmission.findUnique({
+    where: { id: submissionId },
+    include: { invite: { include: { region: true } } },
+  });
+  if (!submission) return { success: false, error: '신청서를 찾을 수 없습니다.' };
+  if (submission.status !== 'PENDING') return { success: false, error: '이미 처리된 신청서입니다.' };
+
+  const slugBase = submission.company_name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9\-가-힣]/g, '');
+
+  await prisma.$transaction([
+    prisma.organization.create({
+      data: {
+        company_name: submission.company_name,
+        slug: slugBase,
+        entity_type: submission.entity_type,
+        ceo_name: submission.ceo_name,
+        founded_year: submission.founded_year,
+        hq_location: submission.hq_location,
+        company_url: submission.company_url,
+        business_summary: submission.business_summary,
+        backlinks: submission.backlinks ?? [],
+        core_keywords: submission.core_keywords ?? [],
+        region_id: submission.invite.region_id,
+      },
+    }),
+    prisma.organizationSubmission.update({
+      where: { id: submissionId },
+      data: { status: 'APPROVED', reviewed_at: new Date() },
+    }),
+  ]);
+
+  revalidatePath('/admin/companies');
+  revalidatePath('/admin/companies/submissions');
+  revalidatePath('/insight-radar');
+  return { success: true };
+}
+
+// ─── 어드민: 신청 반려 ───────────────────────────────────────────────
+export async function rejectOrganizationSubmission(submissionId: number) {
+  await prisma.organizationSubmission.update({
+    where: { id: submissionId },
+    data: { status: 'REJECTED', reviewed_at: new Date() },
+  });
+  revalidatePath('/admin/companies/submissions');
+  return { success: true };
+}
+
+// ─── 어드민: 초대 링크 무효화 ─────────────────────────────────────────
+export async function revokeOrganizationInvite(inviteId: number) {
+  await prisma.organizationInvite.update({
+    where: { id: inviteId },
+    data: { used_at: new Date() },
+  });
+  revalidatePath('/admin/companies');
+  return { success: true };
+}

@@ -103,6 +103,46 @@ model Organization {
   @@map("companies")
 }
 
+// ─── 조직 등록 초대 링크 ──────────────────────────────────────────
+model OrganizationInvite {
+  id         Int       @id @default(autoincrement())
+  token      String    @unique @db.VarChar(64)
+  region_id  Int
+  label      String?   @db.VarChar(255)     // 어드민 식별용 메모
+  used_at    DateTime?                       // 제출 완료 시각 (null=미사용)
+  expires_at DateTime
+  created_at DateTime  @default(now())
+
+  region      Region                  @relation(fields: [region_id], references: [id])
+  submissions OrganizationSubmission[]
+
+  @@map("organization_invites")
+}
+
+// ─── 고객 제출 조직 신청서 ────────────────────────────────────────
+model OrganizationSubmission {
+  id               Int       @id @default(autoincrement())
+  invite_id        Int
+  company_name     String    @db.VarChar(255)
+  entity_type      String    @default("기업") @db.VarChar(50)
+  ceo_name         String?   @db.VarChar(100)
+  founded_year     String?   @db.VarChar(10)
+  hq_location      String?   @db.VarChar(255)
+  company_url      String?   @db.VarChar(255)
+  business_summary String?   @db.Text
+  backlinks        Json?
+  core_keywords    Json?
+  status           String    @default("PENDING") @db.VarChar(20) // PENDING / APPROVED / REJECTED
+  reviewed_at      DateTime?
+  created_at       DateTime  @default(now())
+
+  invite OrganizationInvite @relation(fields: [invite_id], references: [id])
+
+  @@index([invite_id])
+  @@index([status])
+  @@map("organization_submissions")
+}
+
 // ─── 조직-기사 직접 연결 ─────────────────────────────────────────────
 model CompanyArticle {
   id         Int      @id @default(autoincrement())
@@ -292,6 +332,7 @@ model Region {
   organizations Organization[]
   keywords      SearchKeyword[]
   ingestions    ArticleIngestion[]
+  invites       OrganizationInvite[]
 
   @@map("regions")
 }
