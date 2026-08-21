@@ -330,26 +330,6 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             </div>
                         </div>
                     </div>
-
-                    {/* Recent Keywords */}
-                    <div className="mt-6 border border-blue-100 bg-blue-50/50 p-6 rounded-xl">
-                        <h4 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 flex items-center gap-1.5">
-                            <Zap className="h-4 w-4" /> 최근 전략 키워드
-                        </h4>
-                        <div className="flex flex-col gap-4">
-                            <div className="flex flex-wrap gap-2">
-                                {company.core_keywords && Array.isArray((company.core_keywords as any).recent_keywords) && (company.core_keywords as any).recent_keywords.length > 0 ? (
-                                    ((company.core_keywords as any).recent_keywords as string[]).map((rk, i) => (
-                                        <span key={i} className="px-3 py-1 bg-white text-blue-700 rounded-full text-sm font-bold border border-blue-200 shadow-sm">
-                                            {rk}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <span className="text-sm text-slate-500 italic">최근 키워드 데이터가 없습니다.</span>
-                                )}
-                            </div>
-                        </div>
-                    </div>
                 </section>
 
                 {/* ─────────────────────────────── */}
