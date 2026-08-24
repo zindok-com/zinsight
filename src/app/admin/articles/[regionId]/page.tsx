@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { getRegionById } from '@/actions/admin/region-actions';
@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
     RefreshCw, Download, ArrowLeft, Loader2,
-    CheckCircle, AlertTriangle, ExternalLink, X, FileJson, Trash2
+    CheckCircle, AlertTriangle, ExternalLink, X, FileJson, Trash2, Search
 } from 'lucide-react';
 
 // Awaited type for Region is needed, we can define it directly
@@ -362,6 +362,7 @@ export default function ArticlesByRegionPage() {
         return `${yyyy}-${mm}-${dd}`;
     });
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [titleSearch, setTitleSearch] = useState('');
 
     useEffect(() => {
         if (!regionId || isNaN(regionId)) {
@@ -411,6 +412,14 @@ export default function ArticlesByRegionPage() {
     useEffect(() => {
         if (region) loadArticles(1);
     }, [region, loadArticles]);
+
+    const filteredArticles = useMemo(() => {
+        if (!articleData) return [];
+        if (!titleSearch.trim()) return articleData.articles;
+        return articleData.articles.filter(a =>
+            a.title.toLowerCase().includes(titleSearch.toLowerCase())
+        );
+    }, [articleData, titleSearch]);
 
     function openConfirmModal(type: 'region' | 'keyword') {
         if (type === 'keyword' && !selectedKeywordId) {
@@ -552,27 +561,25 @@ export default function ArticlesByRegionPage() {
 
                 {/* 필터 + 수집 패널 */}
                 <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-sm">필터 및 수집</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <CardContent className="pt-5 space-y-4">
+                        {/* 필터 행 */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">수집 방식</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">수집 방식</label>
                                 <select
-                                    className="mt-1 w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-slate-400"
+                                    className="w-full border rounded-md px-2.5 py-1.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     value={selectedSource}
                                     onChange={e => setSelectedSource(e.target.value)}
                                 >
-                                    <option value="">전체 수집 방식</option>
-                                    <option value="REGION_CRAWL">키워드 크롤링 (REGION_CRAWL)</option>
-                                    <option value="MANUAL_ORG">조직 기반 수집 (MANUAL_ORG)</option>
+                                    <option value="">전체</option>
+                                    <option value="REGION_CRAWL">키워드 크롤링</option>
+                                    <option value="MANUAL_ORG">조직 기반 수집</option>
                                 </select>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">키워드</label>
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">키워드</label>
                                 <select
-                                    className="mt-1 w-full border rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-slate-400"
+                                    className="w-full border rounded-md px-2.5 py-1.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-blue-400"
                                     value={selectedKeywordId}
                                     onChange={e => setSelectedKeywordId(e.target.value ? Number(e.target.value) : '')}
                                 >
@@ -583,45 +590,55 @@ export default function ArticlesByRegionPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">수집일</label>
-                                <input
-                                    type="month"
-                                    className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                    value={createdMonth}
-                                    onChange={e => setCreatedMonth(e.target.value)}
-                                />
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">수집일 (월)</label>
+                                <input type="month"
+                                    className="w-full border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    value={createdMonth} onChange={e => setCreatedMonth(e.target.value)} />
                             </div>
                             <div>
-                                <label className="text-xs font-medium text-muted-foreground">발행일</label>
-                                <input
-                                    type="month"
-                                    className="mt-1 w-full border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
-                                    value={pubMonth}
-                                    onChange={e => setPubMonth(e.target.value)}
-                                />
+                                <label className="text-xs font-medium text-muted-foreground block mb-1">발행일 (월)</label>
+                                <input type="month"
+                                    className="w-full border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    value={pubMonth} onChange={e => setPubMonth(e.target.value)} />
                             </div>
                         </div>
-                        <div className="flex flex-wrap gap-2">
-                            <Button onClick={() => loadArticles(1)} variant="outline" disabled={loadingArticles}>
-                                <RefreshCw className={`h-4 w-4 mr-1 ${loadingArticles ? 'animate-spin' : ''}`} />
+
+                        {/* 액션 행 */}
+                        <div className="flex flex-wrap items-center gap-2 pt-1 border-t">
+                            {/* 조회 */}
+                            <Button onClick={() => loadArticles(1)} variant="outline" size="sm" disabled={loadingArticles} className="gap-1.5">
+                                <RefreshCw className={`h-3.5 w-3.5 ${loadingArticles ? 'animate-spin' : ''}`} />
                                 조회
                             </Button>
-                            <Button onClick={() => openConfirmModal('region')} disabled={ingestLoading} className="bg-blue-600 hover:bg-blue-700 text-white">
-                                {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-                                지역 단위 수집
+
+                            <div className="h-5 w-px bg-slate-200" />
+
+                            {/* 수집 */}
+                            <Button onClick={() => openConfirmModal('region')} disabled={ingestLoading} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5">
+                                {ingestLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                                지역 전체 수집
                             </Button>
-                            <Button onClick={() => openConfirmModal('keyword')} disabled={ingestLoading || !selectedKeywordId} variant="outline">
-                                {ingestLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />}
-                                키워드 단위 수집
+                            <Button onClick={() => openConfirmModal('keyword')} disabled={ingestLoading || !selectedKeywordId} size="sm" variant="outline" className="gap-1.5">
+                                {ingestLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                                키워드 수집
+                                {!selectedKeywordId && <span className="text-[10px] text-slate-400">(키워드 선택 필요)</span>}
                             </Button>
-                            <Button onClick={() => setIsDeleteModalOpen(true)} variant="destructive">
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                수집일 기준 삭제
-                            </Button>
-                            <Button onClick={handleExportJson} variant="outline">
-                                <Download className="h-4 w-4 mr-1" />
+
+                            <div className="h-5 w-px bg-slate-200" />
+
+                            {/* Export */}
+                            <Button onClick={handleExportJson} variant="ghost" size="sm" className="gap-1.5 text-slate-600">
+                                <Download className="h-3.5 w-3.5" />
                                 JSON Export
                             </Button>
+
+                            {/* 삭제 — 우측 정렬 */}
+                            <div className="ml-auto">
+                                <Button onClick={() => setIsDeleteModalOpen(true)} variant="ghost" size="sm" className="gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50">
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    수집일 기준 삭제
+                                </Button>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
@@ -632,15 +649,28 @@ export default function ArticlesByRegionPage() {
                 {/* ─── 기사 테이블 ─── */}
                 <Card>
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-sm flex items-center justify-between">
-                            <span>기사 목록</span>
-                            {articleData && (
-                                <span className="text-muted-foreground font-normal text-xs">
-                                    총 {articleData.total.toLocaleString()}건 ({articleData.totalPages}페이지)
-                                    <span className="ml-2 text-slate-400">· 행 클릭 시 상세 보기</span>
-                                </span>
-                            )}
-                        </CardTitle>
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                                <CardTitle className="text-sm">기사 목록</CardTitle>
+                                {articleData && (
+                                    <span className="text-xs text-muted-foreground">
+                                        총 <strong>{articleData.total.toLocaleString()}</strong>건
+                                        {titleSearch && ` · 검색 결과 ${filteredArticles.length}건`}
+                                    </span>
+                                )}
+                            </div>
+                            {/* 제목 검색 */}
+                            <div className="relative w-56">
+                                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    placeholder="제목 검색 (로컬)..."
+                                    value={titleSearch}
+                                    onChange={e => setTitleSearch(e.target.value)}
+                                    className="w-full pl-7 pr-3 py-1.5 text-xs border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                />
+                            </div>
+                        </div>
                     </CardHeader>
                     <CardContent>
                         {loadingArticles ? (
@@ -648,13 +678,12 @@ export default function ArticlesByRegionPage() {
                                 <Loader2 className="h-6 w-6 animate-spin" />
                                 불러오는 중...
                             </div>
-                        ) : articleData && articleData.articles.length === 0 ? (
-                            <div className="py-12 text-center text-muted-foreground">
-                                기사가 없습니다. 수집 버튼을 눌러 기사를 가져오세요.
+                        ) : filteredArticles.length === 0 ? (
+                            <div className="py-12 text-center text-muted-foreground text-sm">
+                                {titleSearch ? '검색 결과가 없습니다.' : '기사가 없습니다. 수집 버튼을 눌러 기사를 가져오세요.'}
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
-                                {/* table-fixed + 명시적 컬럼 비율 */}
                                 <table className="w-full text-sm table-fixed">
                                     <colgroup>
                                         <col style={{ width: '55%' }} />
@@ -664,47 +693,47 @@ export default function ArticlesByRegionPage() {
                                         <col style={{ width: '7%' }} />
                                     </colgroup>
                                     <thead>
-                                        <tr className="border-b text-xs text-muted-foreground">
-                                            <th className="text-left py-2 pr-3 font-medium">제목</th>
-                                            <th className="text-left py-2 pr-3 font-medium">키워드 / 수집 출처</th>
-                                            <th className="text-left py-2 pr-3 font-medium">수집일</th>
-                                            <th className="text-left py-2 pr-3 font-medium">발행일</th>
-                                            <th className="text-center py-2 font-medium">중복</th>
+                                        <tr className="border-b bg-slate-50 text-xs text-muted-foreground font-medium">
+                                            <th className="text-left py-2.5 px-3">제목</th>
+                                            <th className="text-left py-2.5 px-3">키워드 / 출처</th>
+                                            <th className="text-left py-2.5 px-3">수집일</th>
+                                            <th className="text-left py-2.5 px-3">발행일</th>
+                                            <th className="text-center py-2.5 px-3">중복</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {articleData?.articles.map((a: ArticleItem) => (
+                                    <tbody className="divide-y">
+                                        {filteredArticles.map((a: ArticleItem) => (
                                             <tr
                                                 key={a.id}
-                                                className="border-b last:border-0 hover:bg-slate-50 cursor-pointer transition-colors"
+                                                className="hover:bg-slate-50/70 cursor-pointer transition-colors"
                                                 onClick={() => setDrawerArticle(a)}
                                             >
-                                                {/* 제목 컬럼 — 55% */}
-                                                <td className="py-2 pr-3">
-                                                    <p className="font-medium line-clamp-1 text-slate-800">{a.title}</p>
+                                                {/* 제목 컬럼 */}
+                                                <td className="py-2.5 px-3">
+                                                    <p className="font-medium line-clamp-1 text-slate-800" title={a.title}>{a.title}</p>
                                                     {a.description && (
                                                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{a.description}</p>
                                                     )}
                                                 </td>
                                                 {/* 키워드 / 수집 출처 */}
-                                                <td className="py-2 pr-3">
+                                                <td className="py-2.5 px-3">
                                                     {(() => {
                                                         const ing = a.ingestions[0];
                                                         const orgName = ing?.organization?.company_name || a.company_articles?.[0]?.company?.company_name;
 
                                                         if (ing?.source === 'MANUAL_ORG' || orgName) {
                                                             return (
-                                                                <Badge className="text-xs max-w-full truncate block w-fit bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
+                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 truncate max-w-full">
                                                                     🏢 {orgName || '조직 수집'}
-                                                                </Badge>
+                                                                </span>
                                                             );
                                                         }
 
                                                         if (ing?.keyword?.keyword_text) {
                                                             return (
-                                                                <Badge variant="outline" className="text-xs max-w-full truncate block w-fit border-blue-200 bg-blue-50 text-blue-700">
+                                                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 truncate max-w-full">
                                                                     #{ing.keyword.keyword_text}
-                                                                </Badge>
+                                                                </span>
                                                             );
                                                         }
 
@@ -712,18 +741,18 @@ export default function ArticlesByRegionPage() {
                                                     })()}
                                                 </td>
                                                 {/* 수집일 */}
-                                                <td className="py-2 pr-3 text-xs text-muted-foreground whitespace-nowrap">
+                                                <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
                                                     {new Date(a.created_at).toLocaleDateString('ko-KR')}
                                                 </td>
                                                 {/* 발행일 */}
-                                                <td className="py-2 pr-3 text-xs text-muted-foreground whitespace-nowrap">
+                                                <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
                                                     {a.pub_date ? new Date(a.pub_date).toLocaleDateString('ko-KR') : '-'}
                                                 </td>
                                                 {/* 중복 */}
-                                                <td className="py-2 text-center">
+                                                <td className="py-2.5 px-3 text-center">
                                                     {a.ingestions[0]?.is_duplicate
-                                                        ? <Badge variant="secondary" className="text-xs">중복</Badge>
-                                                        : <Badge className="text-xs bg-green-100 text-green-800 hover:bg-green-100">신규</Badge>}
+                                                        ? <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">중복</span>
+                                                        : <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 border border-green-200">신규</span>}
                                                 </td>
                                             </tr>
                                         ))}
@@ -732,10 +761,16 @@ export default function ArticlesByRegionPage() {
 
                                 {/* 페이지네이션 */}
                                 {articleData && articleData.totalPages > 1 && (
-                                    <div className="flex items-center justify-center gap-2 mt-4">
-                                        <Button size="sm" variant="outline" disabled={page === 1} onClick={() => loadArticles(page - 1)}>이전</Button>
-                                        <span className="text-sm text-muted-foreground">{page} / {articleData.totalPages}</span>
-                                        <Button size="sm" variant="outline" disabled={page === articleData.totalPages} onClick={() => loadArticles(page + 1)}>다음</Button>
+                                    <div className="flex items-center justify-center gap-1.5 mt-5 mb-2">
+                                        <Button size="sm" variant="outline" disabled={page === 1} onClick={() => loadArticles(page - 1)} className="h-8 px-3 text-xs">
+                                            이전
+                                        </Button>
+                                        <div className="flex items-center justify-center px-3 text-xs font-medium text-slate-600">
+                                            {page} <span className="text-slate-400 mx-1">/</span> {articleData.totalPages}
+                                        </div>
+                                        <Button size="sm" variant="outline" disabled={page === articleData.totalPages} onClick={() => loadArticles(page + 1)} className="h-8 px-3 text-xs">
+                                            다음
+                                        </Button>
                                     </div>
                                 )}
                             </div>
