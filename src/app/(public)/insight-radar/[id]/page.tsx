@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         description = `${company.region?.name || '지역'}에 위치한 ${company.company_name}의 ${products ? products + ' 및 ' : ''}${tech ? tech + ' ' : ''}비즈니스 전문 프로필과 마켓 인사이트를 확인하세요.`;
     }
 
-    const title = `${company.company_name} 비즈니스 프로필 및 기술 정보 | ${company.region?.name || 'Zinsight'}`;
+    const title = `${company.company_name} 프로필 - 인사이트 레이더`;
     
     const tags = [
         company.company_name,
@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             description,
             type: 'profile',
             url,
-            siteName: 'Zinsight',
+            siteName: '진사이트',
             locale: 'ko_KR',
             // company_logo가 있다면 images에 추가할 수 있지만 현재 없으므로 기본 로고 사용
             images: [{ url: `${baseUrl}/img/zinsight_icon.png`, width: 1200, height: 630, alt: company.company_name }]
@@ -437,7 +437,7 @@ function TimelineItem({
                 <div className="flex items-center justify-between mb-3">
                     {isMagazine ? (
                         <span className="text-xs font-extrabold uppercase text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded border border-amber-200 flex items-center gap-1">
-                            <span aria-hidden="true">✦</span> ZINSIGHT PARTNER
+                            <span aria-hidden="true">✦</span> 진사이트(Zinsight) PARTNER
                         </span>
                     ) : (
                         <span className="text-xs font-bold uppercase text-zi-blue bg-blue-50 px-2 py-1 rounded">{category}</span>

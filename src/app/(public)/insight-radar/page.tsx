@@ -18,9 +18,7 @@ import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompany
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
-    title: {
-        absolute: '관내 기업 및 기관 프로필 데이터베이스 | 인사이트 레이더 | 진사이트 (Zinsight)',
-    },
+    title: '인사이트 레이더 - AEO·SEO·GEO 관내 기업 동향',
     description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 진사이트(Zinsight)의 리스트형 데이터 센터입니다.',
     alternates: {
         canonical: 'https://zinsight.co.kr/insight-radar',
@@ -35,21 +33,6 @@ export const metadata: Metadata = {
             'max-image-preview': 'large',
             'max-snippet': -1,
         },
-    },
-    openGraph: {
-        title: 'Insight Radar - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트 (Zinsight)',
-        description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 데이터 센터.',
-        url: 'https://zinsight.co.kr/insight-radar',
-        siteName: 'Zinsight',
-        locale: 'ko_KR',
-        type: 'website',
-        images: [{ url: '/img/zinsight_icon.png', width: 1200, height: 630, alt: 'Zinsight 인사이트 레이더' }],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Insight Radar - 실시간 산업 트렌드 및 기술 동향 데이터 센터 | 진사이트 (Zinsight)',
-        description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 데이터 센터.',
-        images: ['/img/zinsight_icon.png'],
     },
 };
 
