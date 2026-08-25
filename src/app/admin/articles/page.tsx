@@ -600,14 +600,14 @@ export default function ArticlesPage() {
                                 </div>
 
                                 {/* 액션 행 */}
-                                <div className="flex flex-wrap items-center gap-2 pt-1 border-t">
+                                <div className="flex flex-wrap items-center gap-2 pt-3 border-t">
                                     {/* 조회 */}
                                     <Button onClick={() => loadArticles(1)} variant="outline" size="sm" disabled={loadingArticles} className="gap-1.5">
                                         <RefreshCw className={`h-3.5 w-3.5 ${loadingArticles ? 'animate-spin' : ''}`} />
                                         조회
                                     </Button>
 
-                                    <div className="h-5 w-px bg-slate-200" />
+                                    <div className="h-5 w-px bg-slate-200 mx-1.5" />
 
                                     {/* 수집 */}
                                     <Button onClick={() => openConfirmModal('region')} disabled={ingestLoading} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5">
@@ -620,7 +620,7 @@ export default function ArticlesPage() {
                                         {!selectedKeywordId && <span className="text-[10px] text-slate-400">(키워드 선택 필요)</span>}
                                     </Button>
 
-                                    <div className="h-5 w-px bg-slate-200" />
+                                    <div className="h-5 w-px bg-slate-200 mx-1.5" />
 
                                     {/* Export */}
                                     <Button onClick={handleExportJson} variant="ghost" size="sm" className="gap-1.5 text-slate-600">
