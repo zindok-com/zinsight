@@ -113,7 +113,7 @@ export function MagazineListTable({
             thumbnailUrl: post.thumbnailUrl || '',
             status: post.status,
             authorId: post.authorId || null,
-            authorName: post.authorName || 'Zinsight 편집부'
+            authorName: post.authorName || '진사이트 편집부'
         });
     };
 
@@ -352,7 +352,7 @@ export function MagazineListTable({
                                 </TableCell>
                                 <TableCell>
                                      <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[10px] font-medium">
-                                         {post.authorName || 'Zinsight 편집부'}
+                                         {post.authorName || '진사이트 편집부'}
                                      </Badge>
                                  </TableCell>
                                 <TableCell className="text-right">
@@ -486,7 +486,7 @@ export function MagazineListTable({
                                                     value={editForm.authorId ? String(editForm.authorId) : 'default'}
                                                     onValueChange={(val) => {
                                                         if (val === 'default') {
-                                                            setEditForm({ ...editForm, authorId: null, authorName: 'Zinsight 편집부' });
+                                                            setEditForm({ ...editForm, authorId: null, authorName: '진사이트 편집부' });
                                                         } else {
                                                             const selectedAuthor = authors.find(a => String(a.id) === val);
                                                             if (selectedAuthor) {
@@ -499,7 +499,7 @@ export function MagazineListTable({
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
+                                                        <SelectItem value="default">진사이트 편집부 (기본)</SelectItem>
                                                         {authors.map((author: any) => (
                                                             <SelectItem key={author.id} value={String(author.id)}>
                                                                 {author.name}
@@ -509,7 +509,7 @@ export function MagazineListTable({
                                                 </Select>
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
-                                                    {selectedPost.authorName || 'Zinsight 편집부'}
+                                                    {selectedPost.authorName || '진사이트 편집부'}
                                                 </div>
                                             )}
                                         </div>

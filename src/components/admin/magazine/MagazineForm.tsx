@@ -138,7 +138,7 @@ export function MagazineForm({
         categoryId: post?.categoryId ? String(post.categoryId) : (categories.find(c => c.slug === 'newsletter')?.id ? String(categories.find(c => c.slug === 'newsletter').id) : ''),
         status: post?.status || 'PUBLISHED',
         authorId: post?.authorId || null,
-        authorName: post?.authorName || 'Zinsight 편집부',
+        authorName: post?.authorName || '진사이트 편집부',
         regionId: post?.regionId || null,
         targetKeywords: post?.targetKeywords || '',
         isPaid: post?.isPaid || false
@@ -338,7 +338,7 @@ export function MagazineForm({
                                         value={formData.authorId ? String(formData.authorId) : 'default'}
                                         onValueChange={(val) => {
                                             if (val === 'default') {
-                                                setFormData({ ...formData, authorId: null, authorName: 'Zinsight 편집부' });
+                                                setFormData({ ...formData, authorId: null, authorName: '진사이트 편집부' });
                                             } else {
                                                 const selectedAuthor = authors.find(a => String(a.id) === val);
                                                 if (selectedAuthor) {
@@ -351,7 +351,7 @@ export function MagazineForm({
                                             <SelectValue placeholder="작성자 선택" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="default">Zinsight 편집부 (기본)</SelectItem>
+                                            <SelectItem value="default">진사이트 편집부 (기본)</SelectItem>
                                             {authors.map((author: any) => (
                                                 <SelectItem key={author.id} value={String(author.id)}>
                                                     {author.name}
