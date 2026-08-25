@@ -1,74 +1,869 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
 import { getRegions } from '@/actions/admin/region-actions';
-import { Newspaper, AlertTriangle } from 'lucide-react';
+import { getKeywords } from '@/actions/keyword-actions';
+import { getArticles, deleteArticlesByDate } from '@/actions/article-actions';
+import { ingestByRegion, ingestByKeyword, type IngestReport } from '@/actions/ingest-actions';
+import { searchOrganizations, linkArticleToCompany, unlinkArticleFromCompany } from '@/actions/company-actions';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+    RefreshCw, Download, Loader2, CheckCircle, AlertTriangle, ExternalLink, X, FileJson, Trash2, Search, Newspaper
+} from 'lucide-react';
 
-type Region = Awaited<ReturnType<typeof getRegions>>['data'][0];
+// Awaited type for Region is needed, we can define it directly
+type Region = { id: number; name: string; slug: string; isActive: boolean; createdAt: Date; updatedAt: Date };
+type Keyword = Awaited<ReturnType<typeof getKeywords>>[number];
+type ArticlePage = Awaited<ReturnType<typeof getArticles>>;
+type ArticleItem = ArticlePage['articles'][number];
 
-export default function ArticlesIndexPage() {
-    const router = useRouter();
-    const [regions, setRegions] = useState<Region[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+// ─── 수집 결과 패널 ───────────────────────────────────────────────────────────
+function IngestReportPanel({ report }: { report: IngestReport }) {
+    return (
+        <Card className={`border-l-4 ${report.success ? 'border-l-green-500' : 'border-l-red-500'}`}>
+            <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                    {report.success
+                        ? <CheckCircle className="h-4 w-4 text-green-500" />
+                        : <AlertTriangle className="h-4 w-4 text-red-500" />}
+                    수집 결과
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+                <p className="font-medium">{report.message}</p>
+                {report.success && (
+                    <>
+                        <div className="flex gap-4">
+                            <span className="text-green-600 font-semibold">신규: {report.newCount}</span>
+                            <span className="text-yellow-600 font-semibold">중복: {report.dupCount}</span>
+                            <span className="text-red-600 font-semibold">실패: {report.failCount}</span>
+                        </div>
+                        {report.perKeyword.length > 1 && (
+                            <table className="w-full text-xs border-collapse mt-2">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="text-left py-1">키워드</th>
+                                        <th className="text-right py-1">신규</th>
+                                        <th className="text-right py-1">중복</th>
+                                        <th className="text-right py-1">실패</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {report.perKeyword.map(pk => (
+                                        <tr key={pk.keywordId} className="border-b last:border-0">
+                                            <td className="py-1">{pk.keywordText}</td>
+                                            <td className="text-right py-1 text-green-600">{pk.newCount}</td>
+                                            <td className="text-right py-1 text-yellow-600">{pk.dupCount}</td>
+                                            <td className="text-right py-1 text-red-600">{pk.failCount}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
 
+// ─── 기사 상세 Drawer ─────────────────────────────────────────────────────────
+function ArticleDrawer({ article, onClose, onRefresh }: { article: ArticleItem; onClose: () => void; onRefresh: () => void }) {
+    const [showRaw, setShowRaw] = useState(false);
+    const [orgSearch, setOrgSearch] = useState('');
+    const [orgResults, setOrgResults] = useState<Array<{ id: number; company_name: string }>>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [linkedOrgs, setLinkedOrgs] = useState<Array<{ id: number; company_name: string }>>(() => {
+        return article.company_articles?.map((ca: any) => ca.company).filter(Boolean) || [];
+    });
+
+    // ESC 키로 닫기
     useEffect(() => {
-        getRegions()
-            .then(res => {
-                if (res.success && res.data) {
-                    setRegions(res.data);
-                } else {
-                    setError('지역 목록을 불러오는 중 오류가 발생했습니다.');
-                }
-            })
-            .catch(() => setError('지역 목록을 불러오는 중 오류가 발생했습니다.'))
-            .finally(() => setLoading(false));
-    }, []);
+        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [onClose]);
 
-    if (loading) return (
-        <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">
-            <div className="h-6 w-6 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
-            <span>불러오는 중...</span>
-        </div>
-    );
+    const handleSearchOrg = async (query: string) => {
+        setOrgSearch(query);
+        if (!query.trim()) {
+            setOrgResults([]);
+            return;
+        }
+        setIsSearching(true);
+        try {
+            const results = await searchOrganizations(query);
+            setOrgResults(results);
+        } catch {
+            setOrgResults([]);
+        } finally {
+            setIsSearching(false);
+        }
+    };
 
-    if (error) return (
-        <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">
-            <AlertTriangle className="h-8 w-8 text-red-400" />
-            <span>{error}</span>
-        </div>
-    );
+    const handleLinkOrg = async (orgId: number, orgName: string) => {
+        const res = await linkArticleToCompany(article.id, orgId);
+        if (res.success) {
+            toast.success(`"${orgName}" 조직 연관 기사로 연결되었습니다.`);
+            setLinkedOrgs(prev => [...prev.filter(o => o.id !== orgId), { id: orgId, company_name: orgName }]);
+            setOrgSearch('');
+            setOrgResults([]);
+            onRefresh();
+        } else {
+            toast.error('연결 실패: ' + res.error);
+        }
+    };
+
+    const handleUnlinkOrg = async (orgId: number, orgName: string) => {
+        const res = await unlinkArticleFromCompany(article.id, orgId);
+        if (res.success) {
+            toast.success(`"${orgName}" 연결이 해제되었습니다.`);
+            setLinkedOrgs(prev => prev.filter(o => o.id !== orgId));
+            onRefresh();
+        } else {
+            toast.error('해제 실패: ' + res.error);
+        }
+    };
+
+    const ingestion = article.ingestions[0];
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-                    <Newspaper className="h-8 w-8" /> Articles
-                </h1>
-                <p className="text-muted-foreground mt-1">지역을 선택하여 기사를 수집하고 조회하세요.</p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {regions.map(ex => (
+        <>
+            {/* 오버레이 */}
+            <div
+                className="fixed inset-0 bg-black/40 z-40 transition-opacity"
+                onClick={onClose}
+            />
+            {/* Drawer 패널 */}
+            <div className="fixed right-0 top-0 h-full w-full max-w-xl bg-white z-50 shadow-2xl flex flex-col drawer-slide-in">
+                {/* Drawer 헤더 */}
+                <div className="flex items-start justify-between gap-3 px-6 py-4 border-b bg-slate-50">
+                    <div className="flex-1 min-w-0">
+                        <p className="text-xs text-muted-foreground mb-1 font-mono">Article #{article.id}</p>
+                        <h2 className="text-base font-semibold leading-snug break-words">{article.title}</h2>
+                    </div>
                     <button
-                        key={ex.id}
-                        onClick={() => router.push(`/admin/articles/${ex.id}`)}
-                        className="text-left p-5 border rounded-lg hover:shadow-md hover:border-slate-400 transition-all"
+                        onClick={onClose}
+                        className="flex-shrink-0 text-slate-400 hover:text-slate-700 transition-colors mt-0.5"
+                        aria-label="닫기"
                     >
-                        <h2 className="font-semibold text-base">{ex.name}</h2>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            <span className="font-mono">ID: {ex.id}</span>
-                            <span className="mx-1">·</span>
-                            <span className="font-mono text-slate-400">{ex.slug}</span>
-                        </p>
+                        <X className="h-5 w-5" />
                     </button>
-                ))}
-                {regions.length === 0 && (
-                    <p className="col-span-full text-center py-12 text-muted-foreground">
-                        등록된 지역이 없습니다. 먼저 <strong>Regions</strong>에서 지역을 등록하세요.
-                    </p>
+                </div>
+
+                {/* Drawer 본문 */}
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+                    {/* 메타 정보 */}
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-0.5">수집 출처 / 방식</p>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                {ingestion?.source === 'MANUAL_ORG' ? (
+                                    <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100 font-bold">조직 기반 수집</Badge>
+                                ) : (
+                                    <Badge variant="outline">키워드 크롤링</Badge>
+                                )}
+                                {ingestion?.keyword?.keyword_text && (
+                                    <span className="text-xs font-semibold text-blue-600">#{ingestion.keyword.keyword_text}</span>
+                                )}
+                                {(ingestion?.organization?.company_name || linkedOrgs[0]?.company_name) && (
+                                    <span className="text-xs font-bold text-indigo-600">
+                                        🏢 {ingestion?.organization?.company_name || linkedOrgs[0]?.company_name}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-0.5">중복 여부</p>
+                            {ingestion?.is_duplicate
+                                ? <Badge variant="secondary">중복</Badge>
+                                : <Badge className="bg-green-100 text-green-800 hover:bg-green-100">신규</Badge>}
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-0.5">최초 수집일</p>
+                            <p>{new Date(article.created_at).toLocaleString('ko-KR')}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-0.5">마지막 갱신</p>
+                            <p>{new Date(article.updated_at).toLocaleString('ko-KR')}</p>
+                        </div>
+                        {article.pub_date && (
+                            <div className="col-span-2">
+                                <p className="text-xs text-muted-foreground mb-0.5">발행일 (pub_date)</p>
+                                <p>{new Date(article.pub_date).toLocaleString('ko-KR')}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* ─── 조직 연관 기사 연결 섹션 ─── */}
+                    <div className="space-y-3 border-t pt-4">
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">조직 연관 기사 연결</p>
+                            <span className="text-[11px] text-muted-foreground">프로필에 연관기사로 노출될 조직 선택</span>
+                        </div>
+
+                        {/* 연결된 조직 목록 */}
+                        <div className="flex flex-wrap gap-2">
+                            {linkedOrgs.length > 0 ? (
+                                linkedOrgs.map(org => (
+                                    <span key={org.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
+                                        🏢 {org.company_name}
+                                        <button
+                                            type="button"
+                                            onClick={() => handleUnlinkOrg(org.id, org.company_name)}
+                                            className="text-indigo-400 hover:text-red-500 font-bold ml-0.5 transition-colors"
+                                            title="연결 해제"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </span>
+                                ))
+                            ) : (
+                                <p className="text-xs text-slate-400 italic">연결된 수기 조직이 없습니다.</p>
+                            )}
+                        </div>
+
+                        {/* 조직 검색 입력 */}
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder="조직(회사) 이름으로 검색하여 연관 기사에 연결..."
+                                value={orgSearch}
+                                onChange={e => handleSearchOrg(e.target.value)}
+                                className="w-full text-xs border rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                            />
+                            {isSearching && <Loader2 className="w-3.5 h-3.5 animate-spin absolute right-3 top-2.5 text-slate-400" />}
+                            {orgResults.length > 0 && (
+                                <div className="absolute left-0 right-0 top-full mt-1 bg-white border rounded-md shadow-lg max-h-48 overflow-y-auto z-20 divide-y">
+                                    {orgResults.map(org => (
+                                        <button
+                                            key={org.id}
+                                            type="button"
+                                            onClick={() => handleLinkOrg(org.id, org.company_name)}
+                                            className="w-full text-left px-3 py-2 text-xs hover:bg-indigo-50 flex items-center justify-between text-slate-700 font-medium"
+                                        >
+                                            <span>🏢 {org.company_name}</span>
+                                            <span className="text-[10px] text-indigo-600 font-bold bg-indigo-100 px-1.5 py-0.5 rounded">+ 연결</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 본문 요약 */}
+                    {article.description && (
+                        <div>
+                            <p className="text-xs text-muted-foreground mb-1.5 font-medium uppercase tracking-wide">요약 (Description)</p>
+                            <p className="text-sm leading-relaxed text-slate-700 bg-slate-50 rounded-md p-3 border">
+                                {article.description}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* 링크 */}
+                    <div className="space-y-2">
+                        <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">링크</p>
+                        <div className="space-y-1.5">
+                            <a
+                                href={article.canonical_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline break-all"
+                            >
+                                <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" />
+                                <span className="truncate">{article.canonical_link}</span>
+                            </a>
+                            {article.link && article.link !== article.canonical_link && (
+                                <a
+                                    href={article.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 text-xs text-slate-500 hover:underline break-all"
+                                >
+                                    <ExternalLink className="h-3 w-3 flex-shrink-0" />
+                                    <span className="truncate">Naver 링크: {article.link}</span>
+                                </a>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* raw_json 토글 */}
+                    <div>
+                        <button
+                            onClick={() => setShowRaw(v => !v)}
+                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-slate-700 transition-colors"
+                        >
+                            <FileJson className="h-4 w-4" />
+                            {showRaw ? 'raw_json 숨기기' : 'raw_json 원문 보기'}
+                        </button>
+                        {showRaw && (
+                            <pre className="mt-2 text-xs bg-slate-900 text-slate-100 p-4 rounded-md overflow-auto max-h-72 leading-relaxed">
+                                {JSON.stringify(article.raw_json, null, 2)}
+                            </pre>
+                        )}
+                    </div>
+                </div>
+
+                {/* Drawer 푸터 */}
+                <div className="px-6 py-4 border-t bg-slate-50 flex justify-between items-center">
+                    <a
+                        href={article.canonical_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <Button size="sm" className="gap-1.5">
+                            <ExternalLink className="h-3.5 w-3.5" /> 원문 보기
+                        </Button>
+                    </a>
+                    <Button size="sm" variant="outline" onClick={onClose}>닫기</Button>
+                </div>
+            </div>
+        </>
+    );
+}
+
+// ─── 메인 페이지 ──────────────────────────────────────────────────────────────
+export default function ArticlesPage() {
+    const [regions, setRegions] = useState<Region[]>([]);
+    const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
+    const [initialLoading, setInitialLoading] = useState(true);
+
+    const [keywords, setKeywords] = useState<Keyword[]>([]);
+    const [selectedKeywordId, setSelectedKeywordId] = useState<number | ''>('');
+    const [selectedSource, setSelectedSource] = useState<string>('');
+    const [createdMonth, setCreatedMonth] = useState('');
+    const [pubMonth, setPubMonth] = useState('');
+    const [articleData, setArticleData] = useState<ArticlePage | null>(null);
+    const [page, setPage] = useState(1);
+    const [ingestLoading, setIngestLoading] = useState(false);
+    const [ingestReport, setIngestReport] = useState<IngestReport | null>(null);
+    const [loadingArticles, setLoadingArticles] = useState(false);
+    const [drawerArticle, setDrawerArticle] = useState<ArticleItem | null>(null);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+    const [confirmType, setConfirmType] = useState<'region' | 'keyword'>('region');
+    const [ingestDisplay, setIngestDisplay] = useState<number>(10);
+    const [ingestSort, setIngestSort] = useState<'sim' | 'date'>('date');
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [deleteDate, setDeleteDate] = useState(() => {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    });
+    const [deleteLoading, setDeleteLoading] = useState(false);
+    const [titleSearch, setTitleSearch] = useState('');
+
+    useEffect(() => {
+        getRegions().then(res => {
+            if (res.success && res.data) {
+                setRegions(res.data);
+                if (res.data.length > 0) setSelectedRegionId(res.data[0].id);
+            }
+        }).catch(err => {
+            console.error(err);
+            toast.error('지역 목록을 불러오는 중 오류가 발생했습니다.');
+        }).finally(() => setInitialLoading(false));
+    }, []);
+
+    const selectedRegion = useMemo(() => regions.find(r => r.id === selectedRegionId) || null, [regions, selectedRegionId]);
+
+    useEffect(() => {
+        if (selectedRegionId != null) {
+            getKeywords(selectedRegionId, false).then(setKeywords).catch(console.error);
+        }
+    }, [selectedRegionId]);
+
+    const loadArticles = useCallback(async (p = 1) => {
+        if (!selectedRegionId) return;
+        setLoadingArticles(true);
+        try {
+            const data = await getArticles({
+                regionId: selectedRegionId,
+                keywordId: selectedKeywordId ? Number(selectedKeywordId) : undefined,
+                source: selectedSource || undefined,
+                createdMonth: createdMonth || undefined,
+                pubMonth: pubMonth || undefined,
+                page: p,
+                pageSize: 50,
+            });
+            setArticleData(data);
+            setPage(p);
+        } catch (err) {
+            console.error(err);
+            toast.error('기사 목록을 불러오는 중 오류가 발생했습니다.');
+        } finally {
+            setLoadingArticles(false);
+        }
+    }, [selectedRegionId, selectedKeywordId, selectedSource, createdMonth, pubMonth]);
+
+    useEffect(() => {
+        if (selectedRegionId) loadArticles(1);
+    }, [selectedRegionId, loadArticles]);
+
+    const filteredArticles = useMemo(() => {
+        if (!articleData) return [];
+        if (!titleSearch.trim()) return articleData.articles;
+        return articleData.articles.filter(a =>
+            a.title.toLowerCase().includes(titleSearch.toLowerCase())
+        );
+    }, [articleData, titleSearch]);
+
+    function openConfirmModal(type: 'region' | 'keyword') {
+        if (type === 'keyword' && !selectedKeywordId) {
+            toast.error('키워드를 선택하세요.');
+            return;
+        }
+        setConfirmType(type);
+        setIsConfirmOpen(true);
+    }
+
+    async function executeIngest() {
+        setIsConfirmOpen(false);
+        if (confirmType === 'region') {
+            await handleIngestRegion();
+        } else {
+            await handleIngestKeyword();
+        }
+    }
+
+    async function handleIngestRegion() {
+        if (!selectedRegionId) return;
+        setIngestLoading(true);
+        setIngestReport(null);
+        toast.info('지역 단위 수집 중...');
+        const report = await ingestByRegion(selectedRegionId, ingestDisplay, ingestSort);
+        setIngestReport(report);
+        setIngestLoading(false);
+        if (report.success) toast.success(report.message);
+        else toast.error(report.message);
+        loadArticles(1);
+    }
+
+    async function handleIngestKeyword() {
+        if (!selectedKeywordId) { toast.error('키워드를 선택하세요.'); return; }
+        setIngestLoading(true);
+        setIngestReport(null);
+        toast.info('키워드 단위 수집 중...');
+        const report = await ingestByKeyword(Number(selectedKeywordId), ingestDisplay, ingestSort);
+        setIngestReport(report);
+        setIngestLoading(false);
+        if (report.success) toast.success(report.message);
+        else toast.error(report.message);
+        loadArticles(1);
+    }
+
+    function handleExportJson() {
+        if (!articleData || articleData.articles.length === 0) { toast.error('내보낼 기사가 없습니다.'); return; }
+        const payload = {
+            export_at: new Date().toISOString(),
+            region: selectedRegion?.name,
+            filters: { keyword_id: selectedKeywordId, createdMonth, pubMonth },
+            count: articleData.total,
+            articles: articleData.articles.map((a: ArticleItem) => ({
+                id: a.id,
+                canonical_link: a.canonical_link,
+                title: a.title,
+                description: a.description,
+                pub_date: a.pub_date,
+                created_at: a.created_at,
+                updated_at: a.updated_at,
+                is_duplicate: a.ingestions[0]?.is_duplicate,
+                keyword_id: a.ingestions[0]?.keyword_id,
+            })),
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `articles_region${selectedRegionId}_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('JSON 내보내기 완료');
+    }
+
+    async function handleDeleteArticles() {
+        if (!deleteDate) {
+            toast.error('삭제할 날짜를 선택하세요.');
+            return;
+        }
+
+        const confirmFirst = window.confirm(
+            `정말로 ${deleteDate}에 수집된 이 지역의 모든 기사를 데이터베이스에서 영구 삭제하시겠습니까?\n이 작업은 즉시 실행되며 복구할 수 없습니다.`
+        );
+        if (!confirmFirst) return;
+
+        setDeleteLoading(true);
+        try {
+            const res = await deleteArticlesByDate(deleteDate, selectedRegionId!);
+            if (res.success) {
+                toast.success(res.message);
+                setIsDeleteModalOpen(false);
+                loadArticles(1);
+            } else {
+                toast.error('기사 삭제 실패');
+            }
+        } catch (err: unknown) {
+            console.error(err);
+            toast.error('기사 삭제 중 오류가 발생했습니다.');
+        } finally {
+            setDeleteLoading(false);
+        }
+    }
+
+    if (initialLoading) {
+        return (
+            <div className="py-20 flex flex-col items-center gap-3 text-muted-foreground">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span>정보 불러오는 중...</span>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <div className="space-y-5">
+                {/* 헤더 */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                            <Newspaper className="h-6 w-6" /> Articles
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-0.5">수집된 지역 기사를 조회하고 관리합니다.</p>
+                    </div>
+                </div>
+
+                {/* 지역 탭 */}
+                <div className="flex flex-wrap gap-2 border-b pb-4">
+                    {regions.map(r => (
+                        <button key={r.id} onClick={() => setSelectedRegionId(r.id)}
+                            className={`px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                                selectedRegionId === r.id
+                                    ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                            }`}>
+                            {r.name}
+                        </button>
+                    ))}
+                    {regions.length === 0 && <p className="text-sm text-muted-foreground">등록된 지역이 없습니다.</p>}
+                </div>
+
+                {selectedRegionId && (
+                    <>
+                        {/* 필터 + 수집 패널 */}
+                        <Card>
+                            <CardContent className="pt-5 space-y-4">
+                                {/* 필터 행 */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">수집 방식</label>
+                                        <select
+                                            className="w-full border rounded-md px-2.5 py-1.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                            value={selectedSource}
+                                            onChange={e => setSelectedSource(e.target.value)}
+                                        >
+                                            <option value="">전체</option>
+                                            <option value="REGION_CRAWL">키워드 크롤링</option>
+                                            <option value="MANUAL_ORG">조직 기반 수집</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">키워드</label>
+                                        <select
+                                            className="w-full border rounded-md px-2.5 py-1.5 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                            value={selectedKeywordId}
+                                            onChange={e => setSelectedKeywordId(e.target.value ? Number(e.target.value) : '')}
+                                        >
+                                            <option value="">전체 키워드</option>
+                                            {keywords.map(kw => (
+                                                <option key={kw.id} value={kw.id}>{kw.keyword_text}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">수집일 (월)</label>
+                                        <input type="month"
+                                            className="w-full border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                            value={createdMonth} onChange={e => setCreatedMonth(e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-muted-foreground block mb-1">발행일 (월)</label>
+                                        <input type="month"
+                                            className="w-full border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                            value={pubMonth} onChange={e => setPubMonth(e.target.value)} />
+                                    </div>
+                                </div>
+
+                                {/* 액션 행 */}
+                                <div className="flex flex-wrap items-center gap-2 pt-1 border-t">
+                                    {/* 조회 */}
+                                    <Button onClick={() => loadArticles(1)} variant="outline" size="sm" disabled={loadingArticles} className="gap-1.5">
+                                        <RefreshCw className={`h-3.5 w-3.5 ${loadingArticles ? 'animate-spin' : ''}`} />
+                                        조회
+                                    </Button>
+
+                                    <div className="h-5 w-px bg-slate-200" />
+
+                                    {/* 수집 */}
+                                    <Button onClick={() => openConfirmModal('region')} disabled={ingestLoading} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white gap-1.5">
+                                        {ingestLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                                        지역 전체 수집
+                                    </Button>
+                                    <Button onClick={() => openConfirmModal('keyword')} disabled={ingestLoading || !selectedKeywordId} size="sm" variant="outline" className="gap-1.5">
+                                        {ingestLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                                        키워드 수집
+                                        {!selectedKeywordId && <span className="text-[10px] text-slate-400">(키워드 선택 필요)</span>}
+                                    </Button>
+
+                                    <div className="h-5 w-px bg-slate-200" />
+
+                                    {/* Export */}
+                                    <Button onClick={handleExportJson} variant="ghost" size="sm" className="gap-1.5 text-slate-600">
+                                        <Download className="h-3.5 w-3.5" />
+                                        JSON Export
+                                    </Button>
+
+                                    {/* 삭제 — 우측 정렬 */}
+                                    <div className="ml-auto">
+                                        <Button onClick={() => setIsDeleteModalOpen(true)} variant="ghost" size="sm" className="gap-1.5 text-red-500 hover:text-red-700 hover:bg-red-50">
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                            수집일 기준 삭제
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* 수집 결과 */}
+                        {ingestReport && <IngestReportPanel report={ingestReport} />}
+
+                        {/* ─── 기사 테이블 ─── */}
+                        <Card>
+                            <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3">
+                                        <CardTitle className="text-sm">기사 목록</CardTitle>
+                                        {articleData && (
+                                            <span className="text-xs text-muted-foreground">
+                                                총 <strong>{articleData.total.toLocaleString()}</strong>건
+                                                {titleSearch && ` · 검색 결과 ${filteredArticles.length}건`}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {/* 제목 검색 */}
+                                    <div className="relative w-56">
+                                        <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                                        <input
+                                            type="text"
+                                            placeholder="제목 검색 (로컬)..."
+                                            value={titleSearch}
+                                            onChange={e => setTitleSearch(e.target.value)}
+                                            className="w-full pl-7 pr-3 py-1.5 text-xs border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        />
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                {loadingArticles ? (
+                                    <div className="py-12 flex flex-col items-center gap-2 text-muted-foreground">
+                                        <Loader2 className="h-6 w-6 animate-spin" />
+                                        불러오는 중...
+                                    </div>
+                                ) : filteredArticles.length === 0 ? (
+                                    <div className="py-12 text-center text-muted-foreground text-sm">
+                                        {titleSearch ? '검색 결과가 없습니다.' : '기사가 없습니다. 수집 버튼을 눌러 기사를 가져오세요.'}
+                                    </div>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm table-fixed">
+                                            <colgroup>
+                                                <col style={{ width: '55%' }} />
+                                                <col style={{ width: '18%' }} />
+                                                <col style={{ width: '10%' }} />
+                                                <col style={{ width: '10%' }} />
+                                                <col style={{ width: '7%' }} />
+                                            </colgroup>
+                                            <thead>
+                                                <tr className="border-b bg-slate-50 text-xs text-muted-foreground font-medium">
+                                                    <th className="text-left py-2.5 px-3">제목</th>
+                                                    <th className="text-left py-2.5 px-3">키워드 / 출처</th>
+                                                    <th className="text-left py-2.5 px-3">수집일</th>
+                                                    <th className="text-left py-2.5 px-3">발행일</th>
+                                                    <th className="text-center py-2.5 px-3">중복</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y">
+                                                {filteredArticles.map((a: ArticleItem) => (
+                                                    <tr
+                                                        key={a.id}
+                                                        className="hover:bg-slate-50/70 cursor-pointer transition-colors"
+                                                        onClick={() => setDrawerArticle(a)}
+                                                    >
+                                                        {/* 제목 컬럼 */}
+                                                        <td className="py-2.5 px-3">
+                                                            <p className="font-medium line-clamp-1 text-slate-800" title={a.title}>{a.title}</p>
+                                                            {a.description && (
+                                                                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{a.description}</p>
+                                                            )}
+                                                        </td>
+                                                        {/* 키워드 / 수집 출처 */}
+                                                        <td className="py-2.5 px-3">
+                                                            {(() => {
+                                                                const ing = a.ingestions[0];
+                                                                const orgName = ing?.organization?.company_name || a.company_articles?.[0]?.company?.company_name;
+
+                                                                if (ing?.source === 'MANUAL_ORG' || orgName) {
+                                                                    return (
+                                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200 truncate max-w-full">
+                                                                            🏢 {orgName || '조직 수집'}
+                                                                        </span>
+                                                                    );
+                                                                }
+
+                                                                if (ing?.keyword?.keyword_text) {
+                                                                    return (
+                                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 truncate max-w-full">
+                                                                            #{ing.keyword.keyword_text}
+                                                                        </span>
+                                                                    );
+                                                                }
+
+                                                                return <span className="text-xs text-slate-400">—</span>;
+                                                            })()}
+                                                        </td>
+                                                        {/* 수집일 */}
+                                                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                                                            {new Date(a.created_at).toLocaleDateString('ko-KR')}
+                                                        </td>
+                                                        {/* 발행일 */}
+                                                        <td className="py-2.5 px-3 text-xs text-muted-foreground whitespace-nowrap">
+                                                            {a.pub_date ? new Date(a.pub_date).toLocaleDateString('ko-KR') : '-'}
+                                                        </td>
+                                                        {/* 중복 */}
+                                                        <td className="py-2.5 px-3 text-center">
+                                                            {a.ingestions[0]?.is_duplicate
+                                                                ? <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500">중복</span>
+                                                                : <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 border border-green-200">신규</span>}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+
+                                        {/* 페이지네이션 */}
+                                        {articleData && articleData.totalPages > 1 && (
+                                            <div className="flex items-center justify-center gap-1.5 mt-5 mb-2">
+                                                <Button size="sm" variant="outline" disabled={page === 1} onClick={() => loadArticles(page - 1)} className="h-8 px-3 text-xs">
+                                                    이전
+                                                </Button>
+                                                <div className="flex items-center justify-center px-3 text-xs font-medium text-slate-600">
+                                                    {page} <span className="text-slate-400 mx-1">/</span> {articleData.totalPages}
+                                                </div>
+                                                <Button size="sm" variant="outline" disabled={page === articleData.totalPages} onClick={() => loadArticles(page + 1)} className="h-8 px-3 text-xs">
+                                                    다음
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </>
                 )}
             </div>
-        </div>
+
+            {/* 기사 상세 Drawer */}
+            {drawerArticle && (
+                <ArticleDrawer
+                    article={drawerArticle}
+                    onClose={() => setDrawerArticle(null)}
+                    onRefresh={() => loadArticles(page)}
+                />
+            )}
+
+            <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>새 기사 수집</DialogTitle>
+                        <DialogDescription>
+                            {confirmType === 'region'
+                                ? '모든 활성 키워드를 대상으로 네이버 뉴스 API를 호출하여 기사를 수집하시겠습니까? (API 호출량이 많을 수 있습니다)'
+                                : '선택한 키워드에 대해 네이버 뉴스 API를 호출하여 기사를 수집하시겠습니까?'}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm">수집 기사 수</label>
+                            <select
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                value={ingestDisplay}
+                                onChange={e => setIngestDisplay(Number(e.target.value))}
+                            >
+                                <option value={10}>10개</option>
+                                <option value={20}>20개</option>
+                                <option value={30}>30개</option>
+                                <option value={40}>40개</option>
+                                <option value={50}>50개</option>
+                                <option value={100}>100개</option>
+                            </select>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm">정렬 기준</label>
+                            <select
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                                value={ingestSort}
+                                onChange={e => setIngestSort(e.target.value as 'sim' | 'date')}
+                            >
+                                <option value="sim">관련도순 (sim)</option>
+                                <option value="date">최신순 (date)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsConfirmOpen(false)}>취소</Button>
+                        <Button onClick={executeIngest} className="bg-blue-600 hover:bg-blue-700 text-white">
+                            수집 실행
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle className="text-red-600 flex items-center gap-2">
+                            <Trash2 className="h-5 w-5" />
+                            수집일 기준 기사 삭제
+                        </DialogTitle>
+                        <DialogDescription>
+                            선택한 수집일(created_at)에 수집된 이 지역의 기사들을 데이터베이스에서 영구 삭제합니다. (소프트 삭제 미적용)
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <label className="text-right text-sm font-medium">수집일 선택</label>
+                            <input
+                                type="date"
+                                className="col-span-3 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                value={deleteDate}
+                                onChange={e => setDeleteDate(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)} disabled={deleteLoading}>취소</Button>
+                        <Button onClick={handleDeleteArticles} disabled={deleteLoading || !deleteDate} className="bg-red-600 hover:bg-red-700 text-white font-medium">
+                            {deleteLoading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
+                            삭제 실행
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 }

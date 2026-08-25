@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
     RefreshCw, Download, ArrowLeft, Loader2,
-    CheckCircle, AlertTriangle, ExternalLink, X, FileJson, Trash2, Search
+    CheckCircle, AlertTriangle, ExternalLink, X, FileJson, Trash2, Search, Newspaper
 } from 'lucide-react';
 
 // Awaited type for Region is needed, we can define it directly
@@ -547,15 +547,19 @@ export default function ArticlesByRegionPage() {
 
     return (
         <>
-            <div className="space-y-6">
+            <div className="space-y-5">
                 {/* 헤더 */}
-                <div className="flex items-center gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => router.push('/admin/articles')}>
-                        <ArrowLeft className="h-5 w-5" />
-                    </Button>
+                <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">{region.name}</h1>
-                        <p className="text-xs text-muted-foreground">ID: {region.id} · slug: {region.slug}</p>
+                        <div className="flex items-center gap-3">
+                            <Button variant="ghost" size="icon" onClick={() => router.push('/admin/articles')} className="h-8 w-8 text-slate-500 hover:text-slate-900">
+                                <ArrowLeft className="h-4 w-4" />
+                            </Button>
+                            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                                <Newspaper className="h-6 w-6" /> Articles ({region.name})
+                            </h1>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-0.5 ml-11">수집된 지역 기사를 조회하고 관리합니다.</p>
                     </div>
                 </div>
 
