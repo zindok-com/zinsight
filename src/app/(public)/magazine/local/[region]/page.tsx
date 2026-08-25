@@ -51,7 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     return {
-        title: `${region.name} 비즈니스 허브 | Zinsight Magazine`,
+        title: `${region.name} 비즈니스 허브 - 관내 기업·지원사업 소식`,
         description: `${region.name} 관내 혁신 스타트업 성공 사례 및 소상공인 그로스 스토리, 진흥원 자금 혜택을 한데 모은 지자체 전용 지면입니다.`,
         alternates: {
             canonical: `${baseUrl}/magazine/local/${regionSlug}`,

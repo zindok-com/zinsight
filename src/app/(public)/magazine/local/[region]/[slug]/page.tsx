@@ -94,7 +94,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     }
 
-    const title = `${post.title} | ${post.region?.name || '로컬'} | Zinsight Magazine`;
+    const categoryLabel = getCategoryLabel(post.category);
+    // 제목이 너무 길면 카테고리명 생략, 아니면 병기
+    const title = post.title.length > 50 ? post.title : `${post.title} - ${categoryLabel}`;
+
     let description = post.summary || '';
     if (!description) {
         try {
@@ -106,12 +109,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         if (!description && !post.content.trim().startsWith('{')) {
             description = post.content.slice(0, 160).trim();
         }
-        if (!description) description = `${post.title} — Zinsight Magazine 로컬 비즈니스 뉴스`;
+        if (!description) description = `${post.title} — 진사이트 매거진 로컬 비즈니스 뉴스`;
     }
     description = description.replace(/\*\*/g, '').replace(/\*\{.*?\}\*/g, '').slice(0, 160);
 
     const ogImage = post.thumbnailUrl || `${baseUrl}/img/zinsight_icon.png`;
-    const categoryLabel = getCategoryLabel(post.category);
     // 화면 배지와 동일한 소스로 article:tag 다중 출력
     const tags = [
         categoryLabel,
@@ -143,10 +145,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             publishedTime: post.createdAt.toISOString(),
             modifiedTime: post.updatedAt.toISOString(),
             section: 'Local Business',
-            authors: [post.author?.name || post.authorName || 'Zinsight 편집부'],
+            authors: [post.author?.name || post.authorName || '진사이트 편집부'],
             tags: tags.length > 0 ? tags : undefined,
             locale: 'ko_KR',
-            siteName: 'Zinsight',
+            siteName: '진사이트',
             images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
         },
         twitter: {
@@ -299,11 +301,11 @@ export default async function LocalDetailPage({ params }: PageProps) {
                 } : {}),
                 'author': {
                     '@type': 'Person',
-                    'name': post.author?.name || post.authorName || 'Zinsight 편집부',
+                    'name': post.author?.name || post.authorName || '진사이트 편집부',
                 },
                 'publisher': {
                     '@type': 'Organization',
-                    'name': 'Zinsight',
+                    'name': '진사이트',
                     'logo': {
                         '@type': 'ImageObject',
                         'url': `${baseUrl}/img/zinsight_icon.png`,

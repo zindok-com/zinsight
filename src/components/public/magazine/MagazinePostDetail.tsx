@@ -179,7 +179,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                             </h1>
 
                             <div className="flex items-center gap-4 text-ui-label font-ui-label text-zi-outline">
-                                <span>발행: {post.author?.name || post.authorName || 'Zinsight 편집부'}</span>
+                                <span>발행: {post.author?.name || post.authorName || '진사이트 편집부'}</span>
                                 <span>•</span>
                                 <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                             </div>
@@ -265,7 +265,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
 
                         {/* ── 발행자 섹션 ── */}
                         {(post.author || post.authorName) && (() => {
-                            const authorName = post.author?.name || post.authorName || 'Zinsight 편집부';
+                            const authorName = post.author?.name || post.authorName || '진사이트 편집부';
                             const authorSlug = post.author?.slug;
                             const avatarUrl  = post.author?.avatarUrl;
                             const bio        = post.author?.bio;

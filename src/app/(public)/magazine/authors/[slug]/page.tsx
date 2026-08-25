@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const author = await prisma.author.findUnique({ where: { slug } });
     if (!author) return { title: 'Not Found' };
     return {
-        title: `${author.name} | 발행자 프로필 | Zinsight`,
+        title: `${author.name} 발행자 프로필`,
         description: author.bio || `${author.name}의 발행 기사를 확인하세요.`,
     };
 }

@@ -11,9 +11,7 @@ const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: {
-        absolute: '로컬 비즈니스 허브 | Zinsight Magazine',
-    },
+    title: '로컬 비즈니스 허브 - 관내 기업·지자체 소식',
     description: '전국 주요 지자체 및 지역 진흥원의 정책 자금, 관내 테크 스타트업 릴레이 인터뷰 및 골목상권 소상공인과의 디지털 상생 스토리를 다룹니다.',
     alternates: {
         canonical: `${baseUrl}/magazine/local`,
@@ -140,7 +138,7 @@ export default async function LocalHubPage() {
                                                 </p>
                                             </div>
                                             <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                                <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
+                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>
                                         </Link>

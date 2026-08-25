@@ -236,7 +236,7 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
 
                                 {/* 메타 정보 */}
                                 <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-caption text-slate-400 mt-4">
-                                    <span>{post.author?.name || post.authorName || 'Zinsight 편집부'}</span>
+                                    <span>{post.author?.name || post.authorName || '진사이트 편집부'}</span>
                                     <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}</span>
                                 </div>
                             </article>

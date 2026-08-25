@@ -13,9 +13,7 @@ const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: {
-        absolute: 'Zinsight Magazine - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트 (Zinsight)',
-    },
+    title: '매거진 - 테크·마케팅 저널 & 로컬 비즈니스 허브',
     description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
     alternates: {
         canonical: `${baseUrl}/magazine`,
@@ -30,21 +28,6 @@ export const metadata: Metadata = {
             'max-image-preview': 'large',
             'max-snippet': -1,
         },
-    },
-    openGraph: {
-        title: 'Zinsight Magazine - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트 (Zinsight)',
-        description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
-        url: `${baseUrl}/magazine`,
-        type: 'website',
-        locale: 'ko_KR',
-        siteName: 'Zinsight',
-        images: [{ url: '/img/zinsight_icon.png', width: 1200, height: 630, alt: 'Zinsight Magazine' }],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Zinsight Magazine - GEO·SEO 마케팅 & 데이터 가치 증명 | 진사이트 (Zinsight)',
-        description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
-        images: ['/img/zinsight_icon.png'],
     },
 };
 
@@ -115,7 +98,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                             {isSearchMode ? `키워드 검색 결과 (${allPosts.length}건)` : '최신 에디션'}
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
-                            {isSearchMode ? `"${keyword}" 검색` : 'Zinsight Magazine'}
+                            {isSearchMode ? `"${keyword}" 검색` : '진사이트 매거진'}
                         </h1>
                     </div>
                     {isSearchMode ? (
@@ -168,7 +151,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             {featuredPost.author.name}
                                         </Link>
                                     ) : (
-                                        featuredPost.authorName || 'Zinsight 편집부'
+                                        featuredPost.authorName || '진사이트 편집부'
                                     )}
                                 </span>
                                 <span>•</span>
@@ -274,7 +257,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                                 </p>
                                             </div>
                                             <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                                <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
+                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>
                                         </Link>
@@ -314,7 +297,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             <div className="flex items-center gap-2 text-zi-outline text-[12px]">
                                                 <span>{article.category?.name || article.region?.name || '소식'}</span>
                                                 <span>•</span>
-                                                <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
+                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
                                             </div>
                                         </Link>
                                     </ImpressionTracker>

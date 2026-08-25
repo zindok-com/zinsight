@@ -11,9 +11,7 @@ const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: {
-        absolute: '테크 · 마케팅 저널 | Zinsight Magazine',
-    },
+    title: '테크·마케팅 저널 - AEO·SEO·GEO 비즈니스 인사이트',
     description: '인공지능(AI) 시대의 GEO/SEO 마케팅 전략, B2B 리서치 분석 보고서를 다루는 기술 전문 저널 지면입니다.',
     alternates: {
         canonical: `${baseUrl}/magazine/tech-marketing`,
@@ -103,7 +101,7 @@ export default async function TechMarketingPage() {
                             </ImpressionTracker>
                             <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
                                 <span className="text-zi-on-surface font-semibold">
-                                    By {featuredPost.author?.name || featuredPost.authorName || 'Zinsight 편집부'}
+                                    By {featuredPost.author?.name || featuredPost.authorName || '진사이트 편집부'}
                                 </span>
                                 <span>•</span>
                                 <span>{new Date(featuredPost.createdAt).toLocaleDateString()}</span>
@@ -171,7 +169,7 @@ export default async function TechMarketingPage() {
                                                 </p>
                                             </div>
                                             <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                                <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
+                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
                                                 <ArrowRight className="h-4 w-4" />
                                             </div>
                                         </Link>

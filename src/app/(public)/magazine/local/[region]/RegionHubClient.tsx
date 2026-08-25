@@ -97,7 +97,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                         </ImpressionTracker>
                         <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
                             <span className="text-zi-on-surface font-semibold">
-                                By {localHeadline.author?.name || localHeadline.authorName || 'Zinsight 편집부'}
+                                By {localHeadline.author?.name || localHeadline.authorName || '진사이트 편집부'}
                             </span>
                             <span>•</span>
                             <span>{new Date(localHeadline.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
@@ -193,7 +193,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                         </p>
                                     </div>
                                     <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                        <span>{article.author?.name || article.authorName || 'Zinsight 편집부'}</span>
+                                        <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
                                         <ArrowRight className="h-4 w-4" />
                                     </div>
                                 </Link>

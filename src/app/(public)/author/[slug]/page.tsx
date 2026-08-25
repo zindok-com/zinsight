@@ -11,13 +11,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     if (!author) {
         return {
-            title: 'Author Not Found | Zinsight',
+            title: 'Author Not Found',
             robots: { index: false, follow: false }
         };
     }
 
-    const title = `${author.name} | Zinsight Magazine 작성자`;
-    const description = author.bio || `${author.name} 에디터가 작성한 Zinsight 매거진 기사 목록입니다.`;
+    const title = `${author.name} 에디터 프로필`;
+    const description = author.bio || `${author.name} 에디터가 작성한 진사이트 매거진 기사 목록입니다.`;
     const ogImage = author.avatarUrl || '/img/zinsight_icon.png';
 
     return {
@@ -74,14 +74,14 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                         <div className="text-center md:text-left space-y-4 min-w-0">
                             <div>
                                 <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-[11px] font-bold text-indigo-600 tracking-wider border border-indigo-100 uppercase mb-2">
-                                    Zinsight Magazine 에디터
+                                    진사이트 매거진 에디터
                                 </span>
                                 <h1 className="text-3xl md:text-4xl font-serif font-bold text-zi-primary tracking-tight">
                                     {author.name}
                                 </h1>
                             </div>
                             <p className="text-zi-on-surface-variant font-body-md text-base leading-relaxed max-w-2xl">
-                                {author.bio || '안녕하세요. Zinsight Magazine 에디터입니다. 깊이 있는 비즈니스 분석과 마켓 인사이트를 전해드립니다.'}
+                                {author.bio || '안녕하세요. 진사이트 매거진 에디터입니다. 깊이 있는 비즈니스 분석과 마켓 인사이트를 전해드립니다.'}
                             </p>
                         </div>
                     </div>
