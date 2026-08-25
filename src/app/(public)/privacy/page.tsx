@@ -6,8 +6,8 @@ const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: '개인정보처리방침 | Zinsight',
-    description: 'Zinsight 개인정보처리방침. 개인정보 수집 목적, 보유 기간, GA4 쿠키 수집 거부 및 보안 관리 대책을 안내합니다.',
+    title: '개인정보처리방침',
+    description: '진사이트(Zinsight) 개인정보처리방침. 개인정보 수집 목적, 보유 기간, GA4 쿠키 수집 거부 및 보안 관리 대책을 안내합니다.',
     alternates: {
         canonical: `${baseUrl}/privacy`,
     },

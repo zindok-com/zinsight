@@ -14,12 +14,6 @@ import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
 
 export const metadata: Metadata = {
-    title: {
-        absolute: 'Zinsight - B2B 세일즈 & GEO·SEO 마케팅 멀티 플랫폼 | 진사이트 (Zinsight)',
-    },
-    
-    description: '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
-    
     alternates: {
         canonical: 'https://zinsight.co.kr',
     },
@@ -33,21 +27,6 @@ export const metadata: Metadata = {
             'max-image-preview': 'large',
             'max-snippet': -1,
         },
-    },
-    openGraph: {
-        title: 'Zinsight - B2B 세일즈 & GEO·SEO 마케팅 멀티 플랫폼 | 진사이트 (Zinsight)',
-        description: '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
-        url: 'https://zinsight.co.kr',
-        siteName: 'Zinsight',
-        locale: 'ko_KR',
-        type: 'website',
-        images: [{ url: '/img/zinsight_icon.png', width: 1200, height: 630, alt: 'Zinsight' }],
-    },
-    twitter: {
-        card: 'summary_large_image',
-        title: 'Zinsight - B2B 세일즈 & GEO·SEO 마케팅 멀티 플랫폼 | 진사이트 (Zinsight)',
-        description: '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
-        images: ['/img/zinsight_icon.png'],
     },
 };
 
@@ -69,8 +48,8 @@ export default async function PublicHomePage() {
             {
                 '@type': 'Organization',
                 '@id': 'https://zinsight.co.kr/#organization',
-                'name': 'Zinsight',
-                'alternateName': ['진사이트', '진독', 'Zindok'],
+                'name': '진사이트',
+                'alternateName': ['Zinsight', '진독', 'Zindok'],
                 'url': 'https://zinsight.co.kr',
                 'logo': {
                     '@type': 'ImageObject',
@@ -82,8 +61,8 @@ export default async function PublicHomePage() {
                 '@type': 'WebSite',
                 '@id': 'https://zinsight.co.kr/#website',
                 'url': 'https://zinsight.co.kr',
-                'name': 'Zinsight',
-                'alternateName': ['진사이트'],
+                'name': '진사이트',
+                'alternateName': ['Zinsight'],
                 'description': '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
                 'inLanguage': 'ko-KR',
                 'publisher': {
@@ -349,7 +328,7 @@ export default async function PublicHomePage() {
                     {/* 매거진 헤더 */}
                     <div className="mb-8 sm:mb-16 text-center">
                         <h2 className="font-serif mb-3 text-[24px] sm:text-zi-display font-semibold italic text-zi-primary">
-                            The Zinsight Magazine
+                            진사이트 매거진
                         </h2>
                         <p className="text-zi-body-md text-slate-500">
                             최신 마켓 인사이트와 심층 리서치를 저널리즘 형식으로 전달합니다.

@@ -6,8 +6,8 @@ const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: '이용약관 | Zinsight',
-    description: 'Zinsight 서비스 이용약관. 콘텐츠 저작권 보호, 무단 크롤링 금지 및 면책 조항을 명시합니다.',
+    title: '이용약관',
+    description: '진사이트(Zinsight) 서비스 이용약관. 콘텐츠 저작권 보호, 무단 크롤링 금지 및 면책 조항을 명시합니다.',
     alternates: {
         canonical: `${baseUrl}/terms`,
     },
