@@ -4,7 +4,7 @@ import { ArrowRight, Newspaper, Building2 } from 'lucide-react';
 import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarRegions } from '@/actions/insight-radar-actions';
-import MagazineAeoCTA from '@/components/public/MagazineAeoCTA';
+import RadarSocialProof from '@/components/public/RadarSocialProof';
 import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
@@ -277,7 +277,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                     </div>
                     {/* 사이드바 */}
                     <div className="lg:col-span-4 flex flex-col gap-8 sm:gap-12 self-start">
-                        <MagazineAeoCTA />
+                        <RadarSocialProof limit={8} />
  
                         {/* 트렌딩 사이드바 */}
                         {sideArticles.length > 0 ? (
