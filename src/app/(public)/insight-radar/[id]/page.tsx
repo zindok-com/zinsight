@@ -197,22 +197,22 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     {/* 1. Header Section */}
                     <div className="border-b border-slate-200 pb-10 mb-8">
                         <div className="mb-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                            <div className="flex flex-col gap-3 mb-6">
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
                                     {company.company_name}
                                 </h1>
                                 {backlinksList.length > 0 && (
-                                    <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         {backlinksList.map((link, idx) => (
                                             <a 
                                                 key={idx}
                                                 href={link.url.startsWith('http') ? link.url : `https://${link.url}`} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer" 
-                                                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-bold text-sm transition-all duration-200 shadow-sm shrink-0 group"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-semibold text-sm transition-all duration-200 shadow-sm shrink-0 group"
                                             >
                                                 <span>{link.title || '바로가기'}</span>
-                                                <ExternalLink size={16} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                                <ExternalLink size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                                             </a>
                                         ))}
                                     </div>
