@@ -197,19 +197,19 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     {/* 1. Header Section */}
                     <div className="border-b border-slate-200 pb-10 mb-8">
                         <div className="mb-6">
-                            <div className="flex flex-col gap-3 mb-6">
-                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
+                            <div className="flex items-start justify-between gap-6 mb-6">
+                                <h1 className="flex-1 min-w-0 text-3xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
                                     {company.company_name}
                                 </h1>
                                 {backlinksList.length > 0 && (
-                                    <div className="flex flex-wrap items-center gap-2">
+                                    <div className="flex flex-wrap justify-end items-center gap-2 shrink-0 pt-1">
                                         {backlinksList.map((link, idx) => (
                                             <a 
                                                 key={idx}
                                                 href={link.url.startsWith('http') ? link.url : `https://${link.url}`} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer" 
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-semibold text-sm transition-all duration-200 shadow-sm shrink-0 group"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-semibold text-sm transition-all duration-200 shadow-sm group"
                                             >
                                                 <span>{link.title || '바로가기'}</span>
                                                 <ExternalLink size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
