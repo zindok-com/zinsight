@@ -106,6 +106,11 @@ export default function RootLayout({
                     </Script>
                 </>
                 )}
+                {/* 🗞️ Google 선호하는 출처(Preferred Source) 버튼 초기화 스크립트 */}
+                <Script
+                    src="https://news.google.com/swg/js/v1/publisher.js"
+                    strategy="afterInteractive"
+                />
                 <Toaster />
                 <Analytics />
                 <SpeedInsights />

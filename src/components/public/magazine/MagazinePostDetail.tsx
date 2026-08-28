@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Building2, ArrowRight } from 'lucide-react';
 import { ViewTracker } from '@/components/public/analytics/ViewTracker';
+import { PreferredSourceButton } from '@/components/public/magazine/PreferredSourceButton';
 
 interface HighlightedTextProps {
     text: string;
@@ -316,6 +317,11 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                         })()}
 
                         {/* isPaid 기사 하단 편집 독립성 고지 */}
+                        {/* Google 선호하는 출처 버튼 */}
+                        <div className="mt-8 pt-6 border-t border-zi-divider">
+                            <PreferredSourceButton />
+                        </div>
+
                         {post.isPaid && (
                             <p className="mt-8 text-[11px] text-zi-outline leading-relaxed border-t border-zi-divider pt-5 italic">
                                 {post.category?.slug === 'edu-collab'
