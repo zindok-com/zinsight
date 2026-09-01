@@ -1,4 +1,4 @@
-﻿import { google } from 'googleapis';
+import { google } from 'googleapis';
 import path from 'path';
 import fs from 'fs';
 
@@ -20,7 +20,8 @@ function getAuth() {
     });
 }
 
-const SITE_URL = process.env.GSC_SITE_URL || 'https://zinsight.co.kr';
+const domain = process.env.DOMAIN || 'zinsight.co.kr';
+const SITE_URL = process.env.GSC_SITE_URL || `sc-domain:${domain}`;
 
 export interface DateRange { startDate: string; endDate: string }
 
