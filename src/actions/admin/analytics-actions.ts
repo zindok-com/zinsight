@@ -186,6 +186,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
     const org = await prisma.organization.findUnique({
         where: { id: orgId },
         include: {
+            region: true,
             magazinePosts: {
                 include: {
                     magazinePost: { select: { id: true, title: true, slug: true, viewCount: true } },
@@ -213,6 +214,8 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
             name: org.company_name,
             slug: org.slug,
             pageUrl,
+            regionName: org.region?.name ?? null,
+            isFeatured: org.is_featured ?? false,
         },
         dateRange,
         summary: {

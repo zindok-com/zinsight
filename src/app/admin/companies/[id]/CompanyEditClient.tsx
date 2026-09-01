@@ -21,6 +21,7 @@ import {
     Edit3,
     BookOpen,
     BarChart3,
+    Edit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -489,7 +490,8 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
 
             {/* 탭 네비게이션 */}
             <div className="flex gap-2 border-b">
-                <span className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground">
+                <span className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground flex items-center gap-1.5">
+                    <Edit className="w-3.5 h-3.5" />
                     편집
                 </span>
                 <Link
