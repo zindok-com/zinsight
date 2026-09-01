@@ -51,22 +51,31 @@ export async function getPagePerformance(
                         filters: [
                             {
                                 dimension: 'page',
-                                operator: 'equals',
-                                expression: pageUrl,
+                                operator: 'contains',
+                                expression: pageUrl.replace(/^https?:\/\/[^\/]+/, ''), // 경로만 추출 (/magazine/...)
                             },
                         ],
                     },
                 ],
-                rowLimit: 1,
+                rowLimit: 50,
             },
         });
-        const row = res.data.rows?.[0];
-        if (!row) return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+        const rows = res.data.rows ?? [];
+        if (rows.length === 0) return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+
+        const totalClicks = rows.reduce((s, r) => s + (r.clicks ?? 0), 0);
+        const totalImpressions = rows.reduce((s, r) => s + (r.impressions ?? 0), 0);
+        const ctr = totalImpressions > 0 ? Math.round((totalClicks / totalImpressions) * 10000) / 100 : 0;
+        
+        // 노출수 가중 평균 순위
+        const weightedPosSum = rows.reduce((s, r) => s + (r.position ?? 0) * (r.impressions ?? 1), 0);
+        const position = totalImpressions > 0 ? Math.round((weightedPosSum / totalImpressions) * 10) / 10 : 0;
+
         return {
-            clicks: row.clicks ?? 0,
-            impressions: row.impressions ?? 0,
-            ctr: Math.round((row.ctr ?? 0) * 10000) / 100, // 백분율 소수점 2자리
-            position: Math.round((row.position ?? 0) * 10) / 10,
+            clicks: totalClicks,
+            impressions: totalImpressions,
+            ctr,
+            position,
         };
     } catch (err) {
         console.error('[gsc] getPagePerformance failed:', err);
@@ -99,8 +108,8 @@ export async function getSearchAppearanceBreakdown(
                         filters: [
                             {
                                 dimension: 'page',
-                                operator: 'equals',
-                                expression: pageUrl,
+                                operator: 'contains',
+                                expression: pageUrl.replace(/^https?:\/\/[^\/]+/, ''),
                             },
                         ],
                     },
