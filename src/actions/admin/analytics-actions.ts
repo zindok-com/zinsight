@@ -208,12 +208,16 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         Promise.all(
             org.magazinePosts.map(async (mo: { magazinePost: { id: number; title: string; slug: string; viewCount: number } }) => {
                 const post = mo.magazinePost;
-                const inboundClicks = await getArticleEventCounts(post.slug, 'radar_profile_click', dateRange);
+                const [pvs, inboundClicks] = await Promise.all([
+                    getArticlePageviews(post.slug, dateRange),
+                    getArticleEventCounts(post.slug, 'radar_profile_click', dateRange),
+                ]);
+                const views = pvs?.reduce((s, r) => s + r.views, 0) ?? post.viewCount;
                 return {
                     id: post.id,
                     title: post.title,
                     slug: post.slug,
-                    viewCount: post.viewCount,
+                    viewCount: views,
                     inboundClicks: inboundClicks ?? 0,
                 };
             })
