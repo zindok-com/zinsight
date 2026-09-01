@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Building2, ArrowRight } from 'lucide-react';
 import { ViewTracker } from '@/components/public/analytics/ViewTracker';
 import { PreferredSourceButton } from '@/components/public/magazine/PreferredSourceButton';
+import { ArticleTracker } from '@/components/public/analytics/ArticleTracker';
 
 interface HighlightedTextProps {
     text: string;
@@ -133,6 +134,13 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
         <div className="min-h-screen bg-zi-surface text-zi-on-surface pb-24 relative">
             {/* 데이터 분석용 뷰 카운터 */}
             <ViewTracker postId={post.id} />
+            {/* GA4 커스텀 이벤트 트래커 */}
+            <ArticleTracker
+                postId={post.id}
+                slug={post.slug}
+                category={post.category?.slug ?? 'unknown'}
+                region={post.region?.slug ?? null}
+            />
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

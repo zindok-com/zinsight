@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, User, Target, Zap, Briefcase, Tag } from 'lucide-react';
 import { getRadarCompanyDetail } from '@/actions/insight-radar-actions';
+import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -175,6 +176,12 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
+            {/* GA4 조직 프로필 뷰 및 아웃바운드 링크 트래커 */}
+            <OrganizationTracker
+                orgId={company.id}
+                slug={company.slug || String(company.id)}
+                region={company.region?.name ?? null}
+            />
             {/* JSON-LD 삽입 */}
             <script
                 type="application/ld+json"
