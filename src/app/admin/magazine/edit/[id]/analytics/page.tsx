@@ -1,4 +1,4 @@
-﻿import { notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { getArticleAnalyticsSummary } from '@/actions/admin/analytics-actions';
@@ -30,12 +30,20 @@ export default async function ArticleAnalyticsPage({ params, searchParams }: Pag
                     <h1 className="text-2xl font-bold tracking-tight line-clamp-2">{post.title}</h1>
                     <p className="text-muted-foreground text-sm mt-1">기사 성과 애널리틱스</p>
                 </div>
-                <Link
-                    href={`/admin/magazine/edit/${id}`}
-                    className="shrink-0 text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors"
-                >
-                    ← 편집으로
-                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        href="/admin/magazine"
+                        className="text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors bg-background"
+                    >
+                        ← 목록으로
+                    </Link>
+                    <Link
+                        href={`/admin/magazine/edit/${id}`}
+                        className="text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors bg-background"
+                    >
+                        기사 편집
+                    </Link>
+                </div>
             </div>
             <div className="flex gap-2 border-b">
                 <Link

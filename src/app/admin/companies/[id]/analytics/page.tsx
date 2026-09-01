@@ -1,4 +1,4 @@
-﻿import { notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getOrgAnalyticsSummary } from '@/actions/admin/analytics-actions';
 import { OrgAnalyticsClient } from './OrgAnalyticsClient';
@@ -23,12 +23,20 @@ export default async function OrgAnalyticsPage({ params, searchParams }: PagePro
                     <h1 className="text-2xl font-bold tracking-tight">{data.org.name}</h1>
                     <p className="text-muted-foreground text-sm mt-1">조직 프로필 애널리틱스</p>
                 </div>
-                <Link
-                    href={`/admin/companies/${id}`}
-                    className="shrink-0 text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors"
-                >
-                    ← 편집으로
-                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                    <Link
+                        href="/admin/companies"
+                        className="text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors bg-background"
+                    >
+                        ← 목록으로
+                    </Link>
+                    <Link
+                        href={`/admin/companies/${id}`}
+                        className="text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors bg-background"
+                    >
+                        조직 편집
+                    </Link>
+                </div>
             </div>
             <div className="flex gap-2 border-b">
                 <Link href={`/admin/companies/${id}`} className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground">편집</Link>
