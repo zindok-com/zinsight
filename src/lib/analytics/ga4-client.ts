@@ -1,4 +1,4 @@
-﻿import { BetaAnalyticsDataClient } from '@google-analytics/data';
+import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import path from 'path';
 import fs from 'fs';
 
@@ -54,41 +54,45 @@ export async function getArticlePageviews(slug: string, dateRange: DateRange) {
     }
 }
 
-// ── 커스텀 이벤트 집계 ────────────────────────────────────────────
+// ── 커스텀 이벤트 집계 (표준 dimension인 eventName & pagePath 기반) ──────────
 export async function getArticleEventCounts(
-    postId: number,
+    slugOrId: string | number,
     eventName: string,
     dateRange: DateRange,
 ) {
     try {
+        const expressions: any[] = [
+            {
+                filter: {
+                    fieldName: 'eventName',
+                    stringFilter: { matchType: 'EXACT', value: eventName },
+                },
+            },
+        ];
+
+        const slugStr = String(slugOrId).trim();
+        if (slugStr) {
+            expressions.push({
+                filter: {
+                    fieldName: 'pagePath',
+                    stringFilter: { matchType: 'CONTAINS', value: slugStr },
+                },
+            });
+        }
+
         const [res] = await getClient().runReport({
             property: `properties/${PROPERTY_ID}`,
             dateRanges: [dateRange],
             dimensions: [{ name: 'eventName' }],
             metrics: [{ name: 'eventCount' }],
             dimensionFilter: {
-                andGroup: {
-                    expressions: [
-                        {
-                            filter: {
-                                fieldName: 'eventName',
-                                stringFilter: { matchType: 'EXACT', value: eventName },
-                            },
-                        },
-                        {
-                            filter: {
-                                fieldName: 'customEvent:article_id',
-                                stringFilter: { matchType: 'EXACT', value: String(postId) },
-                            },
-                        },
-                    ],
-                },
+                andGroup: { expressions },
             },
         });
         return Number(res.rows?.[0]?.metricValues?.[0]?.value ?? 0);
     } catch (err) {
-        console.error('[ga4] getArticleEventCounts failed:', err);
-        return null;
+        console.error(`[ga4] getArticleEventCounts (${eventName}) failed:`, err);
+        return 0;
     }
 }
 

@@ -160,8 +160,8 @@ export async function getArticleAnalyticsSummary(
     const [pageviews, radarClicks, outboundClicks, trafficSources, geography, gscPerf, gscAppearance] =
         await Promise.all([
             getArticlePageviews(post.slug, dateRange),
-            getArticleEventCounts(postId, 'radar_profile_click', dateRange),
-            getArticleEventCounts(postId, 'outbound_link_click', dateRange),
+            getArticleEventCounts(post.slug, 'radar_profile_click', dateRange),
+            getArticleEventCounts(post.slug, 'outbound_link_click', dateRange),
             getTrafficSource(post.slug, dateRange),
             getVisitorGeography(post.slug, dateRange),
             getPagePerformance(pageUrl, dateRange),
@@ -202,14 +202,14 @@ export async function getArticleAnalyticsSummary(
 
 // ── 기사 전환 퍼널 ────────────────────────────────────────────────
 export async function getArticleFunnel(postId: number, periodDays: number | 'all' = 30) {
-    const dateRange = buildDateRange(periodDays);
-    const [radarClicks] = await Promise.all([
-        getArticleEventCounts(postId, 'radar_profile_click', dateRange),
-    ]);
     const post = await prisma.magazinePost.findUnique({
         where: { id: postId },
-        select: { viewCount: true },
+        select: { slug: true, viewCount: true },
     });
+    const dateRange = buildDateRange(periodDays);
+    const [radarClicks] = await Promise.all([
+        getArticleEventCounts(post?.slug || String(postId), 'radar_profile_click', dateRange),
+    ]);
     const views = post?.viewCount ?? 0;
     const radar = radarClicks ?? 0;
     return {
@@ -234,12 +234,13 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
     if (!org) return null;
 
     const dateRange = buildDateRange(periodDays);
-    const pageUrl = `https://zinsight.co.kr/insight-radar/${org.slug || org.id}`;
+    const orgIdentifier = org.slug || String(org.id);
+    const pageUrl = `https://zinsight.co.kr/insight-radar/${orgIdentifier}`;
 
     const [profileViews, outboundClicks, geography] = await Promise.all([
-        getArticlePageviews(org.slug || String(org.id), dateRange),
-        getArticleEventCounts(orgId, 'outbound_link_click', dateRange),
-        getVisitorGeography(org.slug || String(org.id), dateRange),
+        getArticlePageviews(orgIdentifier, dateRange),
+        getArticleEventCounts(orgIdentifier, 'outbound_link_click', dateRange),
+        getVisitorGeography(orgIdentifier, dateRange),
     ]);
 
     const linkedArticles = org.magazinePosts.map((mo: { magazinePost: { id: number; title: string; slug: string; viewCount: number } }) => mo.magazinePost);
