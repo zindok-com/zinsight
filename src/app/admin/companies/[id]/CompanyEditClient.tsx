@@ -487,6 +487,20 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 </div>
             </div>
 
+            {/* 탭 네비게이션 */}
+            <div className="flex gap-2 border-b">
+                <span className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground">
+                    편집
+                </span>
+                <Link
+                    href={`/admin/companies/${company.id}/analytics`}
+                    className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5"
+                >
+                    <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
+                    애널리틱스
+                </Link>
+            </div>
+
             {/* 메인 2단 레이아웃 */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                 {/* 좌측: 조직 정보 입력 폼 (7컬럼) */}
