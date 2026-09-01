@@ -228,69 +228,6 @@ export function MagazineListTable({
                                 <TableHead>제목</TableHead>
                                 <TableHead>상태</TableHead>
                                 <TableHead>발행자</TableHead>
-                                <TableHead className="text-right">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div className="inline-flex items-center justify-end gap-1 cursor-help group">
-                                                <span className="group-hover:text-blue-600 transition-colors">노출수</span>
-                                                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground group-hover:text-blue-600 transition-colors" />
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" className="text-left space-y-1 p-3">
-                                            <p className="font-semibold text-white flex items-center gap-1">
-                                                <span>📊 노출수 (Impressions)</span>
-                                            </p>
-                                            <p className="text-[11px] text-slate-300">
-                                                포털 홈, 매거진 피드, 목록 등에서 사용자의 화면 뷰포트에 이 포스트 카드가 실제로 스크롤되어 노출된 총 횟수입니다.
-                                            </p>
-                                            <p className="text-[10px] text-slate-400 border-t border-slate-700 pt-1">
-                                                * Intersection Observer 기반 실측 추적
-                                            </p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TableHead>
-                                <TableHead className="text-right">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div className="inline-flex flex-col items-end cursor-help group">
-                                                <div className="inline-flex items-center gap-1">
-                                                    <span className="group-hover:text-blue-600 transition-colors">조회수</span>
-                                                    <HelpCircle className="h-3.5 w-3.5 text-muted-foreground group-hover:text-blue-600 transition-colors" />
-                                                </div>
-                                                <span className="text-[10px] text-muted-foreground font-normal tracking-tight">(전체/순)</span>
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" className="text-left space-y-1.5 p-3">
-                                            <p className="font-semibold text-white">👀 조회수 (Views)</p>
-                                            <div className="text-[11px] text-slate-300 space-y-1">
-                                                <p><span className="font-semibold text-slate-100">위 (전체 조회수):</span> 독자가 기사 상세 본문을 열람한 총 횟수 (새로고침 및 중복 방문 포함)</p>
-                                                <p><span className="font-semibold text-slate-100">아래 (순 조회수):</span> 중복 열람을 제외한 순수 고유 독자(세션)의 본문 열람 횟수</p>
-                                            </div>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TableHead>
-                                <TableHead className="text-right">
-                                    <Tooltip>
-                                        <TooltipTrigger asChild>
-                                            <div className="inline-flex items-center justify-end gap-1 cursor-help group">
-                                                <span className="group-hover:text-blue-600 transition-colors">CTR</span>
-                                                <HelpCircle className="h-3.5 w-3.5 text-muted-foreground group-hover:text-blue-600 transition-colors" />
-                                            </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top" className="text-left space-y-1.5 p-3">
-                                            <p className="font-semibold text-white">🎯 클릭률 (Click-Through Rate)</p>
-                                            <p className="text-[11px] text-slate-300">
-                                                피드에 노출된 횟수 중 실제 기사 클릭 및 본문 열람으로 전환된 비율입니다.
-                                            </p>
-                                            <p className="text-[10px] text-emerald-400 font-mono border-t border-slate-700 pt-1">
-                                                계산식: (조회수 ÷ 노출수) × 100 (%)
-                                            </p>
-                                            <p className="text-[10px] text-slate-400">
-                                                * 썸네일과 헤드라인의 매력도 및 독자 유입 효율을 나타냅니다.
-                                            </p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TableHead>
                                 <TableHead>등록일</TableHead>
                                 <TableHead className="text-right">관리</TableHead>
                             </TableRow>
@@ -340,44 +277,28 @@ export function MagazineListTable({
                                     <Badge
                                         variant={post.status === 'PUBLISHED' ? 'default' : post.status === 'HIDDEN' ? 'destructive' : 'secondary'}
                                         className={
-                                            post.status === 'PUBLISHED'
-                                                ? 'bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200'
-                                                : post.status === 'HIDDEN'
-                                                    ? 'bg-red-100 text-red-700 hover:bg-red-100/80 border-red-200'
-                                                    : 'bg-amber-100 text-amber-700 hover:bg-amber-100/80 border-amber-200'
-                                        }
-                                    >
-                                        {post.status === 'PUBLISHED' ? '발행됨' : post.status === 'HIDDEN' ? '숨김' : '초안'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                     <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[10px] font-medium">
-                                         {post.authorName || '진사이트 편집부'}
+                                             post.status === 'PUBLISHED'
+                                                 ? 'bg-green-100 text-green-700 hover:bg-green-100/80 border-green-200'
+                                                 : post.status === 'HIDDEN'
+                                                     ? 'bg-red-100 text-red-700 hover:bg-red-100/80 border-red-200'
+                                                     : 'bg-amber-100 text-amber-700 hover:bg-amber-100/80 border-amber-200'
+                                         }
+                                     >
+                                         {post.status === 'PUBLISHED' ? '발행됨' : post.status === 'HIDDEN' ? '숨김' : '초안'}
                                      </Badge>
                                  </TableCell>
-                                <TableCell className="text-right">
-                                    <span className="text-sm font-medium text-slate-700">
-                                        {post.impressions?.toLocaleString() || 0}
-                                    </span>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex flex-col items-end gap-0.5">
-                                        <span className="text-sm font-medium text-slate-700">{post.views?.toLocaleString() || post.viewCount || 0}</span>
-                                        <span className="text-[10px] text-muted-foreground tracking-tight">{post.uniqueViews?.toLocaleString() || 0}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Badge variant="outline" className={Number(post.ctr) > 5 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-600 border-slate-200"}>
-                                        {post.ctr || '0.00'}%
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-slate-500 text-xs font-medium whitespace-nowrap">
-                                    {new Date(post.createdAt).toLocaleDateString('ko-KR', {
-                                        year: '2-digit',
-                                        month: '2-digit',
-                                        day: '2-digit'
-                                    })}
-                                </TableCell>
+                                 <TableCell>
+                                      <Badge variant="outline" className="bg-slate-50 text-slate-700 border-slate-200 text-[10px] font-medium">
+                                          {post.authorName || '진사이트 편집부'}
+                                      </Badge>
+                                  </TableCell>
+                                 <TableCell className="text-slate-500 text-xs font-medium whitespace-nowrap">
+                                     {new Date(post.createdAt).toLocaleDateString('ko-KR', {
+                                         year: '2-digit',
+                                         month: '2-digit',
+                                         day: '2-digit'
+                                     })}
+                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
                                         <Button

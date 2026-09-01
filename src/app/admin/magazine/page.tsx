@@ -2,7 +2,7 @@ import { getPostsWithAnalytics, getDashboardAnalytics } from "@/actions/admin/an
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Eye, MousePointerClick, TrendingUp } from "lucide-react";
+import { Plus, Users, Eye, MousePointerClick, TrendingUp, FileText } from "lucide-react";
 import Link from "next/link";
 import { MagazineListTable } from "@/components/admin/magazine/MagazineListTable";
 
@@ -35,42 +35,42 @@ export default async function MagazinePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">최근 7일 방문자 (DAU 합산)</CardTitle>
-                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">총 포스트</CardTitle>
+                        <FileText className="w-4 h-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.totalDau.toLocaleString()}명</div>
-                        <p className="text-xs text-muted-foreground">유니크 쿠키 기반</p>
+                        <div className="text-2xl font-bold">{posts.length.toLocaleString()}건</div>
+                        <p className="text-xs text-muted-foreground">등록된 전체 매거진 기사</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">노출수 (Impressions)</CardTitle>
-                        <Eye className="w-4 h-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">발행 완료 (Published)</CardTitle>
+                        <TrendingUp className="w-4 h-4 text-emerald-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.totalImpressions.toLocaleString()}회</div>
-                        <p className="text-xs text-muted-foreground">리스트 및 피드 노출 합산</p>
+                        <div className="text-2xl font-bold text-emerald-700">{posts.filter((p: any) => p.status === 'PUBLISHED').length.toLocaleString()}건</div>
+                        <p className="text-xs text-muted-foreground">실서비스 공개 중인 기사</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">조회수 (Views)</CardTitle>
-                        <MousePointerClick className="w-4 h-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">최근 7일 방문자 (DAU)</CardTitle>
+                        <Users className="w-4 h-4 text-blue-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.totalViews.toLocaleString()}회</div>
-                        <p className="text-xs text-muted-foreground">상세페이지 실제 조회</p>
+                        <div className="text-2xl font-bold text-blue-700">{summary.totalDau.toLocaleString()}명</div>
+                        <p className="text-xs text-muted-foreground">Google Analytics 4 실데이터</p>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">평균 CTR</CardTitle>
-                        <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                        <CardTitle className="text-sm font-medium">최근 7일 페이지뷰</CardTitle>
+                        <Eye className="w-4 h-4 text-indigo-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{summary.avgCtr}%</div>
-                        <p className="text-xs text-muted-foreground">조회수 / 노출수</p>
+                        <div className="text-2xl font-bold text-indigo-700">{summary.totalViews.toLocaleString()}회</div>
+                        <p className="text-xs text-muted-foreground">Google Analytics 4 실데이터</p>
                     </CardContent>
                 </Card>
             </div>
