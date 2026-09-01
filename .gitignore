@@ -11,3 +11,7 @@ data/raw/
 /src/generated/prisma
 pnpm-lock.yaml
 next-env.d.ts
+
+# Google Cloud Service Account Key
+zinsight-analytics-*.json
+zinsight-analytics-2026-9897decb4585.json
