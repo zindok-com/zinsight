@@ -200,13 +200,27 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
     const orgIdentifier = org.slug || String(org.id);
     const pageUrl = `https://zinsight.co.kr/insight-radar/${orgIdentifier}`;
 
-    const [profileViews, outboundClicks, geography] = await Promise.all([
+    const [profileViews, outboundClicks, articleClicksFromProfile, geography, linkedArticlesWithClicks] = await Promise.all([
         getArticlePageviews(orgIdentifier, dateRange),
         getArticleEventCounts(orgIdentifier, 'outbound_link_click', dateRange),
+        getArticleEventCounts(orgIdentifier, 'magazine_article_click', dateRange),
         getVisitorGeography(orgIdentifier, dateRange),
+        Promise.all(
+            org.magazinePosts.map(async (mo: { magazinePost: { id: number; title: string; slug: string; viewCount: number } }) => {
+                const post = mo.magazinePost;
+                const inboundClicks = await getArticleEventCounts(post.slug, 'radar_profile_click', dateRange);
+                return {
+                    id: post.id,
+                    title: post.title,
+                    slug: post.slug,
+                    viewCount: post.viewCount,
+                    inboundClicks: inboundClicks ?? 0,
+                };
+            })
+        ),
     ]);
 
-    const linkedArticles = org.magazinePosts.map((mo: { magazinePost: { id: number; title: string; slug: string; viewCount: number } }) => mo.magazinePost);
+    const totalInboundFromArticles = linkedArticlesWithClicks.reduce((sum, a) => sum + a.inboundClicks, 0);
 
     return {
         org: {
@@ -220,10 +234,12 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         dateRange,
         summary: {
             profileViews: profileViews?.reduce((s, r) => s + r.views, 0) ?? null,
+            inboundFromArticles: totalInboundFromArticles,
             outboundClicks: outboundClicks ?? null,
+            articleClicksFromProfile: articleClicksFromProfile ?? null,
         },
         pageviews: profileViews ?? [],
         geography: geography ?? [],
-        linkedArticles,
+        linkedArticles: linkedArticlesWithClicks,
     };
 }

@@ -67,9 +67,27 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
             </div>
 
             {/* 요약 카드 */}
-            <div className="grid grid-cols-2 gap-4">
-                <StatCard label="프로필 조회수" value={summary.profileViews?.toLocaleString() ?? '—'} />
-                <StatCard label="아웃바운드 클릭" value={summary.outboundClicks?.toLocaleString() ?? '—'} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="rounded-xl border bg-card p-5 space-y-1">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">프로필 전체 조회수</p>
+                    <p className="text-3xl font-bold">{summary.profileViews?.toLocaleString() ?? '—'}</p>
+                    <p className="text-[11px] text-muted-foreground">레이더 프로필 총 열람 횟수</p>
+                </div>
+                <div className="rounded-xl border bg-card p-5 space-y-1">
+                    <p className="text-xs text-emerald-600 font-medium uppercase tracking-wide">포스트 ➔ 프로필 유입</p>
+                    <p className="text-3xl font-bold text-emerald-700">{summary.inboundFromArticles?.toLocaleString() ?? 0}회</p>
+                    <p className="text-[11px] text-muted-foreground">매거진 기사에서 프로필 클릭 전환</p>
+                </div>
+                <div className="rounded-xl border bg-card p-5 space-y-1">
+                    <p className="text-xs text-blue-600 font-medium uppercase tracking-wide">외부 아웃바운드 전환</p>
+                    <p className="text-3xl font-bold text-blue-700">{summary.outboundClicks?.toLocaleString() ?? '—'}</p>
+                    <p className="text-[11px] text-muted-foreground">공식 홈페이지 / SNS 링크 클릭</p>
+                </div>
+                <div className="rounded-xl border bg-card p-5 space-y-1">
+                    <p className="text-xs text-indigo-600 font-medium uppercase tracking-wide">프로필 ➔ 포스트 열람</p>
+                    <p className="text-3xl font-bold text-indigo-700">{summary.articleClicksFromProfile?.toLocaleString() ?? 0}회</p>
+                    <p className="text-[11px] text-muted-foreground">프로필에서 연관 기사로 이동</p>
+                </div>
             </div>
 
             {/* 날짜별 조회수 */}
@@ -118,8 +136,8 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
 
             {/* 연결된 기사 유입 기여도 */}
             <div className="space-y-3">
-                <h2 className="text-base font-semibold">📰 연결된 매거진 기사</h2>
-                <p className="text-xs text-muted-foreground">이 조직과 연결된 기사 목록 — 기사를 통해 프로필로 넘어오는 유입의 원천</p>
+                <h2 className="text-base font-semibold">📰 연결된 매거진 기사 및 유입 기여도</h2>
+                <p className="text-xs text-muted-foreground">이 조직과 연결된 기사 목록 및 각 기사 본문에서 조직 프로필로 유입된 클릭 전환 성과</p>
                 {linkedArticles.length > 0 ? (
                     <div className="border rounded-xl overflow-hidden">
                         <table className="w-full text-sm">
@@ -127,22 +145,28 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
                                 <tr>
                                     <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">기사 제목</th>
                                     <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">누적 조회수</th>
+                                    <th className="text-right px-4 py-2.5 font-medium text-emerald-600">프로필 유입 클릭</th>
                                     <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">애널리틱스</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {(linkedArticles as { id: number; title: string; slug: string; viewCount: number }[]).map((a) => (
+                                {(linkedArticles as { id: number; title: string; slug: string; viewCount: number; inboundClicks?: number }[]).map((a) => (
                                     <tr key={a.id} className="border-t">
                                         <td className="px-4 py-2.5 max-w-xs">
-                                            <span className="line-clamp-1">{a.title}</span>
+                                            <span className="line-clamp-1 font-medium">{a.title}</span>
                                         </td>
-                                        <td className="px-4 py-2.5 text-right">{a.viewCount.toLocaleString()}</td>
+                                        <td className="px-4 py-2.5 text-right text-muted-foreground">{a.viewCount.toLocaleString()}</td>
+                                        <td className="px-4 py-2.5 text-right">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                {(a.inboundClicks ?? 0).toLocaleString()}회
+                                            </span>
+                                        </td>
                                         <td className="px-4 py-2.5 text-right">
                                             <Link
                                                 href={`/admin/magazine/edit/${a.id}/analytics`}
                                                 className="text-indigo-600 hover:underline text-xs"
                                             >
-                                                보기 →
+                                                기사 통계 →
                                             </Link>
                                         </td>
                                     </tr>

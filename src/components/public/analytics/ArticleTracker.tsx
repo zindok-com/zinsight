@@ -116,13 +116,30 @@ export function OrganizationTracker({ orgId, slug, region }: OrganizationTracker
         });
     }, [orgId, slug, region]);
 
-    // 2. 이벤트 위임: 조직 프로필 내 아웃바운드 링크 클릭 감지
+    // 2. 이벤트 위임: 조직 프로필 내 링크 클릭 감지 (연관 기사 이동 및 아웃바운드)
     useEffect(() => {
         const handleClick = (e: MouseEvent) => {
             const target = (e.target as HTMLElement)?.closest('a');
             if (!target || !target.href) return;
 
+            const href = target.getAttribute('href') || '';
             const fullUrl = target.href;
+
+            // (A) 조직 프로필에서 매거진 기사로 이동 클릭 감지 (/magazine/...)
+            if (href.startsWith('/magazine/') || fullUrl.includes('/magazine/')) {
+                const parts = fullUrl.split('/magazine/');
+                const articleSlug = parts[1]?.split('?')[0]?.split('#')[0] || '';
+                if (typeof window !== 'undefined' && window.gtag) {
+                    window.gtag('event', 'magazine_article_click', {
+                        organization_id: orgId,
+                        organization_slug: slug || String(orgId),
+                        target_article: articleSlug,
+                    });
+                }
+                return;
+            }
+
+            // (B) 외부 아웃바운드 링크 클릭 감지 (홈페이지, SNS 등)
             if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
                 const currentHost = window.location.hostname;
                 try {
@@ -144,7 +161,7 @@ export function OrganizationTracker({ orgId, slug, region }: OrganizationTracker
 
         document.addEventListener('click', handleClick);
         return () => document.removeEventListener('click', handleClick);
-    }, [orgId]);
+    }, [orgId, slug]);
 
     return null;
 }
