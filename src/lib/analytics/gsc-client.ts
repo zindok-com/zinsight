@@ -32,14 +32,23 @@ export interface PagePerformance {
     position: number;
 }
 
+function extractSlug(urlOrSlug: string): string {
+    if (!urlOrSlug) return '';
+    const cleaned = urlOrSlug.trim().replace(/^https?:\/\/[^\/]+/, '').replace(/\/$/, '');
+    const parts = cleaned.split('/');
+    return parts[parts.length - 1] || cleaned;
+}
+
 // ── 페이지 검색 성과 (노출/클릭/CTR/순위) ─────────────────────────
 export async function getPagePerformance(
-    pageUrl: string,
+    pageUrlOrSlug: string,
     dateRange: DateRange,
 ): Promise<PagePerformance | null> {
     try {
         const auth = getAuth();
         const sc = google.searchconsole({ version: 'v1', auth });
+        const targetSlug = extractSlug(pageUrlOrSlug);
+
         const res = await sc.searchanalytics.query({
             siteUrl: SITE_URL,
             requestBody: {
@@ -52,7 +61,7 @@ export async function getPagePerformance(
                             {
                                 dimension: 'page',
                                 operator: 'contains',
-                                expression: pageUrl.replace(/^https?:\/\/[^\/]+/, ''), // 경로만 추출 (/magazine/...)
+                                expression: targetSlug,
                             },
                         ],
                     },
@@ -91,12 +100,14 @@ export interface SearchAppearance {
 }
 
 export async function getSearchAppearanceBreakdown(
-    pageUrl: string,
+    pageUrlOrSlug: string,
     dateRange: DateRange,
 ): Promise<SearchAppearance[] | null> {
     try {
         const auth = getAuth();
         const sc = google.searchconsole({ version: 'v1', auth });
+        const targetSlug = extractSlug(pageUrlOrSlug);
+
         const res = await sc.searchanalytics.query({
             siteUrl: SITE_URL,
             requestBody: {
@@ -109,7 +120,7 @@ export async function getSearchAppearanceBreakdown(
                             {
                                 dimension: 'page',
                                 operator: 'contains',
-                                expression: pageUrl.replace(/^https?:\/\/[^\/]+/, ''),
+                                expression: targetSlug,
                             },
                         ],
                     },

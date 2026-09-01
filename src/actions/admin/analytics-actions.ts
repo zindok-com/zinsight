@@ -130,6 +130,15 @@ function buildDateRange(periodDays: number | 'all'): DateRange {
     return { startDate: start.toISOString().split('T')[0], endDate };
 }
 
+function buildGscDateRange(periodDays: number | 'all'): DateRange {
+    const now = new Date();
+    const end = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const endDate = end.toISOString().split('T')[0];
+    if (periodDays === 'all') return { startDate: '2024-01-01', endDate };
+    const start = new Date(end.getTime() - (periodDays - 1) * 24 * 60 * 60 * 1000);
+    return { startDate: start.toISOString().split('T')[0], endDate };
+}
+
 // ── 기사 통합 애널리틱스 ─────────────────────────────────────────
 export async function getArticleAnalyticsSummary(
     postId: number,
@@ -146,6 +155,7 @@ export async function getArticleAnalyticsSummary(
     if (!post) return null;
 
     const dateRange = buildDateRange(periodDays);
+    const gscDateRange = buildGscDateRange(periodDays);
     const isLocal = post.category?.isLocal && post.region;
     const pageUrl = isLocal
         ? `https://zinsight.co.kr/magazine/local/${post.region?.slug}/${post.slug}`
@@ -164,8 +174,8 @@ export async function getArticleAnalyticsSummary(
             getArticleEventCounts(post.slug, 'outbound_link_click', dateRange),
             getTrafficSource(post.slug, dateRange),
             getVisitorGeography(post.slug, dateRange),
-            getPagePerformance(pageUrl, dateRange),
-            getSearchAppearanceBreakdown(pageUrl, dateRange),
+            getPagePerformance(post.slug, gscDateRange),
+            getSearchAppearanceBreakdown(post.slug, gscDateRange),
         ]);
 
     const views = pageviews?.reduce((s, r) => s + r.views, 0) ?? totalRawViews;
