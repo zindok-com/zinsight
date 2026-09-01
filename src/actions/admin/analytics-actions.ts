@@ -121,7 +121,7 @@ export async function getPostsWithAnalytics() {
 }
 
 // ── 날짜 범위 헬퍼 ────────────────────────────────────────────────
-export function buildDateRange(periodDays: number | 'all'): DateRange {
+function buildDateRange(periodDays: number | 'all'): DateRange {
     const end = new Date();
     const endDate = end.toISOString().split('T')[0];
     if (periodDays === 'all') return { startDate: '2024-01-01', endDate };
