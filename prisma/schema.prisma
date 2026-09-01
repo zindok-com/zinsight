@@ -206,7 +206,6 @@ model MagazinePost {
 
   // Relationships (Many-to-Many via join tables)
   organizations   MagazinePostOrganization[]
-  analytics       PostDailyAnalytics[]
 
   @@map("magazine_posts")
 }
@@ -288,35 +287,6 @@ model Admin {
   updated_at         DateTime @updatedAt
 
   @@map("admins")
-}
-
-// ─── 포스트 일별 분석 ────────────────────────────────────────────────
-model PostDailyAnalytics {
-  id                Int          @id @default(autoincrement())
-  postId            Int          @map("post_id")
-  date              DateTime     @db.Date
-  impressions       Int          @default(0)
-  rawViews          Int          @default(0) @map("raw_views")
-  uniqueViews       Int          @default(0) @map("unique_views")
-  aiFeedImpressions Int          @default(0) @map("ai_feed_impressions")
-
-  post              MagazinePost @relation(fields: [postId], references: [id], onDelete: Cascade)
-
-  @@unique([postId, date])
-  @@index([date])
-  @@map("post_daily_analytics")
-}
-
-// ─── 방문자 로그 ─────────────────────────────────────────────────────
-model VisitorLog {
-  id         Int      @id @default(autoincrement())
-  visitorId  String   @map("visitor_id") @db.VarChar(100)
-  date       DateTime @db.Date // YYYY-MM-DD
-  createdAt  DateTime @default(now()) @map("created_at")
-
-  @@unique([visitorId, date])
-  @@index([date])
-  @@map("visitor_logs")
 }
 
 // ─── 지역 (분류 축 핵심 테이블) ─────────────────────────────────────

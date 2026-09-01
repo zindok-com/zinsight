@@ -105,7 +105,6 @@ export async function getArticleAnalyticsSummary(
     const post = await prisma.magazinePost.findUnique({
         where: { id: postId },
         include: {
-            analytics: true,
             category: true,
             region: true,
         },
@@ -119,11 +118,6 @@ export async function getArticleAnalyticsSummary(
         ? `https://zinsight.co.kr/magazine/local/${post.region?.slug}/${post.slug}`
         : `https://zinsight.co.kr/magazine/tech-marketing/${post.slug}`;
 
-    // 자체 DB 집계
-    const totalRawViews = post.analytics.reduce((s, a) => s + a.rawViews, 0);
-    const totalUniqueViews = post.analytics.reduce((s, a) => s + a.uniqueViews, 0);
-    const totalImpressions = post.analytics.reduce((s, a) => s + a.impressions, 0);
-
     // GA4·GSC 병렬 호출 (실패해도 null 반환, graceful)
     const [pageviews, radarClicks, outboundClicks, trafficSources, geography, gscPerf, gscAppearance] =
         await Promise.all([
@@ -136,7 +130,7 @@ export async function getArticleAnalyticsSummary(
             getSearchAppearanceBreakdown(post.slug, gscDateRange),
         ]);
 
-    const views = pageviews?.reduce((s, r) => s + r.views, 0) ?? totalRawViews;
+    const views = pageviews?.reduce((s, r) => s + r.views, 0) ?? 0;
     const conversionRate =
         views > 0 && radarClicks != null
             ? Math.round((radarClicks / views) * 10000) / 100
@@ -154,8 +148,8 @@ export async function getArticleAnalyticsSummary(
         dateRange,
         summary: {
             views,
-            uniqueViews: totalUniqueViews,
-            impressions: totalImpressions,
+            uniqueViews: views,
+            impressions: gscPerf?.impressions ?? 0,
             radarClicks: radarClicks ?? null,
             outboundClicks: outboundClicks ?? null,
             conversionRate,
