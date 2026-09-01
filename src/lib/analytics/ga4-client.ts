@@ -16,7 +16,20 @@ function getCredentials() {
     return JSON.parse(fs.readFileSync(abs, 'utf-8'));
 }
 
-const PROPERTY_ID = process.env.GA4_PROPERTY_ID || '538324402';
+function getPropertyId(): string {
+    if (process.env.GA4_PROPERTY_ID) {
+        return process.env.GA4_PROPERTY_ID;
+    }
+    try {
+        const creds = getCredentials();
+        if (creds && creds.property_id) {
+            return String(creds.property_id);
+        }
+    } catch {}
+    return '538324402';
+}
+
+const PROPERTY_ID = getPropertyId();
 
 let _client: BetaAnalyticsDataClient | null = null;
 function getClient(): BetaAnalyticsDataClient {
