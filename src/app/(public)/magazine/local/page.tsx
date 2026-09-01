@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { ArrowRight, Building2, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { getLocalPosts, getRegions } from '@/actions/public/magazine-actions';
-import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 
@@ -108,41 +107,39 @@ export default async function LocalHubPage() {
                         {localPosts.length > 0 ? (
                             localPosts.map((article) => {
                                 return (
-                                    <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={`/magazine/local/${article.region?.slug || 'unknown'}/${article.slug}`} className="flex flex-col group cursor-pointer">
-                                            <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
-                                                {article.thumbnailUrl ? (
-                                                    <Image 
-                                                        src={article.thumbnailUrl} 
-                                                        alt={article.title}
-                                                        fill
-                                                        className="object-cover transition-all duration-500 group-hover:scale-105"
-                                                    />
-                                                ) : (
-                                                    <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
-                                                )}
+                                    <Link key={article.id} href={`/magazine/local/${article.region?.slug || 'unknown'}/${article.slug}`} className="flex flex-col group cursor-pointer">
+                                        <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                            {article.thumbnailUrl ? (
+                                                <Image 
+                                                    src={article.thumbnailUrl} 
+                                                    alt={article.title}
+                                                    fill
+                                                    className="object-cover transition-all duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                            )}
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-start">
+                                            <div className="flex items-center gap-1.5 mb-2 text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
+                                                <span>{article.region?.name || '공통'}</span>
+                                                <span>•</span>
+                                                <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
+                                                    {article.category?.name || '로컬 소식'}
+                                                </span>
                                             </div>
-                                            <div className="flex-1 flex flex-col justify-start">
-                                                <div className="flex items-center gap-1.5 mb-2 text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                                    <span>{article.region?.name || '공통'}</span>
-                                                    <span>•</span>
-                                                    <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
-                                                        {article.category?.name || '로컬 소식'}
-                                                    </span>
-                                                </div>
-                                                <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
-                                                    {article.title}
-                                                </h4>
-                                                <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
-                                                    <HighlightedText text={article.summary || ''} />
-                                                </p>
-                                            </div>
-                                            <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
-                                                <ArrowRight className="h-4 w-4" />
-                                            </div>
-                                        </Link>
-                                    </ImpressionTracker>
+                                            <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
+                                                {article.title}
+                                            </h4>
+                                            <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
+                                                <HighlightedText text={article.summary || ''} />
+                                            </p>
+                                        </div>
+                                        <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
+                                            <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
+                                            <ArrowRight className="h-4 w-4" />
+                                        </div>
+                                    </Link>
                                 );
                             })
                         ) : (

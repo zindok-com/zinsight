@@ -4,7 +4,6 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Newspaper, Building2, GraduationCap } from 'lucide-react';
-import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 function HighlightedText({ text }: { text: string }) {
     if (!text) return null;
@@ -83,18 +82,16 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                 {getHeadlineBadgeText(localHeadline.category?.slug, regionName)}
                             </span>
                         </div>
-                        <ImpressionTracker postId={localHeadline.id}>
-                            <Link href={`/magazine/local/${regionSlug}/${localHeadline.slug}`} className="group block cursor-pointer">
-                                <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-[32px] font-bold text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors leading-tight">
-                                    {localHeadline.title}
-                                </h2>
-                                <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
-                                    <HighlightedText 
-                                        text={localHeadline.summary ?? (localHeadline.content ? localHeadline.content.slice(0, 180) + '...' : '')} 
-                                    />
-                                </p>
-                            </Link>
-                        </ImpressionTracker>
+                        <Link href={`/magazine/local/${regionSlug}/${localHeadline.slug}`} className="group block cursor-pointer">
+                            <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-[32px] font-bold text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors leading-tight">
+                                {localHeadline.title}
+                            </h2>
+                            <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
+                                <HighlightedText 
+                                    text={localHeadline.summary ?? (localHeadline.content ? localHeadline.content.slice(0, 180) + '...' : '')} 
+                                />
+                            </p>
+                        </Link>
                         <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
                             <span className="text-zi-on-surface font-semibold">
                                 By {localHeadline.author?.name || localHeadline.authorName || '진사이트 편집부'}
@@ -159,45 +156,44 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                         const categoryName = article.category?.name || '로컬 소식';
                         
                         return (
-                            <ImpressionTracker postId={article.id} key={article.id}>
-                                <Link 
-                                    href={`/magazine/local/${regionSlug}/${article.slug}`} 
-                                    className="flex flex-col group cursor-pointer"
-                                >
-                                    <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
-                                        {article.thumbnailUrl ? (
-                                            <Image 
-                                                src={article.thumbnailUrl} 
-                                                alt={article.title}
-                                                fill
-                                                className="object-cover transition-all duration-500 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
-                                        )}
-                                        {article.isPaid && (
-                                            <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
-                                                {article.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 flex flex-col justify-start">
-                                        <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                            {categoryName}
-                                        </span>
-                                        <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
-                                            {article.title}
-                                        </h4>
-                                        <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
-                                            <HighlightedText text={article.summary || ''} />
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                        <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
-                                        <ArrowRight className="h-4 w-4" />
-                                    </div>
-                                </Link>
-                            </ImpressionTracker>
+                            <Link 
+                                key={article.id}
+                                href={`/magazine/local/${regionSlug}/${article.slug}`} 
+                                className="flex flex-col group cursor-pointer"
+                            >
+                                <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                    {article.thumbnailUrl ? (
+                                        <Image 
+                                            src={article.thumbnailUrl} 
+                                            alt={article.title}
+                                            fill
+                                            className="object-cover transition-all duration-500 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                    )}
+                                    {article.isPaid && (
+                                        <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
+                                            {article.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex-1 flex flex-col justify-start">
+                                    <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
+                                        {categoryName}
+                                    </span>
+                                    <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
+                                        {article.title}
+                                    </h4>
+                                    <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
+                                        <HighlightedText text={article.summary || ''} />
+                                    </p>
+                                </div>
+                                <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
+                                    <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
+                                    <ArrowRight className="h-4 w-4" />
+                                </div>
+                            </Link>
                         );
                     })
                 ) : (

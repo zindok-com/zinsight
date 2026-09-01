@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarRegions } from '@/actions/insight-radar-actions';
 import RadarSocialProof from '@/components/public/RadarSocialProof';
-import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 
@@ -128,18 +127,16 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                         : (featuredPost.category?.slug === 'tech-marketing' ? 'Digital Marketing' : 'Newsletter')}
                                 </span>
                             </div>
-                            <ImpressionTracker postId={featuredPost.id}>
-                                <Link href={getPostUrl(featuredPost)} className="group block cursor-pointer">
-                                    <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors">
-                                        {featuredPost.title}
-                                    </h2>
-                                    <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
-                                        <HighlightedText 
-                                            text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
-                                        />
-                                    </p>
-                                </Link>
-                            </ImpressionTracker>
+                            <Link href={getPostUrl(featuredPost)} className="group block cursor-pointer">
+                                <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 group-hover:text-zi-secondary transition-colors">
+                                    {featuredPost.title}
+                                </h2>
+                                <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant mb-6 sm:mb-8">
+                                    <HighlightedText 
+                                        text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
+                                    />
+                                </p>
+                            </Link>
                             <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
                                 <span className="text-zi-on-surface font-semibold">
                                     By{' '}
@@ -206,7 +203,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                             <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-600">B2G & SME SYNERGY</span>
                             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-3">로컬 비즈니스 허브</h3>
                             <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                전국 주요 지자체의 육성 사업 소식, 관내 테크 스타트업 성공 사례 및 소상공인과의 디지털 상생 기획 기사를 모아보는 특화 지면입니다.
+                                전국 주요 지자체의 육성 사업 소식, 관내 테크 스타트업 성공 사례 및 소상공인과의 디지털 상생 기사를 모아보는 특화 지면입니다.
                             </p>
                             <span className="mt-6 flex items-center text-xs font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">
                                 로컬 비즈니스 허브 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
@@ -226,42 +223,40 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                 const categoryLabel = article.category?.name || '인사이트';
                                 
                                 return (
-                                    <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={getPostUrl(article)} className="flex flex-col group cursor-pointer">
-                                            <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
-                                                {article.thumbnailUrl ? (
-                                                    <Image 
-                                                        src={article.thumbnailUrl} 
-                                                        alt={article.title}
-                                                        fill
-                                                        className="object-cover transition-all duration-500 group-hover:scale-105"
-                                                    />
-                                                ) : (
-                                                    <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
-                                                )}
-                                                {(article as any).isPaid && (
-                                                    <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
-                                                        파트너
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 flex flex-col justify-start">
-                                                <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                                    {article.region?.name ? `${article.region.name} • ${categoryLabel}` : categoryLabel}
-                                                </span>
-                                                <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
-                                                    {article.title}
-                                                </h4>
-                                                <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
-                                                    <HighlightedText text={article.summary || ''} />
-                                                </p>
-                                            </div>
-                                            <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
-                                                <ArrowRight className="h-4 w-4" />
-                                            </div>
-                                        </Link>
-                                    </ImpressionTracker>
+                                    <Link key={article.id} href={getPostUrl(article)} className="flex flex-col group cursor-pointer">
+                                        <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                            {article.thumbnailUrl ? (
+                                                <Image 
+                                                    src={article.thumbnailUrl} 
+                                                    alt={article.title}
+                                                    fill
+                                                    className="object-cover transition-all duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                            )}
+                                            {(article as any).isPaid && (
+                                                <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
+                                                    파트너
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-start">
+                                            <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
+                                                {article.region?.name ? `${article.region.name} • ${categoryLabel}` : categoryLabel}
+                                            </span>
+                                            <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
+                                                {article.title}
+                                            </h4>
+                                            <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
+                                                <HighlightedText text={article.summary || ''} />
+                                            </p>
+                                        </div>
+                                        <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
+                                            <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
+                                            <ArrowRight className="h-4 w-4" />
+                                        </div>
+                                    </Link>
                                 );
                             })
                         ) : (
@@ -286,21 +281,19 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                     More Headlines
                                 </h3>
                                 {sideArticles.map((article) => (
-                                    <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={getPostUrl(article)} className="group cursor-pointer block">
-                                            <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
-                                                {article.title}
-                                            </h4>
-                                            <p className="mb-3 line-clamp-2 text-[13px] text-zi-on-surface-variant leading-relaxed">
-                                                <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
-                                            </p>
-                                            <div className="flex items-center gap-2 text-zi-outline text-[12px]">
-                                                <span>{article.category?.name || article.region?.name || '소식'}</span>
-                                                <span>•</span>
-                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
-                                            </div>
-                                        </Link>
-                                    </ImpressionTracker>
+                                    <Link key={article.id} href={getPostUrl(article)} className="group cursor-pointer block">
+                                        <h4 className="font-h3 text-[18px] leading-snug text-zi-primary mb-2 group-hover:text-zi-secondary transition-colors">
+                                            {article.title}
+                                        </h4>
+                                        <p className="mb-3 line-clamp-2 text-[13px] text-zi-on-surface-variant leading-relaxed">
+                                            <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
+                                        </p>
+                                        <div className="flex items-center gap-2 text-zi-outline text-[12px]">
+                                            <span>{article.category?.name || article.region?.name || '소식'}</span>
+                                            <span>•</span>
+                                            <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
+                                        </div>
+                                    </Link>
                                 ))}
                             </div>
                         ) : (

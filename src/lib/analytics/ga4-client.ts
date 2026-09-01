@@ -161,3 +161,40 @@ export async function getVisitorGeography(slug: string, dateRange: DateRange) {
         return null;
     }
 }
+
+// ── 사이트 전체 메인 대시보드 통계 (DAU, 페이지뷰, 세션) ─────────
+export async function getGlobalDashboardStats(dateRange: DateRange) {
+    try {
+        const [res] = await getClient().runReport({
+            property: `properties/${PROPERTY_ID}`,
+            dateRanges: [dateRange],
+            dimensions: [{ name: 'date' }],
+            metrics: [
+                { name: 'activeUsers' },
+                { name: 'screenPageViews' },
+                { name: 'sessions' },
+            ],
+            orderBys: [{ dimension: { dimensionName: 'date' } }],
+        });
+        const dailyData = (res.rows ?? []).map((row) => ({
+            date: row.dimensionValues?.[0]?.value?.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3') ?? '',
+            dau: Number(row.metricValues?.[0]?.value ?? 0),
+            views: Number(row.metricValues?.[1]?.value ?? 0),
+            sessions: Number(row.metricValues?.[2]?.value ?? 0),
+        }));
+        const totalDau = dailyData.reduce((s, r) => s + r.dau, 0);
+        const totalViews = dailyData.reduce((s, r) => s + r.views, 0);
+        const totalSessions = dailyData.reduce((s, r) => s + r.sessions, 0);
+        return {
+            dailyData,
+            summary: {
+                totalDau,
+                totalViews,
+                totalSessions,
+            },
+        };
+    } catch (err) {
+        console.error('[ga4] getGlobalDashboardStats failed:', err);
+        return null;
+    }
+}

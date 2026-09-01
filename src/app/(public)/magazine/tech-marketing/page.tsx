@@ -3,7 +3,6 @@ import Image from 'next/image';
 import { ArrowRight, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import { getTechMarketingPosts } from '@/actions/public/magazine-actions';
-import { ImpressionTracker } from '@/components/public/analytics/ImpressionTracker';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 
@@ -87,18 +86,16 @@ export default async function TechMarketingPage() {
                                     {featuredPost.category?.slug === 'tech-marketing' ? 'Digital Marketing' : 'Newsletter'}
                                 </span>
                             </div>
-                            <ImpressionTracker postId={featuredPost.id}>
-                                <Link href={`/magazine/tech-marketing/${featuredPost.slug}`} className="group block cursor-pointer">
-                                    <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 group-hover:text-zi-secondary transition-colors">
-                                        {featuredPost.title}
-                                    </h2>
-                                    <p className="font-body-md text-body-md text-zi-on-surface-variant mb-6">
-                                        <HighlightedText 
-                                            text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
-                                        />
-                                    </p>
-                                </Link>
-                            </ImpressionTracker>
+                            <Link href={`/magazine/tech-marketing/${featuredPost.slug}`} className="group block cursor-pointer">
+                                <h2 className="font-h1 text-[22px] sm:text-[28px] lg:text-h1 text-zi-on-surface mb-4 group-hover:text-zi-secondary transition-colors">
+                                    {featuredPost.title}
+                                </h2>
+                                <p className="font-body-md text-body-md text-zi-on-surface-variant mb-6">
+                                    <HighlightedText 
+                                        text={featuredPost.summary ?? (featuredPost.content ? featuredPost.content.slice(0, 180) + '...' : '')} 
+                                    />
+                                </p>
+                            </Link>
                             <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
                                 <span className="text-zi-on-surface font-semibold">
                                     By {featuredPost.author?.name || featuredPost.authorName || '진사이트 편집부'}
@@ -138,42 +135,40 @@ export default async function TechMarketingPage() {
                                 const industryName = article.region?.name || '인사이트';
                                 
                                 return (
-                                    <ImpressionTracker postId={article.id} key={article.id}>
-                                        <Link href={`/magazine/tech-marketing/${article.slug}`} className="flex flex-col group cursor-pointer h-full">
-                                            <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
-                                                {article.thumbnailUrl ? (
-                                                    <Image 
-                                                        src={article.thumbnailUrl} 
-                                                        alt={article.title}
-                                                        fill
-                                                        className="object-cover transition-all duration-500 group-hover:scale-105"
-                                                    />
-                                                ) : (
-                                                    <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
-                                                )}
-                                                {article.isPaid && (
-                                                    <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
-                                                        파트너
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="flex-1 flex flex-col justify-start">
-                                                <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
-                                                    {industryName}
-                                                </span>
-                                                <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
-                                                    {article.title}
-                                                </h4>
-                                                <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
-                                                    <HighlightedText text={article.summary || ''} />
-                                                </p>
-                                            </div>
-                                            <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                                <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
-                                                <ArrowRight className="h-4 w-4" />
-                                            </div>
-                                        </Link>
-                                    </ImpressionTracker>
+                                    <Link key={article.id} href={`/magazine/tech-marketing/${article.slug}`} className="flex flex-col group cursor-pointer h-full">
+                                        <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
+                                            {article.thumbnailUrl ? (
+                                                <Image 
+                                                    src={article.thumbnailUrl} 
+                                                    alt={article.title}
+                                                    fill
+                                                    className="object-cover transition-all duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
+                                            )}
+                                            {article.isPaid && (
+                                                <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
+                                                    파트너
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-start">
+                                            <span className="mb-2 block text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
+                                                {industryName}
+                                            </span>
+                                            <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
+                                                {article.title}
+                                            </h4>
+                                            <p className="mb-4 line-clamp-3 overflow-hidden text-body-md font-body-md text-zi-on-surface-variant leading-relaxed">
+                                                <HighlightedText text={article.summary || ''} />
+                                            </p>
+                                        </div>
+                                        <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
+                                            <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
+                                            <ArrowRight className="h-4 w-4" />
+                                        </div>
+                                    </Link>
                                 );
                             })
                         ) : (

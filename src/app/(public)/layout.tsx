@@ -10,7 +10,6 @@ export const metadata: Metadata = {
     description: '진사이트(Zinsight)는 GEO·SEO 기반의 파트너 콘텐츠 마케팅 미디어입니다. 기업의 이야기를 저널리즘 형식으로 정제하여 검색과 AI 답변 생태계에 최적화된 방식으로 전달합니다.',
 };
 
-import { VisitorTracker } from '@/components/public/analytics/VisitorTracker';
 import { prisma } from '@/lib/db';
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -28,7 +27,6 @@ export default async function PublicLayout({ children }: { children: React.React
 
     return (
         <div className="flex min-h-screen flex-col bg-zi-surface">
-            <VisitorTracker />
             <PublicNavbar regions={regions} />
             <main className="flex-1">{children}</main>
             <PublicFooter />
