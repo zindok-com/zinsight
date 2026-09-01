@@ -20,6 +20,7 @@ import {
     RefreshCw,
     Edit3,
     BookOpen,
+    BarChart3,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -440,6 +441,13 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/admin/companies/${company.id}/analytics`}>
+                        <Button variant="outline" size="sm" className="gap-1.5 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-950">
+                            <BarChart3 className="h-3.5 w-3.5" />
+                            프로필 애널리틱스
+                        </Button>
+                    </Link>
+
                     <a
                         href={publicUrl}
                         target="_blank"

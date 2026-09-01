@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info, Plus, HelpCircle } from 'lucide-react';
+import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info, Plus, HelpCircle, BarChart3 } from 'lucide-react';
 import { deleteMagazinePost, updateMagazinePost, updateMultipleMagazinePostsStatus } from '@/actions/admin/magazine-actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -383,7 +383,17 @@ export function MagazineListTable({
                                         <Button
                                             variant="ghost"
                                             size="icon"
+                                            className="h-8 w-8 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50"
+                                            title="애널리틱스 리포트"
+                                            onClick={() => router.push(`/admin/magazine/edit/${post.id}/analytics`)}
+                                        >
+                                            <BarChart3 className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             className="h-8 w-8 text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50"
+                                            title="포스트 수정"
                                             onClick={() => router.push(`/admin/magazine/edit/${post.id}`)}
                                         >
                                             <Edit className="w-4 h-4" />
@@ -392,6 +402,7 @@ export function MagazineListTable({
                                             variant="ghost"
                                             size="icon"
                                             className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                            title="포스트 삭제"
                                             onClick={(e) => handleDelete(e, post.id)}
                                         >
                                             <Trash2 className="w-4 h-4" />

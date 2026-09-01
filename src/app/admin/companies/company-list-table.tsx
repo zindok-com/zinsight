@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Star, ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { Search, Star, ArrowUpDown, ArrowUp, ArrowDown, ChevronRight, ExternalLink, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toggleCompanyFeatured } from '@/actions/company-actions';
 
@@ -234,8 +234,25 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                       {company.company_articles?.length || 0}건
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/60 inline-block" />
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/admin/companies/${company.id}/analytics`)}
+                        className="p-1.5 rounded-md hover:bg-emerald-50 text-emerald-600 hover:text-emerald-800 transition-colors"
+                        title="프로필 애널리틱스"
+                      >
+                        <BarChart3 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/admin/companies/${company.id}`)}
+                        className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+                        title="수정"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
