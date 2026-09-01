@@ -62,8 +62,8 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
             ? a.company_name.localeCompare(b.company_name)
             : b.company_name.localeCompare(a.company_name);
         } else if (sortConfig.key === 'articleCount') {
-          const aCount = a.company_articles?.length || 0;
-          const bCount = b.company_articles?.length || 0;
+          const aCount = (a.company_articles?.length || 0) + (a.magazinePosts?.length || 0);
+          const bCount = (b.company_articles?.length || 0) + (b.magazinePosts?.length || 0);
           return sortConfig.direction === 'asc' ? aCount - bCount : bCount - aCount;
         }
         return 0;
@@ -231,7 +231,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary" className="text-xs">
-                      {company.company_articles?.length || 0}건
+                      {((company.company_articles?.length || 0) + (company.magazinePosts?.length || 0))}건
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>

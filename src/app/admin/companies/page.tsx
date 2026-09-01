@@ -16,6 +16,10 @@ export default async function CompaniesPage() {
       include: {
         region: true,
         company_articles: { include: { article: true } },
+        magazinePosts: {
+          where: { magazinePost: { deletedAt: null } },
+          include: { magazinePost: true },
+        },
       },
       orderBy: { created_at: 'desc' },
     }),
