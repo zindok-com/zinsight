@@ -1,4 +1,4 @@
-import { getPostsWithAnalytics, getDashboardAnalytics } from "@/actions/admin/analytics-actions";
+import { getPostsWithAnalytics, getDashboardAnalytics, getRecentArticlesLeaderboard } from "@/actions/admin/analytics-actions";
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,12 @@ import { MagazineListTable } from "@/components/admin/magazine/MagazineListTable
 export const dynamic = 'force-dynamic';
 
 export default async function MagazinePage() {
-    const [posts, authors, categories, analytics] = await Promise.all([
+    const [posts, authors, categories, analytics, leaderboard] = await Promise.all([
         getPostsWithAnalytics(),
         prisma.author.findMany({ orderBy: { name: 'asc' } }),
         prisma.magazineCategory.findMany({ orderBy: { id: 'asc' } }),
-        getDashboardAnalytics(7)
+        getDashboardAnalytics(7),
+        getRecentArticlesLeaderboard(30, 50)
     ]);
 
     const { summary } = analytics;
@@ -93,6 +94,47 @@ export default async function MagazinePage() {
                             authors={authors} 
                             categories={categories} 
                         />
+                    )}
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>최근 발행 50건 기사 성과 순위표 (최근 30일 기준)</CardTitle>
+                    <CardDescription>
+                        GA4 실시간 조회 결과로, 조회수(Pageviews) 순으로 정렬됩니다. (F-12)
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    {leaderboard.length === 0 ? (
+                        <div className="text-center py-10 text-muted-foreground">성과 데이터가 없습니다.</div>
+                    ) : (
+                        <div className="border rounded-md">
+                            <table className="w-full text-sm text-left">
+                                <thead className="bg-muted">
+                                    <tr>
+                                        <th className="px-4 py-3 font-medium">순위</th>
+                                        <th className="px-4 py-3 font-medium">기사 제목</th>
+                                        <th className="px-4 py-3 font-medium text-right">조회수 (GA4)</th>
+                                        <th className="px-4 py-3 font-medium text-right">레이더 전환수</th>
+                                        <th className="px-4 py-3 font-medium text-right">전환율</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {leaderboard.map((item, idx) => {
+                                        const convRate = item.views > 0 ? ((item.radarClicks / item.views) * 100).toFixed(2) : '0.00';
+                                        return (
+                                            <tr key={item.id} className="hover:bg-muted/50 transition-colors">
+                                                <td className="px-4 py-3 text-muted-foreground font-medium">{idx + 1}</td>
+                                                <td className="px-4 py-3 font-medium truncate max-w-[300px]">{item.title}</td>
+                                                <td className="px-4 py-3 text-right font-bold text-indigo-600">{item.views.toLocaleString()}</td>
+                                                <td className="px-4 py-3 text-right font-medium">{item.radarClicks.toLocaleString()}</td>
+                                                <td className="px-4 py-3 text-right text-emerald-600 font-medium">{convRate}%</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </CardContent>
             </Card>

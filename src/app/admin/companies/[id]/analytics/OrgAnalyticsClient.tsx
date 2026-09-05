@@ -57,7 +57,7 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="조직 데이터를 찾을 수 없습니다." />;
 
-    const { org, summary, pageviews, geography, trafficSources, visitorAttributes, linkedArticles } = data;
+    const { org, summary, pageviews, geography, trafficSources, visitorAttributes, linkedArticles, outboundLinkTable } = data;
 
 
     const pvChartData = pageviews.map((r) => ({
@@ -164,6 +164,44 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
                     </div>
                 ) : <NoData />}
             </div>
+
+            {/* 외부 링크 클릭 상세 */}
+            <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-base font-semibold">🔗 외부 아웃바운드 링크별 클릭</h2>
+                    <p className="text-xs text-muted-foreground">프로필에 등록된 외부 링크 클릭수 (GA4)</p>
+                </div>
+                {outboundLinkTable && outboundLinkTable.length > 0 ? (
+                    <div className="border rounded-xl overflow-hidden bg-card">
+                        <table className="w-full text-sm">
+                            <thead className="bg-muted/50">
+                                <tr>
+                                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-1/4">도메인</th>
+                                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground w-1/2">링크 URL</th>
+                                    <th className="text-right px-4 py-2.5 font-medium text-muted-foreground w-1/4">클릭수</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {outboundLinkTable.map((link, i) => (
+                                    <tr key={i} className="border-t">
+                                        <td className="px-4 py-2.5 font-medium truncate max-w-[150px]">{link.domain}</td>
+                                        <td className="px-4 py-2.5 max-w-[300px]">
+                                            <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline truncate block">
+                                                {link.url}
+                                            </a>
+                                        </td>
+                                        <td className="px-4 py-2.5 text-right font-medium">{link.clicks.toLocaleString()}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <NoData msg="등록된 외부 링크가 없거나 클릭 데이터가 없습니다." />
+                )}
+            </div>
+
+
 
             {/* 방문자 지역 */}
             {/* F-08 유입 채널 */}

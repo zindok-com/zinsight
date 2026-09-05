@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/db';
+import * as cheerio from 'cheerio';
 import {
     getArticlePageviews,
     getArticleEventCounts,
@@ -8,6 +9,7 @@ import {
     getVisitorAttributes,
     getVisitorGeography,
     getGlobalDashboardStats,
+    getOutboundLinkClicksByUrl,
     type DateRange,
 } from '@/lib/analytics/ga4-client';
 import {
@@ -15,6 +17,24 @@ import {
     getSearchAppearanceBreakdown,
     getGenerativeAIPerformance,
 } from '@/lib/analytics/gsc-client';
+
+// ── 링크 추출 헬퍼 (cheerio HTML 파서) ───────────────────────────
+function extractExternalLinks(htmlContent: string): string[] {
+    if (!htmlContent) return [];
+    const $ = cheerio.load(htmlContent);
+    const links: string[] = [];
+    $('a[href]').each((_, el) => {
+        const href = $(el).attr('href') ?? '';
+        if (
+            (href.startsWith('http://') || href.startsWith('https://')) &&
+            !href.includes('zinsight.co.kr')
+        ) {
+            links.push(href);
+        }
+    });
+    return [...new Set(links)];
+}
+
 
 // ── 날짜 범위 헬퍼 ────────────────────────────────────────────────
 function buildDateRange(periodDays: number | 'all'): DateRange {
@@ -82,7 +102,44 @@ export async function getPostsWithAnalytics() {
     }));
 }
 
-// ── 기사 통합 애널리틱스 (F-08/F-13/F-05 포함) ───────────────────
+// ── 기사 성과 순위표 (F-12) ───────────────────────────────────────
+export async function getRecentArticlesLeaderboard(periodDays: number = 30, limit: number = 50) {
+    // 1. 최근 발행 기사 목록 추출
+    const recentPosts = await prisma.magazinePost.findMany({
+        where: { deletedAt: null, status: 'PUBLISHED' },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        select: { id: true, title: true, slug: true, createdAt: true },
+    });
+
+    const dateRange = buildDateRange(periodDays);
+
+    // 2. 병렬로 GA4 pageviews, radarClicks 조회
+    const leaderboard = await Promise.all(
+        recentPosts.map(async (post) => {
+            const [pvs, radarClicks] = await Promise.all([
+                getArticlePageviews(post.slug, dateRange),
+                getArticleEventCounts(post.slug, 'radar_profile_click', dateRange),
+            ]);
+            const views = pvs?.reduce((s, r) => s + r.views, 0) ?? 0;
+            return {
+                id: post.id,
+                title: post.title,
+                slug: post.slug,
+                publishedAt: post.createdAt, // UI 호환성을 위해 이름 유지
+                views,
+                radarClicks: radarClicks ?? 0,
+            };
+        })
+    );
+
+    // 3. 조회수 기준 내림차순 정렬
+    leaderboard.sort((a, b) => b.views - a.views);
+    return leaderboard;
+}
+
+
+// ── 기사 통합 애널리틱스 (F-08/F-13/F-05/F-02 포함) ────────────────
 export async function getArticleAnalyticsSummary(
     postId: number,
     periodDays: number | 'all' = 30,
@@ -100,6 +157,9 @@ export async function getArticleAnalyticsSummary(
         ? `https://zinsight.co.kr/magazine/local/${post.region?.slug}/${post.slug}`
         : `https://zinsight.co.kr/magazine/tech-marketing/${post.slug}`;
 
+    // content HTML에서 외부 링크 추출 (cheerio)
+    const registeredLinks = extractExternalLinks(post.content ?? '');
+
     // GA4·GSC 병렬 호출
     const [
         pageviews,
@@ -111,16 +171,18 @@ export async function getArticleAnalyticsSummary(
         gscPerf,
         gscAppearance,
         gscGenerativeAI,
+        outboundLinkClicks,
     ] = await Promise.all([
         getArticlePageviews(post.slug, dateRange),
         getArticleEventCounts(post.slug, 'radar_profile_click', dateRange),
         getArticleEventCounts(post.slug, 'outbound_link_click', dateRange),
-        getTrafficSourceDetailed(post.slug, dateRange),           // F-08
+        getTrafficSourceDetailed(post.slug, dateRange),
         getVisitorGeography(post.slug, dateRange),
-        getVisitorAttributes(post.slug, dateRange),               // F-13
+        getVisitorAttributes(post.slug, dateRange),
         getPagePerformance(post.slug, gscDateRange),
         getSearchAppearanceBreakdown(post.slug, gscDateRange),
-        getGenerativeAIPerformance(post.slug, gscDateRange),      // F-05
+        getGenerativeAIPerformance(post.slug, gscDateRange),
+        getOutboundLinkClicksByUrl(post.slug, dateRange),          // F-02
     ]);
 
     const views = pageviews?.reduce((s, r) => s + r.views, 0) ?? 0;
@@ -128,6 +190,25 @@ export async function getArticleAnalyticsSummary(
         views > 0 && radarClicks != null
             ? Math.round((radarClicks / views) * 10000) / 100
             : null;
+
+    // F-02: 등록 링크와 GA4 클릭수 LEFT JOIN
+    const linkClickMap = new Map(outboundLinkClicks.map((r) => [r.url, r.clicks]));
+    const outboundLinkTable = registeredLinks.map((url) => {
+        let domain = '';
+        try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch { domain = url; }
+        return {
+            url,
+            domain,
+            clicks: linkClickMap.get(url) ?? 0,
+        };
+    });
+    // GA4에 기록된 링크 중 content에 없는 것도 추가 (삭제된 링크 이력 보존)
+    for (const row of outboundLinkClicks) {
+        if (!outboundLinkTable.find((r) => r.url === row.url)) {
+            outboundLinkTable.push({ ...row });
+        }
+    }
+    outboundLinkTable.sort((a, b) => b.clicks - a.clicks);
 
     return {
         post: {
@@ -147,14 +228,16 @@ export async function getArticleAnalyticsSummary(
             conversionRate,
         },
         pageviews: pageviews ?? [],
-        trafficSources,                 // ChannelRow[] (F-08)
+        trafficSources,
         geography: geography ?? [],
-        visitorAttributes,              // VisitorAttributes (F-13)
+        visitorAttributes,
         gsc: gscPerf,
         gscAppearance: gscAppearance ?? [],
-        gscGenerativeAI,                // GenerativeAIPerformance | null (F-05)
+        gscGenerativeAI,
+        outboundLinkTable,                  // F-02: 링크별 클릭 상세
     };
 }
+
 
 // ── 기사 전환 퍼널 (B-01 수정: DB viewCount → GA4 pageviews) ─────
 export async function getArticleFunnel(postId: number, periodDays: number | 'all' = 30) {
@@ -177,7 +260,7 @@ export async function getArticleFunnel(postId: number, periodDays: number | 'all
     };
 }
 
-// ── 조직 프로필 애널리틱스 (F-08/F-13 포함, B-03 수정) ─────────────
+// ── 조직 프로필 애널리틱스 (F-08/F-13/F-02 포함, B-03 수정) ──────────
 export async function getOrgAnalyticsSummary(orgId: number, periodDays: number | 'all' = 30) {
     const org = await prisma.organization.findUnique({
         where: { id: orgId },
@@ -196,21 +279,34 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
     const orgIdentifier = org.slug || String(org.id);
     const pageUrl = `https://zinsight.co.kr/insight-radar/${orgIdentifier}`;
 
+    // F-02: 조직 등록 링크 수집 (company_url + backlinks JSON)
+    const orgLinks: string[] = [];
+    if (org.company_url) orgLinks.push(org.company_url);
+    if (org.backlinks && Array.isArray(org.backlinks)) {
+        for (const bl of org.backlinks as { title?: string; url?: string }[]) {
+            if (bl.url && (bl.url.startsWith('http://') || bl.url.startsWith('https://'))) {
+                orgLinks.push(bl.url);
+            }
+        }
+    }
+
     const [
         profileViews,
         outboundClicks,
         articleClicksFromProfile,
         geography,
-        trafficSources,     // F-08 B-03
-        visitorAttributes,  // F-13
+        trafficSources,
+        visitorAttributes,
+        outboundLinkClicks,
         linkedArticlesWithClicks,
     ] = await Promise.all([
         getArticlePageviews(orgIdentifier, dateRange),
         getArticleEventCounts(orgIdentifier, 'outbound_link_click', dateRange),
         getArticleEventCounts(orgIdentifier, 'magazine_article_click', dateRange),
         getVisitorGeography(orgIdentifier, dateRange),
-        getTrafficSourceDetailed(orgIdentifier, dateRange),      // F-08 B-03
-        getVisitorAttributes(orgIdentifier, dateRange),          // F-13
+        getTrafficSourceDetailed(orgIdentifier, dateRange),
+        getVisitorAttributes(orgIdentifier, dateRange),
+        getOutboundLinkClicksByUrl(orgIdentifier, dateRange),      // F-02
         Promise.all(
             org.magazinePosts.map(async (mo: { magazinePost: { id: number; title: string; slug: string; viewCount: number } }) => {
                 const post = mo.magazinePost;
@@ -232,6 +328,20 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
 
     const totalInboundFromArticles = linkedArticlesWithClicks.reduce((sum, a) => sum + a.inboundClicks, 0);
 
+    // F-02: 등록 링크와 GA4 클릭수 LEFT JOIN
+    const linkClickMap = new Map(outboundLinkClicks.map((r) => [r.url, r.clicks]));
+    const outboundLinkTable = orgLinks.map((url) => {
+        let domain = '';
+        try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch { domain = url; }
+        return { url, domain, clicks: linkClickMap.get(url) ?? 0 };
+    });
+    for (const row of outboundLinkClicks) {
+        if (!outboundLinkTable.find((r) => r.url === row.url)) {
+            outboundLinkTable.push({ ...row });
+        }
+    }
+    outboundLinkTable.sort((a, b) => b.clicks - a.clicks);
+
     return {
         org: {
             id: org.id,
@@ -250,11 +360,13 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         },
         pageviews: profileViews ?? [],
         geography: geography ?? [],
-        trafficSources,          // ChannelRow[] (F-08)
-        visitorAttributes,       // VisitorAttributes (F-13)
+        trafficSources,
+        visitorAttributes,
+        outboundLinkTable,               // F-02: 링크별 클릭 상세
         linkedArticles: linkedArticlesWithClicks,
     };
 }
+
 
 // ── 리포트 스냅샷 저장 (F-11-A) ──────────────────────────────────
 export async function saveAnalyticsReport({

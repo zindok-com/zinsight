@@ -360,3 +360,62 @@ export async function getVisitorAttributes(slug: string, dateRange: DateRange): 
     }
 }
 
+// ── 링크별 외부 클릭 집계 (F-02) ─────────────────────────────────
+// 전제: GA4 콘솔에서 맞춤 차원 'target_url' (이벤트 범위) 등록 완료 후 사용 가능
+export interface OutboundLinkClickRow {
+    url: string;
+    domain: string;
+    clicks: number;
+}
+
+export async function getOutboundLinkClicksByUrl(
+    slug: string,
+    dateRange: DateRange,
+): Promise<OutboundLinkClickRow[]> {
+    try {
+        const [res] = await getClient().runReport({
+            property: `properties/${PROPERTY_ID}`,
+            dateRanges: [dateRange],
+            dimensions: [
+                { name: 'customEvent:target_url' },
+            ],
+            metrics: [{ name: 'eventCount' }],
+            dimensionFilter: {
+                andGroup: {
+                    expressions: [
+                        {
+                            filter: {
+                                fieldName: 'eventName',
+                                stringFilter: { matchType: 'EXACT', value: 'outbound_link_click' },
+                            },
+                        },
+                        {
+                            filter: {
+                                fieldName: 'pagePath',
+                                stringFilter: { matchType: 'CONTAINS', value: slug },
+                            },
+                        },
+                    ],
+                },
+            },
+            orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+        });
+
+        return (res.rows ?? [])
+            .map((row) => {
+                const url = row.dimensionValues?.[0]?.value ?? '';
+                let domain = '';
+                try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch { domain = url; }
+                return {
+                    url,
+                    domain,
+                    clicks: Number(row.metricValues?.[0]?.value ?? 0),
+                };
+            })
+            .filter((r) => r.url && r.url !== '(not set)');
+    } catch (err) {
+        console.error('[ga4] getOutboundLinkClicksByUrl failed:', err);
+        return [];
+    }
+}
+
