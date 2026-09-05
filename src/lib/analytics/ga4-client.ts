@@ -1,6 +1,9 @@
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
 import path from 'path';
 import fs from 'fs';
+import type { CustomChannel, ChannelRow, VisitorAttributes } from './types';
+import { measured } from './types';
+
 
 // ── 서비스 계정 인증 ──────────────────────────────────────────────
 function getCredentials() {
@@ -198,3 +201,162 @@ export async function getGlobalDashboardStats(dateRange: DateRange) {
         return null;
     }
 }
+
+// ── AI/검색엔진/SNS 분류 상수 ──────────────────────────────────────
+const AI_DOMAINS = ['chatgpt.com', 'perplexity.ai', 'gemini.google.com', 'claude.ai', 'copilot.microsoft.com', 'you.com', 'kagi.com'];
+const SEARCH_ENGINES = ['google', 'naver', 'daum', 'bing', 'yahoo', 'duckduckgo'];
+const SNS_DOMAINS = ['instagram.com', 'youtube.com', 'facebook.com', 'linkedin.com', 'x.com', 'twitter.com', 'threads.net', 'tiktok.com'];
+
+function classifyChannel(source: string, medium: string, defaultGroup: string): CustomChannel {
+    const s = source?.toLowerCase() ?? '';
+    const m = medium?.toLowerCase() ?? '';
+    if (AI_DOMAINS.some((d) => s.includes(d))) return 'ai_service';
+    if (SNS_DOMAINS.some((d) => s.includes(d)) || m === 'social') return 'sns';
+    if (SEARCH_ENGINES.some((e) => s.includes(e)) && (m === 'organic' || m === '(none)')) return 'search';
+    if (defaultGroup?.toLowerCase().includes('organic search')) return 'search';
+    if (s === '(direct)' || m === '(none)' || defaultGroup?.toLowerCase() === 'direct') return 'direct';
+    return 'other';
+}
+
+// ── 유입 채널 세분화 (F-08) ──────────────────────────────────────────
+export async function getTrafficSourceDetailed(slug: string, dateRange: DateRange): Promise<ChannelRow[]> {
+    const CHANNEL_LABELS: Record<CustomChannel, string> = {
+        ai_service: '🤖 AI 서비스',
+        search: '🔍 검색엔진',
+        sns: '📱 SNS',
+        direct: '🔗 직접 방문',
+        other: '기타',
+    };
+    try {
+        const [res] = await getClient().runReport({
+            property: `properties/${PROPERTY_ID}`,
+            dateRanges: [dateRange],
+            dimensions: [
+                { name: 'sessionDefaultChannelGroup' },
+                { name: 'sessionSource' },
+                { name: 'sessionMedium' },
+            ],
+            metrics: [
+                { name: 'sessions' },
+                { name: 'averageSessionDuration' },
+            ],
+            dimensionFilter: {
+                filter: {
+                    fieldName: 'pagePath',
+                    stringFilter: { matchType: 'CONTAINS', value: slug },
+                },
+            },
+            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+        });
+
+        // GA4 rows를 커스텀 채널로 리매핑 후 집계
+        const buckets: Record<CustomChannel, { sessions: number; durationSum: number; count: number }> = {
+            ai_service: { sessions: 0, durationSum: 0, count: 0 },
+            search: { sessions: 0, durationSum: 0, count: 0 },
+            sns: { sessions: 0, durationSum: 0, count: 0 },
+            direct: { sessions: 0, durationSum: 0, count: 0 },
+            other: { sessions: 0, durationSum: 0, count: 0 },
+        };
+
+        for (const row of res.rows ?? []) {
+            const defaultGroup = row.dimensionValues?.[0]?.value ?? '';
+            const source = row.dimensionValues?.[1]?.value ?? '';
+            const medium = row.dimensionValues?.[2]?.value ?? '';
+            const sessions = Number(row.metricValues?.[0]?.value ?? 0);
+            const avgDuration = Number(row.metricValues?.[1]?.value ?? 0);
+            const ch = classifyChannel(source, medium, defaultGroup);
+            buckets[ch].sessions += sessions;
+            buckets[ch].durationSum += avgDuration * sessions;
+            buckets[ch].count += sessions;
+        }
+
+        return (Object.keys(buckets) as CustomChannel[])
+            .filter((ch) => buckets[ch].sessions > 0)
+            .sort((a, b) => buckets[b].sessions - buckets[a].sessions)
+            .map((ch) => ({
+                channel: ch,
+                channelLabel: CHANNEL_LABELS[ch],
+                sessions: measured(buckets[ch].sessions),
+                avgDuration: measured(
+                    buckets[ch].count > 0 ? Math.round(buckets[ch].durationSum / buckets[ch].count) : 0
+                ),
+            }));
+    } catch (err) {
+        console.error('[ga4] getTrafficSourceDetailed failed:', err);
+        return [];
+    }
+}
+
+// ── 방문자 속성 확장 (F-13) ──────────────────────────────────────────
+export async function getVisitorAttributes(slug: string, dateRange: DateRange): Promise<VisitorAttributes> {
+    const empty: VisitorAttributes = { devices: [], hours: [], newVsReturning: [], browsers: [] };
+    try {
+        const filter = {
+            filter: {
+                fieldName: 'pagePath',
+                stringFilter: { matchType: 'CONTAINS' as const, value: slug },
+            },
+        };
+
+        const [devRes, hourRes, nvrRes, browserRes] = await Promise.all([
+            // ① 기기 카테고리
+            getClient().runReport({
+                property: `properties/${PROPERTY_ID}`,
+                dateRanges: [dateRange],
+                dimensions: [{ name: 'deviceCategory' }],
+                metrics: [{ name: 'sessions' }],
+                dimensionFilter: filter,
+                orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+            }),
+            // ② 방문 시간대 (hour 0~23)
+            getClient().runReport({
+                property: `properties/${PROPERTY_ID}`,
+                dateRanges: [dateRange],
+                dimensions: [{ name: 'hour' }],
+                metrics: [{ name: 'sessions' }],
+                dimensionFilter: filter,
+            }),
+            // ③ 신규/재방문
+            getClient().runReport({
+                property: `properties/${PROPERTY_ID}`,
+                dateRanges: [dateRange],
+                dimensions: [{ name: 'newVsReturning' }],
+                metrics: [{ name: 'sessions' }],
+                dimensionFilter: filter,
+            }),
+            // ④ 브라우저 상위 5개
+            getClient().runReport({
+                property: `properties/${PROPERTY_ID}`,
+                dateRanges: [dateRange],
+                dimensions: [{ name: 'browser' }],
+                metrics: [{ name: 'sessions' }],
+                dimensionFilter: filter,
+                orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+                limit: 5,
+            }),
+        ]);
+
+        const devices = (devRes[0].rows ?? []).map((row) => ({
+            device: row.dimensionValues?.[0]?.value ?? 'unknown',
+            sessions: Number(row.metricValues?.[0]?.value ?? 0),
+        }));
+        const hours = (hourRes[0].rows ?? []).map((row) => ({
+            hour: Number(row.dimensionValues?.[0]?.value ?? 0),
+            sessions: Number(row.metricValues?.[0]?.value ?? 0),
+        })).sort((a, b) => a.hour - b.hour);
+        const newVsReturning = (nvrRes[0].rows ?? []).map((row) => ({
+            type: row.dimensionValues?.[0]?.value ?? 'unknown',
+            sessions: Number(row.metricValues?.[0]?.value ?? 0),
+        }));
+        const browsers = (browserRes[0].rows ?? []).map((row) => ({
+            browser: row.dimensionValues?.[0]?.value ?? 'unknown',
+            sessions: Number(row.metricValues?.[0]?.value ?? 0),
+        }));
+
+        return { devices, hours, newVsReturning, browsers };
+    } catch (err) {
+        console.error('[ga4] getVisitorAttributes failed:', err);
+        return empty;
+    }
+}
+
