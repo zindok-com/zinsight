@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -7,6 +7,8 @@ import {
     BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
+import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
+
 
 const PERIOD_OPTIONS = [
     { label: '7일', value: '7' },
@@ -55,6 +57,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
     const router = useRouter();
     const pathname = usePathname();
     const [visitorTab, setVisitorTab] = useState<VisitorTab>('geography');
+    const [showReportModal, setShowReportModal] = useState(false);
 
     const changePeriod = (val: string) => {
         router.push(`${pathname}?period=${val}`);
@@ -62,7 +65,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="기사 데이터를 찾을 수 없습니다." />;
 
-    const { summary, pageviews, trafficSources, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI } = data;
+    const { post, summary, pageviews, trafficSources, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI } = data;
 
     const pvChartData = pageviews.map((r) => ({
         date: r.date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
@@ -91,20 +94,39 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
 
     return (
         <div className="space-y-8">
-            <div className="flex gap-2">
-                {PERIOD_OPTIONS.map((opt) => (
-                    <button
-                        key={opt.value}
-                        onClick={() => changePeriod(opt.value)}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                            currentPeriod === opt.value
-                                ? 'bg-foreground text-background border-foreground'
-                                : 'text-muted-foreground hover:text-foreground border-border'
-                        }`}
-                    >
-                        {opt.label}
-                    </button>
-                ))}
+            {showReportModal && post && (
+                <ReportExportModal
+                    entityType="article"
+                    entityId={post.id}
+                    entityName={post.title}
+                    currentPeriod={currentPeriod}
+                    analyticsData={data}
+                    onClose={() => setShowReportModal(false)}
+                />
+            )}
+
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex gap-2">
+                    {PERIOD_OPTIONS.map((opt) => (
+                        <button
+                            key={opt.value}
+                            onClick={() => changePeriod(opt.value)}
+                            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                                currentPeriod === opt.value
+                                    ? 'bg-foreground text-background border-foreground'
+                                    : 'text-muted-foreground hover:text-foreground border-border'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+                <button
+                    onClick={() => setShowReportModal(true)}
+                    className="px-4 py-1.5 rounded-full text-sm font-medium border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                >
+                    📄 리포트 생성
+                </button>
             </div>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

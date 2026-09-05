@@ -1,4 +1,4 @@
-﻿'use server';
+'use server';
 
 import { prisma } from '@/lib/db';
 import {
@@ -255,3 +255,65 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         linkedArticles: linkedArticlesWithClicks,
     };
 }
+
+// ── 리포트 스냅샷 저장 (F-11-A) ──────────────────────────────────
+export async function saveAnalyticsReport({
+    entityType,
+    entityId,
+    entityName,
+    reportType,
+    periodDays,
+    dataSnapshot,
+}: {
+    entityType: 'article' | 'organization';
+    entityId: number;
+    entityName: string;
+    reportType: 'simple' | 'detailed';
+    periodDays: number;
+    dataSnapshot: object;
+}) {
+    return prisma.analyticsReport.create({
+        data: {
+            entityType,
+            entityId,
+            entityName,
+            reportType,
+            periodDays,
+            dataSnapshot,
+        },
+    });
+}
+
+// ── 리포트 이력 조회 (F-11-A) ────────────────────────────────────
+export async function getAnalyticsReports(options?: {
+    entityType?: 'article' | 'organization';
+    entityId?: number;
+    limit?: number;
+}) {
+    return prisma.analyticsReport.findMany({
+        where: {
+            ...(options?.entityType ? { entityType: options.entityType } : {}),
+            ...(options?.entityId ? { entityId: options.entityId } : {}),
+        },
+        orderBy: { createdAt: 'desc' },
+        take: options?.limit ?? 50,
+        select: {
+            id: true,
+            entityType: true,
+            entityId: true,
+            entityName: true,
+            reportType: true,
+            periodDays: true,
+            createdAt: true,
+            // dataSnapshot은 기본적으로 제외 (목록 UI에서는 불필요)
+        },
+    });
+}
+
+// ── 리포트 스냅샷 단건 조회 (다시 보기용) ──────────────────────────
+export async function getAnalyticsReportById(id: number) {
+    return prisma.analyticsReport.findUnique({
+        where: { id },
+    });
+}
+

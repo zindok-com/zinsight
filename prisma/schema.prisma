@@ -318,3 +318,20 @@ model Redirect {
 
   @@map("redirects")
 }
+
+// ─── 애널리틱스 리포트 스냅샷 이력 (F-11-A) ─────────────────────────
+// 리포트 생성 시점의 데이터를 보관하여 이후 수치 변동 후에도 당시 버전 조회 가능
+model AnalyticsReport {
+  id           Int      @id @default(autoincrement())
+  entityType   String   @db.VarChar(20)   // 'article' | 'organization'
+  entityId     Int                         // MagazinePost.id 또는 Organization.id
+  entityName   String   @db.VarChar(255)  // 빠른 조회용 비정규화 이름
+  reportType   String   @db.VarChar(20)   // 'simple' | 'detailed'
+  periodDays   Int                         // 집계 기간 (7 / 30 / 90 / 0=전체)
+  dataSnapshot Json                        // 생성 시점 analytics 데이터 전체
+  createdAt    DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@map("analytics_reports")
+}
+

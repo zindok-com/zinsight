@@ -8,6 +8,7 @@ import {
 } from 'recharts';
 import Link from 'next/link';
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
+import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
 
 
 const PERIOD_OPTIONS = [
@@ -52,10 +53,11 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
     const router = useRouter();
     const pathname = usePathname();
     const [visitorTab, setVisitorTab] = useState<VisitorTab>('geography');
+    const [showReportModal, setShowReportModal] = useState(false);
 
     if (!data) return <NoData msg="조직 데이터를 찾을 수 없습니다." />;
 
-    const { summary, pageviews, geography, trafficSources, visitorAttributes, linkedArticles } = data;
+    const { org, summary, pageviews, geography, trafficSources, visitorAttributes, linkedArticles } = data;
 
 
     const pvChartData = pageviews.map((r) => ({
@@ -85,21 +87,40 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
 
     return (
         <div className="space-y-8">
-            {/* 기간 선택 */}
-            <div className="flex gap-2">
-                {PERIOD_OPTIONS.map((opt) => (
-                    <button
-                        key={opt.value}
-                        onClick={() => router.push(`${pathname}?period=${opt.value}`)}
-                        className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                            currentPeriod === opt.value
-                                ? 'bg-foreground text-background border-foreground'
-                                : 'text-muted-foreground hover:text-foreground border-border'
-                        }`}
-                    >
-                        {opt.label}
-                    </button>
-                ))}
+            {showReportModal && org && (
+                <ReportExportModal
+                    entityType="organization"
+                    entityId={org.id}
+                    entityName={org.name}
+                    currentPeriod={currentPeriod}
+                    analyticsData={data}
+                    onClose={() => setShowReportModal(false)}
+                />
+            )}
+
+            {/* 기간 선택 + 리포트 버튼 */}
+            <div className="flex items-center justify-between gap-4">
+                <div className="flex gap-2">
+                    {PERIOD_OPTIONS.map((opt) => (
+                        <button
+                            key={opt.value}
+                            onClick={() => router.push(`${pathname}?period=${opt.value}`)}
+                            className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                                currentPeriod === opt.value
+                                    ? 'bg-foreground text-background border-foreground'
+                                    : 'text-muted-foreground hover:text-foreground border-border'
+                            }`}
+                        >
+                            {opt.label}
+                        </button>
+                    ))}
+                </div>
+                <button
+                    onClick={() => setShowReportModal(true)}
+                    className="px-4 py-1.5 rounded-full text-sm font-medium border border-indigo-200 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 transition-colors"
+                >
+                    📄 리포트 생성
+                </button>
             </div>
 
             {/* 요약 카드 */}
