@@ -1,5 +1,7 @@
-﻿import { getAnalyticsReports } from '@/actions/admin/analytics-actions';
+import { getAnalyticsReports } from '@/actions/admin/analytics-actions';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata = { title: '애널리틱스 리포트 이력 | Zinsight Admin' };
 

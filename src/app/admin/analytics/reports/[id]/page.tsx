@@ -1,6 +1,8 @@
-﻿import { getAnalyticsReportById } from '@/actions/admin/analytics-actions';
+import { getAnalyticsReportById } from '@/actions/admin/analytics-actions';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 
 interface Props {
     params: Promise<{ id: string }>;
