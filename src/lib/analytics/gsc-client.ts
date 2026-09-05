@@ -138,3 +138,64 @@ export async function getSearchAppearanceBreakdown(
         return null;
     }
 }
+
+// ── 생성형 AI 성과 리포트 (F-05) ─────────────────────────────────────
+// GSC searchType:'DISCOVER' 또는 searchAppearance 기반으로 AI Overview 노출수 별도 조회
+// 클릭수·CTR·순위는 제공되지 않음 — 노출수만 제공
+export interface GenerativeAIPerformance {
+    impressions: number;        // AI 개요(AI Overview) 노출수
+    note: string;               // UI 안내 문구
+}
+
+export async function getGenerativeAIPerformance(
+    pageUrlOrSlug: string,
+    dateRange: DateRange,
+): Promise<GenerativeAIPerformance | null> {
+    const NOTE = 'AI 개요 노출수만 측정 가능합니다. 클릭수·CTR·순위는 생성형 AI 성과에서 제공되지 않습니다.';
+    try {
+        const auth = getAuth();
+        const sc = google.searchconsole({ version: 'v1', auth });
+        const targetSlug = extractSlug(pageUrlOrSlug);
+
+        // searchAppearance 차원에서 'AI_OVERVIEW' 또는 'GENERATIVE_AI' 타입 필터링
+        const res = await sc.searchanalytics.query({
+            siteUrl: SITE_URL,
+            requestBody: {
+                startDate: dateRange.startDate,
+                endDate: dateRange.endDate,
+                dimensions: ['searchAppearance'],
+                dimensionFilterGroups: [
+                    {
+                        filters: [
+                            {
+                                dimension: 'page',
+                                operator: 'contains',
+                                expression: targetSlug,
+                            },
+                        ],
+                    },
+                ],
+                rowLimit: 50,
+                // 생성형 AI 전용 searchType (계정별 롤아웃 대상인 경우 사용 가능)
+                // searchType: 'DISCOVER',  // 필요 시 주석 해제
+            },
+        });
+
+        // searchAppearance 값 중 AI Overview 관련 항목 추출
+        const AI_APPEARANCE_KEYS = ['AI_OVERVIEW', 'GENERATIVE_AI', 'AI_MODE'];
+        const aiRows = (res.data.rows ?? []).filter((row) =>
+            AI_APPEARANCE_KEYS.some((key) => (row.keys?.[0] ?? '').toUpperCase().includes(key))
+        );
+
+        const totalImpressions = aiRows.reduce((s, r) => s + (r.impressions ?? 0), 0);
+
+        return {
+            impressions: totalImpressions,
+            note: NOTE,
+        };
+    } catch (err) {
+        console.error('[gsc] getGenerativeAIPerformance failed:', err);
+        return null;
+    }
+}
+
