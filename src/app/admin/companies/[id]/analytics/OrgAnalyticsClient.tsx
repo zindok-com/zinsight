@@ -1,8 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+    BarChart, Bar, PieChart, Pie, Cell, Legend,
+} from 'recharts';
 import Link from 'next/link';
+import { CHANNEL_COLORS } from '@/lib/analytics/types';
+
 
 const PERIOD_OPTIONS = [
     { label: '7일', value: '7' },
@@ -34,18 +40,48 @@ interface Props {
     currentPeriod: string;
 }
 
+type VisitorTab = 'geography' | 'device' | 'hour' | 'returning';
+
+const DEVICE_LABELS: Record<string, string> = {
+    desktop: '💻 PC',
+    mobile: '📱 모바일',
+    tablet: '📟 태블릿',
+};
+
 export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
     const router = useRouter();
     const pathname = usePathname();
+    const [visitorTab, setVisitorTab] = useState<VisitorTab>('geography');
 
     if (!data) return <NoData msg="조직 데이터를 찾을 수 없습니다." />;
 
-    const { summary, pageviews, geography, linkedArticles } = data;
+    const { summary, pageviews, geography, trafficSources, visitorAttributes, linkedArticles } = data;
+
 
     const pvChartData = pageviews.map((r) => ({
         date: r.date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
         조회수: r.views,
     }));
+
+    const channelChartData = (trafficSources ?? []).map((r) => ({
+        name: r.channelLabel,
+        sessions: r.sessions.value ?? 0,
+        color: CHANNEL_COLORS[r.channel] ?? '#6b7280',
+    }));
+
+    const devicePieData = (visitorAttributes?.devices ?? []).map((d) => ({
+        name: DEVICE_LABELS[d.device] ?? d.device,
+        value: d.sessions,
+    }));
+    const DEVICE_PIE_COLORS = ['#3b82f6', '#10b981', '#f59e0b'];
+
+    const hourChartData = Array.from({ length: 24 }, (_, h) => {
+        const found = visitorAttributes?.hours.find((r) => r.hour === h);
+        return { hour: String(h) + '시', sessions: found?.sessions ?? 0 };
+    });
+
+    const nvrData = visitorAttributes?.newVsReturning ?? [];
+    const totalNvr = nvrData.reduce((s, r) => s + r.sessions, 0);
 
     return (
         <div className="space-y-8">
@@ -109,29 +145,141 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
             </div>
 
             {/* 방문자 지역 */}
-            <div className="space-y-3">
-                <h2 className="text-base font-semibold">🗺 방문자 지역 분포</h2>
-                <p className="text-xs text-muted-foreground">실제 사이트 방문자 기준 (AI 노출 미포함)</p>
-                {geography.length > 0 ? (
-                    <div className="border rounded-xl overflow-hidden">
-                        <table className="w-full text-sm">
-                            <thead className="bg-muted/50">
-                                <tr>
-                                    <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">도시</th>
-                                    <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">세션수</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {geography.map((g, i) => (
-                                    <tr key={i} className="border-t">
-                                        <td className="px-4 py-2.5">{g.city}</td>
-                                        <td className="px-4 py-2.5 text-right font-medium">{g.sessions.toLocaleString()}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+            {/* F-08 유입 채널 */}
+            {channelChartData.length > 0 && (
+                <div className="space-y-3">
+                    <h2 className="text-base font-semibold">📊 유입 채널 (세분화)</h2>
+                    <div className="border rounded-xl p-4 bg-card space-y-2">
+                        {channelChartData.map((ch) => {
+                            const maxSessions = Math.max(...channelChartData.map((c) => c.sessions));
+                            const pct = maxSessions > 0 ? (ch.sessions / maxSessions) * 100 : 0;
+                            return (
+                                <div key={ch.name} className="flex items-center gap-3 text-sm">
+                                    <span className="w-28 text-muted-foreground shrink-0">{ch.name}</span>
+                                    <div className="flex-1 bg-muted rounded-full h-2">
+                                        <div
+                                            className="h-2 rounded-full transition-all"
+                                            style={{ width: `${pct}%`, backgroundColor: ch.color }}
+                                        />
+                                    </div>
+                                    <span className="w-10 text-right font-medium">{ch.sessions.toLocaleString()}</span>
+                                </div>
+                            );
+                        })}
+                        <p className="text-[11px] text-muted-foreground pt-1 leading-relaxed">
+                            ⚠ AI 서비스 리퍼러로 식별되지 않은 AI 답변 내 링크 유입은 검색/직접 방문으로 계상됩니다.
+                        </p>
                     </div>
-                ) : <NoData />}
+                </div>
+            )}
+
+            {/* F-13 방문자 속성 탭 */}
+            <div className="space-y-3">
+                <h2 className="text-base font-semibold">👥 방문자 속성</h2>
+                <p className="text-xs text-muted-foreground">실제 사이트 방문자 기준 (AI 노출 미포함)</p>
+                <div className="flex gap-1 border-b">
+                    {([
+                        { key: 'geography' as VisitorTab, label: '🗺 지역' },
+                        { key: 'device' as VisitorTab, label: '🖥 기기' },
+                        { key: 'hour' as VisitorTab, label: '🕐 시간대' },
+                        { key: 'returning' as VisitorTab, label: '🔄 재방문' },
+                    ]).map((t) => (
+                        <button
+                            key={t.key}
+                            onClick={() => setVisitorTab(t.key)}
+                            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+                                visitorTab === t.key
+                                    ? 'border-foreground text-foreground'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                            }`}
+                        >
+                            {t.label}
+                        </button>
+                    ))}
+                </div>
+
+                {visitorTab === 'geography' && (
+                    geography.length > 0 ? (
+                        <div className="border rounded-xl overflow-hidden">
+                            <table className="w-full text-sm">
+                                <thead className="bg-muted/50">
+                                    <tr>
+                                        <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">도시</th>
+                                        <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">세션수</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {geography.map((g, i) => (
+                                        <tr key={i} className="border-t">
+                                            <td className="px-4 py-2.5">{g.city}</td>
+                                            <td className="px-4 py-2.5 text-right font-medium">{g.sessions.toLocaleString()}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : <NoData />
+                )}
+
+                {visitorTab === 'device' && (
+                    devicePieData.length > 0 ? (
+                        <div className="border rounded-xl p-4 bg-card">
+                            <ResponsiveContainer width="100%" height={220}>
+                                <PieChart>
+                                    <Pie data={devicePieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                                        {devicePieData.map((_, i) => (
+                                            <Cell key={i} fill={DEVICE_PIE_COLORS[i % DEVICE_PIE_COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Legend />
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                    ) : <NoData />
+                )}
+
+                {visitorTab === 'hour' && (
+                    <div className="border rounded-xl p-4 bg-card">
+                        <ResponsiveContainer width="100%" height={200}>
+                            <BarChart data={hourChartData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                <XAxis dataKey="hour" tick={{ fontSize: 10 }} />
+                                <YAxis tick={{ fontSize: 11 }} />
+                                <Tooltip />
+                                <Bar dataKey="sessions" fill="#4f46e5" radius={[3, 3, 0, 0]} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                )}
+
+                {visitorTab === 'returning' && (
+                    nvrData.length > 0 ? (
+                        <div className="border rounded-xl p-5 bg-card space-y-3">
+                            {nvrData.map((r) => (
+                                <div key={r.type} className="flex items-center gap-3 text-sm">
+                                    <span className="w-20 text-muted-foreground">
+                                        {r.type === 'new' ? '🆕 신규' : r.type === 'returning' ? '🔄 재방문' : r.type}
+                                    </span>
+                                    <div className="flex-1 bg-muted rounded-full h-2">
+                                        <div
+                                            className="h-2 rounded-full bg-indigo-500"
+                                            style={{ width: `${totalNvr > 0 ? (r.sessions / totalNvr) * 100 : 0}%` }}
+                                        />
+                                    </div>
+                                    <span className="w-24 text-right font-medium">
+                                        {r.sessions.toLocaleString()}회
+                                        {totalNvr > 0 && (
+                                            <span className="text-muted-foreground ml-1">
+                                                ({Math.round((r.sessions / totalNvr) * 100)}%)
+                                            </span>
+                                        )}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : <NoData />
+                )}
             </div>
 
             {/* 연결된 기사 유입 기여도 */}
