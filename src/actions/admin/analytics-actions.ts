@@ -160,7 +160,7 @@ export async function getArticleAnalyticsSummary(
     // content HTML에서 외부 링크 추출 (cheerio)
     const registeredLinks = extractExternalLinks(post.content ?? '');
 
-    // GA4·GSC 병렬 호출
+    // GA4·GSC 병렬 호출 (에러 격리: 개별 지표 실패가 전체 화면을 중단시키지 않음)
     const [
         pageviews,
         radarClicks,
@@ -173,16 +173,46 @@ export async function getArticleAnalyticsSummary(
         gscGenerativeAI,
         outboundLinkClicks,
     ] = await Promise.all([
-        getArticlePageviews(post.slug, dateRange),
-        getArticleEventCounts(post.slug, 'radar_profile_click', dateRange),
-        getArticleEventCounts(post.slug, 'outbound_link_click', dateRange),
-        getTrafficSourceDetailed(post.slug, dateRange),
-        getVisitorGeography(post.slug, dateRange),
-        getVisitorAttributes(post.slug, dateRange),
-        getPagePerformance(post.slug, gscDateRange),
-        getSearchAppearanceBreakdown(post.slug, gscDateRange),
-        getGenerativeAIPerformance(post.slug, gscDateRange),
-        getOutboundLinkClicksByUrl(post.slug, dateRange),          // F-02
+        getArticlePageviews(post.slug, dateRange).catch((err) => {
+            console.error('[analytics] getArticlePageviews failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getArticleEventCounts(post.slug, 'radar_profile_click', dateRange).catch((err) => {
+            console.error('[analytics] radar_profile_click failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getArticleEventCounts(post.slug, 'outbound_link_click', dateRange).catch((err) => {
+            console.error('[analytics] outbound_link_click failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getTrafficSourceDetailed(post.slug, dateRange).catch((err) => {
+            console.error('[analytics] getTrafficSourceDetailed failed:', err?.message, err?.stack);
+            return [];
+        }),
+        getVisitorGeography(post.slug, dateRange).catch((err) => {
+            console.error('[analytics] getVisitorGeography failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getVisitorAttributes(post.slug, dateRange).catch((err) => {
+            console.error('[analytics] getVisitorAttributes failed:', err?.message, err?.stack);
+            return { devices: [], hours: [], newVsReturning: [], browsers: [] };
+        }),
+        getPagePerformance(post.slug, gscDateRange).catch((err) => {
+            console.error('[analytics] getPagePerformance failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getSearchAppearanceBreakdown(post.slug, gscDateRange).catch((err) => {
+            console.error('[analytics] getSearchAppearanceBreakdown failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getGenerativeAIPerformance(post.slug, gscDateRange).catch((err) => {
+            console.error('[analytics] getGenerativeAIPerformance failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getOutboundLinkClicksByUrl(post.slug, dateRange).catch((err) => {
+            console.error('[analytics] getOutboundLinkClicksByUrl failed:', err?.message, err?.stack);
+            return [];
+        }),
     ]);
 
     const views = pageviews?.reduce((s, r) => s + r.views, 0) ?? 0;
@@ -191,8 +221,9 @@ export async function getArticleAnalyticsSummary(
             ? Math.round((radarClicks / views) * 10000) / 100
             : null;
 
-    // F-02: 등록 링크와 GA4 클릭수 LEFT JOIN
-    const linkClickMap = new Map(outboundLinkClicks.map((r) => [r.url, r.clicks]));
+    // F-02: 등록 링크와 GA4 클릭수 LEFT JOIN (null-safe)
+    const safeOutboundLinkClicks = outboundLinkClicks ?? [];
+    const linkClickMap = new Map(safeOutboundLinkClicks.map((r) => [r.url, r.clicks]));
     const outboundLinkTable = registeredLinks.map((url) => {
         let domain = '';
         try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch { domain = url; }
@@ -203,12 +234,13 @@ export async function getArticleAnalyticsSummary(
         };
     });
     // GA4에 기록된 링크 중 content에 없는 것도 추가 (삭제된 링크 이력 보존)
-    for (const row of outboundLinkClicks) {
+    for (const row of safeOutboundLinkClicks) {
         if (!outboundLinkTable.find((r) => r.url === row.url)) {
             outboundLinkTable.push({ ...row });
         }
     }
     outboundLinkTable.sort((a, b) => b.clicks - a.clicks);
+
 
     return {
         post: {
@@ -290,6 +322,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         }
     }
 
+    // GA4 병렬 호출 (에러 격리)
     const [
         profileViews,
         outboundClicks,
@@ -300,19 +333,40 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         outboundLinkClicks,
         linkedArticlesWithClicks,
     ] = await Promise.all([
-        getArticlePageviews(orgIdentifier, dateRange),
-        getArticleEventCounts(orgIdentifier, 'outbound_link_click', dateRange),
-        getArticleEventCounts(orgIdentifier, 'magazine_article_click', dateRange),
-        getVisitorGeography(orgIdentifier, dateRange),
-        getTrafficSourceDetailed(orgIdentifier, dateRange),
-        getVisitorAttributes(orgIdentifier, dateRange),
-        getOutboundLinkClicksByUrl(orgIdentifier, dateRange),      // F-02
+        getArticlePageviews(orgIdentifier, dateRange).catch((err) => {
+            console.error('[analytics-org] getArticlePageviews failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getArticleEventCounts(orgIdentifier, 'outbound_link_click', dateRange).catch((err) => {
+            console.error('[analytics-org] outbound_link_click failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getArticleEventCounts(orgIdentifier, 'magazine_article_click', dateRange).catch((err) => {
+            console.error('[analytics-org] magazine_article_click failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getVisitorGeography(orgIdentifier, dateRange).catch((err) => {
+            console.error('[analytics-org] getVisitorGeography failed:', err?.message, err?.stack);
+            return null;
+        }),
+        getTrafficSourceDetailed(orgIdentifier, dateRange).catch((err) => {
+            console.error('[analytics-org] getTrafficSourceDetailed failed:', err?.message, err?.stack);
+            return [];
+        }),
+        getVisitorAttributes(orgIdentifier, dateRange).catch((err) => {
+            console.error('[analytics-org] getVisitorAttributes failed:', err?.message, err?.stack);
+            return { devices: [], hours: [], newVsReturning: [], browsers: [] };
+        }),
+        getOutboundLinkClicksByUrl(orgIdentifier, dateRange).catch((err) => {
+            console.error('[analytics-org] getOutboundLinkClicksByUrl failed:', err?.message, err?.stack);
+            return [];
+        }),
         Promise.all(
             org.magazinePosts.map(async (mo: { magazinePost: { id: number; title: string; slug: string; viewCount: number } }) => {
                 const post = mo.magazinePost;
                 const [pvs, inboundClicks] = await Promise.all([
-                    getArticlePageviews(post.slug, dateRange),
-                    getArticleEventCounts(post.slug, 'radar_profile_click', dateRange),
+                    getArticlePageviews(post.slug, dateRange).catch(() => null),
+                    getArticleEventCounts(post.slug, 'radar_profile_click', dateRange).catch(() => 0),
                 ]);
                 const views = pvs?.reduce((s, r) => s + r.views, 0) ?? post.viewCount;
                 return {
@@ -323,24 +377,30 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
                     inboundClicks: inboundClicks ?? 0,
                 };
             })
-        ),
+        ).catch((err) => {
+            console.error('[analytics-org] linkedArticles failed:', err);
+            return [];
+        }),
     ]);
 
-    const totalInboundFromArticles = linkedArticlesWithClicks.reduce((sum, a) => sum + a.inboundClicks, 0);
+    const safeArticles = linkedArticlesWithClicks ?? [];
+    const totalInboundFromArticles = safeArticles.reduce((sum, a) => sum + a.inboundClicks, 0);
 
-    // F-02: 등록 링크와 GA4 클릭수 LEFT JOIN
-    const linkClickMap = new Map(outboundLinkClicks.map((r) => [r.url, r.clicks]));
+    // F-02: 등록 링크와 GA4 클릭수 LEFT JOIN (null-safe)
+    const safeOutboundLinkClicks = outboundLinkClicks ?? [];
+    const linkClickMap = new Map(safeOutboundLinkClicks.map((r) => [r.url, r.clicks]));
     const outboundLinkTable = orgLinks.map((url) => {
         let domain = '';
         try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch { domain = url; }
         return { url, domain, clicks: linkClickMap.get(url) ?? 0 };
     });
-    for (const row of outboundLinkClicks) {
+    for (const row of safeOutboundLinkClicks) {
         if (!outboundLinkTable.find((r) => r.url === row.url)) {
             outboundLinkTable.push({ ...row });
         }
     }
     outboundLinkTable.sort((a, b) => b.clicks - a.clicks);
+
 
     return {
         org: {

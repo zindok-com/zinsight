@@ -6,12 +6,22 @@ import fs from 'fs';
 function getAuth() {
     let credentials: any;
     if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-        credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+        try {
+            credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+        } catch (parseErr) {
+            console.error('[gsc] Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON env:', parseErr);
+            throw parseErr;
+        }
     } else {
         const filePath =
             process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH ||
             './zinsight-analytics-2026-9897decb4585.json';
         const abs = path.resolve(process.cwd(), filePath);
+        if (!fs.existsSync(abs)) {
+            const msg = `[gsc] Google Service Account credentials not found. Neither GOOGLE_SERVICE_ACCOUNT_JSON env is set nor credential file exists at: ${abs}`;
+            console.error(msg);
+            throw new Error(msg);
+        }
         credentials = JSON.parse(fs.readFileSync(abs, 'utf-8'));
     }
     return new google.auth.GoogleAuth({
@@ -19,6 +29,7 @@ function getAuth() {
         scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
     });
 }
+
 
 const domain = process.env.DOMAIN || 'zinsight.co.kr';
 const SITE_URL = process.env.GSC_SITE_URL || `sc-domain:${domain}`;
