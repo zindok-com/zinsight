@@ -146,9 +146,20 @@ export async function getArticleAnalyticsSummary(
 ) {
     const post = await prisma.magazinePost.findUnique({
         where: { id: postId },
-        include: { category: true, region: true },
+        include: {
+            category: true,
+            region: true,
+            organizations: {
+                include: {
+                    organization: {
+                        select: { id: true, company_name: true, slug: true },
+                    },
+                },
+            },
+        },
     });
     if (!post) return null;
+
 
     const dateRange = buildDateRange(periodDays);
     const gscDateRange = buildGscDateRange(periodDays);
@@ -242,6 +253,15 @@ export async function getArticleAnalyticsSummary(
     outboundLinkTable.sort((a, b) => b.clicks - a.clicks);
 
 
+    const linkedOrganizations = (post.organizations ?? [])
+        .map((po) => po.organization)
+        .filter(Boolean)
+        .map((org) => ({
+            id: org.id,
+            name: org.company_name,
+            slug: org.slug,
+        }));
+
     return {
         post: {
             id: post.id,
@@ -251,6 +271,7 @@ export async function getArticleAnalyticsSummary(
             category: post.category?.name,
             region: post.region?.name,
         },
+        linkedOrganizations,                // 연동된 조직 목록 (조직 애널리틱스 바로가기용)
         dateRange,
         summary: {
             views,
@@ -269,6 +290,7 @@ export async function getArticleAnalyticsSummary(
         outboundLinkTable,                  // F-02: 링크별 클릭 상세
     };
 }
+
 
 
 // ── 기사 전환 퍼널 (B-01 수정: DB viewCount → GA4 pageviews) ─────

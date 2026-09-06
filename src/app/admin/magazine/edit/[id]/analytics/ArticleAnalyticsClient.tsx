@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from 'recharts';
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
 import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
+
 
 
 const PERIOD_OPTIONS = [
@@ -65,7 +67,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="기사 데이터를 찾을 수 없습니다." />;
 
-    const { post, summary, pageviews, trafficSources, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, outboundLinkTable } = data;
+    const { post, linkedOrganizations, summary, pageviews, trafficSources, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, outboundLinkTable } = data;
 
     const pvChartData = pageviews.map((r) => ({
         date: r.date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
@@ -105,7 +107,32 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
                 />
             )}
 
+            {/* 연동된 조직 애널리틱스 바로가기 */}
+            {linkedOrganizations && linkedOrganizations.length > 0 && (
+                <div className="flex items-center justify-between gap-4 p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 flex-wrap">
+                    <div className="flex items-center gap-2.5">
+                        <span className="text-xl">🏢</span>
+                        <div>
+                            <p className="text-sm font-semibold text-emerald-950">연동된 조직 애널리틱스</p>
+                            <p className="text-xs text-emerald-700">이 기사와 연결된 조직의 프로필 조회 및 전환 성과를 바로 확인하세요.</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {linkedOrganizations.map((org) => (
+                            <Link
+                                key={org.id}
+                                href={`/admin/companies/${org.id}/analytics`}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors shadow-sm flex items-center gap-1"
+                            >
+                                {org.name} 애널리틱스 바로가기 →
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="flex items-center justify-between gap-4">
+
                 <div className="flex gap-2">
                     {PERIOD_OPTIONS.map((opt) => (
                         <button
