@@ -23,6 +23,8 @@ import {
     BarChart3,
     Edit,
     List,
+    MoveVertical,
+    ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +32,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     updateCompany,
     linkArticleToCompany,
@@ -312,6 +320,33 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 }
             }
         }
+    };
+
+    // 단락 간격 및 구분선 삽입 핸들러 (회사소개 및 최근현황)
+    const handleInsertSpacingToSummary = (type: 'medium' | 'large' | 'divider') => {
+        const textarea = summaryTextareaRef.current;
+        let insertStr = '';
+        if (type === 'medium') insertStr = '\n\n';
+        else if (type === 'large') insertStr = '\n\n\n';
+        else if (type === 'divider') insertStr = '\n\n---\n\n';
+
+        if (!textarea) {
+            setBusinessSummary(prev => (prev ? `${prev}${insertStr}` : insertStr));
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = businessSummary;
+
+        const newText = text.substring(0, start) + insertStr + text.substring(end);
+        setBusinessSummary(newText);
+
+        const newCursorPos = start + insertStr.length;
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
     };
 
     // 주요 실적/레퍼런스 글머리 기호 삽입 핸들러
@@ -840,11 +875,51 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                             size="sm"
                                             onClick={handleInsertBulletToSummary}
                                             className="h-6 px-2 text-[11px] font-medium text-slate-700 hover:text-purple-700 hover:border-purple-300 border-slate-300 flex items-center gap-1 shadow-2xs"
+                                            title="글머리 기호(•)를 삽입합니다"
                                         >
                                             <List className="h-3 w-3 text-purple-600" />
-                                            <span>글머리 기호 삽입</span>
+                                            <span>글머리 기호</span>
                                         </Button>
-                                        <span className="text-[10px] text-muted-foreground hidden sm:inline">줄바꿈 시 단락 간격이 넓게 적용됩니다</span>
+
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-6 px-2 text-[11px] font-medium text-slate-700 hover:text-purple-700 hover:border-purple-300 border-slate-300 flex items-center gap-1 shadow-2xs"
+                                                >
+                                                    <MoveVertical className="h-3 w-3 text-slate-500" />
+                                                    <span>단락 간격 조절</span>
+                                                    <ChevronDown className="h-2.5 w-2.5 text-slate-400" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="w-44 bg-white shadow-lg">
+                                                <DropdownMenuItem
+                                                    onClick={() => handleInsertSpacingToSummary('medium')}
+                                                    className="text-xs cursor-pointer gap-2"
+                                                >
+                                                    <span className="font-bold text-purple-600">↕</span>
+                                                    <span>중간 간격 (Enter 2회)</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleInsertSpacingToSummary('large')}
+                                                    className="text-xs cursor-pointer gap-2"
+                                                >
+                                                    <span className="font-bold text-purple-600">⇕</span>
+                                                    <span>넓은 간격 (Enter 3회)</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onClick={() => handleInsertSpacingToSummary('divider')}
+                                                    className="text-xs cursor-pointer gap-2"
+                                                >
+                                                    <span className="font-bold text-slate-400">―</span>
+                                                    <span>구분선 삽입 (---)</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+
+                                        <span className="text-[10px] text-muted-foreground hidden sm:inline">Enter 횟수로 단락 간격 조율 가능</span>
                                     </div>
                                 </div>
                                 <Textarea
@@ -852,7 +927,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     value={businessSummary}
                                     onChange={e => setBusinessSummary(e.target.value)}
                                     onKeyDown={handleSummaryKeyDown}
-                                    placeholder="조직의 설립 목적, 주요 사업 내용, 최근 현황 및 제공 가치를 상세히 서술하세요.&#10;• '글머리 기호 삽입' 버튼을 누르면 항목별로 정리할 수 있습니다.&#10;• 글머리 기호 작성 중 Enter를 누르면 다음 줄에도 자동으로 기호가 이어집니다."
+                                    placeholder="조직의 설립 목적, 주요 사업 내용, 최근 현황 및 제공 가치를 상세히 서술하세요.&#10;• '글머리 기호' 버튼으로 불릿 목록을 작성할 수 있습니다.&#10;• '단락 간격 조절' 메뉴 또는 Enter 줄바꿈 횟수(1회: 보통, 2회: 중간, 3회: 넓음)로 단락 사이 길이를 자유롭게 조율할 수 있습니다."
                                     rows={9}
                                     className="text-sm leading-relaxed min-h-[170px] whitespace-pre-wrap font-sans"
                                 />
