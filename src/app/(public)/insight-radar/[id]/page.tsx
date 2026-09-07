@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, User, Target, Zap, Briefcase, Tag } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Target, Tag } from 'lucide-react';
 import { getRadarCompanyDetail } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
 import { FormattedBusinessSummary } from '@/components/public/insight-radar/FormattedBusinessSummary';
@@ -345,41 +345,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 </section>
 
                 {/* ─────────────────────────────── */}
-                {/* 3. Intelligence Report (Status) */}
-                {/* ─────────────────────────────── */}
-                <section className="mb-12">
-                    <div className="bg-gradient-to-br from-zi-primary to-slate-800 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-12 opacity-10 pointer-events-none">
-                            <Zap className="w-64 h-64 text-white" />
-                        </div>
-                        <div className="relative z-10">
-                            <span className="mb-4 inline-block px-3 py-1 bg-white/10 rounded-full text-xs font-bold uppercase tracking-widest text-blue-200">
-                                Intelligence Report
-                            </span>
-                            <h3 className="font-serif text-3xl font-bold mb-8">최근 동향 및 현황</h3>
-                            
-                            <div className="space-y-8 max-w-4xl">
-                                <div className="relative pl-4 before:absolute before:left-0 before:top-1.5 before:bottom-1 before:w-1 before:bg-blue-500/50 before:rounded-full">
-                                    <h4 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-wide">
-                                        비즈니스 요약
-                                    </h4>
-                                    <div className="max-w-none">
-                                        <FormattedBusinessSummary
-                                            text={company.business_summary}
-                                            fallback="최신 비즈니스 동향 정보를 수집 중입니다."
-                                            className="text-lg text-slate-200 font-medium"
-                                            bulletColor="text-blue-400"
-                                            paragraphSpacing="space-y-2.5"
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* ─────────────────────────────── */}
-                {/* 4. Activity Timeline            */}
+                {/* 3. Activity Timeline            */}
                 {/* ─────────────────────────────── */}
                 <section>
                     <div className="mb-8 flex items-center justify-between border-b border-zi-divider pb-4">
