@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useMemo } from 'react';
+import { useState, useTransition, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -22,6 +22,7 @@ import {
     BookOpen,
     BarChart3,
     Edit,
+    List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -221,6 +222,123 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [isSearching, setIsSearching] = useState(false);
     const [ingesting, setIngesting] = useState(false);
 
+    // 에디터 Ref
+    const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
+    const referencesTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // 글머리 기호(•) 삽입 핸들러 (회사소개 및 최근현황)
+    const handleInsertBulletToSummary = () => {
+        const textarea = summaryTextareaRef.current;
+        if (!textarea) {
+            setBusinessSummary(prev => (prev ? `${prev}\n• ` : '• '));
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = businessSummary;
+
+        if (start !== end) {
+            // 텍스트 블록 선택 시: 선택된 각 줄 앞에 글머리 기호 부착
+            const before = text.substring(0, start);
+            const selection = text.substring(start, end);
+            const after = text.substring(end);
+
+            const bulletedSelection = selection
+                .split('\n')
+                .map(line => (/^[•\-\*▪]\s*/.test(line.trim()) ? line : `• ${line}`))
+                .join('\n');
+
+            const newText = before + bulletedSelection + after;
+            setBusinessSummary(newText);
+
+            setTimeout(() => {
+                textarea.focus();
+                textarea.setSelectionRange(start, start + bulletedSelection.length);
+            }, 0);
+            return;
+        }
+
+        // 단일 커서 위치에 삽입
+        const isStartOfLine = start === 0 || text[start - 1] === '\n';
+        const insertStr = isStartOfLine ? '• ' : '\n• ';
+
+        const newText = text.substring(0, start) + insertStr + text.substring(end);
+        setBusinessSummary(newText);
+
+        const newCursorPos = start + insertStr.length;
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+    };
+
+    // Enter 키 스마트 글머리 기호 자동 연속 핸들러
+    const handleSummaryKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            const textarea = e.currentTarget;
+            const cursorPos = textarea.selectionStart;
+            const text = businessSummary;
+
+            // 현재 커서가 속한 줄 탐색
+            const lineStart = text.lastIndexOf('\n', cursorPos - 1) + 1;
+            const nextNewline = text.indexOf('\n', cursorPos);
+            const lineEnd = nextNewline === -1 ? text.length : nextNewline;
+            const currentLine = text.substring(lineStart, lineEnd);
+
+            const bulletMatch = currentLine.match(/^[•\-\*▪]\s*/);
+            if (bulletMatch) {
+                e.preventDefault();
+                const contentAfterBullet = currentLine.substring(bulletMatch[0].length).trim();
+
+                if (contentAfterBullet === '') {
+                    // 빈 글머리 기호에서 Enter -> 기호 삭제 후 리스트 종료
+                    const newText = text.substring(0, lineStart) + text.substring(cursorPos);
+                    setBusinessSummary(newText);
+                    setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(lineStart, lineStart);
+                    }, 0);
+                } else {
+                    // 항목 작성 후 Enter -> 다음 줄에 자동으로 글머리 기호(• ) 삽입
+                    const insertStr = '\n• ';
+                    const newText = text.substring(0, cursorPos) + insertStr + text.substring(cursorPos);
+                    setBusinessSummary(newText);
+                    const nextCursor = cursorPos + insertStr.length;
+                    setTimeout(() => {
+                        textarea.focus();
+                        textarea.setSelectionRange(nextCursor, nextCursor);
+                    }, 0);
+                }
+            }
+        }
+    };
+
+    // 주요 실적/레퍼런스 글머리 기호 삽입 핸들러
+    const handleInsertBulletToReferences = () => {
+        const textarea = referencesTextareaRef.current;
+        if (!textarea) {
+            setKeyReferences(prev => (prev ? `${prev}\n• ` : '• '));
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = keyReferences;
+
+        const isStartOfLine = start === 0 || text[start - 1] === '\n';
+        const insertStr = isStartOfLine ? '• ' : '\n• ';
+
+        const newText = text.substring(0, start) + insertStr + text.substring(end);
+        setKeyReferences(newText);
+
+        const newCursorPos = start + insertStr.length;
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+    };
+
     // 백링크 관리 함수
     const addBacklink = () => {
         if (backlinks.length < 3) {
@@ -267,7 +385,10 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
             };
 
             const parsedAliases = aliases.split(',').map((s: string) => s.trim()).filter(Boolean);
-            const parsedReferences = keyReferences.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean);
+            const parsedReferences = keyReferences
+                .split(/[\n,]/)
+                .map((s: string) => s.replace(/^[•\-\*▪]\s*/, '').trim())
+                .filter(Boolean);
 
             const res = await updateCompany(company.id, regionId, {
                 company_name: companyName.trim(),
@@ -710,16 +831,30 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-1.5">
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between flex-wrap gap-2">
                                     <Label className="text-xs font-semibold">회사소개 및 최근현황 (Business Summary & Status)</Label>
-                                    <span className="text-[11px] text-muted-foreground">Enter 줄바꿈으로 문단을 나눌 수 있습니다</span>
+                                    <div className="flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleInsertBulletToSummary}
+                                            className="h-6 px-2 text-[11px] font-medium text-slate-700 hover:text-purple-700 hover:border-purple-300 border-slate-300 flex items-center gap-1 shadow-2xs"
+                                        >
+                                            <List className="h-3 w-3 text-purple-600" />
+                                            <span>글머리 기호 삽입</span>
+                                        </Button>
+                                        <span className="text-[10px] text-muted-foreground hidden sm:inline">줄바꿈 시 단락 간격이 넓게 적용됩니다</span>
+                                    </div>
                                 </div>
                                 <Textarea
+                                    ref={summaryTextareaRef}
                                     value={businessSummary}
                                     onChange={e => setBusinessSummary(e.target.value)}
-                                    placeholder="조직의 설립 목적, 주요 사업 내용, 최근 현황 및 제공 가치를 상세히 서술하세요. 줄바꿈(Enter) 시 공개 프로필에 문단으로 반영됩니다."
-                                    rows={8}
-                                    className="text-sm leading-relaxed min-h-[160px] whitespace-pre-wrap font-sans"
+                                    onKeyDown={handleSummaryKeyDown}
+                                    placeholder="조직의 설립 목적, 주요 사업 내용, 최근 현황 및 제공 가치를 상세히 서술하세요.&#10;• '글머리 기호 삽입' 버튼을 누르면 항목별로 정리할 수 있습니다.&#10;• 글머리 기호 작성 중 Enter를 누르면 다음 줄에도 자동으로 기호가 이어집니다."
+                                    rows={9}
+                                    className="text-sm leading-relaxed min-h-[170px] whitespace-pre-wrap font-sans"
                                 />
                             </div>
 
@@ -765,8 +900,21 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     <p className="text-[10px] text-muted-foreground">뉴스 크롤링 시 일치 검사에 활용됩니다.</p>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label className="text-xs font-semibold">주요 실적 / 레퍼런스</Label>
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-semibold">주요 실적 / 레퍼런스</Label>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={handleInsertBulletToReferences}
+                                            className="h-5 px-1.5 text-[10px] text-slate-500 hover:text-purple-600 flex items-center gap-1"
+                                        >
+                                            <List className="h-2.5 w-2.5 text-purple-600" />
+                                            <span>기호 삽입</span>
+                                        </Button>
+                                    </div>
                                     <Textarea
+                                        ref={referencesTextareaRef}
                                         value={keyReferences}
                                         onChange={e => setKeyReferences(e.target.value)}
                                         placeholder="2024 유망중소기업 선정&#10;2023 글로벌 강소기업 지정 (줄바꿈 또는 쉼표 구분)"

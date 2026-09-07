@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle2, XCircle, Eye, Globe, MapPin, Calendar, User, Building2 } from 'lucide-react';
+import { FormattedBusinessSummary } from '@/components/public/insight-radar/FormattedBusinessSummary';
 
 type Region = { id: number; name: string };
 type Invite = { id: number; region: Region; label: string | null };
@@ -198,7 +199,13 @@ export function SubmissionsClient({ submissions }: Props) {
                             {selected.business_summary && (
                                 <div>
                                     <p className="text-xs font-medium text-muted-foreground mb-1">사업 요약</p>
-                                    <p className="text-sm leading-relaxed bg-muted/30 rounded p-3 whitespace-pre-line">{selected.business_summary}</p>
+                                    <div className="bg-muted/30 rounded p-3 text-sm">
+                                        <FormattedBusinessSummary
+                                            text={selected.business_summary}
+                                            paragraphSpacing="space-y-2.5"
+                                            bulletColor="text-purple-600"
+                                        />
+                                    </div>
                                 </div>
                             )}
 

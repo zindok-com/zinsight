@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Building2, MapPin, Calendar, User, Target, Zap, Briefcase, Tag } from 'lucide-react';
 import { getRadarCompanyDetail } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
+import { FormattedBusinessSummary } from '@/components/public/insight-radar/FormattedBusinessSummary';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -237,9 +238,13 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             </div>
                         </div>
                         
-                        <p className="text-xl text-slate-600 leading-relaxed max-w-4xl font-medium whitespace-pre-line">
-                            {company.business_summary || '등록된 비즈니스 요약이 없습니다.'}
-                        </p>
+                        <FormattedBusinessSummary
+                            text={company.business_summary}
+                            fallback="등록된 비즈니스 요약이 없습니다."
+                            className="text-xl text-slate-600 max-w-4xl font-medium"
+                            bulletColor="text-zi-secondary"
+                            paragraphSpacing="space-y-4"
+                        />
                     </div>
 
                     {/* 2. Metadata Insight Bar */}
@@ -358,10 +363,14 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                     <h4 className="text-sm font-bold text-blue-300 mb-2 uppercase tracking-wide">
                                         비즈니스 요약
                                     </h4>
-                                    <div className="prose prose-invert max-w-none">
-                                        <p className="text-lg leading-relaxed text-slate-200 font-medium whitespace-pre-line">
-                                            {company.business_summary || '최신 비즈니스 동향 정보를 수집 중입니다.'}
-                                        </p>
+                                    <div className="max-w-none">
+                                        <FormattedBusinessSummary
+                                            text={company.business_summary}
+                                            fallback="최신 비즈니스 동향 정보를 수집 중입니다."
+                                            className="text-lg text-slate-200 font-medium"
+                                            bulletColor="text-blue-400"
+                                            paragraphSpacing="space-y-4"
+                                        />
                                     </div>
                                 </div>
                             </div>
