@@ -143,8 +143,14 @@ export async function getRadarCompanies(
                 _count: {
                     select: {
                         company_articles: true,
-                        ingestions: true,
-                        magazinePosts: true,
+                        magazinePosts: {
+                            where: {
+                                magazinePost: {
+                                    status: 'PUBLISHED' as const,
+                                    deletedAt: null,
+                                },
+                            },
+                        },
                     },
                 },
             },
@@ -167,7 +173,7 @@ export async function getRadarCompanies(
         core_keywords: c.core_keywords,
         region: c.region ?? null,
         hq_location: c.hq_location ?? null,
-        articleCount: c._count.company_articles + c._count.ingestions + c._count.magazinePosts,
+        articleCount: c._count.company_articles + c._count.magazinePosts,
         latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
     }));
 
@@ -308,7 +314,14 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         _count: {
             select: {
                 company_articles: true,
-                magazinePosts: true,
+                magazinePosts: {
+                    where: {
+                        magazinePost: {
+                            status: 'PUBLISHED' as const,
+                            deletedAt: null,
+                        },
+                    },
+                },
             },
         },
     };
