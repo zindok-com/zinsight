@@ -111,10 +111,10 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 5. 글머리 기호 (•, -, *, ▪ 등)
-        const bulletMatch = trimmed.match(/^([•\-\*▪])\s*(.*)$/);
+        // 5. 글머리 기호 (•, ▪ 또는 단독 -, * 뒤에 공백)
+        const bulletMatch = trimmed.match(/^(?:([•▪])\s*|([\-\*])(?!\2)\s+)(.*)$/);
         if (bulletMatch) {
-            blocks.push({ type: 'bullet', text: bulletMatch[2] });
+            blocks.push({ type: 'bullet', text: bulletMatch[3].trim() });
             continue;
         }
 
