@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createMagazinePost, updateMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon, ChevronDown, ChevronUp, FileText, List } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
@@ -79,6 +79,102 @@ export function MagazineForm({
         const markdownLink = `[${text}](${url})`;
         insertTextAtCursor(activeLinkTextareaId, markdownLink);
         setActiveLinkTextareaId(null);
+    };
+
+    // 글머리 기호(•) 삽입 핸들러
+    const handleInsertBullet = (id: string) => {
+        const textarea = document.getElementById(id) as HTMLTextAreaElement;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+
+        let newValue = '';
+        let newCursorPos = 0;
+
+        if (start !== end) {
+            const before = value.substring(0, start);
+            const selection = value.substring(start, end);
+            const after = value.substring(end);
+
+            const bulleted = selection
+                .split('\n')
+                .map(line => (/^[•\-\*▪]\s*/.test(line.trim()) ? line : `• ${line}`))
+                .join('\n');
+
+            newValue = before + bulleted + after;
+            newCursorPos = start + bulleted.length;
+        } else {
+            const isStartOfLine = start === 0 || value[start - 1] === '\n';
+            const insertStr = isStartOfLine ? '• ' : '\n• ';
+            newValue = value.substring(0, start) + insertStr + value.substring(end);
+            newCursorPos = start + insertStr.length;
+        }
+
+        if (id === 'lead') {
+            setFormData((prev: any) => ({ ...prev, lead: newValue }));
+        } else if (id === 'closing') {
+            setFormData((prev: any) => ({ ...prev, closing: newValue }));
+        } else if (id.startsWith('body-')) {
+            const index = parseInt(id.split('-')[1]);
+            const newBodies = [...formData.bodies];
+            newBodies[index].content = newValue;
+            setFormData((prev: any) => ({ ...prev, bodies: newBodies }));
+        }
+
+        setTimeout(() => {
+            textarea.focus();
+            textarea.setSelectionRange(newCursorPos, newCursorPos);
+        }, 0);
+    };
+
+    // Enter 키 스마트 글머리 기호 연속 입력 핸들러
+    const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>, id: string) => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            const textarea = e.currentTarget;
+            const cursorPos = textarea.selectionStart;
+            const value = textarea.value;
+
+            const lineStart = value.lastIndexOf('\n', cursorPos - 1) + 1;
+            const nextNewline = value.indexOf('\n', cursorPos);
+            const lineEnd = nextNewline === -1 ? value.length : nextNewline;
+            const currentLine = value.substring(lineStart, lineEnd);
+
+            const bulletMatch = currentLine.match(/^[•\-\*▪]\s*/);
+            if (bulletMatch) {
+                e.preventDefault();
+                const contentAfterBullet = currentLine.substring(bulletMatch[0].length).trim();
+
+                let newValue = '';
+                let nextCursor = 0;
+
+                if (contentAfterBullet === '') {
+                    newValue = value.substring(0, lineStart) + value.substring(cursorPos);
+                    nextCursor = lineStart;
+                } else {
+                    const insertStr = '\n• ';
+                    newValue = value.substring(0, cursorPos) + insertStr + value.substring(cursorPos);
+                    nextCursor = cursorPos + insertStr.length;
+                }
+
+                if (id === 'lead') {
+                    setFormData((prev: any) => ({ ...prev, lead: newValue }));
+                } else if (id === 'closing') {
+                    setFormData((prev: any) => ({ ...prev, closing: newValue }));
+                } else if (id.startsWith('body-')) {
+                    const index = parseInt(id.split('-')[1]);
+                    const newBodies = [...formData.bodies];
+                    newBodies[index].content = newValue;
+                    setFormData((prev: any) => ({ ...prev, bodies: newBodies }));
+                }
+
+                setTimeout(() => {
+                    textarea.focus();
+                    textarea.setSelectionRange(nextCursor, nextCursor);
+                }, 0);
+            }
+        }
     };
 
     // Parse content from post if available (handles both structured JSON and legacy text)
@@ -623,6 +719,17 @@ export function MagazineForm({
                                             type="button"
                                             variant="outline"
                                             size="sm"
+                                            onClick={() => handleInsertBullet('lead')}
+                                            className="h-7 px-2.5 text-xs bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
+                                            title="글머리 기호(•)를 삽입합니다"
+                                        >
+                                            <List className="w-3.5 h-3.5 text-indigo-600" />
+                                            글머리 기호
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
                                             onClick={() => handleInsertLink('lead')}
                                             className="h-7 px-2.5 text-xs bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
                                         >
@@ -642,7 +749,7 @@ export function MagazineForm({
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 pb-1">
-                                    <p className="text-[11px] text-indigo-600/80">기사의 도입부나 요약을 작성해주세요. **텍스트** 또는 **{`{텍스트}`}**로 강조할 수 있습니다. 이미지는 단독 줄에 URL을 입력하거나 `![설명](주소)` 형식으로 삽입됩니다.</p>
+                                    <p className="text-[11px] text-indigo-600/80">기사의 도입부나 요약을 작성해주세요. 줄바꿈 시 단락 간격이 넓게 적용되며, 글머리 기호(•) 작성 중 Enter를 누르면 자동으로 기호가 이어집니다.</p>
                                     <span title="기사의 도입부(리드) 내용을 작성하세요." className="cursor-help inline-flex items-center">
                                         <Info className="w-3.5 h-3.5 text-slate-400" />
                                     </span>
@@ -652,6 +759,7 @@ export function MagazineForm({
                                     className="min-h-[130px] bg-white border-indigo-200 focus-visible:ring-indigo-500 text-sm leading-relaxed"
                                     value={formData.lead}
                                     onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
+                                    onKeyDown={(e) => handleTextareaKeyDown(e, 'lead')}
                                     required
                                 />
                             </div>
@@ -727,6 +835,17 @@ export function MagazineForm({
                                                                 type="button"
                                                                 variant="outline"
                                                                 size="sm"
+                                                                onClick={() => handleInsertBullet(`body-${index}`)}
+                                                                className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                                                title="글머리 기호(•)를 삽입합니다"
+                                                            >
+                                                                <List className="w-3.5 h-3.5 text-slate-500" />
+                                                                글머리 기호
+                                                            </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
                                                                 onClick={() => handleInsertLink(`body-${index}`)}
                                                                 className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
                                                             >
@@ -754,6 +873,7 @@ export function MagazineForm({
                                                             newBodies[index].content = e.target.value;
                                                             setFormData({ ...formData, bodies: newBodies });
                                                         }}
+                                                        onKeyDown={(e) => handleTextareaKeyDown(e, `body-${index}`)}
                                                         required={index === 0}
                                                         title="본문 내용을 작성하세요..."
                                                     />
@@ -769,6 +889,17 @@ export function MagazineForm({
                                 <div className="flex justify-between items-center pb-1">
                                     <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
                                     <div className="flex gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleInsertBullet('closing')}
+                                            className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
+                                            title="글머리 기호(•)를 삽입합니다"
+                                        >
+                                            <List className="w-3.5 h-3.5 text-slate-500" />
+                                            글머리 기호
+                                        </Button>
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -792,7 +923,7 @@ export function MagazineForm({
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 pb-1">
-                                    <p className="text-[11px] text-slate-500">기사의 맺음말이나 결론을 작성해주세요.</p>
+                                    <p className="text-[11px] text-slate-500">기사의 맺음말이나 결론을 작성해주세요. 줄바꿈 시 단락 간격이 넓게 적용됩니다.</p>
                                     <span title="클로징 내용을 작성하세요..." className="cursor-help inline-flex items-center">
                                         <Info className="w-3.5 h-3.5 text-slate-400" />
                                     </span>
@@ -802,6 +933,7 @@ export function MagazineForm({
                                     className="min-h-[130px] bg-white text-sm leading-relaxed"
                                     value={formData.closing}
                                     onChange={(e) => setFormData({ ...formData, closing: e.target.value })}
+                                    onKeyDown={(e) => handleTextareaKeyDown(e, 'closing')}
                                     required
                                 />
                             </div>
@@ -977,7 +1109,48 @@ export function MagazineForm({
     );
 }
 
-// Inline custom parser for **text** -> zi-blue and **{text}** -> zi-blue + underline
+function renderHighlightedParts(text: string) {
+    const parts = text.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**{') && part.endsWith('}**')) {
+            const content = part.slice(3, -3);
+            return (
+                <span key={i} className="font-bold text-zi-blue underline decoration-zi-blue/30 underline-offset-4">
+                    {content}
+                </span>
+            );
+        }
+        if (part.startsWith('**') && part.endsWith('**')) {
+            const content = part.slice(2, -2);
+            return (
+                <span key={i} className="font-bold text-zi-blue">
+                    {content}
+                </span>
+            );
+        }
+        if (part.startsWith('[') && part.endsWith(')')) {
+            const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+            if (match) {
+                const linkText = match[1];
+                const url = match[2];
+                return (
+                    <a 
+                        key={i} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
+                    >
+                        {linkText}
+                    </a>
+                );
+            }
+        }
+        return part;
+    });
+}
+
+// Inline custom parser for **text** -> zi-blue, **{text}** -> zi-blue + underline, and bullet points
 function HighlightedText({ text }: { text: string }) {
     if (!text) return null;
     
@@ -987,8 +1160,10 @@ function HighlightedText({ text }: { text: string }) {
     return (
         <>
             {lines.map((line, lineIdx) => {
+                const trimmed = line.trim();
+
                 // 1. Markdown 이미지 형식 매칭 (![alt](url))
-                const imgMatch = line.trim().match(/^!\[(.*?)\]\((.*?)\)$/);
+                const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
                 if (imgMatch) {
                     const alt = imgMatch[1];
                     const url = imgMatch[2];
@@ -1005,7 +1180,7 @@ function HighlightedText({ text }: { text: string }) {
                 }
 
                 // 2. Raw 이미지 URL 형식 매칭 (Vercel Blob 등 이미지 링크 단독 행)
-                const rawUrlMatch = line.trim().match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
+                const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
                 if (rawUrlMatch) {
                     const url = rawUrlMatch[0];
                     return (
@@ -1019,47 +1194,29 @@ function HighlightedText({ text }: { text: string }) {
                     );
                 }
 
-                // 기존의 강조 및 링크 처리
-                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+                // 3. 빈 줄 (문단 간 추가 간격)
+                if (!trimmed) {
+                    return <span key={lineIdx} className="block h-3" />;
+                }
+
+                // 4. 글머리 기호 행 매칭 (•, -, *, ▪ 등)
+                const bulletMatch = trimmed.match(/^([•\-\*▪])\s*(.*)$/);
+                if (bulletMatch) {
+                    const content = bulletMatch[2];
+                    return (
+                        <span key={lineIdx} className="flex items-start gap-2.5 mb-2.5 pl-1.5 last:mb-0">
+                            <span className="font-bold shrink-0 select-none text-zi-blue leading-relaxed">•</span>
+                            <span className="flex-1 leading-relaxed">
+                                {renderHighlightedParts(content)}
+                            </span>
+                        </span>
+                    );
+                }
+
+                // 5. 일반 단락 (줄바꿈 시 단락 간격을 넓게 설정)
                 return (
-                    <span key={lineIdx} className="block mb-4 last:mb-0">
-                        {parts.map((part, i) => {
-                            if (part.startsWith('**{') && part.endsWith('}**')) {
-                                const content = part.slice(3, -3);
-                                return (
-                                    <span key={i} className="font-bold text-zi-blue underline decoration-zi-blue/30 underline-offset-4">
-                                        {content}
-                                    </span>
-                                );
-                            }
-                            if (part.startsWith('**') && part.endsWith('**')) {
-                                const content = part.slice(2, -2);
-                                return (
-                                    <span key={i} className="font-bold text-zi-blue">
-                                        {content}
-                                    </span>
-                                );
-                            }
-                            if (part.startsWith('[') && part.endsWith(')')) {
-                                const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
-                                if (match) {
-                                    const linkText = match[1];
-                                    const url = match[2];
-                                    return (
-                                        <a 
-                                            key={i} 
-                                            href={url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
-                                        >
-                                            {linkText}
-                                        </a>
-                                    );
-                                }
-                            }
-                            return part;
-                        })}
+                    <span key={lineIdx} className="block mb-5 last:mb-0 leading-[1.8]">
+                        {renderHighlightedParts(line)}
                     </span>
                 );
             })}

@@ -8,6 +8,39 @@ interface HighlightedTextProps {
     text: string;
 }
 
+function renderHighlightedParts(text: string) {
+    const parts = text.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**{') && part.endsWith('}**')) {
+            const content = part.slice(3, -3);
+            return <span key={i} className="font-bold text-zi-blue underline decoration-zi-blue/30 underline-offset-4">{content}</span>;
+        }
+        if (part.startsWith('**') && part.endsWith('**')) {
+            const content = part.slice(2, -2);
+            return <span key={i} className="font-bold text-zi-blue">{content}</span>;
+        }
+        if (part.startsWith('[') && part.endsWith(')')) {
+            const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+            if (match) {
+                const linkText = match[1];
+                const url = match[2];
+                return (
+                    <a 
+                        key={i} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
+                    >
+                        {linkText}
+                    </a>
+                );
+            }
+        }
+        return part;
+    });
+}
+
 function HighlightedText({ text }: HighlightedTextProps) {
     if (!text) return null;
     
@@ -16,7 +49,10 @@ function HighlightedText({ text }: HighlightedTextProps) {
     return (
         <>
             {lines.map((line, lineIdx) => {
-                const imgMatch = line.trim().match(/^!\[(.*?)\]\((.*?)\)$/);
+                const trimmed = line.trim();
+
+                // 1. Markdown 이미지 형식 매칭 (![alt](url))
+                const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
                 if (imgMatch) {
                     const alt = imgMatch[1];
                     const url = imgMatch[2];
@@ -32,7 +68,8 @@ function HighlightedText({ text }: HighlightedTextProps) {
                     );
                 }
 
-                const rawUrlMatch = line.trim().match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
+                // 2. Raw 이미지 URL 형식 매칭 (Vercel Blob 등 이미지 링크 단독 행)
+                const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
                 if (rawUrlMatch) {
                     const url = rawUrlMatch[0];
                     return (
@@ -46,38 +83,29 @@ function HighlightedText({ text }: HighlightedTextProps) {
                     );
                 }
 
-                const parts = line.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+                // 3. 빈 줄 (문단 간 추가 간격)
+                if (!trimmed) {
+                    return <span key={lineIdx} className="block h-3" />;
+                }
+
+                // 4. 글머리 기호 행 매칭 (•, -, *, ▪ 등)
+                const bulletMatch = trimmed.match(/^([•\-\*▪])\s*(.*)$/);
+                if (bulletMatch) {
+                    const content = bulletMatch[2];
+                    return (
+                        <span key={lineIdx} className="flex items-start gap-2.5 mb-2.5 pl-1.5 last:mb-0">
+                            <span className="font-bold shrink-0 select-none text-zi-blue leading-relaxed">•</span>
+                            <span className="flex-1 leading-relaxed">
+                                {renderHighlightedParts(content)}
+                            </span>
+                        </span>
+                    );
+                }
+
+                // 5. 일반 단락 (줄바꿈 시 단락 간격을 넓게 설정)
                 return (
-                    <span key={lineIdx} className="block mb-4 last:mb-0">
-                        {parts.map((part, i) => {
-                            if (part.startsWith('**{') && part.endsWith('}**')) {
-                                const content = part.slice(3, -3);
-                                return <span key={i} className="font-bold text-zi-blue underline decoration-zi-blue/30 underline-offset-4">{content}</span>;
-                            }
-                            if (part.startsWith('**') && part.endsWith('**')) {
-                                const content = part.slice(2, -2);
-                                return <span key={i} className="font-bold text-zi-blue">{content}</span>;
-                            }
-                            if (part.startsWith('[') && part.endsWith(')')) {
-                                const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
-                                if (match) {
-                                    const linkText = match[1];
-                                    const url = match[2];
-                                    return (
-                                        <a 
-                                            key={i} 
-                                            href={url} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer"
-                                            className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
-                                        >
-                                            {linkText}
-                                        </a>
-                                    );
-                                }
-                            }
-                            return part;
-                        })}
+                    <span key={lineIdx} className="block mb-5 last:mb-0 leading-[1.8]">
+                        {renderHighlightedParts(line)}
                     </span>
                 );
             })}
