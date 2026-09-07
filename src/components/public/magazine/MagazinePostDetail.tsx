@@ -41,71 +41,118 @@ function renderHighlightedParts(text: string) {
     });
 }
 
-function HighlightedText({ text }: HighlightedTextProps) {
+type HighlightBlock = 
+    | { type: 'image'; url: string; alt?: string }
+    | { type: 'divider' }
+    | { type: 'spacer'; size: 'md' | 'lg' | 'xl' }
+    | { type: 'bullet'; text: string }
+    | { type: 'paragraph'; text: string };
+
+// Inline custom parser for **text** -> zi-blue, **{text}** -> zi-blue + underline, and bullet points
+function HighlightedText({ text }: { text: string }) {
     if (!text) return null;
     
     const lines = text.split('\n');
-    
+    const blocks: HighlightBlock[] = [];
+    let emptyLineCount = 0;
+
+    const flushSpacers = () => {
+        if (emptyLineCount === 1) {
+            blocks.push({ type: 'spacer', size: 'md' });
+        } else if (emptyLineCount === 2) {
+            blocks.push({ type: 'spacer', size: 'lg' });
+        } else if (emptyLineCount >= 3) {
+            blocks.push({ type: 'spacer', size: 'xl' });
+        }
+        emptyLineCount = 0;
+    };
+
+    for (const rawLine of lines) {
+        const trimmed = rawLine.trim();
+
+        if (!trimmed) {
+            emptyLineCount++;
+            continue;
+        }
+
+        flushSpacers();
+
+        // 1. 구분선 매칭 (---, ***, ___)
+        if (/^(\-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+            blocks.push({ type: 'divider' });
+            continue;
+        }
+
+        // 2. Markdown 이미지 (![alt](url))
+        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+        if (imgMatch) {
+            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2] });
+            continue;
+        }
+
+        // 3. Raw 이미지 URL
+        const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
+        if (rawUrlMatch) {
+            blocks.push({ type: 'image', url: rawUrlMatch[0], alt: 'Image' });
+            continue;
+        }
+
+        // 4. 글머리 기호 (•, -, *, ▪ 등)
+        const bulletMatch = trimmed.match(/^([•\-\*▪])\s*(.*)$/);
+        if (bulletMatch) {
+            blocks.push({ type: 'bullet', text: bulletMatch[2] });
+            continue;
+        }
+
+        // 5. 일반 단락
+        blocks.push({ type: 'paragraph', text: rawLine });
+    }
+
     return (
         <>
-            {lines.map((line, lineIdx) => {
-                const trimmed = line.trim();
-
-                // 1. Markdown 이미지 형식 매칭 (![alt](url))
-                const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
-                if (imgMatch) {
-                    const alt = imgMatch[1];
-                    const url = imgMatch[2];
+            {blocks.map((block, idx) => {
+                if (block.type === 'image') {
                     return (
-                        <span key={lineIdx} className="block my-6 text-center">
+                        <span key={idx} className="block my-6 text-center">
                             <img 
-                                src={url} 
-                                alt={alt} 
+                                src={block.url} 
+                                alt={block.alt || 'Image'} 
                                 className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
                             />
-                            {alt && <span className="block text-xs text-zi-outline-variant mt-2 italic">{alt}</span>}
+                            {block.alt && block.alt !== 'Image' && (
+                                <span className="block text-xs text-zi-outline-variant mt-2 italic">{block.alt}</span>
+                            )}
                         </span>
                     );
                 }
 
-                // 2. Raw 이미지 URL 형식 매칭 (Vercel Blob 등 이미지 링크 단독 행)
-                const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
-                if (rawUrlMatch) {
-                    const url = rawUrlMatch[0];
+                if (block.type === 'divider') {
                     return (
-                        <span key={lineIdx} className="block my-6 text-center">
-                            <img 
-                                src={url} 
-                                alt="Image" 
-                                className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
-                            />
+                        <span key={idx} className="block py-4">
+                            <hr className="border-zi-divider/40" />
                         </span>
                     );
                 }
 
-                // 3. 빈 줄 (문단 간 추가 간격)
-                if (!trimmed) {
-                    return <span key={lineIdx} className="block h-3" />;
+                if (block.type === 'spacer') {
+                    const hClass = block.size === 'xl' ? 'h-9' : block.size === 'lg' ? 'h-6' : 'h-3';
+                    return <span key={idx} className={`block ${hClass}`} aria-hidden="true" />;
                 }
 
-                // 4. 글머리 기호 행 매칭 (•, -, *, ▪ 등)
-                const bulletMatch = trimmed.match(/^([•\-\*▪])\s*(.*)$/);
-                if (bulletMatch) {
-                    const content = bulletMatch[2];
+                if (block.type === 'bullet') {
                     return (
-                        <span key={lineIdx} className="flex items-start gap-2.5 mb-2.5 pl-1.5 last:mb-0">
+                        <span key={idx} className="flex items-start gap-2.5 mb-2.5 pl-1.5 last:mb-0">
                             <span className="font-bold shrink-0 select-none text-zi-blue leading-relaxed">•</span>
                             <span className="flex-1 leading-relaxed">
-                                {renderHighlightedParts(content)}
+                                {renderHighlightedParts(block.text)}
                             </span>
                         </span>
                     );
                 }
 
-                // 5. 일반 단락 (줄바꿈 시 단락 간격을 넓게 설정)
                 return (
-                    <span key={lineIdx} className="block mb-5 last:mb-0 leading-[1.8]">
-                        {renderHighlightedParts(line)}
+                    <span key={idx} className="block mb-5 last:mb-0 leading-[1.8]">
+                        {renderHighlightedParts(block.text)}
                     </span>
                 );
             })}
