@@ -20,7 +20,7 @@ interface ParagraphBlock {
 
 interface SpacerBlock {
     type: 'spacer';
-    size: 'md' | 'lg' | 'xl';
+    size: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 interface DividerBlock {
@@ -34,7 +34,7 @@ export function FormattedBusinessSummary({
     fallback = '등록된 비즈니스 요약이 없습니다.',
     className = '',
     bulletColor = 'text-blue-600',
-    paragraphSpacing = 'space-y-4',
+    paragraphSpacing = 'space-y-2.5',
 }: FormattedBusinessSummaryProps) {
     if (!text || !text.trim()) {
         return <p className={`leading-relaxed text-slate-400 italic ${className}`}>{fallback}</p>;
@@ -54,11 +54,11 @@ export function FormattedBusinessSummary({
 
     const flushSpacers = () => {
         if (emptyLineCount === 1) {
-            blocks.push({ type: 'spacer', size: 'md' });
+            blocks.push({ type: 'spacer', size: 'sm' });
         } else if (emptyLineCount === 2) {
-            blocks.push({ type: 'spacer', size: 'lg' });
+            blocks.push({ type: 'spacer', size: 'md' });
         } else if (emptyLineCount >= 3) {
-            blocks.push({ type: 'spacer', size: 'xl' });
+            blocks.push({ type: 'spacer', size: 'lg' });
         }
         emptyLineCount = 0;
     };
@@ -82,12 +82,17 @@ export function FormattedBusinessSummary({
             continue;
         }
 
-        // 2. 명시적 여백 태그 매칭 ([여백], [space], [space:lg])
-        if (/^\[(여백|space|spacer)(:?(sm|md|lg|xl)?)\]$/i.test(trimmed)) {
+        // 2. 명시적 여백 태그 매칭 ([여백], [여백:좁게], [여백:sm], [space:xs] 등)
+        if (/^\[(여백|space|spacer)(:?(xs|sm|md|lg|xl|좁게|미세|보통|중간|넓게)?)\]$/i.test(trimmed)) {
             flushBullets();
-            const match = trimmed.match(/^\[(여백|space|spacer)(:?(sm|md|lg|xl)?)\]$/i);
-            const sizeStr = match?.[2]?.replace(':', '').toLowerCase() || 'md';
-            const size = sizeStr === 'xl' ? 'xl' : sizeStr === 'lg' ? 'lg' : 'md';
+            const match = trimmed.match(/^\[(여백|space|spacer)(:?(xs|sm|md|lg|xl|좁게|미세|보통|중간|넓게)?)\]$/i);
+            const sizeRaw = match?.[2]?.replace(':', '').toLowerCase() || 'xs';
+            let size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'xs';
+            if (sizeRaw === 'xs' || sizeRaw === '좁게' || sizeRaw === '미세') size = 'xs';
+            else if (sizeRaw === 'sm') size = 'sm';
+            else if (sizeRaw === 'md' || sizeRaw === '보통' || sizeRaw === '중간') size = 'md';
+            else if (sizeRaw === 'lg' || sizeRaw === '넓게') size = 'lg';
+            else if (sizeRaw === 'xl') size = 'xl';
             blocks.push({ type: 'spacer', size });
             continue;
         }
@@ -124,7 +129,11 @@ export function FormattedBusinessSummary({
                 }
 
                 if (block.type === 'spacer') {
-                    const heightClass = block.size === 'xl' ? 'h-10' : block.size === 'lg' ? 'h-7' : 'h-4';
+                    const heightClass = 
+                        block.size === 'xs' ? 'h-[5px]' :
+                        block.size === 'sm' ? 'h-2.5' :
+                        block.size === 'md' ? 'h-[18px]' :
+                        block.size === 'lg' ? 'h-7' : 'h-10';
                     return <div key={`spacer-${idx}`} className={heightClass} aria-hidden="true" />;
                 }
 

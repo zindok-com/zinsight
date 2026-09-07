@@ -243,7 +243,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             fallback="등록된 비즈니스 요약이 없습니다."
                             className="text-xl text-slate-600 max-w-4xl font-medium"
                             bulletColor="text-zi-secondary"
-                            paragraphSpacing="space-y-4"
+                            paragraphSpacing="space-y-2.5"
                         />
                     </div>
 
@@ -369,7 +369,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                             fallback="최신 비즈니스 동향 정보를 수집 중입니다."
                                             className="text-lg text-slate-200 font-medium"
                                             bulletColor="text-blue-400"
-                                            paragraphSpacing="space-y-4"
+                                            paragraphSpacing="space-y-2.5"
                                         />
                                     </div>
                                 </div>

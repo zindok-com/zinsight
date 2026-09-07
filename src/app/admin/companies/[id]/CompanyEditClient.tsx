@@ -323,10 +323,11 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     };
 
     // 단락 간격 및 구분선 삽입 핸들러 (회사소개 및 최근현황)
-    const handleInsertSpacingToSummary = (type: 'medium' | 'large' | 'divider') => {
+    const handleInsertSpacingToSummary = (type: 'narrow' | 'medium' | 'large' | 'divider') => {
         const textarea = summaryTextareaRef.current;
         let insertStr = '';
-        if (type === 'medium') insertStr = '\n\n';
+        if (type === 'narrow') insertStr = '\n[여백:좁게]\n';
+        else if (type === 'medium') insertStr = '\n\n';
         else if (type === 'large') insertStr = '\n\n\n';
         else if (type === 'divider') insertStr = '\n\n---\n\n';
 
@@ -894,7 +895,14 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                                     <ChevronDown className="h-2.5 w-2.5 text-slate-400" />
                                                 </Button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end" className="w-44 bg-white shadow-lg">
+                                            <DropdownMenuContent align="end" className="w-48 bg-white shadow-lg">
+                                                <DropdownMenuItem
+                                                    onClick={() => handleInsertSpacingToSummary('narrow')}
+                                                    className="text-xs cursor-pointer gap-2"
+                                                >
+                                                    <span className="font-bold text-purple-600">·</span>
+                                                    <span>미세 간격 (5px)</span>
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => handleInsertSpacingToSummary('medium')}
                                                     className="text-xs cursor-pointer gap-2"
@@ -919,7 +927,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                             </DropdownMenuContent>
                                         </DropdownMenu>
 
-                                        <span className="text-[10px] text-muted-foreground hidden sm:inline">Enter 횟수로 단락 간격 조율 가능</span>
+                                        <span className="text-[10px] text-muted-foreground hidden sm:inline">기본 10px | 미세 간격 및 Enter 횟수로 조율</span>
                                     </div>
                                 </div>
                                 <Textarea
@@ -927,7 +935,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     value={businessSummary}
                                     onChange={e => setBusinessSummary(e.target.value)}
                                     onKeyDown={handleSummaryKeyDown}
-                                    placeholder="조직의 설립 목적, 주요 사업 내용, 최근 현황 및 제공 가치를 상세히 서술하세요.&#10;• '글머리 기호' 버튼으로 불릿 목록을 작성할 수 있습니다.&#10;• '단락 간격 조절' 메뉴 또는 Enter 줄바꿈 횟수(1회: 보통, 2회: 중간, 3회: 넓음)로 단락 사이 길이를 자유롭게 조율할 수 있습니다."
+                                    placeholder="조직의 설립 목적, 주요 사업 내용, 최근 현황 및 제공 가치를 상세히 서술하세요.&#10;• '글머리 기호' 버튼으로 불릿 목록을 작성할 수 있습니다.&#10;• 기본 단락 간격: 10px (줄바꿈 1회)&#10;• '단락 간격 조절' 메뉴(미세 5px, 중간, 넓음) 또는 Enter 줄바꿈 횟수로 단락 사이 길이를 세부적으로 조율할 수 있습니다."
                                     rows={9}
                                     className="text-sm leading-relaxed min-h-[170px] whitespace-pre-wrap font-sans"
                                 />
