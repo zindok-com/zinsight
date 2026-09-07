@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -198,7 +198,7 @@ export function SubmissionsClient({ submissions }: Props) {
                             {selected.business_summary && (
                                 <div>
                                     <p className="text-xs font-medium text-muted-foreground mb-1">사업 요약</p>
-                                    <p className="text-sm leading-relaxed bg-muted/30 rounded p-3">{selected.business_summary}</p>
+                                    <p className="text-sm leading-relaxed bg-muted/30 rounded p-3 whitespace-pre-line">{selected.business_summary}</p>
                                 </div>
                             )}
 

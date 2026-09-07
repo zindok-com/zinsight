@@ -174,6 +174,19 @@ function parseCommaArray(val: any): string {
     return '';
 }
 
+function parseLinesArray(val: any): string {
+    if (!val) return '';
+    if (Array.isArray(val)) return val.join('\n');
+    if (typeof val === 'string') {
+        try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return parsed.join('\n');
+        } catch { }
+        return val;
+    }
+    return '';
+}
+
 export function CompanyEditClient({ company: initialCompany, regions, matchedArticles = [] }: Props) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -190,7 +203,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [foundedYear, setFoundedYear] = useState(initialCompany.founded_year || '');
     const [ceoName, setCeoName] = useState(initialCompany.ceo_name || '');
     const [aliases, setAliases] = useState(parseCommaArray(initialCompany.aliases));
-    const [keyReferences, setKeyReferences] = useState(parseCommaArray(initialCompany.key_references));
+    const [keyReferences, setKeyReferences] = useState(parseLinesArray(initialCompany.key_references));
     const [kwProducts, setKwProducts] = useState(kw.products);
     const [kwTechnology, setKwTechnology] = useState(kw.technology);
     const [kwTargetMarket, setKwTargetMarket] = useState(kw.target_market);
@@ -254,7 +267,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
             };
 
             const parsedAliases = aliases.split(',').map((s: string) => s.trim()).filter(Boolean);
-            const parsedReferences = keyReferences.split(',').map((s: string) => s.trim()).filter(Boolean);
+            const parsedReferences = keyReferences.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean);
 
             const res = await updateCompany(company.id, regionId, {
                 company_name: companyName.trim(),
@@ -697,13 +710,16 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold">사업 요약 (Business Summary)</Label>
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-xs font-semibold">회사소개 및 최근현황 (Business Summary & Status)</Label>
+                                    <span className="text-[11px] text-muted-foreground">Enter 줄바꿈으로 문단을 나눌 수 있습니다</span>
+                                </div>
                                 <Textarea
                                     value={businessSummary}
                                     onChange={e => setBusinessSummary(e.target.value)}
-                                    placeholder="조직의 설립 목적, 주요 사업 내용, 제공 가치를 상세히 서술하세요."
-                                    rows={4}
-                                    className="text-sm leading-relaxed"
+                                    placeholder="조직의 설립 목적, 주요 사업 내용, 최근 현황 및 제공 가치를 상세히 서술하세요. 줄바꿈(Enter) 시 공개 프로필에 문단으로 반영됩니다."
+                                    rows={8}
+                                    className="text-sm leading-relaxed min-h-[160px] whitespace-pre-wrap font-sans"
                                 />
                             </div>
 
@@ -750,11 +766,12 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label className="text-xs font-semibold">주요 실적 / 레퍼런스</Label>
-                                    <Input
+                                    <Textarea
                                         value={keyReferences}
                                         onChange={e => setKeyReferences(e.target.value)}
-                                        placeholder="2024 유망중소기업 선정 (쉼표 구분)"
-                                        className="h-8 text-xs"
+                                        placeholder="2024 유망중소기업 선정&#10;2023 글로벌 강소기업 지정 (줄바꿈 또는 쉼표 구분)"
+                                        rows={3}
+                                        className="text-xs min-h-[68px]"
                                     />
                                 </div>
                             </div>
