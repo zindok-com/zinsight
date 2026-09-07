@@ -29,6 +29,47 @@ interface DividerBlock {
 
 type ContentBlock = BulletBlock | ParagraphBlock | SpacerBlock | DividerBlock;
 
+function renderHighlightedParts(text: string) {
+    const parts = text.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
+    return parts.map((part, i) => {
+        if (part.startsWith('**{') && part.endsWith('}**')) {
+            const content = part.slice(3, -3);
+            return (
+                <span key={i} className="font-bold underline decoration-current/30 underline-offset-4">
+                    {content}
+                </span>
+            );
+        }
+        if (part.startsWith('**') && part.endsWith('**')) {
+            const content = part.slice(2, -2);
+            return (
+                <strong key={i} className="font-bold">
+                    {content}
+                </strong>
+            );
+        }
+        if (part.startsWith('[') && part.endsWith(')')) {
+            const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+            if (match) {
+                const linkText = match[1];
+                const url = match[2];
+                return (
+                    <a 
+                        key={i} 
+                        href={url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="font-bold underline underline-offset-4 decoration-current/30 hover:opacity-80 transition-opacity"
+                    >
+                        {linkText}
+                    </a>
+                );
+            }
+        }
+        return part;
+    });
+}
+
 export function FormattedBusinessSummary({
     text,
     fallback = '등록된 비즈니스 요약이 없습니다.',
@@ -97,10 +138,10 @@ export function FormattedBusinessSummary({
             continue;
         }
 
-        // 3. 글머리 기호 행 매칭 (•, -, *, ▪ 등)
-        const isBullet = /^[•\-\*▪]\s*/.test(trimmed) || trimmed.startsWith('•');
-        if (isBullet) {
-            const itemText = trimmed.replace(/^[•\-\*▪]\s*/, '').trim();
+        // 3. 글머리 기호 행 매칭 (•, ▪ 또는 단독 -, * 뒤에 공백)
+        const bulletMatch = trimmed.match(/^(?:([•▪])\s*|([\-\*])(?!\2)\s+)(.*)$/);
+        if (bulletMatch) {
+            const itemText = bulletMatch[3].trim();
             currentBullets.push(itemText);
         } else {
             flushBullets();
@@ -121,7 +162,9 @@ export function FormattedBusinessSummary({
                                     <span className={`font-bold shrink-0 select-none text-base leading-relaxed ${bulletColor}`}>
                                         •
                                     </span>
-                                    <span className="leading-relaxed flex-1">{item}</span>
+                                    <span className="leading-relaxed flex-1">
+                                        {renderHighlightedParts(item)}
+                                    </span>
                                 </li>
                             ))}
                         </ul>
@@ -147,7 +190,7 @@ export function FormattedBusinessSummary({
 
                 return (
                     <p key={`para-${idx}`} className="leading-relaxed">
-                        {block.text}
+                        {renderHighlightedParts(block.text)}
                     </p>
                 );
             })}
