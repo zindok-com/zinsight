@@ -44,7 +44,7 @@ function renderHighlightedParts(text: string) {
 type HighlightBlock = 
     | { type: 'image'; url: string; alt?: string }
     | { type: 'divider' }
-    | { type: 'spacer'; size: 'md' | 'lg' | 'xl' }
+    | { type: 'spacer'; size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }
     | { type: 'bullet'; text: string }
     | { type: 'paragraph'; text: string };
 
@@ -58,11 +58,11 @@ function HighlightedText({ text }: { text: string }) {
 
     const flushSpacers = () => {
         if (emptyLineCount === 1) {
-            blocks.push({ type: 'spacer', size: 'md' });
+            blocks.push({ type: 'spacer', size: 'sm' });
         } else if (emptyLineCount === 2) {
-            blocks.push({ type: 'spacer', size: 'lg' });
+            blocks.push({ type: 'spacer', size: 'md' });
         } else if (emptyLineCount >= 3) {
-            blocks.push({ type: 'spacer', size: 'xl' });
+            blocks.push({ type: 'spacer', size: 'lg' });
         }
         emptyLineCount = 0;
     };
@@ -83,28 +83,42 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 2. Markdown 이미지 (![alt](url))
+        // 2. 명시적 여백 태그 매칭 ([여백], [여백:좁게], [여백:sm], [space:xs] 등)
+        if (/^\[(여백|space|spacer)(:?(xs|sm|md|lg|xl|좁게|미세|보통|중간|넓게)?)\]$/i.test(trimmed)) {
+            const match = trimmed.match(/^\[(여백|space|spacer)(:?(xs|sm|md|lg|xl|좁게|미세|보통|중간|넓게)?)\]$/i);
+            const sizeRaw = match?.[2]?.replace(':', '').toLowerCase() || 'xs';
+            let size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'xs';
+            if (sizeRaw === 'xs' || sizeRaw === '좁게' || sizeRaw === '미세') size = 'xs';
+            else if (sizeRaw === 'sm') size = 'sm';
+            else if (sizeRaw === 'md' || sizeRaw === '보통' || sizeRaw === '중간') size = 'md';
+            else if (sizeRaw === 'lg' || sizeRaw === '넓게') size = 'lg';
+            else if (sizeRaw === 'xl') size = 'xl';
+            blocks.push({ type: 'spacer', size });
+            continue;
+        }
+
+        // 3. Markdown 이미지 (![alt](url))
         const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
         if (imgMatch) {
             blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2] });
             continue;
         }
 
-        // 3. Raw 이미지 URL
+        // 4. Raw 이미지 URL
         const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
         if (rawUrlMatch) {
             blocks.push({ type: 'image', url: rawUrlMatch[0], alt: 'Image' });
             continue;
         }
 
-        // 4. 글머리 기호 (•, -, *, ▪ 등)
+        // 5. 글머리 기호 (•, -, *, ▪ 등)
         const bulletMatch = trimmed.match(/^([•\-\*▪])\s*(.*)$/);
         if (bulletMatch) {
             blocks.push({ type: 'bullet', text: bulletMatch[2] });
             continue;
         }
 
-        // 5. 일반 단락
+        // 6. 일반 단락
         blocks.push({ type: 'paragraph', text: rawLine });
     }
 
@@ -135,7 +149,11 @@ function HighlightedText({ text }: { text: string }) {
                 }
 
                 if (block.type === 'spacer') {
-                    const hClass = block.size === 'xl' ? 'h-9' : block.size === 'lg' ? 'h-6' : 'h-3';
+                    const hClass = 
+                        block.size === 'xs' ? 'h-[5px]' :
+                        block.size === 'sm' ? 'h-2.5' :
+                        block.size === 'md' ? 'h-[18px]' :
+                        block.size === 'lg' ? 'h-7' : 'h-10';
                     return <span key={idx} className={`block ${hClass}`} aria-hidden="true" />;
                 }
 
@@ -151,7 +169,7 @@ function HighlightedText({ text }: { text: string }) {
                 }
 
                 return (
-                    <span key={idx} className="block mb-5 last:mb-0 leading-[1.8]">
+                    <span key={idx} className="block mb-2.5 last:mb-0 leading-[1.8]">
                         {renderHighlightedParts(block.text)}
                     </span>
                 );
