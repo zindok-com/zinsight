@@ -1,40 +1,14 @@
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import path from 'path';
-import fs from 'fs';
 import type { CustomChannel, ChannelRow, VisitorAttributes } from './types';
 import { measured } from './types';
-
-
-// ── 서비스 계정 인증 ──────────────────────────────────────────────
-function getCredentials() {
-    // 1) 환경변수로 직접 JSON 문자열을 넣은 경우
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-        try {
-            return JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-        } catch (parseErr) {
-            console.error('[ga4] Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON env:', parseErr);
-            throw parseErr;
-        }
-    }
-    // 2) 파일 경로로 지정한 경우 (개발 환경)
-    const filePath =
-        process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH ||
-        './zinsight-analytics-2026-9897decb4585.json';
-    const abs = path.resolve(process.cwd(), filePath);
-    if (!fs.existsSync(abs)) {
-        const msg = `[ga4] Google Service Account credentials not found. Neither GOOGLE_SERVICE_ACCOUNT_JSON env is set nor credential file exists at: ${abs}`;
-        console.error(msg);
-        throw new Error(msg);
-    }
-    return JSON.parse(fs.readFileSync(abs, 'utf-8'));
-}
+import { loadGoogleCredentials } from './google-credentials';
 
 function getPropertyId(): string {
     if (process.env.GA4_PROPERTY_ID) {
         return process.env.GA4_PROPERTY_ID;
     }
     try {
-        const creds = getCredentials();
+        const creds = loadGoogleCredentials();
         if (creds && creds.property_id) {
             return String(creds.property_id);
         }
@@ -45,13 +19,17 @@ function getPropertyId(): string {
 const PROPERTY_ID = getPropertyId();
 
 let _client: BetaAnalyticsDataClient | null = null;
-function getClient(): BetaAnalyticsDataClient {
+function getClient(): BetaAnalyticsDataClient | null {
     if (!_client) {
+        const credentials = loadGoogleCredentials();
+        if (!credentials) {
+            return null;
+        }
         try {
-            _client = new BetaAnalyticsDataClient({ credentials: getCredentials() });
+            _client = new BetaAnalyticsDataClient({ credentials });
         } catch (initErr: any) {
             console.error('[ga4] BetaAnalyticsDataClient initialization failed:', initErr?.message, initErr?.stack);
-            throw initErr;
+            return null;
         }
     }
     return _client;
@@ -88,10 +66,14 @@ const ga4Queue = new ConcurrencyQueue(3);
 // ── RESOURCE_EXHAUSTED / 쿼터 초과 시 재시도 로직 포함 안전 호출기 ───
 async function safeRunReport(params: any, retries = 3): Promise<any> {
     return ga4Queue.run(async () => {
+        const client = getClient();
+        if (!client) {
+            return [{ rows: [] }];
+        }
         let attempt = 0;
         while (true) {
             try {
-                return await getClient().runReport(params);
+                return await client.runReport(params);
             } catch (err: any) {
                 const isQuotaError =
                     err?.code === 8 ||

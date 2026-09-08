@@ -1,29 +1,10 @@
 import { google } from 'googleapis';
-import path from 'path';
-import fs from 'fs';
+import { loadGoogleCredentials } from './google-credentials';
 
 // ── 서비스 계정 인증 ──────────────────────────────────────────────
 function getAuth() {
-    let credentials: any;
-    if (process.env.GOOGLE_SERVICE_ACCOUNT_JSON) {
-        try {
-            credentials = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-        } catch (parseErr) {
-            console.error('[gsc] Failed to parse GOOGLE_SERVICE_ACCOUNT_JSON env:', parseErr);
-            throw parseErr;
-        }
-    } else {
-        const filePath =
-            process.env.GOOGLE_SERVICE_ACCOUNT_JSON_PATH ||
-            './zinsight-analytics-2026-9897decb4585.json';
-        const abs = path.resolve(process.cwd(), filePath);
-        if (!fs.existsSync(abs)) {
-            const msg = `[gsc] Google Service Account credentials not found. Neither GOOGLE_SERVICE_ACCOUNT_JSON env is set nor credential file exists at: ${abs}`;
-            console.error(msg);
-            throw new Error(msg);
-        }
-        credentials = JSON.parse(fs.readFileSync(abs, 'utf-8'));
-    }
+    const credentials = loadGoogleCredentials();
+    if (!credentials) return null;
     return new google.auth.GoogleAuth({
         credentials,
         scopes: ['https://www.googleapis.com/auth/webmasters.readonly'],
@@ -57,6 +38,7 @@ export async function getPagePerformance(
 ): Promise<PagePerformance | null> {
     try {
         const auth = getAuth();
+        if (!auth) return null;
         const sc = google.searchconsole({ version: 'v1', auth });
         const targetSlug = extractSlug(pageUrlOrSlug);
 
@@ -116,6 +98,7 @@ export async function getSearchAppearanceBreakdown(
 ): Promise<SearchAppearance[] | null> {
     try {
         const auth = getAuth();
+        if (!auth) return null;
         const sc = google.searchconsole({ version: 'v1', auth });
         const targetSlug = extractSlug(pageUrlOrSlug);
 
@@ -165,6 +148,7 @@ export async function getGenerativeAIPerformance(
     const NOTE = 'AI 개요 노출수만 측정 가능합니다. 클릭수·CTR·순위는 생성형 AI 성과에서 제공되지 않습니다.';
     try {
         const auth = getAuth();
+        if (!auth) return null;
         const sc = google.searchconsole({ version: 'v1', auth });
         const targetSlug = extractSlug(pageUrlOrSlug);
 
