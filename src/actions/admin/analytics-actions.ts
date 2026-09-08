@@ -10,6 +10,7 @@ import {
     getVisitorGeography,
     getGlobalDashboardStats,
     getOutboundLinkClicksByUrl,
+    getBatchArticlesStats,
     type DateRange,
 } from '@/lib/analytics/ga4-client';
 import {
@@ -112,26 +113,25 @@ export async function getRecentArticlesLeaderboard(periodDays: number = 30, limi
         select: { id: true, title: true, slug: true, createdAt: true },
     });
 
+    if (recentPosts.length === 0) return [];
+
     const dateRange = buildDateRange(periodDays);
 
-    // 2. 병렬로 GA4 pageviews, radarClicks 조회
-    const leaderboard = await Promise.all(
-        recentPosts.map(async (post) => {
-            const [pvs, radarClicks] = await Promise.all([
-                getArticlePageviews(post.slug, dateRange),
-                getArticleEventCounts(post.slug, 'radar_profile_click', dateRange),
-            ]);
-            const views = pvs?.reduce((s, r) => s + r.views, 0) ?? 0;
-            return {
-                id: post.id,
-                title: post.title,
-                slug: post.slug,
-                publishedAt: post.createdAt, // UI 호환성을 위해 이름 유지
-                views,
-                radarClicks: radarClicks ?? 0,
-            };
-        })
-    );
+    // 2. 전체 기사 통계 일괄 조회 (개별 기사별 100건 동시 호출 대신 2건의 GA4 쿼리로 처리하여 쿼터 초과 방지)
+    const slugs = recentPosts.map((post) => post.slug);
+    const statsMap = await getBatchArticlesStats(slugs, dateRange);
+
+    const leaderboard = recentPosts.map((post) => {
+        const stats = statsMap.get(post.slug) ?? { views: 0, radarClicks: 0 };
+        return {
+            id: post.id,
+            title: post.title,
+            slug: post.slug,
+            publishedAt: post.createdAt, // UI 호환성을 위해 이름 유지
+            views: stats.views,
+            radarClicks: stats.radarClicks,
+        };
+    });
 
     // 3. 조회수 기준 내림차순 정렬
     leaderboard.sort((a, b) => b.views - a.views);
@@ -383,23 +383,22 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
             console.error('[analytics-org] getOutboundLinkClicksByUrl failed:', err?.message, err?.stack);
             return [];
         }),
-        Promise.all(
-            org.magazinePosts.map(async (mo: { magazinePost: { id: number; title: string; slug: string; viewCount: number } }) => {
+        (async () => {
+            if (!org.magazinePosts || org.magazinePosts.length === 0) return [];
+            const slugs = org.magazinePosts.map((mo: any) => mo.magazinePost.slug);
+            const statsMap = await getBatchArticlesStats(slugs, dateRange);
+            return org.magazinePosts.map((mo: any) => {
                 const post = mo.magazinePost;
-                const [pvs, inboundClicks] = await Promise.all([
-                    getArticlePageviews(post.slug, dateRange).catch(() => null),
-                    getArticleEventCounts(post.slug, 'radar_profile_click', dateRange).catch(() => 0),
-                ]);
-                const views = pvs?.reduce((s, r) => s + r.views, 0) ?? post.viewCount;
+                const stats = statsMap.get(post.slug);
                 return {
                     id: post.id,
                     title: post.title,
                     slug: post.slug,
-                    viewCount: views,
-                    inboundClicks: inboundClicks ?? 0,
+                    viewCount: stats?.views ?? post.viewCount ?? 0,
+                    inboundClicks: stats?.radarClicks ?? 0,
                 };
-            })
-        ).catch((err) => {
+            });
+        })().catch((err) => {
             console.error('[analytics-org] linkedArticles failed:', err);
             return [];
         }),
