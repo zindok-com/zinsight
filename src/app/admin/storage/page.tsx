@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { listAllBlobs, deleteBlob, uploadImageDirect, getUsedImageUrls, deleteMultipleBlobs } from '@/actions/upload-actions';
+import { listAllBlobs, deleteBlob, uploadImageDirect, getUsedImageUrls, deleteMultipleBlobs, renameBlobTransaction } from '@/actions/upload-actions';
 import { toast } from 'sonner';
-import { Loader2, Trash2, Copy, Check, Upload, Image as ImageIcon, Search, ExternalLink, RefreshCw, Eraser } from 'lucide-react';
+import { Loader2, Trash2, Copy, Check, Upload, Image as ImageIcon, Search, ExternalLink, RefreshCw, Eraser, Edit } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function StoragePage() {
     const [blobs, setBlobs] = useState<any[]>([]);
@@ -14,6 +17,11 @@ export default function StoragePage() {
     const [uploading, setUploading] = useState(false);
     const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    
+    // Rename state
+    const [renamingBlob, setRenamingBlob] = useState<{ url: string; pathname: string; currentName: string; isUsed: boolean } | null>(null);
+    const [newFileName, setNewFileName] = useState('');
+    const [isRenaming, setIsRenaming] = useState(false);
 
     // Fetch all blobs and their usage status
     const fetchBlobsAndUsage = async (showToast = false) => {
@@ -157,6 +165,31 @@ export default function StoragePage() {
         const fileName = b.pathname.toLowerCase();
         return fileName.includes(searchQuery.toLowerCase());
     });
+
+    const handleRenameSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!renamingBlob || !newFileName) return;
+
+        setIsRenaming(true);
+        try {
+            const res = await renameBlobTransaction(renamingBlob.url, renamingBlob.pathname, newFileName);
+            if (res.success) {
+                toast.success('파일명 변경이 완료되었습니다.');
+                if (res.affectedPosts && res.affectedPosts > 0) {
+                    toast.info(`${res.affectedPosts}개의 기사에서 해당 이미지 URL이 자동 업데이트 되었습니다.`);
+                }
+                setRenamingBlob(null);
+                await fetchBlobsAndUsage();
+            } else {
+                toast.error(res.error || '파일명 변경 실패');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('파일명 변경 중 시스템 오류가 발생했습니다.');
+        } finally {
+            setIsRenaming(false);
+        }
+    };
 
     const formatSize = (bytes: number) => {
         if (bytes < 1024) return `${bytes} B`;
@@ -364,6 +397,19 @@ export default function StoragePage() {
                                                         type="button"
                                                         variant="ghost" 
                                                         size="sm"
+                                                        onClick={() => {
+                                                            setRenamingBlob({ url: blob.url, pathname: blob.pathname, currentName: fileName, isUsed: isCurrentlyUsed });
+                                                            setNewFileName(fileName);
+                                                        }}
+                                                        className="text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 h-8 w-8 p-0 shrink-0 rounded-lg transition-colors"
+                                                        title="파일명 변경"
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button 
+                                                        type="button"
+                                                        variant="ghost" 
+                                                        size="sm"
                                                         onClick={() => handleDelete(blob.url, blob.pathname)}
                                                         className="text-slate-400 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0 shrink-0 rounded-lg transition-colors"
                                                         title="파일 삭제"
@@ -380,6 +426,56 @@ export default function StoragePage() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Rename Modal */}
+            <Dialog open={!!renamingBlob} onOpenChange={(open) => !open && !isRenaming && setRenamingBlob(null)}>
+                <DialogContent>
+                    <form onSubmit={handleRenameSubmit}>
+                        <DialogHeader>
+                            <DialogTitle>파일명 변경</DialogTitle>
+                            <DialogDescription>
+                                영문 슬러그를 권장합니다. 특수문자는 자동으로 하이픈(-)으로 치환됩니다.
+                            </DialogDescription>
+                        </DialogHeader>
+                        
+                        {renamingBlob?.isUsed && (
+                            <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg mt-4 text-xs text-amber-700">
+                                ⚠️ <strong>주의:</strong> 이 이미지는 현재 매거진 기사에서 사용 중입니다. 
+                                파일명을 변경하면 영향을 받는 모든 기사 내의 이미지 주소가 <strong>자동으로 일괄 치환</strong>됩니다.
+                            </div>
+                        )}
+
+                        <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="newFileName">새 파일명</Label>
+                                <Input 
+                                    id="newFileName" 
+                                    value={newFileName} 
+                                    onChange={(e) => setNewFileName(e.target.value)} 
+                                    placeholder="new-file-name.png"
+                                    required
+                                    disabled={isRenaming}
+                                />
+                            </div>
+                        </div>
+
+                        <DialogFooter>
+                            <Button 
+                                type="button" 
+                                variant="outline" 
+                                onClick={() => setRenamingBlob(null)} 
+                                disabled={isRenaming}
+                            >
+                                취소
+                            </Button>
+                            <Button type="submit" disabled={isRenaming || !newFileName || newFileName === renamingBlob?.currentName}>
+                                {isRenaming ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                파일명 변경
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
