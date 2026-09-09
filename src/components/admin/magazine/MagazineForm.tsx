@@ -344,8 +344,18 @@ export function MagazineForm({
         }
     }, [formData.categoryId, year, month, post, categories]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+        const target = e.target as HTMLElement;
+        // Textarea가 아닌 일반 input 등에서 Enter 입력 시 폼 자동 제출(수정/발행 완료) 방지
+        if (e.key === 'Enter' && target.tagName !== 'TEXTAREA') {
+            e.preventDefault();
+        }
+    };
+
+    const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+        }
 
         if (!formData.title) {
             toast.error('제목을 입력해주세요.');
@@ -463,7 +473,7 @@ export function MagazineForm({
                 </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8">
                 {activeTab === 'edit' ? (
                     <div className="space-y-8">
                         {/* 기본 정보 및 메타데이터 카드 */}
@@ -1304,7 +1314,8 @@ export function MagazineForm({
                             취소
                         </Button>
                         <Button
-                            type="submit"
+                            type="button"
+                            onClick={handleSubmit}
                             className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
                             disabled={isPending}
                         >
