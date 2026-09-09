@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
+import { ImageDetailsModal } from '@/components/admin/magazine/ImageDetailsModal';
 import OrganizationSelector from '@/components/admin/magazine/OrganizationSelector';
 import {
     DropdownMenu,
@@ -40,17 +41,17 @@ export function MagazineForm({
     const [activeTextareaId, setActiveTextareaId] = useState<string | null>(null);
     const [activeLinkTextareaId, setActiveLinkTextareaId] = useState<string | null>(null);
 
-    const insertTextAtCursor = (id: string, textToInsert: string) => {
+    // Image Details Modal State
+    const [isImageDetailsOpen, setIsImageDetailsOpen] = useState(false);
+    const [imageDetailsData, setImageDetailsData] = useState<{ url: string; alt: string; caption: string; targetTextareaId: string; startIndex: number; endIndex: number } | null>(null);
+
+    const replaceTextRange = (id: string, textToInsert: string, start: number, end: number) => {
         const textarea = document.getElementById(id) as HTMLTextAreaElement;
         if (!textarea) return;
 
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
         const value = textarea.value;
-
         const newValue = value.substring(0, start) + textToInsert + value.substring(end);
         
-        // Trigger React state update!
         if (id === 'lead') {
             setFormData((prev: any) => ({ ...prev, lead: newValue }));
         } else if (id === 'closing') {
@@ -62,17 +63,69 @@ export function MagazineForm({
             setFormData((prev: any) => ({ ...prev, bodies: newBodies }));
         }
 
-        // Put focus back and set cursor position after inserted text
         setTimeout(() => {
             textarea.focus();
             textarea.setSelectionRange(start + textToInsert.length, start + textToInsert.length);
         }, 0);
     };
 
+    const insertTextAtCursor = (id: string, textToInsert: string) => {
+        const textarea = document.getElementById(id) as HTMLTextAreaElement;
+        if (!textarea) return;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        replaceTextRange(id, textToInsert, start, end);
+    };
+
+    const handleImageButtonClick = (textareaId: string) => {
+        const textarea = document.getElementById(textareaId) as HTMLTextAreaElement;
+        if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            if (start !== end) {
+                const selectedText = textarea.value.substring(start, end).trim();
+                const imgMatch = selectedText.match(/^!\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
+                if (imgMatch) {
+                    setIsImageDetailsOpen(true);
+                    setImageDetailsData({
+                        url: imgMatch[2].trim(),
+                        alt: imgMatch[1] || '',
+                        caption: imgMatch[3] || '',
+                        targetTextareaId: textareaId,
+                        startIndex: start,
+                        endIndex: end,
+                    });
+                    return;
+                }
+            }
+        }
+        setActiveTextareaId(textareaId);
+    };
+
+    const handleImageDetailsConfirm = (markdown: string) => {
+        if (!imageDetailsData) return;
+        const { targetTextareaId, startIndex, endIndex } = imageDetailsData;
+        
+        if (startIndex !== -1 && endIndex !== -1) {
+            replaceTextRange(targetTextareaId, markdown, startIndex, endIndex);
+        } else {
+            insertTextAtCursor(targetTextareaId, markdown);
+        }
+        setImageDetailsData(null);
+    };
+
     const handleImageSelect = (url: string) => {
         if (!activeTextareaId) return;
-        const markdownImage = `\n![이미지 설명](${url})\n`;
-        insertTextAtCursor(activeTextareaId, markdownImage);
+        setIsImageDetailsOpen(true);
+        setImageDetailsData({
+            url,
+            alt: '',
+            caption: '',
+            targetTextareaId: activeTextareaId,
+            startIndex: -1,
+            endIndex: -1,
+        });
         setActiveTextareaId(null);
     };
 
@@ -825,7 +878,7 @@ export function MagazineForm({
                                             type="button"
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => setActiveTextareaId('lead')}
+                                            onClick={() => handleImageButtonClick('lead')}
                                             className="h-7 px-2.5 text-xs bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-semibold gap-1"
                                         >
                                             <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
@@ -985,7 +1038,7 @@ export function MagazineForm({
                                                                 type="button"
                                                                 variant="outline"
                                                                 size="sm"
-                                                                onClick={() => setActiveTextareaId(`body-${index}`)}
+                                                                onClick={() => handleImageButtonClick(`body-${index}`)}
                                                                 className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
                                                             >
                                                                 <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -1087,7 +1140,7 @@ export function MagazineForm({
                                             type="button"
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => setActiveTextareaId('closing')}
+                                            onClick={() => handleImageButtonClick('closing')}
                                             className="h-7 px-2.5 text-xs bg-white border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold gap-1"
                                         >
                                             <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
@@ -1268,9 +1321,18 @@ export function MagazineForm({
             </form>
 
             <StorageImageSelectorModal
-                isOpen={activeTextareaId !== null}
+                isOpen={activeTextareaId !== null && !isImageDetailsOpen}
                 onClose={() => setActiveTextareaId(null)}
                 onSelect={handleImageSelect}
+            />
+
+            <ImageDetailsModal
+                isOpen={isImageDetailsOpen}
+                onClose={() => setIsImageDetailsOpen(false)}
+                onConfirm={handleImageDetailsConfirm}
+                initialUrl={imageDetailsData?.url}
+                initialAlt={imageDetailsData?.alt}
+                initialCaption={imageDetailsData?.caption}
             />
 
             <LinkInsertModal
@@ -1324,7 +1386,7 @@ function renderHighlightedParts(text: string) {
 }
 
 type HighlightBlock = 
-    | { type: 'image'; url: string; alt?: string }
+    | { type: 'image'; url: string; alt?: string; caption?: string }
     | { type: 'divider' }
     | { type: 'spacer'; size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }
     | { type: 'bullet'; text: string }
@@ -1379,10 +1441,10 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 3. Markdown 이미지 (![alt](url))
-        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+        // 3. Markdown 이미지 (![alt](url "caption"))
+        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
         if (imgMatch) {
-            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2] });
+            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption: imgMatch[3] });
             continue;
         }
 
@@ -1409,16 +1471,16 @@ function HighlightedText({ text }: { text: string }) {
             {blocks.map((block, idx) => {
                 if (block.type === 'image') {
                     return (
-                        <span key={idx} className="block my-6 text-center">
+                        <figure key={idx} className="block my-8 text-center m-0">
                             <img 
                                 src={block.url} 
-                                alt={block.alt || 'Image'} 
+                                alt={block.alt || ''} 
                                 className="mx-auto rounded-zi-card max-h-[300px] object-contain shadow-sm border border-zi-surface-container" 
                             />
-                            {block.alt && block.alt !== 'Image' && (
-                                <span className="block text-xs text-slate-400 mt-2 italic">{block.alt}</span>
+                            {block.caption && (
+                                <figcaption className="block text-sm text-slate-600 mt-3 font-medium">{block.caption}</figcaption>
                             )}
-                        </span>
+                        </figure>
                     );
                 }
 

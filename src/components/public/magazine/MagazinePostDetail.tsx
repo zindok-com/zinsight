@@ -42,7 +42,7 @@ function renderHighlightedParts(text: string) {
 }
 
 type HighlightBlock = 
-    | { type: 'image'; url: string; alt?: string }
+    | { type: 'image'; url: string; alt?: string; caption?: string }
     | { type: 'divider' }
     | { type: 'spacer'; size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }
     | { type: 'bullet'; text: string }
@@ -97,10 +97,10 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 3. Markdown 이미지 (![alt](url))
-        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)\)$/);
+        // 3. Markdown 이미지 (![alt](url "caption"))
+        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
         if (imgMatch) {
-            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2] });
+            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption: imgMatch[3] });
             continue;
         }
 
@@ -127,16 +127,16 @@ function HighlightedText({ text }: { text: string }) {
             {blocks.map((block, idx) => {
                 if (block.type === 'image') {
                     return (
-                        <span key={idx} className="block my-6 text-center">
+                        <figure key={idx} className="block my-8 text-center m-0">
                             <img 
                                 src={block.url} 
-                                alt={block.alt || 'Image'} 
+                                alt={block.alt || ''} 
                                 className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
                             />
-                            {block.alt && block.alt !== 'Image' && (
-                                <span className="block text-xs text-zi-outline-variant mt-2 italic">{block.alt}</span>
+                            {block.caption && (
+                                <figcaption className="block text-sm text-slate-600 mt-3 font-medium">{block.caption}</figcaption>
                             )}
-                        </span>
+                        </figure>
                     );
                 }
 
