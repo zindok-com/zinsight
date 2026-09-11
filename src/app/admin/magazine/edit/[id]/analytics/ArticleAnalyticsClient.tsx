@@ -9,8 +9,16 @@ import {
 } from 'recharts';
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
 import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
-
+const CHANNEL_TOOLTIPS: Record<string, string> = {
+    ai_service: 'ChatGPT, Perplexity, Claude, Gemini 등 생성형 AI 답변 내 링크를 통한 유입',
+    search: '네이버, 구글, 다음 등 검색엔진 자연 검색(Organic Search)을 통한 유입',
+    sns: '인스타그램, 유튜브, 페이스북, X(트위터), 링크드인 등 소셜 미디어를 통한 유입',
+    direct: 'URL 직접 입력, 북마크(즐겨찾기), 메신저 앱 내 링크 직접 오픈 등',
+    other: '외부 웹사이트 링크(Referral/백링크), 이메일 뉴스레터, 유료 광고 및 기타 미분류 유입',
+};
 
 const PERIOD_OPTIONS = [
     { label: '7일', value: '7' },
@@ -75,6 +83,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
     }));
 
     const channelChartData = trafficSources.map((r) => ({
+        channel: r.channel,
         name: r.channelLabel,
         sessions: r.sessions.value ?? 0,
         color: CHANNEL_COLORS[r.channel] ?? '#6b7280',
@@ -190,27 +199,49 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
                 <div className="space-y-3">
                     <SectionHeader title="📊 유입 채널 (세분화)" />
                     {channelChartData.length > 0 ? (
-                        <div className="border rounded-xl p-4 bg-card space-y-2">
-                            {channelChartData.map((ch) => {
-                                const maxSessions = Math.max(...channelChartData.map((c) => c.sessions));
-                                const pct = maxSessions > 0 ? (ch.sessions / maxSessions) * 100 : 0;
-                                return (
-                                    <div key={ch.name} className="flex items-center gap-3 text-sm">
-                                        <span className="w-28 text-muted-foreground shrink-0">{ch.name}</span>
-                                        <div className="flex-1 bg-muted rounded-full h-2">
-                                            <div
-                                                className="h-2 rounded-full transition-all"
-                                                style={{ width: `${pct}%`, backgroundColor: ch.color }}
-                                            />
+                        <TooltipProvider delayDuration={150}>
+                            <div className="border rounded-xl p-4 bg-card space-y-2.5">
+                                {channelChartData.map((ch) => {
+                                    const maxSessions = Math.max(...channelChartData.map((c) => c.sessions));
+                                    const pct = maxSessions > 0 ? (ch.sessions / maxSessions) * 100 : 0;
+                                    const tooltipText = CHANNEL_TOOLTIPS[ch.channel];
+                                    return (
+                                        <div key={ch.name} className="flex items-center gap-3 text-sm">
+                                            <div className="w-32 flex items-center gap-1 shrink-0">
+                                                <span className="text-muted-foreground">{ch.name}</span>
+                                                {tooltipText && (
+                                                    <UITooltip>
+                                                        <TooltipTrigger asChild>
+                                                            <button
+                                                                type="button"
+                                                                className="text-muted-foreground/50 hover:text-foreground transition-colors cursor-help p-0.5 rounded"
+                                                                aria-label={`${ch.name} 설명`}
+                                                            >
+                                                                <Info className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </TooltipTrigger>
+                                                        <TooltipContent side="top" className="max-w-xs text-xs">
+                                                            <p className="font-semibold text-white mb-0.5">{ch.name}</p>
+                                                            <p className="text-slate-300 leading-relaxed">{tooltipText}</p>
+                                                        </TooltipContent>
+                                                    </UITooltip>
+                                                )}
+                                            </div>
+                                            <div className="flex-1 bg-muted rounded-full h-2">
+                                                <div
+                                                    className="h-2 rounded-full transition-all"
+                                                    style={{ width: `${pct}%`, backgroundColor: ch.color }}
+                                                />
+                                            </div>
+                                            <span className="w-10 text-right font-medium">{ch.sessions.toLocaleString()}</span>
                                         </div>
-                                        <span className="w-10 text-right font-medium">{ch.sessions.toLocaleString()}</span>
-                                    </div>
-                                );
-                            })}
-                            <p className="text-[11px] text-muted-foreground pt-1 leading-relaxed">
-                                ⚠ AI 서비스 리퍼러로 식별되지 않은 AI 답변 내 링크 유입은 검색/직접 방문으로 계상됩니다.
-                            </p>
-                        </div>
+                                    );
+                                })}
+                                <p className="text-[11px] text-muted-foreground pt-1.5 leading-relaxed border-t border-border/40">
+                                    💡 <strong>기타:</strong> 외부 웹사이트 링크(Referral), 이메일 뉴스레터, 유료 광고 및 미분류 유입이 포함됩니다.
+                                </p>
+                            </div>
+                        </TooltipProvider>
                     ) : (
                         <NoData />
                     )}
