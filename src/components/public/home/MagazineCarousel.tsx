@@ -34,27 +34,44 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
     // 만약 기사가 2개 이상일 때만 전후로 복제하여 seamless 무한 순환 구조 제공
     const clonedPosts = hasMultiple ? [...posts, ...posts, ...posts] : posts;
 
+    // 각 카드 간의 실제 스크롤 스텝(카드 너비 + gap)을 정확히 계산하는 헬퍼
+    const getStep = () => {
+        const el = scrollRef.current;
+        if (!el) return 0;
+        const cards = el.querySelectorAll<HTMLElement>(':scope > div');
+        if (cards.length >= 2) {
+            return cards[1].offsetLeft - cards[0].offsetLeft;
+        }
+        if (cards.length === 1) {
+            const cardWidth = cards[0].clientWidth;
+            const style = window.getComputedStyle(el);
+            const gap = parseFloat(style.columnGap || style.gap || '0') || 0;
+            return cardWidth + gap;
+        }
+        return el.clientWidth;
+    };
+
     // 초기 마운트 시 2번째 클론 세트(중간) 시작 부분으로 스크롤 위치 이동
     useEffect(() => {
         const el = scrollRef.current;
         if (!el || !hasMultiple) return;
 
-        const cardWidth = el.querySelector('div')?.clientWidth || el.clientWidth;
-        const gap = 48; // gap-12 sm:gap-8 lg:gap-12
-        const step = cardWidth + gap;
-
-        // 중간 섹션의 첫 기사 위치로 스크롤 설정
-        el.scrollLeft = posts.length * step;
+        // 렌더링 완료 후 정확한 offsetLeft를 측정하기 위해 requestAnimationFrame 사용
+        requestAnimationFrame(() => {
+            const step = getStep();
+            if (step > 0) {
+                el.scrollLeft = posts.length * step;
+            }
+        });
     }, [posts, hasMultiple]);
 
     const scroll = (direction: 'left' | 'right') => {
         if (isScrolling.current || !scrollRef.current || !hasMultiple) return;
 
         const el = scrollRef.current;
-        const { scrollLeft, clientWidth } = el;
-        const cardWidth = el.querySelector('div')?.clientWidth || el.clientWidth;
-        const gap = 48;
-        const step = cardWidth + gap;
+        const { scrollLeft } = el;
+        const step = getStep();
+        if (step <= 0) return;
         const middleStart = posts.length * step;
 
         isScrolling.current = true;
@@ -104,9 +121,8 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
         let scrollTimeout: NodeJS.Timeout;
 
         const handleScroll = () => {
-            const cardWidth = el.querySelector('div')?.clientWidth || el.clientWidth;
-            const gap = 48;
-            const step = cardWidth + gap;
+            const step = getStep();
+            if (step <= 0) return;
             const middleStart = posts.length * step;
 
             const offset = el.scrollLeft - middleStart;
@@ -176,8 +192,8 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
             {/* 슬라이드 컨테이너 */}
             <div 
                 ref={scrollRef}
-                className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-4 px-4 sm:px-0 sm:gap-8 lg:gap-12"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', scrollPaddingLeft: '1rem' }}
+                className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-4 px-4 sm:px-0 scroll-pl-4 sm:scroll-pl-0 sm:gap-8 lg:gap-12"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
             >
                 {clonedPosts.map((post, index) => (
                     <div 
@@ -229,15 +245,15 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                 <p className="line-clamp-3 text-[13px] sm:text-zi-body-md text-zi-on-surface-variant leading-relaxed">
                                     {post.summary?.split(/(\*\*.*?\*\*)/).map((part, i) => 
                                         part.startsWith('**') && part.endsWith('**') 
-                                            ? <strong key={i} className="font-bold text-zi-primary">{part.slice(2, -2)}</strong>
+                                             ? <strong key={i} className="font-bold text-zi-primary">{part.slice(2, -2)}</strong>
                                             : part
                                     )}
                                 </p>
 
                                 {/* 메타 정보 */}
                                 <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-caption text-slate-400 mt-4">
-                                    <span>{post.author?.name || post.authorName || '진사이트 편집부'}</span>
-                                    <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}</span>
+                                    <span className="truncate pr-2">{post.author?.name || post.authorName || '진사이트 편집부'}</span>
+                                    <span className="shrink-0 whitespace-nowrap">{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}</span>
                                 </div>
                             </article>
                         </Link>
@@ -253,10 +269,11 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                             key={i}
                             onClick={() => {
                                 if (scrollRef.current) {
-                                    const cardWidth = scrollRef.current.querySelector('div')?.clientWidth || scrollRef.current.clientWidth;
-                                    const step = cardWidth + 48;
-                                    const middleStart = posts.length * step;
-                                    scrollRef.current.scrollTo({ left: middleStart + i * step, behavior: 'smooth' });
+                                    const step = getStep();
+                                    if (step > 0) {
+                                        const middleStart = posts.length * step;
+                                        scrollRef.current.scrollTo({ left: middleStart + i * step, behavior: 'smooth' });
+                                    }
                                 }
                             }}
                             className={`h-1.5 rounded-full transition-all duration-300 ${
