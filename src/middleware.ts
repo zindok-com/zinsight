@@ -39,6 +39,13 @@ export function middleware(request: NextRequest) {
         response.cookies.set('is_local_test', 'true', { path: '/' });
     }
 
+    // www 리다이렉트 (운영 환경에서 non-www 접속 시)
+    if (!isLocalTest && request.nextUrl.hostname === 'zinsight.co.kr') {
+        const url = request.nextUrl.clone();
+        url.hostname = 'www.zinsight.co.kr';
+        return NextResponse.redirect(url, 301);
+    }
+
     return response;
 }
 

@@ -1,11 +1,11 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
 
-// sitemap 자체도 1시간마다 재생성
+// sitemap ?�체??1?�간마다 ?�생??
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const domain = process.env.DOMAIN || 'zinsight.co.kr'; // fallback 수정
+    const domain = "www.zinsight.co.kr"; // fallback ?�정
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `https://${domain}`;
 
     // Static routes
@@ -107,8 +107,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
         return [...staticRoutes, ...regionRoutes, ...magazineRoutes, ...orgRoutes];
     } catch (error) {
-        console.error('[sitemap] DB 조회 실패, 기본 목록으로 진행:', error);
+        console.error('[sitemap] DB 조회 ?�패, 기본 목록?�로 진행:', error);
     }
 
     return [...staticRoutes, ...regionRoutes, ...magazineRoutes];
 }
+

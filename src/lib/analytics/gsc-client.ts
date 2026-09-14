@@ -1,7 +1,7 @@
 import { google } from 'googleapis';
 import { loadGoogleCredentials } from './google-credentials';
 
-// ── 서비스 계정 인증 ──────────────────────────────────────────────
+// ?�?� ?�비??계정 ?�증 ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 function getAuth() {
     const credentials = loadGoogleCredentials();
     if (!credentials) return null;
@@ -12,7 +12,7 @@ function getAuth() {
 }
 
 
-const domain = process.env.DOMAIN || 'zinsight.co.kr';
+const domain = "www.zinsight.co.kr";
 const SITE_URL = process.env.GSC_SITE_URL || `sc-domain:${domain}`;
 
 export interface DateRange { startDate: string; endDate: string }
@@ -31,7 +31,7 @@ function extractSlug(urlOrSlug: string): string {
     return parts[parts.length - 1] || cleaned;
 }
 
-// ── 페이지 검색 성과 (노출/클릭/CTR/순위) ─────────────────────────
+// ?�?� ?�이지 검???�과 (?�출/?�릭/CTR/?�위) ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
 export async function getPagePerformance(
     pageUrlOrSlug: string,
     dateRange: DateRange,
@@ -69,7 +69,7 @@ export async function getPagePerformance(
         const totalImpressions = rows.reduce((s, r) => s + (r.impressions ?? 0), 0);
         const ctr = totalImpressions > 0 ? Math.round((totalClicks / totalImpressions) * 10000) / 100 : 0;
         
-        // 노출수 가중 평균 순위
+        // ?�출??가�??�균 ?�위
         const weightedPosSum = rows.reduce((s, r) => s + (r.position ?? 0) * (r.impressions ?? 1), 0);
         const position = totalImpressions > 0 ? Math.round((weightedPosSum / totalImpressions) * 10) / 10 : 0;
 
@@ -85,7 +85,7 @@ export async function getPagePerformance(
     }
 }
 
-// ── 검색 노출 유형 분류 (AI Overview 포함 가능 범위까지) ──────────
+// ?�?� 검???�출 ?�형 분류 (AI Overview ?�함 가??범위까�?) ?�?�?�?�?�?�?�?�?�?�
 export interface SearchAppearance {
     type: string;
     clicks: number;
@@ -133,27 +133,25 @@ export async function getSearchAppearanceBreakdown(
     }
 }
 
-// ── 생성형 AI 성과 리포트 (F-05) ─────────────────────────────────────
-// GSC searchType:'DISCOVER' 또는 searchAppearance 기반으로 AI Overview 노출수 별도 조회
-// 클릭수·CTR·순위는 제공되지 않음 — 노출수만 제공
+// ?�?� ?�성??AI ?�과 리포??(F-05) ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�
+// GSC searchType:'DISCOVER' ?�는 searchAppearance 기반?�로 AI Overview ?�출??별도 조회
+// ?�릭?�·CTR·?�위???�공?��? ?�음 ???�출?�만 ?�공
 export interface GenerativeAIPerformance {
-    impressions: number;        // AI 개요(AI Overview) 노출수
-    note: string;               // UI 안내 문구
+    impressions: number;        // AI 개요(AI Overview) ?�출??    note: string;               // UI ?�내 문구
 }
 
 export async function getGenerativeAIPerformance(
     pageUrlOrSlug: string,
     dateRange: DateRange,
 ): Promise<GenerativeAIPerformance | null> {
-    const NOTE = 'AI 개요 노출수만 측정 가능합니다. 클릭수·CTR·순위는 생성형 AI 성과에서 제공되지 않습니다.';
+    const NOTE = 'AI 개요 ?�출?�만 측정 가?�합?�다. ?�릭?�·CTR·?�위???�성??AI ?�과?�서 ?�공?��? ?�습?�다.';
     try {
         const auth = getAuth();
         if (!auth) return null;
         const sc = google.searchconsole({ version: 'v1', auth });
         const targetSlug = extractSlug(pageUrlOrSlug);
 
-        // searchAppearance 차원에서 'AI_OVERVIEW' 또는 'GENERATIVE_AI' 타입 필터링
-        const res = await sc.searchanalytics.query({
+        // searchAppearance 차원?�서 'AI_OVERVIEW' ?�는 'GENERATIVE_AI' ?�???�터�?        const res = await sc.searchanalytics.query({
             siteUrl: SITE_URL,
             requestBody: {
                 startDate: dateRange.startDate,
@@ -171,12 +169,12 @@ export async function getGenerativeAIPerformance(
                     },
                 ],
                 rowLimit: 50,
-                // 생성형 AI 전용 searchType (계정별 롤아웃 대상인 경우 사용 가능)
-                // searchType: 'DISCOVER',  // 필요 시 주석 해제
+                // ?�성??AI ?�용 searchType (계정�?롤아???�?�인 경우 ?�용 가??
+                // searchType: 'DISCOVER',  // ?�요 ??주석 ?�제
             },
         });
 
-        // searchAppearance 값 중 AI Overview 관련 항목 추출
+        // searchAppearance �?�?AI Overview 관????�� 추출
         const AI_APPEARANCE_KEYS = ['AI_OVERVIEW', 'GENERATIVE_AI', 'AI_MODE'];
         const aiRows = (res.data.rows ?? []).filter((row) =>
             AI_APPEARANCE_KEYS.some((key) => (row.keys?.[0] ?? '').toUpperCase().includes(key))
@@ -193,4 +191,5 @@ export async function getGenerativeAIPerformance(
         return null;
     }
 }
+
 

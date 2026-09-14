@@ -200,6 +200,7 @@ model MagazinePost {
   deletedAt       DateTime? // 소프트 삭제 일시 기록용 (null 이면 활성 상태)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  publishedAt     DateTime? // 최초 발행 일시
 
   regionId        Int?      @map("region_id")
   region          Region?   @relation(fields: [regionId], references: [id], onDelete: SetNull)

@@ -6,13 +6,13 @@ import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarRegions } from '@/actions/insight-radar-actions';
 import RadarSocialProof from '@/components/public/RadarSocialProof';
 
-export const revalidate = 1800; // 30분마??ISR ?�생??
+export const revalidate = 1800; // 30분마??ISR ?�생??
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: '매거�?- ?�크·마�????�??& 로컬 비즈?�스 ?�브',
-    description: '진사?�트 매거진�? ?�트?�사??비즈?�스 ?�사?�트�??�?�리�?기�??�로 ?�구?�한 ?�폰?�드 콘텐츠�? ?�립 리포?��? ?�께 발행?�니??',
+    title: '매거�?- ?�크·마�????�??& 로컬 비즈?�스 ?�브',
+    description: '진사?�트 매거진�? ?�트?�사??비즈?�스 ?�사?�트�??�?�리�?기�??�로 ?�구?�한 ?�폰?�드 콘텐츠�? ?�립 리포?��? ?�께 발행?�니??',
     alternates: {
         canonical: `${baseUrl}/magazine`,
     },
@@ -51,7 +51,7 @@ function HighlightedText({ text }: { text: string }) {
     );
 }
 
-// 기사 카테고리/지??구성??맞춰 ?�적 URL??가?�오???�퍼 ?�수
+// 기사 카테고리/지??구성??맞춰 ?�적 URL??가?�오???�퍼 ?�수
 const getPostUrl = (post: any) => {
     if (post.category?.isLocal && post.region?.slug) {
         return `/magazine/local/${post.region.slug}/${post.slug}`;
@@ -60,12 +60,12 @@ const getPostUrl = (post: any) => {
 };
 
 interface PageProps {
-    searchParams: Promise<{ q?: string; keyword?: string }>;
+    params: Promise<{ slug: string }>;
 }
 
-export default async function MagazinePage({ searchParams }: PageProps) {
-    const params = await searchParams;
-    const keyword = params.q || params.keyword || '';
+export default async function TagArchivePage({ params }: PageProps) {
+    const resolvedParams = await params;
+    const keyword = decodeURIComponent(resolvedParams.slug || '');
     const isSearchMode = !!keyword;
 
     const [allPosts, regions] = await Promise.all([
@@ -73,48 +73,48 @@ export default async function MagazinePage({ searchParams }: PageProps) {
         getRadarRegions(),
     ]);
 
-    // 1�? ?�처???�토�?(Hero) - 검??모드가 ?�닐 ?�만 ?�출
+    // 1�? ?�처???�토�?(Hero) - 검??모드가 ?�닐 ?�만 ?�출
     const featuredPost = !isSearchMode ? (allPosts.find(p => p.isPortalFeatured) || allPosts[0] || null) : null;
     
-    // 2~5�? ?�렌???�이?�바 (More Headlines) - 검??모드가 ?�닐 ?�만 ?�출
+    // 2~5�? ?�렌???�이?�바 (More Headlines) - 검??모드가 ?�닐 ?�만 ?�출
     const sideArticles = !isSearchMode ? allPosts
         .filter(p => p.portalSidePriority >= 1 && p.portalSidePriority <= 4)
         .sort((a, b) => a.portalSidePriority - b.portalSidePriority) : [];
         
-    // 0�? 메인 리스??(최신?? ?�처??�??�이??기사??중복 ?�출?��? ?�도�??�터�?
+    // 0�? 메인 리스??(최신?? ?�처??�??�이??기사??중복 ?�출?��? ?�도�??�터�?
     const gridArticles = isSearchMode ? allPosts : allPosts.filter(p => !p.isPortalFeatured && p.portalSidePriority === 0);
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
             <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
-                {/* 매거�??�더 */}
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* 매거�??�더 */}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
                 <div className="mb-8 sm:mb-16 flex flex-col md:flex-row items-start sm:items-end justify-between border-b border-zi-divider pb-5 sm:pb-8 gap-3 sm:gap-0">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest">
-                            {isSearchMode ? `?�워??검??결과 (${allPosts.length}�?` : '최신 ?�디??}
+                            {isSearchMode ? `?�워??검??결과 (${allPosts.length}�?` : '최신 ?�디??}
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
-                            {isSearchMode ? `"${keyword}" 검?? : '진사?�트 매거�?}
+                            {isSearchMode ? `"${keyword}" 검?? : '진사?�트 매거�?}
                         </h1>
                     </div>
                     {isSearchMode ? (
                         <Link href="/magazine" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-4">
-                            ?�체 ?�디??보기
+                            ?�체 ?�디??보기
                         </Link>
                     ) : (
                         <div className="hidden text-right md:block">
                             <p className="max-w-sm text-body-md font-body-md text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
-                                ?�이?�의 깊이?� ?�?�리즘의 ?�찰??만난 �?<br />
-                                마�??�의 격을 ?�이???�리미엄 미디??                            </p>
+                                ?�이?�의 깊이?� ?�?�리즘의 ?�찰??만난 �?<br />
+                                마�??�의 격을 ?�이???�리미엄 미디??                            </p>
                         </div>
                     )}
                 </div>
 
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
-                {/* ?�처???�토�?(Hero) */}
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* ?�처???�토�?(Hero) */}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
                 {featuredPost && (
                     <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 mb-12 sm:mb-16 items-center">
                         <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
@@ -146,7 +146,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             {featuredPost.author.name}
                                         </Link>
                                     ) : (
-                                        featuredPost.authorName || '진사?�트 ?�집부'
+                                        featuredPost.authorName || '진사?�트 ?�집부'
                                     )}
                                 </span>
                                 <span>??/span>
@@ -173,9 +173,9 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                     </section>
                 )}
 
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
-                {/* ?�션 바로가�??�비게이??*/}
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* ?�션 바로가�??�비게이??*/}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
                     <Link href="/magazine/tech-marketing" className="group p-6 sm:p-8 rounded-zi-card border border-zi-divider bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
                         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
@@ -183,12 +183,12 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                         </div>
                         <div className="relative z-10">
                             <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-300">CORE JOURNALISM</span>
-                            <h3 className="text-xl sm:text-2xl font-bold mt-2 mb-3">?�크 · 마�????�??/h3>
+                            <h3 className="text-xl sm:text-2xl font-bold mt-2 mb-3">?�크 · 마�????�??/h3>
                             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                기업???�크·마�????�공 ?��??� ?�략 ?�사?�트�??�트?�십 �??�체 리서�?기반?�로 ?�루??진사?�트??콘텐�?코너?�니??
+                                기업???�크·마�????�공 ?��??� ?�략 ?�사?�트�??�트?�십 �??�체 리서�?기반?�로 ?�루??진사?�트??콘텐�?코너?�니??
                             </p>
                             <span className="mt-6 flex items-center text-xs font-semibold text-indigo-300 group-hover:text-indigo-200 transition-colors">
-                                ?�크·마�???지�?바로가�?<ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                                ?�크·마�???지�?바로가�?<ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                             </span>
                         </div>
                     </Link>
@@ -199,26 +199,26 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                         </div>
                         <div className="relative z-10">
                             <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-600">B2G & SME SYNERGY</span>
-                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-3">로컬 비즈?�스 ?�브</h3>
+                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-3">로컬 비즈?�스 ?�브</h3>
                             <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                ?�국 주요 지?�체???�성 ?�업 ?�식, 관???�크 ?��??�업 ?�공 ?��? �??�상공인과의 ?��????�생 기사�?모아보는 ?�화 지면입?�다.
+                                ?�국 주요 지?�체???�성 ?�업 ?�식, 관???�크 ?��??�업 ?�공 ?��? �??�상공인과의 ?��????�생 기사�?모아보는 ?�화 지면입?�다.
                             </p>
                             <span className="mt-6 flex items-center text-xs font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">
-                                로컬 비즈?�스 ?�브 바로가�?<ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                                로컬 비즈?�스 ?�브 바로가�?<ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                             </span>
                         </div>
                     </Link>
                 </div>
 
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
-                {/* ?�브 ?�션 (그리??+ ?�이?�바) */}
-                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
+                {/* ?�브 ?�션 (그리??+ ?�이?�바) */}
+                {/* ?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?�?� */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-start">
                     {/* 메인 리스??*/}
                     <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 self-start">
                         {gridArticles.length > 0 ? (
                             gridArticles.map((article) => {
-                                const categoryLabel = article.category?.name || '?�사?�트';
+                                const categoryLabel = article.category?.name || '?�사?�트';
                                 
                                 return (
                                     <Link key={article.id} href={getPostUrl(article)} className="flex flex-col group cursor-pointer">
@@ -235,7 +235,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             )}
                                             {(article as any).isPaid && (
                                                 <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
-                                                    ?�트??                                                </div>
+                                                    ?�트??                                                </div>
                                             )}
                                         </div>
                                         <div className="flex-1 flex flex-col justify-start">
@@ -250,7 +250,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             </p>
                                         </div>
                                         <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                            <span>{article.author?.name || article.authorName || '진사?�트 ?�집부'}</span>
+                                            <span>{article.author?.name || article.authorName || '진사?�트 ?�집부'}</span>
                                             <ArrowRight className="h-4 w-4" />
                                         </div>
                                     </Link>
@@ -259,19 +259,19 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                         ) : (
                             <div className="col-span-full py-16 px-8 border border-dashed border-zi-divider rounded-zi-card bg-zi-surface-container-low flex flex-col items-center justify-center text-center">
                                 <h3 className="font-h3 text-h3 text-zi-primary mb-3">
-                                    ?�록??기사가 ?�습?�다.
+                                    ?�록??기사가 ?�습?�다.
                                 </h3>
                                 <p className="text-body-md text-zi-on-surface-variant max-w-sm">
-                                    ?�자 ?�러분을 ?�한 ?�로???�디?�과 깊이 ?�는 리포?��? 준�?중입?�다. 조금�?기다??주세??
+                                    ?�자 ?�러분을 ?�한 ?�로???�디?�과 깊이 ?�는 리포?��? 준�?중입?�다. 조금�?기다??주세??
                                 </p>
                             </div>
                         )}
                     </div>
-                    {/* ?�이?�바 */}
+                    {/* ?�이?�바 */}
                     <div className="lg:col-span-4 flex flex-col gap-8 sm:gap-12 self-start">
                         <RadarSocialProof limit={8} />
  
-                        {/* ?�렌???�이?�바 */}
+                        {/* ?�렌???�이?�바 */}
                         {sideArticles.length > 0 ? (
                             <div className="flex flex-col gap-6">
                                 <h3 className="font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline pb-2 border-b border-zi-divider">
@@ -286,9 +286,9 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             <HighlightedText text={(article as any).summary || (article.content ? article.content.slice(0, 100) : '')} />
                                         </p>
                                         <div className="flex items-center gap-2 text-zi-outline text-[12px]">
-                                            <span>{article.category?.name || article.region?.name || '?�식'}</span>
+                                            <span>{article.category?.name || article.region?.name || '?�식'}</span>
                                             <span>??/span>
-                                            <span>{article.author?.name || article.authorName || '진사?�트 ?�집부'}</span>
+                                            <span>{article.author?.name || article.authorName || '진사?�트 ?�집부'}</span>
                                         </div>
                                     </Link>
                                 ))}
@@ -299,7 +299,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                     More Headlines
                                 </h4>
                                 <p className="text-[13px] text-zi-on-surface-variant italic">
-                                    추�??�인 주요 ?�드?�인??준�?중입?�다.
+                                    추�??�인 주요 ?�드?�인??준�?중입?�다.
                                 </p>
                             </div>
                         )}

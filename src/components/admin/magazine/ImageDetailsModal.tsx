@@ -37,7 +37,17 @@ export function ImageDetailsModal({ isOpen, onClose, onConfirm, initialUrl = '',
         
         let markdown = '';
         if (finalCaption) {
-            markdown = `\n![${finalAlt}](${url} "${finalCaption}")\n`;
+            let captionMarkup = '';
+            if (finalCaption.includes('"')) {
+                if (finalCaption.includes("'")) {
+                    captionMarkup = `(${finalCaption})`;
+                } else {
+                    captionMarkup = `'${finalCaption}'`;
+                }
+            } else {
+                captionMarkup = `"${finalCaption}"`;
+            }
+            markdown = `\n![${finalAlt}](${url} ${captionMarkup})\n`;
         } else {
             markdown = `\n![${finalAlt}](${url})\n`;
         }

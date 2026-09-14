@@ -9,18 +9,21 @@ import { X, Link2 } from 'lucide-react';
 interface LinkInsertModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onInsert: (text: string, url: string) => void;
+    onInsert: (text: string, url: string, linkType: 'normal' | 'sponsored') => void;
 }
 
 export function LinkInsertModal({ isOpen, onClose, onInsert }: LinkInsertModalProps) {
     const [linkText, setLinkText] = useState('');
     const [url, setUrl] = useState('');
 
+    const [linkType, setLinkType] = useState<'normal' | 'sponsored'>('normal');
+
     // Reset inputs on open
     useEffect(() => {
         if (isOpen) {
             setLinkText('');
             setUrl('');
+            setLinkType('normal');
         }
     }, [isOpen]);
 
@@ -36,7 +39,7 @@ export function LinkInsertModal({ isOpen, onClose, onInsert }: LinkInsertModalPr
             cleanUrl = 'https://' + cleanUrl;
         }
 
-        onInsert(linkText.trim(), cleanUrl);
+        onInsert(linkText.trim(), cleanUrl, linkType);
     };
 
     return (
@@ -96,6 +99,36 @@ export function LinkInsertModal({ isOpen, onClose, onInsert }: LinkInsertModalPr
                             required
                             className="bg-slate-50 border-slate-200 text-sm h-10 focus-visible:ring-indigo-500"
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold text-slate-600">링크 유형</Label>
+                        <div className="flex flex-col gap-2">
+                            <label className="flex items-center gap-2 text-sm cursor-pointer border p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                                <input 
+                                    type="radio" 
+                                    name="linkType" 
+                                    value="normal" 
+                                    checked={linkType === 'normal'} 
+                                    onChange={() => setLinkType('normal')} 
+                                    className="accent-indigo-600 w-4 h-4"
+                                />
+                                <span className="font-medium text-slate-700">근거 링크 (일반)</span>
+                                <span className="text-xs text-slate-400 ml-auto">rel="noopener"</span>
+                            </label>
+                            <label className="flex items-center gap-2 text-sm cursor-pointer border p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                                <input 
+                                    type="radio" 
+                                    name="linkType" 
+                                    value="sponsored" 
+                                    checked={linkType === 'sponsored'} 
+                                    onChange={() => setLinkType('sponsored')}
+                                    className="accent-indigo-600 w-4 h-4"
+                                />
+                                <span className="font-medium text-slate-700">고객사·파트너 링크 (Sponsored)</span>
+                                <span className="text-xs text-slate-400 ml-auto">rel="sponsored noopener"</span>
+                            </label>
+                        </div>
                     </div>
 
                     {/* Actions */}

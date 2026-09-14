@@ -65,7 +65,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { region: regionSlug, slug } = await params;
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
 
     let post = null;
@@ -142,7 +142,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             description,
             type: 'article',
             url: `${baseUrl}/magazine/local/${regionSlug}/${post.slug}`,
-            publishedTime: post.createdAt.toISOString(),
+            publishedTime: (post.publishedAt || post.createdAt).toISOString(),
             modifiedTime: post.updatedAt.toISOString(),
             section: 'Local Business',
             authors: [post.author?.name || post.authorName || '진사이트 편집부'],
@@ -190,7 +190,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
 
     const geoData = regionGeoMap[regionSlug] || { lat: 37.5665, lng: 126.9780, address: 'Seoul, South Korea' };
@@ -260,7 +260,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
                     `${baseUrl}/img/zinsight_icon.png?ar=4:3`,
                     `${baseUrl}/img/zinsight_icon.png?ar=1:1`
                 ],
-                'datePublished': post.createdAt.toISOString(),
+                'datePublished': (post.publishedAt || post.createdAt).toISOString(),
                 'dateModified': post.updatedAt.toISOString(),
                 'articleSection': post.category?.slug === 'edu-collab' ? '산학협력 · 교육' : '로컬 비즈니스',
                 'keywords': ldKeywords.join(', '),

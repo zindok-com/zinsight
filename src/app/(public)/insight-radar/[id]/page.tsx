@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const company = await getRadarCompanyDetail(id);
     if (!company) return { title: '조직을 찾을 수 없습니다' };
 
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
     const url = `${baseUrl}/insight-radar/${company.slug || company.id}`;
     
@@ -97,7 +97,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     }
 
     const coreKw = parseKeywords(company.core_keywords);
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
     const url = `${baseUrl}/insight-radar/${company.slug || company.id}`;
 

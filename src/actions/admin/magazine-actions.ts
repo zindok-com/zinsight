@@ -44,6 +44,24 @@ async function revalidateMagazinePostPaths(postId: number, oldSlug?: string) {
     }
 }
 
+function autoTruncateSummary(text: string) {
+    const plainText = text.replace(/[*_#\[\]\(\)]/g, '').trim();
+    // 문장 단위(.?!)로 분리
+    const sentences = plainText.match(/[^.!?]+[.!?]+/g) || [plainText];
+    let summary = '';
+    for (const sentence of sentences) {
+        if ((summary + sentence).length > 155) {
+            if (summary.length === 0) {
+                // 첫 문장이 이미 155자를 넘을 경우, 그냥 155자에서 자름
+                summary = sentence.substring(0, 152) + '...';
+            }
+            break;
+        }
+        summary += sentence;
+    }
+    return summary.trim();
+}
+
 function processMagazineContent(content: string, providedSummary?: string) {
     let sections: any = {
         lead: '',
@@ -69,7 +87,7 @@ function processMagazineContent(content: string, providedSummary?: string) {
         if (leadMatch) sections.lead = leadMatch[1].trim();
 
         // 2. 본문 섹션들 추출
-        const bodyMatches = content.matchAll(/\*\*\(본문\s*\d+\s*[—|-]\s*(.*?)\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/g);
+        const bodyMatches = content.matchAll(/\*\*\(본문\s*\d+\s*[-:]\s*(.*?)\)\*\*\s*([\s\S]*?)(?=\*\*\(|$)/g);
         for (const match of bodyMatches) {
             sections.bodies.push({
                 title: match[1].trim(),
@@ -82,8 +100,11 @@ function processMagazineContent(content: string, providedSummary?: string) {
         if (closingMatch) sections.closing = closingMatch[1].trim();
     }
 
-    // 요약(summary)은 리드 내용을 기본으로 사용
-    const summary = providedSummary || sections.lead || '';
+    // 요약(summary)은 직접 입력값을 우선하고, 없을 경우 리드 내용을 문장 단위로 절삭
+    let summary = providedSummary || '';
+    if (!summary && sections.lead) {
+        summary = autoTruncateSummary(sections.lead);
+    }
 
     // 전체 본문을 구조화된 JSON 문자열로 저장
     const structuredContent = JSON.stringify(sections);
@@ -146,7 +167,14 @@ export async function createMagazinePost(data: {
             }
         }
 
-        // Generic slug generation if still not set
+        // 발행 시 슬러그 서버 검증
+        if (postData.status === 'PUBLISHED') {
+            if (!slug || slug.trim() === '' || slug === 'post-slug-placeholder') {
+                return { success: false, error: '발행하려면 유효한 슬러그를 입력해야 합니다.' };
+            }
+        }
+
+        // Generic slug generation if still not set (Draft 상태일 때만 도달 가능)
         if (!slug) {
             slug = data.title
                 .toLowerCase()
@@ -157,6 +185,8 @@ export async function createMagazinePost(data: {
         // Content processing: Extract summary from lead and clean markers
         const { summary: extractedSummary, cleanedContent } = processMagazineContent(postData.content, (postData as any).summary);
 
+        const isPublishing = postData.status === 'PUBLISHED';
+
         const post = await prisma.magazinePost.create({
             data: {
                 ...postData,
@@ -166,6 +196,7 @@ export async function createMagazinePost(data: {
                 slug,
                 regionId,
                 targetKeywords,
+                publishedAt: isPublishing ? new Date() : null,
                 organizations: {
                     create: organizationIds.map((id: number) => ({
                         organizationId: id
@@ -197,13 +228,26 @@ export async function updateMagazinePost(id: number, data: {
     try {
         const oldPost = await prisma.magazinePost.findUnique({
             where: { id },
-            select: { slug: true }
+            select: { slug: true, status: true, publishedAt: true }
         });
 
         const { organizationIds = [], regionId = null, targetKeywords = null, categoryId, lead, bodies, closing, ...postData } = data as any;
+        let slug = data.slug;
+
+        // 발행 시 슬러그 서버 검증
+        if (postData.status === 'PUBLISHED') {
+            if (!slug || slug.trim() === '' || slug === 'post-slug-placeholder') {
+                return { success: false, error: '발행하려면 유효한 슬러그를 입력해야 합니다.' };
+            }
+        }
 
         // Content processing: Extract summary from lead and clean markers
         const { summary: extractedSummary, cleanedContent } = processMagazineContent(postData.content, (postData as any).summary);
+
+        let publishedAt = oldPost?.publishedAt;
+        if (postData.status === 'PUBLISHED' && oldPost?.status !== 'PUBLISHED' && !publishedAt) {
+            publishedAt = new Date();
+        }
 
         const post = await prisma.magazinePost.update({
             where: { id },
@@ -214,6 +258,7 @@ export async function updateMagazinePost(id: number, data: {
                 categoryId,
                 regionId,
                 targetKeywords,
+                publishedAt,
                 organizations: {
                     deleteMany: {},
                     create: organizationIds.map((id: number) => ({

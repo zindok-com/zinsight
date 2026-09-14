@@ -20,16 +20,19 @@ function renderHighlightedParts(text: string) {
             return <span key={i} className="font-bold text-zi-blue">{content}</span>;
         }
         if (part.startsWith('[') && part.endsWith(')')) {
-            const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
+            const match = part.match(/^\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
             if (match) {
                 const linkText = match[1];
-                const url = match[2];
+                const url = match[2].trim();
+                const title = match[3];
+                const isSponsored = title === 'sponsored';
+                const rel = isSponsored ? "sponsored noopener" : "noopener";
                 return (
                     <a 
                         key={i} 
                         href={url} 
                         target="_blank" 
-                        rel="noopener noreferrer"
+                        rel={rel}
                         className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
                     >
                         {linkText}
@@ -97,10 +100,11 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 3. Markdown 이미지 (![alt](url "caption"))
-        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
+        // 3. Markdown 이미지 (![alt](url "caption") or ![alt](url 'caption') or ![alt](url (caption)))
+        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+(?:"(.*?)"|'(.*?)'|\((.*?)\)))?\)$/);
         if (imgMatch) {
-            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption: imgMatch[3] });
+            const caption = imgMatch[3] || imgMatch[4] || imgMatch[5];
+            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption });
             continue;
         }
 
@@ -131,6 +135,7 @@ function HighlightedText({ text }: { text: string }) {
                             <img 
                                 src={block.url} 
                                 alt={block.alt || ''} 
+                                loading="lazy"
                                 className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
                             />
                             {block.caption && (
@@ -304,9 +309,9 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                 <div className="space-y-12">
                                     {/* 리드 섹션 */}
                                     {parsedContent.lead && (
-                                        <h2 className="font-sans m-0 p-6 sm:p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[17px] sm:text-[18px] leading-relaxed font-medium text-zi-on-surface-variant italic">
+                                        <p className="font-sans m-0 p-6 sm:p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[17px] sm:text-[18px] leading-relaxed font-medium text-zi-on-surface-variant italic">
                                             <HighlightedText text={parsedContent.lead} />
-                                        </h2>
+                                        </p>
                                     )}
 
                                     {/* 본문 섹션들 */}
@@ -342,7 +347,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                 {tags.map((tag: string, idx: number) => (
                                     <Link
                                         key={`tag-${idx}`}
-                                        href={`/magazine?q=${encodeURIComponent(tag)}`}
+                                        href={`/magazine/tags/${encodeURIComponent(tag)}`}
                                         className="px-3 py-1.5 bg-zi-surface-container-low text-zi-on-surface-variant hover:text-indigo-600 hover:border-indigo-300 rounded-full text-[13px] font-medium border border-zi-divider/50 transition-colors"
                                     >
                                         # {tag}

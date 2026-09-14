@@ -46,7 +46,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
 
     const post = await prisma.magazinePost.findFirst({
@@ -115,7 +115,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             description,
             type: 'article',
             url: `${baseUrl}/magazine/tech-marketing/${post.slug}`,
-            publishedTime: post.createdAt.toISOString(),
+            publishedTime: (post.publishedAt || post.createdAt).toISOString(),
             modifiedTime: post.updatedAt.toISOString(),
             section: 'Tech & Marketing',
             authors: [post.author?.name || post.authorName || '진사이트 편집부'],
@@ -157,7 +157,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
 
     const ldCategoryLabel = getCategoryLabel(post.category);
@@ -218,7 +218,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
                     `${baseUrl}/img/zinsight_icon.png?ar=4:3`,
                     `${baseUrl}/img/zinsight_icon.png?ar=1:1`
                 ],
-                'datePublished': post.createdAt.toISOString(),
+                'datePublished': (post.publishedAt || post.createdAt).toISOString(),
                 'dateModified': post.updatedAt.toISOString(),
                 'articleSection': '테크 · 마케팅',
                 'keywords': ldKeywords.join(', '),

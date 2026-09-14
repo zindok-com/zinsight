@@ -15,11 +15,11 @@ const notoSerifKR = Noto_Serif_KR({
     variable: "--font-serif",
 });
 
-const domain = process.env.DOMAIN || "zinsight.co.kr";
+const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || baseUrl),
+    metadataBase: new URL(baseUrl),
     title: {
         template: "%s | 진사이트(Zinsight)",
         default: "진사이트(Zinsight) - AEO·SEO·GEO 통합 검색최적화 플랫폼",

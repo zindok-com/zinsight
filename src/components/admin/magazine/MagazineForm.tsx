@@ -85,13 +85,13 @@ export function MagazineForm({
             const end = textarea.selectionEnd;
             if (start !== end) {
                 const selectedText = textarea.value.substring(start, end).trim();
-                const imgMatch = selectedText.match(/^!\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
+                const imgMatch = selectedText.match(/^!\[(.*?)\]\((.*?)(?:\s+(?:"(.*?)"|'(.*?)'|\((.*?)\)))?\)$/);
                 if (imgMatch) {
                     setIsImageDetailsOpen(true);
                     setImageDetailsData({
                         url: imgMatch[2].trim(),
                         alt: imgMatch[1] || '',
-                        caption: imgMatch[3] || '',
+                        caption: imgMatch[3] || imgMatch[4] || imgMatch[5] || '',
                         targetTextareaId: textareaId,
                         startIndex: start,
                         endIndex: end,
@@ -133,9 +133,12 @@ export function MagazineForm({
         setActiveLinkTextareaId(textareaId);
     };
 
-    const handleLinkInsertConfirm = (text: string, url: string) => {
+    const handleLinkInsertConfirm = (text: string, url: string, linkType: 'normal' | 'sponsored') => {
         if (!activeLinkTextareaId) return;
-        const markdownLink = `[${text}](${url})`;
+        let markdownLink = `[${text}](${url})`;
+        if (linkType === 'sponsored') {
+            markdownLink = `[${text}](${url} "sponsored")`;
+        }
         insertTextAtCursor(activeLinkTextareaId, markdownLink);
         setActiveLinkTextareaId(null);
     };
@@ -591,6 +594,28 @@ export function MagazineForm({
                                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     className="bg-white border-slate-200 text-base py-5 font-semibold focus-visible:ring-indigo-500"
                                     required
+                                />
+                            </div>
+
+                            {/* 요약 (meta description) */}
+                            <div className="space-y-2 pt-2">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <div className="flex items-center gap-1.5">
+                                        <Label htmlFor="summary" className="text-xs font-semibold text-slate-600">요약 (Meta Description)</Label>
+                                        <span title="검색 엔진 결과에 표시될 요약문입니다. 비워두면 기사 도입부에서 자동 생성됩니다." className="cursor-help inline-flex items-center">
+                                            <Info className="w-3.5 h-3.5 text-slate-400" />
+                                        </span>
+                                    </div>
+                                    <span className={`text-[10px] font-bold ${(formData.summary?.length || 0) > 160 ? 'text-red-500' : 'text-slate-400'}`}>
+                                        {formData.summary?.length || 0} / 160자
+                                    </span>
+                                </div>
+                                <Textarea
+                                    id="summary"
+                                    value={formData.summary || ''}
+                                    onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                                    className="bg-white border-slate-200 text-sm py-3 min-h-[80px] focus-visible:ring-indigo-500"
+                                    placeholder="검색 결과에 노출될 기사 요약을 입력하세요 (155~160자 권장)"
                                 />
                             </div>
                         </div>
@@ -1452,10 +1477,11 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 3. Markdown 이미지 (![alt](url "caption"))
-        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
+        // 3. Markdown 이미지 (![alt](url "caption") or ![alt](url 'caption') or ![alt](url (caption)))
+        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+(?:"(.*?)"|'(.*?)'|\((.*?)\)))?\)$/);
         if (imgMatch) {
-            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption: imgMatch[3] });
+            const caption = imgMatch[3] || imgMatch[4] || imgMatch[5];
+            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption });
             continue;
         }
 
