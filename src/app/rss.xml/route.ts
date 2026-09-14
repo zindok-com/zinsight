@@ -5,7 +5,7 @@ export async function GET() {
   const domain = "www.zinsight.co.kr";
   const baseUrl = `https://${domain}`;
 
-  // 1. 최신 매거�??�스??20개만 긁어?�기 (발행 ?�태?�면???�프????��?��? ?��? 기사)
+  // 1. 최신 매거진 포스트 20개만 긁어오기 (발행 상태이면서 소프트 삭제되지 않은 기사)
   const posts = await prisma.magazinePost.findMany({
     where: { 
       status: 'PUBLISHED',
@@ -21,7 +21,7 @@ export async function GET() {
     }
   });
 
-  // 2. RSS ?��? XML ?�식 조립
+  // 2. RSS 표준 XML 양식 조립
   const rssItems = posts
     .map((post) => `
       <item>
@@ -37,9 +37,9 @@ export async function GET() {
   const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
     <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
       <channel>
-        <title>Zinsight 매거�?/title>
+        <title>Zinsight 매거진</title>
         <link>${baseUrl}</link>
-        <description>B2B ?�일�??�텔리전??�??�업 ?�향 ?�스?�터</description>
+        <description>B2B 세일즈 인텔리전스 및 산업 동향 뉴스레터</description>
         <language>ko</language>
         <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>
         ${rssItems}
@@ -47,12 +47,11 @@ export async function GET() {
     </rss>
   `;
 
-  // 3. Content-Type??application/xml�??�정?�여 반환
+  // 3. Content-Type을 application/xml로 설정하여 반환
   return new NextResponse(rssXml, {
     headers: {
       'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=59', // 1?�간 캐싱
+      'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=59', // 1시간 캐싱
     },
   });
 }
-

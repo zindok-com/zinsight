@@ -4,13 +4,14 @@ import { ArrowRight, Building2, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { getLocalPosts, getRegions } from '@/actions/public/magazine-actions';
 
-export const revalidate = 1800; // 30분마??ISR ?�생??
+export const revalidate = 1800; // 30분마다 ISR 재생성
+
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: '로컬 비즈?�스 ?�브 - 관??기업·지?�체 ?�식',
-    description: '?�국 주요 지?�체 �?지??진흥?�의 ?�책 ?�금, 관???�크 ?��??�업 릴레???�터�?�?골목?�권 ?�상공인과의 ?��????�생 ?�토리�? ?�룹?�다.',
+    title: '로컬 비즈니스 허브 - 관내 기업·지자체 소식',
+    description: '전국 주요 지자체 및 지역 진흥원의 정책 자금, 관내 테크 스타트업 릴레이 인터뷰 및 골목상권 소상공인과의 디지털 상생 스토리를 다룹니다.',
     alternates: {
         canonical: `${baseUrl}/magazine/local`,
     },
@@ -49,7 +50,7 @@ export default async function LocalHubPage() {
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
             <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
-                {/* 브레?�크??*/}
+                {/* 브레드크럼 */}
                 <div className="mb-4 text-xs text-zi-outline font-ui-label flex items-center gap-1.5">
                     <Link href="/magazine" className="hover:text-zi-secondary transition-colors">Magazine</Link>
                     <span>&gt;</span>
@@ -62,18 +63,18 @@ export default async function LocalHubPage() {
                             <Building2 className="w-4 h-4" /> B2G & SME SYNERGY
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
-                            로컬 비즈?�스 ?�브
+                            로컬 비즈니스 허브
                         </h1>
                     </div>
                     <div className="max-w-md text-right hidden md:block">
                         <p className="text-xs text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
-                            지?�체?� ?�상공인???��????�생 �??��??�업 ?�성 ?�토�???br />
-                            공익??목적??부?�하???�화 지면입?�다.
+                            지자체와 소상공인의 디지털 상생 및 스타트업 육성 스토리 등<br />
+                            공익적 목적에 부합하는 특화 지면입니다.
                         </p>
                     </div>
                 </div>
 
-                {/* 1?�계: 지?�체/지???�택 그리??*/}
+                {/* 1단계: 지자체/지역 선택 그리드 */}
                 <section className="mb-16">
                     <h3 className="font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline mb-6 flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-indigo-500" /> Select Target Region
@@ -86,8 +87,8 @@ export default async function LocalHubPage() {
                                 className="group p-6 rounded-zi-card border border-zi-divider bg-white hover:border-indigo-200 hover:shadow-sm transition-all duration-300 flex items-center justify-between"
                             >
                                 <div>
-                                    <h4 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{reg.name} 지�?/h4>
-                                    <p className="text-xs text-muted-foreground mt-1">{reg.name} 관???�식 �??��??�업 ?�터�?/p>
+                                    <h4 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{reg.name} 지면</h4>
+                                    <p className="text-xs text-muted-foreground mt-1">{reg.name} 관내 소식 및 스타트업 인터뷰</p>
                                 </div>
                                 <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-indigo-50 transition-colors">
                                     <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
@@ -97,7 +98,7 @@ export default async function LocalHubPage() {
                     </div>
                 </section>
 
-                {/* 2?�계: 최신 로컬 리스??*/}
+                {/* 2단계: 최신 로컬 리스트 */}
                 <section className="border-t border-zi-divider pt-12">
                     <h3 className="font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline mb-8">
                         Latest Local Business Stories
@@ -122,9 +123,9 @@ export default async function LocalHubPage() {
                                         <div className="flex-1 flex flex-col justify-start">
                                             <div className="flex items-center gap-1.5 mb-2 text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
                                                 <span>{article.region?.name || '공통'}</span>
-                                                <span>??/span>
+                                                <span>•</span>
                                                 <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
-                                                    {article.category?.name || '로컬 ?�식'}
+                                                    {article.category?.name || '로컬 소식'}
                                                 </span>
                                             </div>
                                             <h4 className="mb-2 font-h3 text-[18px] sm:text-h3 text-zi-primary group-hover:text-zi-secondary transition-colors line-clamp-2 leading-snug">
@@ -135,7 +136,7 @@ export default async function LocalHubPage() {
                                             </p>
                                         </div>
                                         <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                            <span>{article.author?.name || article.authorName || '진사?�트 ?�집부'}</span>
+                                            <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
                                             <ArrowRight className="h-4 w-4" />
                                         </div>
                                     </Link>
@@ -144,7 +145,7 @@ export default async function LocalHubPage() {
                         ) : (
                             <div className="col-span-full py-16 px-8 border border-dashed border-zi-divider rounded-zi-card bg-zi-surface-container-low flex flex-col items-center justify-center text-center">
                                 <p className="text-body-md text-zi-on-surface-variant max-w-sm">
-                                    ?�록??기사가 ?�습?�다. 지???�식 �??�터뷰�? 준�?중입?�다.
+                                    등록된 기사가 없습니다. 지역 소식 및 인터뷰를 준비 중입니다.
                                 </p>
                             </div>
                         )}
@@ -154,4 +155,3 @@ export default async function LocalHubPage() {
         </div>
     );
 }
-

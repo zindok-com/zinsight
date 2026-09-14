@@ -4,13 +4,14 @@ import { ArrowRight, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import { getTechMarketingPosts } from '@/actions/public/magazine-actions';
 
-export const revalidate = 1800; // 30분마??ISR ?�생??
+export const revalidate = 1800; // 30분마다 ISR 재생성
+
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: '?�크·마�????�??- AEO·SEO·GEO 비즈?�스 ?�사?�트',
-    description: '?�공지??AI) ?��???GEO/SEO 마�????�략, B2B 리서�?분석 보고?��? ?�루??기술 ?�문 ?�??지면입?�다.',
+    title: '테크·마케팅 저널 - AEO·SEO·GEO 비즈니스 인사이트',
+    description: '인공지능(AI) 시대의 GEO/SEO 마케팅 전략, B2B 리서치 분석 보고서를 다루는 기술 전문 저널 지면입니다.',
     alternates: {
         canonical: `${baseUrl}/magazine/tech-marketing`,
     },
@@ -41,17 +42,18 @@ function HighlightedText({ text }: { text: string }) {
 export default async function TechMarketingPage() {
     const allPosts = await getTechMarketingPosts();
 
-    // 1�? ?�드?�인 (?�크 마�????�용 ?�드?�인 지??
+    // 1번: 헤드라인 (테크 마케팅 전용 헤드라인 지정)
     const featuredPost = allPosts.find(p => p.isTechFeatured) || allPosts[0] || null;
     
-    // ?�반 기사 리스??    const gridArticles = featuredPost 
+    // 일반 기사 리스트
+    const gridArticles = featuredPost 
         ? allPosts.filter(p => p.id !== featuredPost.id) 
         : allPosts;
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
             <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
-                {/* 브레?�크??*/}
+                {/* 브레드크럼 */}
                 <div className="mb-4 text-xs text-zi-outline font-ui-label flex items-center gap-1.5">
                     <Link href="/magazine" className="hover:text-zi-secondary transition-colors">Magazine</Link>
                     <span>&gt;</span>
@@ -64,12 +66,13 @@ export default async function TechMarketingPage() {
                             <Newspaper className="w-4 h-4" /> CORE JOURNALISM
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
-                            ?�크 · 마�????�??                        </h1>
+                            테크 · 마케팅 저널
+                        </h1>
                     </div>
                     <div className="max-w-md text-right hidden md:block">
                         <p className="text-xs text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
-                            AI ?��???고품�?B2B 리서�?보고??�?br />
-                            최신 검??최적??GEO·SEO) 기술 ?�향.
+                            AI 시대의 고품격 B2B 리서치 보고서 및<br />
+                            최신 검색 최적화(GEO·SEO) 기술 동향.
                         </p>
                     </div>
                 </div>
@@ -95,9 +98,9 @@ export default async function TechMarketingPage() {
                             </Link>
                             <div className="flex items-center gap-4 text-zi-outline font-ui-label text-ui-label border-t border-zi-divider pt-4">
                                 <span className="text-zi-on-surface font-semibold">
-                                    By {featuredPost.author?.name || featuredPost.authorName || '진사?�트 ?�집부'}
+                                    By {featuredPost.author?.name || featuredPost.authorName || '진사이트 편집부'}
                                 </span>
-                                <span>??/span>
+                                <span>•</span>
                                 <span>{new Date(featuredPost.createdAt).toLocaleDateString()}</span>
                             </div>
                         </div>
@@ -121,7 +124,7 @@ export default async function TechMarketingPage() {
                     </section>
                 )}
 
-                {/* 그리??기사 목록 */}
+                {/* 그리드 기사 목록 */}
                 <div className="border-t border-zi-divider pt-12">
                     <h3 className="font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline mb-8">
                         Latest Technical Articles
@@ -129,7 +132,7 @@ export default async function TechMarketingPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
                         {gridArticles.length > 0 ? (
                             gridArticles.map((article) => {
-                                const industryName = article.region?.name || '?�사?�트';
+                                const industryName = article.region?.name || '인사이트';
                                 
                                 return (
                                     <Link key={article.id} href={`/magazine/tech-marketing/${article.slug}`} className="flex flex-col group cursor-pointer h-full">
@@ -146,7 +149,8 @@ export default async function TechMarketingPage() {
                                             )}
                                             {article.isPaid && (
                                                 <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
-                                                    ?�트??                                                </div>
+                                                    파트너
+                                                </div>
                                             )}
                                         </div>
                                         <div className="flex-1 flex flex-col justify-start">
@@ -161,7 +165,7 @@ export default async function TechMarketingPage() {
                                             </p>
                                         </div>
                                         <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
-                                            <span>{article.author?.name || article.authorName || '진사?�트 ?�집부'}</span>
+                                            <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
                                             <ArrowRight className="h-4 w-4" />
                                         </div>
                                     </Link>
@@ -170,7 +174,7 @@ export default async function TechMarketingPage() {
                         ) : (
                             <div className="col-span-full py-16 px-8 border border-dashed border-zi-divider rounded-zi-card bg-zi-surface-container-low flex flex-col items-center justify-center text-center">
                                 <p className="text-body-md text-zi-on-surface-variant max-w-sm">
-                                    ?�록??기사가 ?�습?�다. ?�로???�사?�트�?준�?중입?�다.
+                                    등록된 기사가 없습니다. 새로운 인사이트를 준비 중입니다.
                                 </p>
                             </div>
                         )}
@@ -180,4 +184,3 @@ export default async function TechMarketingPage() {
         </div>
     );
 }
-
