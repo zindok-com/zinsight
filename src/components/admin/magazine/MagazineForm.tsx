@@ -324,6 +324,7 @@ export function MagazineForm({
     const [formData, setFormData] = useState<any>({
         title: post?.title || '',
         slug: post?.slug || '',
+        summary: post?.summary || '',
         lead: parsedContent.lead,
         bodies: parsedContent.bodies,
         closing: parsedContent.closing,
@@ -355,50 +356,60 @@ export function MagazineForm({
         }
     };
 
-    const handleSubmit = (e?: React.FormEvent | React.MouseEvent) => {
+    const handleSubmit = (e?: React.FormEvent | React.MouseEvent, overrideStatus?: string) => {
         if (e) {
             e.preventDefault();
         }
 
-        if (!formData.title) {
+        const targetStatus = overrideStatus || formData.status || 'PUBLISHED';
+        const isDraft = targetStatus === 'DRAFT';
+
+        if (!formData.title || formData.title.trim() === '') {
             toast.error('제목을 입력해주세요.');
             return;
         }
 
-        if (!formData.lead || formData.lead.trim() === '') {
-            toast.error('리드(Lead) 내용을 입력해주세요.');
-            return;
-        }
+        if (!isDraft) {
+            if (!formData.lead || formData.lead.trim() === '') {
+                toast.error('리드(Lead) 내용을 입력해주세요.');
+                return;
+            }
 
-        if (!formData.closing || formData.closing.trim() === '') {
-            toast.error('클로징(Closing) 내용을 입력해주세요.');
-            return;
+            if (!formData.closing || formData.closing.trim() === '') {
+                toast.error('클로징(Closing) 내용을 입력해주세요.');
+                return;
+            }
+
+            const validBodies = formData.bodies.filter((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
+            if (validBodies.length === 0) {
+                toast.error('최소 하나의 본문 섹션을 입력해주세요.');
+                return;
+            }
         }
 
         const validBodies = formData.bodies.filter((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
-        if (validBodies.length === 0) {
-            toast.error('최소 하나의 본문 섹션을 입력해주세요.');
-            return;
-        }
 
         startTransition(async () => {
             const structuredContent = JSON.stringify({
-                lead: formData.lead,
-                bodies: validBodies,
-                closing: formData.closing
+                lead: formData.lead || '',
+                bodies: validBodies.length > 0 ? validBodies : [{ title: '', content: '' }],
+                closing: formData.closing || ''
             });
+
+            const submitPayload = {
+                ...formData,
+                status: targetStatus,
+                categoryId: Number(formData.categoryId),
+                content: structuredContent,
+                organizationIds: selectedOrganizations.map(o => o.id)
+            };
 
             if (post) {
                 // Edit Mode
-                const res = await updateMagazinePost(post.id, {
-                    ...formData,
-                    categoryId: Number(formData.categoryId),
-                    content: structuredContent,
-                    organizationIds: selectedOrganizations.map(o => o.id)
-                });
+                const res = await updateMagazinePost(post.id, submitPayload);
 
                 if (res.success) {
-                    toast.success('포스트가 성공적으로 수정되었습니다!');
+                    toast.success(isDraft ? '임시 저장이 완료되었습니다.' : '포스트가 성공적으로 수정되었습니다!');
                     router.push('/admin/magazine');
                 } else {
                     toast.error('수정 실패: ' + res.error);
@@ -406,15 +417,12 @@ export function MagazineForm({
             } else {
                 // Create Mode
                 const res = await createMagazinePost({
-                    ...formData,
-                    categoryId: Number(formData.categoryId),
-                    content: structuredContent,
+                    ...submitPayload,
                     slug: formData.slug || undefined,
-                    organizationIds: selectedOrganizations.map(o => o.id)
                 });
 
                 if (res.success) {
-                    toast.success('포스트가 성공적으로 등록되었습니다!');
+                    toast.success(isDraft ? '임시 저장이 완료되었습니다.' : '포스트가 성공적으로 등록되었습니다!');
                     router.push('/admin/magazine');
                 } else {
                     toast.error('등록 실패: ' + res.error);
@@ -1340,7 +1348,16 @@ export function MagazineForm({
                         </Button>
                         <Button
                             type="button"
-                            onClick={handleSubmit}
+                            variant="outline"
+                            className="h-11 px-6 bg-amber-50 hover:bg-amber-100/80 text-amber-800 border-amber-300 font-semibold"
+                            onClick={(e) => handleSubmit(e, 'DRAFT')}
+                            disabled={isPending}
+                        >
+                            임시저장
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={(e) => handleSubmit(e, formData.status === 'DRAFT' ? 'PUBLISHED' : formData.status)}
                             className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
                             disabled={isPending}
                         >
