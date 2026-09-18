@@ -106,6 +106,7 @@ export function MagazineListTable({
         setEditForm({
             title: post.title,
             slug: post.slug,
+            summary: post.summary || '',
             categoryId: post.categoryId,
             lead: parsedData.lead,
             bodies: parsedData.bodies,
@@ -119,26 +120,37 @@ export function MagazineListTable({
 
     const handleSave = () => {
         startTransition(async () => {
-            if (!editForm.lead || editForm.lead.trim() === '') {
-                toast.error('리드(Lead) 내용을 입력해주세요.');
+            const isDraft = editForm.status === 'DRAFT';
+
+            if (!editForm.title || editForm.title.trim() === '') {
+                toast.error('제목을 입력해주세요.');
                 return;
             }
 
-            if (!editForm.closing || editForm.closing.trim() === '') {
-                toast.error('클로징(Closing) 내용을 입력해주세요.');
-                return;
+            if (!isDraft) {
+                if (!editForm.lead || editForm.lead.trim() === '') {
+                    toast.error('리드(Lead) 내용을 입력해주세요.');
+                    return;
+                }
+
+                if (!editForm.closing || editForm.closing.trim() === '') {
+                    toast.error('클로징(Closing) 내용을 입력해주세요.');
+                    return;
+                }
+
+                const validBodies = editForm.bodies.filter((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
+                if (validBodies.length === 0) {
+                    toast.error('최소 하나의 본문 섹션을 입력해주세요.');
+                    return;
+                }
             }
 
             const validBodies = editForm.bodies.filter((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
-            if (validBodies.length === 0) {
-                toast.error('최소 하나의 본문 섹션을 입력해주세요.');
-                return;
-            }
 
             const structuredContent = JSON.stringify({
-                lead: editForm.lead,
-                bodies: validBodies,
-                closing: editForm.closing
+                lead: editForm.lead || '',
+                bodies: validBodies.length > 0 ? validBodies : [{ title: '', content: '' }],
+                closing: editForm.closing || ''
             });
 
             const payload = {
@@ -149,11 +161,14 @@ export function MagazineListTable({
 
             const res = await updateMagazinePost(selectedPost.id, payload);
             if (res.success) {
-                toast.success('포스트가 수정되었습니다.');
+                toast.success(isDraft ? '임시 저장이 완료되었습니다.' : '포스트가 수정되었습니다.');
                 setSelectedPost({
-                    ...selectedPost, ...editForm
+                    ...selectedPost,
+                    ...editForm,
+                    summary: editForm.summary
                 });
                 setIsEditing(false);
+                router.refresh();
             } else {
                 toast.error('수정 실패: ' + res.error);
             }
@@ -228,7 +243,8 @@ export function MagazineListTable({
                                 <TableHead>제목</TableHead>
                                 <TableHead>상태</TableHead>
                                 <TableHead>발행자</TableHead>
-                                <TableHead>등록일</TableHead>
+                                <TableHead className="whitespace-nowrap">등록일</TableHead>
+                                <TableHead className="whitespace-nowrap">발행일</TableHead>
                                 <TableHead className="text-right">관리</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -263,7 +279,7 @@ export function MagazineListTable({
                                         variant="outline" 
                                         className={
                                             post.category?.slug === 'tech-marketing' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                            post.category?.isLocal ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                             post.category?.isLocal ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                                             'bg-blue-50 text-blue-700 border-blue-200'
                                         }
                                     >
@@ -293,11 +309,26 @@ export function MagazineListTable({
                                       </Badge>
                                   </TableCell>
                                  <TableCell className="text-slate-500 text-xs font-medium whitespace-nowrap">
-                                     {new Date(post.createdAt).toLocaleDateString('ko-KR', {
+                                     {post.createdAt ? new Date(post.createdAt).toLocaleDateString('ko-KR', {
                                          year: '2-digit',
                                          month: '2-digit',
                                          day: '2-digit'
-                                     })}
+                                     }) : '-'}
+                                 </TableCell>
+                                 <TableCell className="text-xs font-medium whitespace-nowrap">
+                                     {post.publishedAt ? (
+                                         <span className="text-indigo-600 font-semibold">
+                                             {new Date(post.publishedAt).toLocaleDateString('ko-KR', {
+                                                 year: '2-digit',
+                                                 month: '2-digit',
+                                                 day: '2-digit'
+                                             })}
+                                         </span>
+                                     ) : (
+                                         <span className="text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded text-[10px] font-medium">
+                                             미발행
+                                         </span>
+                                     )}
                                  </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
@@ -454,6 +485,30 @@ export function MagazineListTable({
                                                 />
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">{selectedPost.title}</div>
+                                            )}
+                                        </div>
+
+                                        {/* 요약 (Meta Description) */}
+                                        <div className="space-y-2 md:col-span-6">
+                                            <div className="flex items-center justify-between">
+                                                <Label className="text-xs font-bold text-slate-400 uppercase tracking-wider">요약 (Meta Description)</Label>
+                                                {isEditing && (
+                                                    <span className={`text-[10px] font-bold ${(editForm.summary?.length || 0) > 160 ? 'text-red-500' : 'text-slate-400'}`}>
+                                                        {editForm.summary?.length || 0} / 160자
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {isEditing ? (
+                                                <Textarea
+                                                    value={editForm.summary || ''}
+                                                    onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
+                                                    className="text-sm min-h-[70px] bg-white"
+                                                    placeholder="검색 결과에 노출될 기사 요약 (155~160자 권장)"
+                                                />
+                                            ) : (
+                                                <div className="p-3 bg-white border rounded-md text-xs text-slate-700 leading-relaxed">
+                                                    {selectedPost.summary || <span className="text-slate-400 italic">등록된 요약이 없습니다.</span>}
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -651,13 +706,19 @@ export function MagazineListTable({
 
                                     {/* Metadata */}
                                     {!isEditing && (
-                                        <div className="grid grid-cols-2 gap-4 pt-4 border-t text-xs text-muted-foreground">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4 border-t text-xs text-muted-foreground">
                                             <div className="flex items-center gap-2">
                                                 <Eye className="w-3.5 h-3.5" />
                                                 총 조회수: <span className="font-bold text-slate-900">{selectedPost.viewCount}회</span>
                                             </div>
                                             <div>
-                                                생성 일시: <span className="font-bold text-slate-900">{new Date(selectedPost.createdAt).toLocaleString()}</span>
+                                                등록 일시: <span className="font-bold text-slate-900">{selectedPost.createdAt ? new Date(selectedPost.createdAt).toLocaleString() : '-'}</span>
+                                            </div>
+                                            <div>
+                                                발행 일시: <span className="font-bold text-slate-900">{selectedPost.publishedAt ? new Date(selectedPost.publishedAt).toLocaleString() : '미발행 (초안)'}</span>
+                                            </div>
+                                            <div>
+                                                최근 수정: <span className="font-bold text-slate-900">{selectedPost.updatedAt ? new Date(selectedPost.updatedAt).toLocaleString() : '-'}</span>
                                             </div>
                                         </div>
                                     )}

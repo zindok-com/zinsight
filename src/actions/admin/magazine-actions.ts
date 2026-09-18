@@ -396,14 +396,36 @@ export async function updateMultipleMagazinePostsStatus(ids: number[], status: s
             select: { id: true, slug: true }
         });
 
-        await prisma.magazinePost.updateMany({
-            where: {
-                id: { in: ids }
-            },
-            data: {
-                status
-            }
-        });
+        if (status === 'PUBLISHED') {
+            await prisma.magazinePost.updateMany({
+                where: {
+                    id: { in: ids },
+                    publishedAt: null
+                },
+                data: {
+                    status,
+                    publishedAt: new Date()
+                }
+            });
+            await prisma.magazinePost.updateMany({
+                where: {
+                    id: { in: ids },
+                    publishedAt: { not: null }
+                },
+                data: {
+                    status
+                }
+            });
+        } else {
+            await prisma.magazinePost.updateMany({
+                where: {
+                    id: { in: ids }
+                },
+                data: {
+                    status
+                }
+            });
+        }
         for (const post of posts) {
             await revalidateMagazinePostPaths(post.id);
         }
