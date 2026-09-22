@@ -1357,16 +1357,16 @@ export function MagazineForm({
                         </Button>
                         <Button
                             type="button"
-                            onClick={(e) => handleSubmit(e, formData.status === 'DRAFT' ? 'PUBLISHED' : formData.status)}
+                            onClick={(e) => handleSubmit(e, formData.status)}
                             className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
                             disabled={isPending}
                         >
                             {isPending ? (
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             ) : post ? (
-                                '수정 완료'
+                                formData.status === 'DRAFT' ? '초안 수정 저장' : '수정 완료'
                             ) : (
-                                '매거진 포스트 발행'
+                                formData.status === 'DRAFT' ? '초안으로 저장' : '매거진 포스트 발행'
                             )}
                         </Button>
                     </div>

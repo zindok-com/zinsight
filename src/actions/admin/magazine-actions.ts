@@ -17,6 +17,8 @@ async function revalidateMagazinePostPaths(postId: number, oldSlug?: string) {
         revalidatePath('/magazine/tech-marketing');
         revalidatePath('/magazine/local');
         revalidatePath('/');
+        revalidatePath('/sitemap.xml');
+        revalidatePath('/rss.xml');
         revalidatePath('/admin/magazine');
         revalidatePath('/admin/magazine/headlines');
         revalidatePath('/admin');
