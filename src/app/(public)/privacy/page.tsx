@@ -217,7 +217,7 @@ export default function PrivacyPage() {
                                     <div className="text-[13.5px] leading-relaxed">
                                         <p>• <strong>담당 부서</strong>: Zinsight 개인정보보호 및 기술지원 운영실</p>
                                         <p>• <strong>보호책임자 직책</strong>: 최고보안책임자 (CISO)</p>
-                                        <p>• <strong>문의 이메일</strong>: <a href="mailto:support@zinsight.co.kr" className="text-zi-primary font-semibold hover:underline">support@zinsight.co.kr</a></p>
+                                        <p>• <strong>문의 이메일</strong>: <a href="mailto:cto@zindok.com" className="text-zi-primary font-semibold hover:underline">cto@zindok.com</a></p>
                                     </div>
                                 </div>
                                 <p className="text-[13.5px]">회원님께서는 회사의 서비스(또는 화면)를 이용하시면서 발생한 모든 개인정보 보호 관련 문의, 불만처리, 피해구제 등에 관한 사항을 개인정보 보호책임자 및 담당부서로 문의하실 수 있으며, 회사는 신속하고 성실하게 답변해 드릴 예정입니다.</p>
