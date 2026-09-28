@@ -21,10 +21,10 @@ const baseUrl = `https://${domain}`;
 export const metadata: Metadata = {
     metadataBase: new URL(baseUrl),
     title: {
-        template: "%s | 진사이트(Zinsight)",
-        default: "진사이트(Zinsight) - AEO·SEO·GEO 통합 검색최적화 플랫폼",
+        template: "%s | 진사이트",
+        default: "진사이트 - AEO·SEO·GEO 통합 검색최적화 플랫폼",
     },
-    description: "진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.",
+    description: "진사이트는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.",
     keywords: ["zinsight", "진사이트", "진독", "zindok", "인사이트", "기업 분석", "산업 동향", "시장 리서치", "뉴스레터", "비즈니스 인텔리전스", "GEO", "SEO", "테크니컬 마케팅"],
     authors: [{ name: "Zinsight Team" }],
     creator: "Zinsight",
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
         locale: "ko_KR",
         url: baseUrl,
         siteName: "진사이트",
-        title: "진사이트(Zinsight) - AEO·SEO·GEO 통합 검색최적화 플랫폼",
-        description: "진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다.",
+        title: "진사이트 - AEO·SEO·GEO 통합 검색최적화 플랫폼",
+        description: "진사이트는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다.",
         images: [
             {
                 url: "/img/zinsight_icon.png",
@@ -57,8 +57,8 @@ export const metadata: Metadata = {
     },
     twitter: {
         card: "summary_large_image",
-        title: "진사이트(Zinsight) - AEO·SEO·GEO 통합 검색최적화 플랫폼",
-        description: "진사이트(Zinsight)는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.",
+        title: "진사이트 - AEO·SEO·GEO 통합 검색최적화 플랫폼",
+        description: "진사이트는 최신 마케팅 트렌드와 차세대 검색 최적화(GEO/SEO) 인텔리전스를 다루는 리서치 미디어입니다. AI 시대의 시장 동향과 비즈니스 통찰력을 제공합니다.",
         images: ["/img/zinsight_icon.png"],
     },
     verification: {
