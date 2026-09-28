@@ -419,7 +419,7 @@ function TimelineItem({
                 <div className="flex items-center justify-between mb-3">
                     {isMagazine ? (
                         <span className="text-xs font-extrabold uppercase text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded border border-amber-200 flex items-center gap-1">
-                            <span aria-hidden="true">✦</span> 진사이트(Zinsight) PARTNER
+                            <span aria-hidden="true">✦</span> 진사이트 PARTNER
                         </span>
                     ) : (
                         <span className="text-xs font-bold uppercase text-zi-blue bg-blue-50 px-2 py-1 rounded">{category}</span>
