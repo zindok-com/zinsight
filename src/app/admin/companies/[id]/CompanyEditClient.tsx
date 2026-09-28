@@ -211,7 +211,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [hqLocation, setHqLocation] = useState(initialCompany.hq_location || '');
     const [foundedYear, setFoundedYear] = useState(initialCompany.founded_year || '');
     const [ceoName, setCeoName] = useState(initialCompany.ceo_name || '');
-    const [aliases, setAliases] = useState(parseCommaArray(initialCompany.aliases));
+    const [aliases, setAliases] = useState(parseLinesArray(initialCompany.aliases));
     const [keyReferences, setKeyReferences] = useState(parseLinesArray(initialCompany.key_references));
     const [kwProducts, setKwProducts] = useState(kw.products);
     const [kwTechnology, setKwTechnology] = useState(kw.technology);
@@ -420,9 +420,9 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 target_market: kwTargetMarket.split(',').map((s: string) => s.trim()).filter(Boolean),
             };
 
-            const parsedAliases = aliases.split(',').map((s: string) => s.trim()).filter(Boolean);
+            const parsedAliases = aliases.split('\n').map((s: string) => s.trim()).filter(Boolean);
             const parsedReferences = keyReferences
-                .split(/[\n,]/)
+                .split('\n')
                 .map((s: string) => s.replace(/^[•\-\*▪]\s*/, '').trim())
                 .filter(Boolean);
 
