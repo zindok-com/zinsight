@@ -571,21 +571,7 @@ export function MagazineForm({
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="status" className="text-xs font-semibold text-slate-600">발행 상태</Label>
-                                    <Select
-                                        value={formData.status}
-                                        onValueChange={(val) => setFormData({ ...formData, status: val })}
-                                    >
-                                        <SelectTrigger id="status" className="bg-white border-slate-200">
-                                            <SelectValue placeholder="상태 선택" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="PUBLISHED">발행 완료 (Published)</SelectItem>
-                                            <SelectItem value="DRAFT">임시 저장 (Draft)</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+
                             </div>
 
                             {/* 제목 - 단독 행 전체 너비 */}
