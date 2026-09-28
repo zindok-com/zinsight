@@ -15,7 +15,7 @@ export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic �
 
 export const metadata: Metadata = {
     alternates: {
-        canonical: 'https://zinsight.co.kr',
+        canonical: 'https://www.zinsight.co.kr',
     },
     robots: {
         index: true,
@@ -47,44 +47,44 @@ export default async function PublicHomePage() {
         '@graph': [
             {
                 '@type': 'Organization',
-                '@id': 'https://zinsight.co.kr/#organization',
+                '@id': 'https://www.zinsight.co.kr/#organization',
                 'name': '진사이트',
                 'alternateName': ['Zinsight', '진독', 'Zindok'],
-                'url': 'https://zinsight.co.kr',
+                'url': 'https://www.zinsight.co.kr',
                 'logo': {
                     '@type': 'ImageObject',
-                    'url': 'https://zinsight.co.kr/img/zinsight_icon.png',
+                    'url': 'https://www.zinsight.co.kr/img/zinsight_icon.png',
                 },
                 'sameAs': ['https://www.zindok.com'],
             },
             {
                 '@type': 'WebSite',
-                '@id': 'https://zinsight.co.kr/#website',
-                'url': 'https://zinsight.co.kr',
+                '@id': 'https://www.zinsight.co.kr/#website',
+                'url': 'https://www.zinsight.co.kr',
                 'name': '진사이트',
                 'alternateName': ['Zinsight'],
                 'description': '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
                 'inLanguage': 'ko-KR',
                 'publisher': {
-                    '@id': 'https://zinsight.co.kr/#organization',
+                    '@id': 'https://www.zinsight.co.kr/#organization',
                 },
                 'potentialAction': {
                     '@type': 'SearchAction',
-                    'target': 'https://zinsight.co.kr/insight-radar?q={search_term_string}',
+                    'target': 'https://www.zinsight.co.kr/insight-radar?q={search_term_string}',
                     'query-input': 'required name=search_term_string',
                 },
             },
             {
                 '@type': 'SiteNavigationElement',
-                '@id': 'https://zinsight.co.kr/#nav-magazine',
+                '@id': 'https://www.zinsight.co.kr/#nav-magazine',
                 'name': '매거진',
-                'url': 'https://zinsight.co.kr/magazine',
+                'url': 'https://www.zinsight.co.kr/magazine',
             },
             {
                 '@type': 'SiteNavigationElement',
-                '@id': 'https://zinsight.co.kr/#nav-radar',
+                '@id': 'https://www.zinsight.co.kr/#nav-radar',
                 'name': '인사이트 레이더',
-                'url': 'https://zinsight.co.kr/insight-radar',
+                'url': 'https://www.zinsight.co.kr/insight-radar',
             },
         ],
     };
@@ -122,7 +122,7 @@ export default async function PublicHomePage() {
                         미래를 여는 데이터, <br className="hidden sm:inline" /> AI 시대를 선도하는 마케팅 분석.
                     </h1>
                     <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant max-w-3xl mx-auto mb-8 sm:mb-12 break-keep">
-                        진사이트(Zinsight)는 관내 기업 리서치와 차세대 검색 최적화(AEO·SEO·GEO) 트렌드를 <br className="hidden sm:inline" /> 결합하여, 지역 기업을 위한 프리미엄 마케팅 통찰력을 제공합니다.
+                        진사이트는 관내 기업 리서치와 차세대 검색 최적화(AEO·SEO·GEO) 트렌드를 <br className="hidden sm:inline" /> 결합하여, 지역 기업을 위한 프리미엄 마케팅 통찰력을 제공합니다.
                     </p>
 
                     {/* 통합 검색바 (인사이트 레이더 이동 버튼으로 사용되던 부분 주석 처리) */}
