@@ -408,8 +408,15 @@ export function MagazineForm({
                 // Edit Mode
                 const res = await updateMagazinePost(post.id, submitPayload);
 
+                const wasDraft = post.status === 'DRAFT';
                 if (res.success) {
-                    toast.success(isDraft ? '임시 저장이 완료되었습니다.' : '포스트가 성공적으로 수정되었습니다!');
+                    if (isDraft) {
+                        toast.success('임시 저장이 완료되었습니다.');
+                    } else if (wasDraft) {
+                        toast.success('초안이 성공적으로 발행되었습니다! 🎉');
+                    } else {
+                        toast.success('포스트가 성공적으로 수정되었습니다!');
+                    }
                     router.push('/admin/magazine');
                 } else {
                     toast.error('수정 실패: ' + res.error);
@@ -456,32 +463,73 @@ export function MagazineForm({
 
     return (
         <div className="space-y-6">
-            {/* Tab Switched Header */}
-            <div className="flex border-b border-slate-200">
-                <button
-                    type="button"
-                    className={`flex items-center gap-1.5 pb-3 text-sm font-semibold px-5 border-b-2 transition-all ${
-                        activeTab === 'edit'
-                            ? 'border-indigo-600 text-indigo-600 font-bold'
-                            : 'border-transparent text-slate-400 hover:text-slate-600'
-                    }`}
-                    onClick={() => setActiveTab('edit')}
-                >
-                    <Edit3 className="w-4 h-4" />
-                    에디터 (Edit)
-                </button>
-                <button
-                    type="button"
-                    className={`flex items-center gap-1.5 pb-3 text-sm font-semibold px-5 border-b-2 transition-all ${
-                        activeTab === 'preview'
-                            ? 'border-indigo-600 text-indigo-600 font-bold'
-                            : 'border-transparent text-slate-400 hover:text-slate-600'
-                    }`}
-                    onClick={() => setActiveTab('preview')}
-                >
-                    <Eye className="w-4 h-4" />
-                    미리보기 (Preview)
-                </button>
+            {/* Tab Switched Header & Quick Actions */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-4">
+                <div className="flex">
+                    <button
+                        type="button"
+                        className={`flex items-center gap-1.5 pb-3 text-sm font-semibold px-5 border-b-2 transition-all -mb-3 ${
+                            activeTab === 'edit'
+                                ? 'border-indigo-600 text-indigo-600 font-bold'
+                                : 'border-transparent text-slate-400 hover:text-slate-600'
+                        }`}
+                        onClick={() => setActiveTab('edit')}
+                    >
+                        <Edit3 className="w-4 h-4" />
+                        에디터 (Edit)
+                    </button>
+                    <button
+                        type="button"
+                        className={`flex items-center gap-1.5 pb-3 text-sm font-semibold px-5 border-b-2 transition-all -mb-3 ${
+                            activeTab === 'preview'
+                                ? 'border-indigo-600 text-indigo-600 font-bold'
+                                : 'border-transparent text-slate-400 hover:text-slate-600'
+                        }`}
+                        onClick={() => setActiveTab('preview')}
+                    >
+                        <Eye className="w-4 h-4" />
+                        미리보기 (Preview)
+                    </button>
+                </div>
+
+                <div className="flex items-center gap-3">
+                    {post && (
+                        <div className="flex items-center gap-1.5 mr-2">
+                            <span className="text-xs text-slate-400">상태:</span>
+                            {post.status === 'PUBLISHED' ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    ● 발행됨
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    ◐ 초안 (미발행)
+                                </span>
+                            )}
+                        </div>
+                    )}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-9 px-4 bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-300 font-semibold text-xs"
+                        onClick={(e) => handleSubmit(e, 'DRAFT')}
+                        disabled={isPending}
+                    >
+                        임시저장
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        className="h-9 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs"
+                        onClick={(e) => handleSubmit(e, 'PUBLISHED')}
+                        disabled={isPending}
+                    >
+                        {isPending ? (
+                            <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                        ) : null}
+                        {post?.status === 'PUBLISHED' ? '수정 완료' : '발행하기'}
+                    </Button>
+                </div>
             </div>
 
             <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8">
@@ -1343,16 +1391,16 @@ export function MagazineForm({
                         </Button>
                         <Button
                             type="button"
-                            onClick={(e) => handleSubmit(e, formData.status)}
+                            onClick={(e) => handleSubmit(e, 'PUBLISHED')}
                             className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
                             disabled={isPending}
                         >
                             {isPending ? (
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : post ? (
-                                formData.status === 'DRAFT' ? '초안 수정 저장' : '수정 완료'
+                            ) : post?.status === 'PUBLISHED' ? (
+                                '수정 완료'
                             ) : (
-                                formData.status === 'DRAFT' ? '초안으로 저장' : '매거진 포스트 발행'
+                                '발행하기'
                             )}
                         </Button>
                     </div>
