@@ -977,10 +977,10 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     <Input
                                         value={aliases}
                                         onChange={e => setAliases(e.target.value)}
-                                        placeholder="안양진흥원, APA (쉼표 구분)"
+                                        placeholder="안양진흥원\nAPA\n(줄바꿈으로 구분)"
                                         className="h-8 text-xs"
                                     />
-                                    <p className="text-[10px] text-muted-foreground">뉴스 크롤링 시 일치 검사에 활용됩니다.</p>
+                                    <p className="text-[10px] text-muted-foreground">줄바꿈으로 구분. 뉴스 크롤링 시 일치 검사에 활용됩니다.</p>
                                 </div>
                                 <div className="space-y-1.5">
                                     <div className="flex items-center justify-between">
@@ -1000,7 +1000,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                         ref={referencesTextareaRef}
                                         value={keyReferences}
                                         onChange={e => setKeyReferences(e.target.value)}
-                                        placeholder="2024 유망중소기업 선정&#10;2023 글로벌 강소기업 지정 (줄바꿈 또는 쉼표 구분)"
+                                        placeholder="2024 유망중소기업 선정&#10;2023 글로벌 강소기업 지정&#10;(한 줄에 한 항목씩 입력)"
                                         rows={3}
                                         className="text-xs min-h-[68px]"
                                     />
