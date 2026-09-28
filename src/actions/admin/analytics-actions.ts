@@ -165,8 +165,8 @@ export async function getArticleAnalyticsSummary(
     const gscDateRange = buildGscDateRange(periodDays);
     const isLocal = post.category?.isLocal && post.region;
     const pageUrl = isLocal
-        ? `https://zinsight.co.kr/magazine/local/${post.region?.slug}/${post.slug}`
-        : `https://zinsight.co.kr/magazine/tech-marketing/${post.slug}`;
+        ? `https://www.zinsight.co.kr/magazine/local/${post.region?.slug}/${post.slug}`
+        : `https://www.zinsight.co.kr/magazine/tech-marketing/${post.slug}`;
 
     // content HTML에서 외부 링크 추출 (cheerio)
     const registeredLinks = extractExternalLinks(post.content ?? '');
@@ -331,7 +331,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
 
     const dateRange = buildDateRange(periodDays);
     const orgIdentifier = org.slug || String(org.id);
-    const pageUrl = `https://zinsight.co.kr/insight-radar/${orgIdentifier}`;
+    const pageUrl = `https://www.zinsight.co.kr/insight-radar/${orgIdentifier}`;
 
     // F-02: 조직 등록 링크 수집 (company_url + backlinks JSON)
     const orgLinks: string[] = [];

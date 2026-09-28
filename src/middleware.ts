@@ -11,6 +11,14 @@ export function middleware(request: NextRequest) {
         request.nextUrl.hostname === 'localhost' ||
         request.nextUrl.hostname === '127.0.0.1';
 
+    // ── 운영 환경 non-www -> www 301 영구 리다이렉트 (모든 라우트 최우선 적용) ──
+    if (!isLocalTest && request.nextUrl.hostname === 'zinsight.co.kr') {
+        const url = request.nextUrl.clone();
+        url.hostname = 'www.zinsight.co.kr';
+        url.protocol = 'https:';
+        return NextResponse.redirect(url, 301);
+    }
+
     // ── 인증이 필요한 경로: /admin 하위 전체 ──
     const isAdminPath = pathname.startsWith('/admin');
 
@@ -39,12 +47,6 @@ export function middleware(request: NextRequest) {
         response.cookies.set('is_local_test', 'true', { path: '/' });
     }
 
-    // www 리다이렉트 (운영 환경에서 non-www 접속 시)
-    if (!isLocalTest && request.nextUrl.hostname === 'zinsight.co.kr') {
-        const url = request.nextUrl.clone();
-        url.hostname = 'www.zinsight.co.kr';
-        return NextResponse.redirect(url, 301);
-    }
 
     return response;
 }

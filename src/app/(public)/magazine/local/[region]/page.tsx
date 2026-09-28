@@ -31,7 +31,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { region: regionSlug } = await params;
-    const domain = process.env.DOMAIN || 'zinsight.co.kr';
+    const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
 
     let region = null;
