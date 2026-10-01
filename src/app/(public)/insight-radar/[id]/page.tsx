@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { ArrowLeft, ExternalLink, Target, Tag } from 'lucide-react';
 import { getRadarCompanyDetail } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
-import { FormattedBusinessSummary } from '@/components/public/insight-radar/FormattedBusinessSummary';
+import { CollapsibleBusinessSummary } from '@/components/public/insight-radar/CollapsibleBusinessSummary';
+import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -188,11 +189,11 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <main className="mx-auto max-w-zi-container px-6 py-12">
+            <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-6 sm:py-12">
                 {/* ── 뒤로가기 ── */}
                 <Link
                     href="/insight-radar"
-                    className="mb-8 inline-flex items-center gap-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-primary"
+                    className="mb-6 sm:mb-8 inline-flex items-center gap-2 text-zi-label font-semibold text-zi-on-surface-variant transition-colors hover:text-zi-primary"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     인사이트 레이더로 돌아가기
@@ -201,143 +202,132 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 {/* ─────────────────────────────── */}
                 {/* 1. Header & Profile Section     */}
                 {/* ─────────────────────────────── */}
-                <section className="mb-12">
+                <section className="mb-10 sm:mb-12">
                     {/* 1. Header Section */}
-                    <div className="border-b border-slate-200 pb-10 mb-8">
-                        <div className="mb-6">
-                            <div className="flex items-start justify-between gap-6 mb-6">
-                                <h1 className="flex-1 min-w-0 text-3xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
+                    <div className="border-b border-slate-200 pb-8 sm:pb-10 mb-6 sm:mb-8">
+                        <div className="mb-4 sm:mb-6">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
+                                <h1 className="flex-1 min-w-0 text-2xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
                                     {company.company_name}
                                 </h1>
                                 {backlinksList.length > 0 && (
-                                    <div className="flex flex-wrap justify-end items-center gap-2 shrink-0 pt-1">
+                                    <div className="flex flex-wrap items-center gap-2 shrink-0 pt-0 sm:pt-1">
                                         {backlinksList.map((link, idx) => (
                                             <a 
                                                 key={idx}
                                                 href={link.url.startsWith('http') ? link.url : `https://${link.url}`} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer" 
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-semibold text-sm transition-all duration-200 shadow-sm group"
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-zi-blue hover:bg-zi-blue hover:text-white font-semibold text-xs sm:text-sm transition-all duration-200 shadow-sm group"
                                             >
                                                 <span>{link.title || '바로가기'}</span>
-                                                <ExternalLink size={14} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                                                <ExternalLink size={13} className="transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                                             </a>
                                         ))}
                                     </div>
                                 )}
                             </div>
-                            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+                            <div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-3">
                                 {/* 지자체/지역 태그 */}
-                                <div className="flex flex-wrap gap-2.5">
+                                <div className="flex flex-wrap gap-2">
                                     {company.region && (
-                                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-bold text-zi-secondary bg-teal-50 border border-teal-100 rounded-lg">
-                                            <Tag size={14} /> {company.region.name}
+                                        <span className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-bold text-zi-secondary bg-teal-50 border border-teal-100 rounded-lg">
+                                            <Tag size={13} /> {company.region.name}
                                         </span>
                                     )}
                                 </div>
                             </div>
                         </div>
                         
-                        <FormattedBusinessSummary
+                        <CollapsibleBusinessSummary
                             text={company.business_summary}
                             fallback="등록된 비즈니스 요약이 없습니다."
-                            className="text-xl text-slate-600 max-w-4xl font-medium"
+                            className="text-base sm:text-xl text-slate-600 max-w-4xl font-medium"
                             bulletColor="text-zi-secondary"
                             paragraphSpacing="space-y-2.5"
                         />
                     </div>
 
                     {/* 2. Metadata Insight Bar */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 py-7 px-8 bg-zi-blue rounded-xl border border-blue-400/20 mb-10 shadow-sm">
-                        <div className="flex flex-col gap-1.5">
-                            <span className="text-sm text-blue-100 font-medium">대표자</span>
-                            <span className="text-base text-white font-semibold">{company.ceo_name || '-'}</span>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-8 py-5 sm:py-7 px-5 sm:px-8 bg-zi-blue rounded-xl border border-blue-400/20 mb-8 sm:mb-10 shadow-sm">
+                        <div className="flex flex-col gap-1 sm:gap-1.5">
+                            <span className="text-xs sm:text-sm text-blue-100 font-medium">대표자</span>
+                            <span className="text-sm sm:text-base text-white font-semibold">{company.ceo_name || '-'}</span>
                         </div>
-                        <div className="flex flex-col gap-1.5 md:border-l border-white/20 md:pl-8">
-                            <span className="text-sm text-blue-100 font-medium">설립연도</span>
-                            <span className="text-base text-white font-semibold">{company.founded_year || '-'}</span>
+                        <div className="flex flex-col gap-1 sm:gap-1.5 md:border-l border-white/20 md:pl-8">
+                            <span className="text-xs sm:text-sm text-blue-100 font-medium">설립연도</span>
+                            <span className="text-sm sm:text-base text-white font-semibold">{company.founded_year || '-'}</span>
                         </div>
-                        <div className="flex flex-col gap-1.5 md:border-l border-white/20 md:pl-8">
-                            <span className="text-sm text-blue-100 font-medium">소재지</span>
-                            <span className="text-base text-white font-semibold">{company.hq_location || '-'}</span>
+                        <div className="flex flex-col gap-1 sm:gap-1.5 md:border-l border-white/20 md:pl-8">
+                            <span className="text-xs sm:text-sm text-blue-100 font-medium">소재지</span>
+                            <span className="text-sm sm:text-base text-white font-semibold line-clamp-1" title={company.hq_location || '-'}>{company.hq_location || '-'}</span>
                         </div>
-                        <div className="flex flex-col gap-1.5 md:border-l border-white/20 md:pl-8">
-                            <span className="text-sm text-blue-100 font-medium">조직유형</span>
-                            <span className="text-base text-white font-semibold">{company.entity_type || 'Enterprise'}</span>
+                        <div className="flex flex-col gap-1 sm:gap-1.5 md:border-l border-white/20 md:pl-8">
+                            <span className="text-xs sm:text-sm text-blue-100 font-medium">조직유형</span>
+                            <span className="text-sm sm:text-base text-white font-semibold">{company.entity_type || 'Enterprise'}</span>
                         </div>
                     </div>
 
                     {/* 3. Key References Section */}
                     {Array.isArray(company.key_references) && company.key_references.length > 0 && (
-                        <div>
-                            <h3 className="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
-                                <Target size={18} className="text-[#002B5B]" /> 주요 레퍼런스
-                            </h3>
-                            <div className="flex flex-wrap gap-2">
-                                {(company.key_references as string[]).map((ref, i) => (
-                                    <span key={i} className="px-4 py-1.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-full hover:border-[#002B5B] transition-colors cursor-default shadow-sm">
-                                        {ref}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
+                        <CollapsibleReferences references={company.key_references as string[]} />
                     )}
                 </section>
 
                 {/* ─────────────────────────────── */}
                 {/* 2. Strategic Positioning        */}
                 {/* ─────────────────────────────── */}
-                <section className="mb-12">
-                    <div className="mb-6 flex items-center gap-2">
-                        <Target className="h-6 w-6 text-zi-blue" />
-                        <h2 className="text-2xl font-bold text-zi-primary font-serif tracking-tight">Strategic Positioning</h2>
+                <section className="mb-10 sm:mb-12">
+                    <div className="mb-4 sm:mb-6 flex items-center gap-2">
+                        <Target className="h-5 w-5 sm:h-6 sm:w-6 text-zi-blue" />
+                        <h2 className="text-xl sm:text-2xl font-bold text-zi-primary font-serif tracking-tight">Strategic Positioning</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
                         {/* Products */}
-                        <div className="border border-zi-divider bg-white p-6 rounded-xl shadow-sm">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">핵심 제품 및 서비스</h4>
-                            <div className="flex flex-wrap gap-2">
+                        <div className="border border-zi-divider bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sm:mb-4">핵심 제품 및 서비스</h4>
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                 {coreKw?.products && coreKw.products.length > 0 ? (
                                     coreKw.products.map((p: string, i: number) => (
-                                        <span key={i} className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium border border-blue-100">
+                                        <span key={i} className="px-2.5 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm font-medium border border-blue-100">
                                             {p}
                                         </span>
                                     ))
                                 ) : (
-                                    <span className="text-sm text-slate-400 italic">정보 없음</span>
+                                    <span className="text-xs sm:text-sm text-slate-400 italic">정보 없음</span>
                                 )}
                             </div>
                         </div>
 
                         {/* Technology */}
-                        <div className="border border-zi-divider bg-white p-6 rounded-xl shadow-sm">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">핵심 기술 (Tech)</h4>
-                            <div className="flex flex-wrap gap-2">
+                        <div className="border border-zi-divider bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sm:mb-4">핵심 기술 (Tech)</h4>
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                 {coreKw?.technology && coreKw.technology.length > 0 ? (
                                     coreKw.technology.map((t: string, i: number) => (
-                                        <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-medium border border-indigo-100">
+                                        <span key={i} className="px-2.5 sm:px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs sm:text-sm font-medium border border-indigo-100">
                                             {t}
                                         </span>
                                     ))
                                 ) : (
-                                    <span className="text-sm text-slate-400 italic">정보 없음</span>
+                                    <span className="text-xs sm:text-sm text-slate-400 italic">정보 없음</span>
                                 )}
                             </div>
                         </div>
 
                         {/* Target Market */}
-                        <div className="border border-zi-divider bg-white p-6 rounded-xl shadow-sm">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">타겟 시장 (Market)</h4>
-                            <div className="flex flex-wrap gap-2">
+                        <div className="border border-zi-divider bg-white p-4 sm:p-6 rounded-xl shadow-sm">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sm:mb-4">타겟 시장 (Market)</h4>
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
                                 {coreKw?.target_market && coreKw.target_market.length > 0 ? (
                                     coreKw.target_market.map((m: string, i: number) => (
-                                        <span key={i} className="px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-medium border border-emerald-100">
+                                        <span key={i} className="px-2.5 sm:px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs sm:text-sm font-medium border border-emerald-100">
                                             {m}
                                         </span>
                                     ))
                                 ) : (
-                                    <span className="text-sm text-slate-400 italic">정보 없음</span>
+                                    <span className="text-xs sm:text-sm text-slate-400 italic">정보 없음</span>
                                 )}
                             </div>
                         </div>
@@ -348,19 +338,19 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 {/* 3. Activity Timeline            */}
                 {/* ─────────────────────────────── */}
                 <section>
-                    <div className="mb-8 flex items-center justify-between border-b border-zi-divider pb-4">
-                        <h2 className="text-2xl font-bold text-zi-primary font-serif tracking-tight flex items-center gap-2">
-                            <Tag className="h-6 w-6 text-slate-400" />
+                    <div className="mb-6 sm:mb-8 flex items-center justify-between border-b border-zi-divider pb-3 sm:pb-4">
+                        <h2 className="text-xl sm:text-2xl font-bold text-zi-primary font-serif tracking-tight flex items-center gap-2">
+                            <Tag className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
                             Activity Timeline
                         </h2>
-                        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-semibold">
+                        <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-600 rounded-full text-xs sm:text-sm font-semibold">
                             총 {company.articleCount.toLocaleString()}건 중 주요 {company.recentArticles.length}건
                         </span>
                     </div>
 
-                    <div className="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                    <div className="space-y-0 relative before:absolute before:inset-0 before:ml-4 sm:before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
                         {company.recentArticles.length > 0 ? (
-                            company.recentArticles.map((article: typeof company.recentArticles[number], idx: number) => (
+                            company.recentArticles.map((article: typeof company.recentArticles[number]) => (
                                 <TimelineItem
                                     key={article.id}
                                     date={article.pub_date
@@ -408,27 +398,27 @@ function TimelineItem({
 }) {
     const isMagazine = category === 'ZINSIGHT_MAGAZINE';
     return (
-        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-4">
+        <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active py-3 sm:py-4">
             {/* 도트 마커 */}
-            <div className={`flex items-center justify-center w-10 h-10 rounded-full border-4 border-white text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 ${isMagazine ? 'bg-amber-500' : 'bg-zi-blue'}`}>
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+            <div className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full border-3 sm:border-4 border-white text-slate-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 ${isMagazine ? 'bg-amber-500' : 'bg-zi-blue'}`}>
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full"></div>
             </div>
             
             {/* 컨텐츠 카드 */}
-            <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-6 rounded-xl border shadow-sm transition-all hover:shadow-md ${isMagazine ? 'border-amber-200 bg-amber-50/5' : 'border-zi-divider'}`}>
-                <div className="flex items-center justify-between mb-3">
+            <div className={`w-[calc(100%-2.75rem)] sm:w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-white p-4 sm:p-6 rounded-xl border shadow-sm transition-all hover:shadow-md ${isMagazine ? 'border-amber-200 bg-amber-50/5' : 'border-zi-divider'}`}>
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
                     {isMagazine ? (
-                        <span className="text-xs font-extrabold uppercase text-amber-700 bg-amber-100/80 px-2.5 py-1 rounded border border-amber-200 flex items-center gap-1">
+                        <span className="text-[11px] sm:text-xs font-extrabold uppercase text-amber-700 bg-amber-100/80 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded border border-amber-200 flex items-center gap-1">
                             <span aria-hidden="true">✦</span> 진사이트 PARTNER
                         </span>
                     ) : (
-                        <span className="text-xs font-bold uppercase text-zi-blue bg-blue-50 px-2 py-1 rounded">{category}</span>
+                        <span className="text-[11px] sm:text-xs font-bold uppercase text-zi-blue bg-blue-50 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded">{category}</span>
                     )}
-                    <time className="text-xs font-semibold text-slate-400">{date}</time>
+                    <time className="text-[11px] sm:text-xs font-semibold text-slate-400">{date}</time>
                 </div>
-                <h3 className="mb-3 text-base font-bold text-zi-primary leading-snug">{title}</h3>
+                <h3 className="mb-2 sm:mb-3 text-sm sm:text-base font-bold text-zi-primary leading-snug">{title}</h3>
                 {summary && (
-                    <p className="line-clamp-2 text-sm text-slate-500 mb-4 leading-relaxed">{summary}</p>
+                    <p className="line-clamp-2 text-xs sm:text-sm text-slate-500 mb-3 sm:mb-4 leading-relaxed">{summary}</p>
                 )}
                 {url && (
                     isMagazine ? (
