@@ -70,17 +70,17 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
             </div>
 
             {/* 메인 검색 컨테이너 (최신 트렌드 플로팅 바) */}
-            <div className="relative z-10 max-w-5xl mx-auto bg-white p-2 rounded-[18px] sm:rounded-[24px] shadow-xl flex flex-col md:flex-row gap-2 items-center border border-white/40 backdrop-blur-xl">
+            <div className="relative z-10 max-w-5xl mx-auto bg-white p-2 rounded-[16px] sm:rounded-[24px] shadow-xl flex flex-col md:flex-row gap-2 items-center border border-white/40 backdrop-blur-xl">
 
                 {/* 산업 필터 */}
                 <div className="relative w-full md:w-[260px] shrink-0">
-                    <div className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-blue-500">
-                        <Filter className="h-5 w-5" />
+                    <div className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-blue-500">
+                        <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
                     <select
                         value={regionId}
                         onChange={(e) => setRegionId(e.target.value)}
-                        className="h-16 w-full appearance-none rounded-[18px] bg-slate-50/50 pl-14 pr-12 text-[15px] font-bold text-slate-700 focus:bg-blue-50/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer border border-transparent hover:border-slate-200"
+                        className="h-12 sm:h-16 w-full appearance-none rounded-[12px] sm:rounded-[18px] bg-slate-50/50 pl-11 sm:pl-14 pr-10 sm:pr-12 text-[14px] sm:text-[15px] font-bold text-slate-700 focus:bg-blue-50/50 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all cursor-pointer border border-transparent hover:border-slate-200"
                     >
                         <option value="">전체 지역</option>
                         {regions.map((reg) => (
@@ -89,7 +89,7 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
                             </option>
                         ))}
                     </select>
-                    <div className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <div className="pointer-events-none absolute right-4 sm:right-5 top-1/2 -translate-y-1/2 text-slate-400">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                         </svg>
@@ -100,8 +100,8 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
 
                 {/* 검색어 입력란 */}
                 <div className="relative flex-1 w-full">
-                    <div className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-blue-500">
-                        <Search className="h-5 w-5" />
+                    <div className="pointer-events-none absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 text-blue-500">
+                        <Search className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
                     <input
                         type="text"
@@ -109,14 +109,14 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
                         onChange={(e) => setQ(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                         placeholder="조직명, 핵심 키워드, 관련 기술 등을 검색해보세요"
-                        className="h-16 w-full rounded-[18px] bg-transparent pl-14 pr-12 text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-slate-50/50 transition-all border border-transparent hover:border-slate-200"
+                        className="h-12 sm:h-16 w-full rounded-[12px] sm:rounded-[18px] bg-transparent pl-11 sm:pl-14 pr-10 sm:pr-12 text-[14px] sm:text-[16px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:bg-slate-50/50 transition-all border border-transparent hover:border-slate-200"
                     />
                     {q && (
                         <button
                             onClick={() => setQ('')}
-                            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full p-1.5 transition-colors"
+                            className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 bg-slate-100 rounded-full p-1 sm:p-1.5 transition-colors"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                     )}
                 </div>
@@ -126,9 +126,9 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
                     {/* 검색 버튼 */}
                     <button
                         onClick={handleSearch}
-                        className="h-16 flex-1 md:flex-none md:px-10 rounded-[18px] bg-blue-600 text-white font-bold text-[16px] hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
+                        className="h-12 sm:h-16 flex-1 md:flex-none md:px-10 rounded-[12px] sm:rounded-[18px] bg-blue-600 text-white font-bold text-[15px] sm:text-[16px] hover:bg-blue-700 active:scale-95 transition-all shadow-md shadow-blue-600/20 flex items-center justify-center gap-2"
                     >
-                        <Search className="h-5 w-5 md:hidden lg:block" />
+                        <Search className="h-4 w-4 sm:h-5 sm:w-5 md:hidden lg:block" />
                         <span>검색</span>
                     </button>
 
@@ -136,10 +136,10 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
                     {(q || regionId) && (
                         <button
                             onClick={handleClear}
-                            className="h-16 px-5 rounded-[18px] border border-slate-200 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 active:scale-95 transition-all flex items-center justify-center"
+                            className="h-12 sm:h-16 px-4 sm:px-5 rounded-[12px] sm:rounded-[18px] border border-slate-200 bg-white text-slate-500 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50 active:scale-95 transition-all flex items-center justify-center"
                             title="검색 조건 초기화"
                         >
-                            <X className="h-6 w-6" />
+                            <X className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
                     )}
                 </div>

@@ -82,11 +82,14 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
                 </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {companies.map((company, index) => {
+                {companies.map((company) => {
                 const kw = parseKeywords(company.core_keywords);
-                const allKws = kw 
-                    ? [...(kw.products || []), ...(kw.technology || []), ...(kw.target_market || [])].slice(0, 4)
+                const allKwsRaw = kw 
+                    ? [...(kw.products || []), ...(kw.technology || []), ...(kw.target_market || [])]
                     : [];
+                // 데스크톱에서는 최대 4개, 모바일에서는 2개 노출 + (+N 축약)
+                const displayKws = allKwsRaw.slice(0, 4);
+                const remainingMobileCount = allKwsRaw.length - 2;
 
                 // 조직 타입(entity_type)을 기반으로 테마와 아이콘을 결정
                 const config = getEntityConfig(company.entity_type);
@@ -100,72 +103,86 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
                         className={`group flex flex-col border border-zi-divider bg-white rounded-zi-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-zi-primary/40 border-t-[4px] ${theme.border}`}
                     >
                         {/* Header Section */}
-                        <div className="p-6 pb-5 border-b border-zi-divider/50 flex-grow-0">
-                            <div className="flex items-start justify-between gap-4 mb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${theme.iconBg} transition-transform duration-300 group-hover:scale-110 shadow-sm border border-white`}>
-                                        <LottieIcon name={iconName} size={42} hover={true} loop={false} autoplay={false} />
+                        <div className="p-4 sm:p-6 pb-3.5 sm:pb-5 border-b border-zi-divider/50 flex-grow-0">
+                            <div className="flex items-start justify-between gap-3 sm:gap-4 mb-2 sm:mb-3">
+                                <div className="flex items-center gap-3 min-w-0">
+                                    <div className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl ${theme.iconBg} transition-transform duration-300 group-hover:scale-110 shadow-sm border border-white`}>
+                                        <LottieIcon name={iconName} size={36} hover={true} loop={false} autoplay={false} />
                                     </div>
-                                    <div className="flex flex-col">
-                                        <h3 className="font-bold text-[17px] text-zi-on-surface group-hover:text-zi-primary transition-colors line-clamp-1 leading-snug">
+                                    <div className="flex flex-col min-w-0">
+                                        <h3 className="font-bold text-[16px] sm:text-[17px] text-zi-on-surface group-hover:text-zi-primary transition-colors line-clamp-1 leading-snug">
                                             {company.company_name}
                                         </h3>
-                                        <div className="mt-1.5">
+                                        {/* 조직 타입 & 지역 뱃지 (가로 인라인 배치로 세로 공간 절약) */}
+                                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                                             <span className="inline-flex bg-zi-surface-container px-2 py-0.5 rounded text-[11px] font-bold text-zi-secondary uppercase tracking-tighter shadow-sm">
                                                 {company.entity_type || '기업'}
                                             </span>
+                                            {company.region ? (
+                                                <span className="text-[11px] font-medium text-zi-on-surface-variant bg-zi-surface px-2 py-0.5 rounded border border-zi-divider">
+                                                    {company.region.name}
+                                                </span>
+                                            ) : company.hq_location ? (
+                                                <span className="text-[11px] font-medium text-zi-on-surface-variant bg-zi-surface px-2 py-0.5 rounded border border-zi-divider">
+                                                    {company.hq_location}
+                                                </span>
+                                            ) : null}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Region */}
-                            <div className="flex flex-wrap gap-1.5 mt-2">
-                                {company.region ? (
-                                    <span className="text-[12px] font-medium text-zi-on-surface-variant bg-zi-surface px-2.5 py-1 rounded-md border border-zi-divider hover:bg-zi-surface-high transition-colors">
-                                        {company.region.name}
-                                    </span>
-                                ) : company.hq_location ? (
-                                    <span className="text-[12px] font-medium text-zi-on-surface-variant bg-zi-surface px-2.5 py-1 rounded-md border border-zi-divider hover:bg-zi-surface-high transition-colors">
-                                        {company.hq_location}
-                                    </span>
-                                ) : null}
-                            </div>
                         </div>
 
                         {/* Body Section */}
-                        <div className="p-6 flex-grow flex flex-col justify-start gap-4 bg-zi-surface/20">
+                        <div className="p-4 sm:p-6 flex-grow flex flex-col justify-start gap-3 sm:gap-4 bg-zi-surface/20">
                             {/* Keywords */}
                             <div>
-                                <div className="flex items-center gap-1.5 mb-3 text-zi-on-surface-variant">
-                                    <Tag className="h-3.5 w-3.5" />
-                                    <span className="text-xs font-bold uppercase tracking-widest text-zi-outline">핵심 키워드</span>
+                                <div className="flex items-center gap-1.5 mb-2.5 text-zi-on-surface-variant">
+                                    <Tag className="h-3.5 w-3.5 text-zi-outline shrink-0" />
+                                    <span className="text-xs font-bold uppercase tracking-widest text-zi-outline hidden sm:inline">핵심 키워드</span>
+                                    <span className="text-xs font-bold text-zi-outline sm:hidden">키워드</span>
                                 </div>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {allKws.length > 0 ? (
-                                        allKws.map((k, i) => (
-                                            <span 
-                                                key={i} 
-                                                className={`px-2.5 py-1 rounded-md border text-[12px] font-semibold transition-colors shadow-sm ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder}`}
-                                            >
-                                                {k}
-                                            </span>
-                                        ))
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                    {displayKws.length > 0 ? (
+                                        <>
+                                            {displayKws.map((k, i) => (
+                                                <span 
+                                                    key={i} 
+                                                    className={`px-2.5 py-1 rounded-md border text-[11px] sm:text-[12px] font-semibold transition-colors shadow-sm ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder} ${
+                                                        i >= 2 ? 'hidden sm:inline-flex' : 'inline-flex'
+                                                    }`}
+                                                >
+                                                    {k}
+                                                </span>
+                                            ))}
+                                            {/* 모바일 2개 초과 시 +N 뱃지 */}
+                                            {remainingMobileCount > 0 && (
+                                                <span 
+                                                    className="sm:hidden px-2 py-0.5 rounded-md border text-[11px] font-bold text-zi-outline bg-white border-zi-divider"
+                                                    title={`외 ${remainingMobileCount}개 키워드`}
+                                                >
+                                                    +{remainingMobileCount}
+                                                </span>
+                                            )}
+                                        </>
                                     ) : (
-                                        <span className="text-[13px] text-zi-outline italic bg-white/50 px-3 py-1.5 rounded-md border border-dashed border-zi-divider">키워드 없음</span>
+                                        <span className="text-[12px] sm:text-[13px] text-zi-outline italic bg-white/50 px-2.5 py-1 rounded-md border border-dashed border-zi-divider">키워드 없음</span>
                                     )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Footer Section */}
-                        <div className="px-6 py-4 mt-auto border-t border-zi-divider/50 bg-zi-surface-container-low/40 flex items-center justify-between rounded-b-zi-card">
-                            <div className="flex items-center gap-2 text-zi-on-surface-variant">
-                                <Newspaper className="h-4 w-4" />
-                                <span className="text-[13px] font-bold text-zi-outline">연관 기사</span>
+                        <div className="px-4 sm:px-6 py-3 sm:py-4 mt-auto border-t border-zi-divider/50 bg-zi-surface-container-low/40 flex items-center justify-between rounded-b-zi-card">
+                            <div className="flex items-center gap-1.5 sm:gap-2 text-zi-on-surface-variant">
+                                <Newspaper className="h-4 w-4 shrink-0 text-zi-outline" />
+                                <span className="text-[12px] sm:text-[13px] font-bold text-zi-outline">
+                                    <span className="hidden sm:inline">연관 기사</span>
+                                    <span className="sm:hidden">기사</span>
+                                </span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center justify-center text-white px-3 py-0.5 rounded-full text-xs font-bold transition-transform group-hover:scale-105 shadow-sm ${theme.articleBg}`}>
+                                <span className={`inline-flex items-center justify-center text-white px-2.5 sm:px-3 py-0.5 rounded-full text-xs font-bold transition-transform group-hover:scale-105 shadow-sm ${theme.articleBg}`}>
                                     {company.articleCount}
                                 </span>
                                 <ArrowRight className={`h-4 w-4 text-zi-outline transition-transform group-hover:translate-x-1 ${theme.arrowHover}`} />
