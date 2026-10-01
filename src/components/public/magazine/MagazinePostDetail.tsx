@@ -240,49 +240,43 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
-            <main className="mx-auto max-w-4xl xl:max-w-6xl px-4 sm:px-6 py-8 sm:py-12">
+            <main className="mx-auto max-w-4xl xl:max-w-6xl px-4 sm:px-6 py-5 sm:py-10">
                 <div className={post.organizations && post.organizations.length > 0 ? "xl:grid xl:grid-cols-[1fr_280px] xl:gap-12 items-start xl:relative" : ""}>
                     {/* 메인 기사 영역 */}
                     <div className="min-w-0">
                         {/* 브레드크럼 */}
-                        <div className="mb-8">
+                        <div className="mb-4 sm:mb-6">
                             {breadcrumb}
                         </div>
 
                         {/* 기사 헤더 */}
-                        <header className="mb-12">
-                            <div className="flex flex-wrap items-center gap-3 mb-6">
-                                <span className="text-ui-label font-ui-label font-bold uppercase tracking-widest text-zi-secondary bg-zi-surface-container-high px-3 py-1 rounded-full">
+                        <header className="mb-8 sm:mb-12">
+                            {/* 배지 목록 (점 구분자 대신 독립 칩으로 모바일 줄바꿈 최적화) */}
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
+                                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-zi-secondary bg-zi-surface-container-high px-2.5 sm:px-3 py-1 rounded-full">
                                     {categoryLabel}
                                 </span>
-                                <span className="text-zi-outline text-ui-label">•</span>
-                                <span className="text-ui-label font-ui-label font-bold text-zi-primary uppercase tracking-widest bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full border border-indigo-100">
+                                <span className="text-[11px] sm:text-xs font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-2.5 sm:px-3 py-1 rounded-full border border-indigo-100">
                                     {mainIndustry}
                                 </span>
                                 {post.region && (
-                                    <>
-                                        <span className="text-zi-outline text-ui-label">•</span>
-                                        <span className="text-ui-label font-ui-label font-semibold text-zi-on-surface-variant">
-                                            {post.region.name}
-                                        </span>
-                                    </>
+                                    <span className="text-[11px] sm:text-xs font-semibold text-zi-on-surface-variant bg-zi-surface px-2.5 sm:px-3 py-1 rounded-full border border-zi-divider">
+                                        {post.region.name}
+                                    </span>
                                 )}
                                 {post.isPaid && (
-                                    <>
-                                        <span className="text-zi-outline text-ui-label">•</span>
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
-                                            <span aria-hidden="true">✦</span>
-                                            {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
-                                        </span>
-                                    </>
+                                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full flex items-center gap-1">
+                                        <span aria-hidden="true">✦</span>
+                                        {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
+                                    </span>
                                 )}
                             </div>
 
-                            <h1 className="font-h1 text-[24px] sm:text-[32px] lg:text-h1 text-zi-on-surface mb-6 leading-tight">
+                            <h1 className="font-h1 text-[22px] sm:text-[30px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 leading-snug sm:leading-tight">
                                 {post.title}
                             </h1>
 
-                            <div className="flex items-center gap-4 text-ui-label font-ui-label text-zi-outline">
+                            <div className="flex items-center gap-2.5 sm:gap-4 text-xs sm:text-ui-label font-ui-label text-zi-outline">
                                 <span>발행: {post.author?.name || post.authorName || '진사이트 편집부'}</span>
                                 <span>•</span>
                                 <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>

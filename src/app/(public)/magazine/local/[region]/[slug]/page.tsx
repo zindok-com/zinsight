@@ -320,15 +320,15 @@ export default async function LocalDetailPage({ params }: PageProps) {
     };
 
     const breadcrumb = (
-        <div className="text-[11px] sm:text-xs text-zi-outline font-ui-label flex items-center gap-1.5 flex-wrap">
-            <Link href="/magazine" className="hover:text-zi-secondary transition-colors">Magazine</Link>
-            <span>&gt;</span>
-            <Link href="/magazine/local" className="hover:text-zi-secondary transition-colors">Local Hub</Link>
-            <span>&gt;</span>
-            <Link href={`/magazine/local/${regionSlug}`} className="hover:text-zi-secondary transition-colors">{post.region?.name || 'Local'}</Link>
-            <span>&gt;</span>
-            <span className="text-zi-on-surface-variant font-medium line-clamp-1">{post.title}</span>
-        </div>
+        <nav aria-label="기사 경로" className="text-[11px] sm:text-xs text-zi-outline font-ui-label flex items-center gap-1.5 flex-wrap">
+            <Link href="/magazine" className="hover:text-zi-secondary transition-colors">매거진</Link>
+            <span>/</span>
+            <Link href="/magazine/local" className="hover:text-zi-secondary transition-colors">로컬 허브</Link>
+            <span>/</span>
+            <Link href={`/magazine/local/${regionSlug}`} className="hover:text-zi-secondary transition-colors">{post.region?.name || '로컬'}</Link>
+            <span className="hidden sm:inline">/</span>
+            <span className="text-zi-on-surface-variant font-medium line-clamp-1 hidden sm:inline max-w-sm">{post.title}</span>
+        </nav>
     );
 
     return (
