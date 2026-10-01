@@ -144,28 +144,6 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
                     )}
                 </div>
             </div>
-
-            {/* 최근 검색어 / 추천 키워드 영역 (시각적 장식) */}
-            <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 mt-6 text-sm">
-                <span className="text-blue-200 font-medium mr-2">추천 키워드:</span>
-                {['안양', '광명', '군포', '시흥', '의왕'].map((keyword, idx) => (
-                    <button
-                        key={idx}
-                        onClick={() => {
-                            setQ(keyword);
-                            // Set Q and then immediately push to URL
-                            const params = new URLSearchParams(searchParams.toString());
-                            params.set('q', keyword);
-                            if (regionId) params.set('regionId', regionId);
-                            params.delete('page');
-                            router.push(`/insight-radar?${params.toString()}`);
-                        }}
-                        className="px-3 py-1 rounded-full bg-white/10 text-white hover:bg-white/20 border border-white/10 transition-colors backdrop-blur-sm"
-                    >
-                        #{keyword}
-                    </button>
-                ))}
-            </div>
         </div>
     );
 }
