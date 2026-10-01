@@ -6,6 +6,7 @@ import { getRadarCompanyDetail } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
 import { CollapsibleBusinessSummary } from '@/components/public/insight-radar/CollapsibleBusinessSummary';
 import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
+import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -275,62 +276,47 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 </section>
 
                 {/* ─────────────────────────────── */}
-                {/* 2. Strategic Positioning        */}
+                {/* 2. 전략적 포지셔닝               */}
                 {/* ─────────────────────────────── */}
                 <section className="mb-10 sm:mb-12">
                     <div className="mb-4 sm:mb-6 flex items-center gap-2">
                         <Target className="h-5 w-5 sm:h-6 sm:w-6 text-zi-blue" />
-                        <h2 className="text-xl sm:text-2xl font-bold text-zi-primary font-serif tracking-tight">Strategic Positioning</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-zi-primary font-serif tracking-tight">전략적 포지셔닝</h2>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-start">
                         {/* Products */}
-                        <div className="border border-zi-divider bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sm:mb-4">핵심 제품 및 서비스</h4>
-                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                {coreKw?.products && coreKw.products.length > 0 ? (
-                                    coreKw.products.map((p: string, i: number) => (
-                                        <span key={i} className="px-2.5 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm font-medium border border-blue-100">
-                                            {p}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <span className="text-xs sm:text-sm text-slate-400 italic">정보 없음</span>
-                                )}
-                            </div>
-                        </div>
+                        <CollapsibleTagGroup
+                            title="핵심 제품 및 서비스"
+                            items={coreKw?.products}
+                            badgeStyle={{
+                                bg: 'bg-blue-50',
+                                text: 'text-blue-700',
+                                border: 'border-blue-100',
+                            }}
+                        />
 
                         {/* Technology */}
-                        <div className="border border-zi-divider bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sm:mb-4">핵심 기술 (Tech)</h4>
-                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                {coreKw?.technology && coreKw.technology.length > 0 ? (
-                                    coreKw.technology.map((t: string, i: number) => (
-                                        <span key={i} className="px-2.5 sm:px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs sm:text-sm font-medium border border-indigo-100">
-                                            {t}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <span className="text-xs sm:text-sm text-slate-400 italic">정보 없음</span>
-                                )}
-                            </div>
-                        </div>
+                        <CollapsibleTagGroup
+                            title="핵심 기술 (Tech)"
+                            items={coreKw?.technology}
+                            badgeStyle={{
+                                bg: 'bg-indigo-50',
+                                text: 'text-indigo-700',
+                                border: 'border-indigo-100',
+                            }}
+                        />
 
                         {/* Target Market */}
-                        <div className="border border-zi-divider bg-white p-4 sm:p-6 rounded-xl shadow-sm">
-                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3 sm:mb-4">타겟 시장 (Market)</h4>
-                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                                {coreKw?.target_market && coreKw.target_market.length > 0 ? (
-                                    coreKw.target_market.map((m: string, i: number) => (
-                                        <span key={i} className="px-2.5 sm:px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-xs sm:text-sm font-medium border border-emerald-100">
-                                            {m}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <span className="text-xs sm:text-sm text-slate-400 italic">정보 없음</span>
-                                )}
-                            </div>
-                        </div>
+                        <CollapsibleTagGroup
+                            title="타겟 시장 (Market)"
+                            items={coreKw?.target_market}
+                            badgeStyle={{
+                                bg: 'bg-emerald-50',
+                                text: 'text-emerald-700',
+                                border: 'border-emerald-100',
+                            }}
+                        />
                     </div>
                 </section>
 
