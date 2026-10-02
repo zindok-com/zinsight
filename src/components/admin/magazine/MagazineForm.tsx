@@ -38,6 +38,7 @@ export function MagazineForm({
     const [isPending, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
     const [guideOpen, setGuideOpen] = useState(false);
+    const [expandedBodyIndex, setExpandedBodyIndex] = useState<number>(0);
     const [activeTextareaId, setActiveTextareaId] = useState<string | null>(null);
     const [activeLinkTextareaId, setActiveLinkTextareaId] = useState<string | null>(null);
 
@@ -459,12 +460,30 @@ export function MagazineForm({
         }
     })();
 
+    // 발행 필수 조건 검사
+    const hasTitle = formData.title.trim().length > 0;
+    const hasLead = formData.lead.trim().length > 0;
+    const hasClosing = formData.closing.trim().length > 0;
+    const hasValidBody = formData.bodies.some((b: any) => b.title.trim() !== '' || b.content.trim() !== '');
+    const canPublish = hasTitle && hasLead && hasClosing && hasValidBody;
 
+    const handlePublishClick = (e: React.MouseEvent) => {
+        if (!canPublish) {
+            const missing: string[] = [];
+            if (!hasTitle) missing.push('제목');
+            if (!hasLead) missing.push('리드(Lead)');
+            if (!hasValidBody) missing.push('본문 섹션');
+            if (!hasClosing) missing.push('클로징(Closing)');
+            toast.error(`다음 항목을 입력해주세요: ${missing.join(', ')}`);
+            return;
+        }
+        handleSubmit(e, 'PUBLISHED');
+    };
 
     return (
         <div className="space-y-6">
             {/* Tab Switched Header & Quick Actions */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-4">
+            <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-4 bg-white/95 backdrop-blur-sm -mx-6 px-6 pt-2">
                 <div className="flex">
                     <button
                         type="button"
@@ -520,9 +539,14 @@ export function MagazineForm({
                     <Button
                         type="button"
                         size="sm"
-                        className="h-9 px-5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-xs"
-                        onClick={(e) => handleSubmit(e, 'PUBLISHED')}
+                        className={`h-9 px-5 font-semibold text-xs shadow-xs transition-all ${
+                            canPublish
+                                ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                        }`}
+                        onClick={handlePublishClick}
                         disabled={isPending}
+                        title={!canPublish ? '제목, 리드, 본문, 클로징을 모두 입력해야 발행할 수 있습니다' : undefined}
                     >
                         {isPending ? (
                             <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -534,9 +558,26 @@ export function MagazineForm({
 
             <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8">
                 {activeTab === 'edit' ? (
-                    <div className="space-y-8">
+                    <div className="flex gap-6 items-start">
+                        {/* Desktop side navigation */}
+                        <nav className="hidden lg:flex flex-col gap-0.5 w-40 shrink-0 sticky top-14 self-start py-2 text-[11px] bg-white/80 border border-slate-100 rounded-xl shadow-xs px-1">
+                            <p className="font-bold text-slate-400 uppercase tracking-widest mb-1 px-2 pt-1">섹션 이동</p>
+                            <a href="#section-meta" onClick={(e)=>{e.preventDefault();document.getElementById('section-meta')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">📋 기본 정보</a>
+                            <a href="#section-guide" onClick={(e)=>{e.preventDefault();document.getElementById('section-guide')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">📖 카테고리 안내</a>
+                            <a href="#section-org-slug" onClick={(e)=>{e.preventDefault();document.getElementById('section-org-slug')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">🔗 조직·슬러그</a>
+                            <div className="w-full h-px bg-slate-100 my-1" />
+                            <a href="#section-lead" onClick={(e)=>{e.preventDefault();document.getElementById('section-lead')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-indigo-50 text-indigo-700 hover:text-indigo-900 font-semibold transition-colors truncate">① 리드</a>
+                            {formData.bodies.map((_: any, i: number) => (
+                                <a key={i} href={`#section-body-${i}`} onClick={(e)=>{e.preventDefault();document.getElementById(`section-body-${i}`)?.scrollIntoView({behavior:'smooth',block:'start'});setExpandedBodyIndex(i);}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">
+                                    ② 섹션 {i + 1}{formData.bodies[i]?.title ? ` — ${formData.bodies[i].title.slice(0, 8)}${formData.bodies[i].title.length > 8 ? '…' : ''}` : ''}
+                                </a>
+                            ))}
+                            <a href="#section-closing" onClick={(e)=>{e.preventDefault();document.getElementById('section-closing')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">③ 클로징</a>
+                        </nav>
+                        {/* Main edit area */}
+                        <div className="flex-1 min-w-0 space-y-8">
                         {/* 기본 정보 및 메타데이터 카드 */}
-                        <div className="p-6 bg-slate-50/50 border border-slate-200 rounded-2xl space-y-6">
+                        <div id="section-meta" className="p-6 bg-slate-50/50 border border-slate-200 rounded-2xl space-y-6">
                             <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 pb-3 border-b border-slate-200/60">
                                 <FileText className="w-4.5 h-4.5 text-slate-500" />
                                 기본 정보 및 메타데이터
@@ -663,7 +704,7 @@ export function MagazineForm({
                         </div>
 
                         {/* 카테고리 안내 가이드 */}
-                        <div className="p-4 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs">
+                        <div id="section-guide" className="p-4 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs">
                             <button
                                 type="button"
                                 onClick={() => setGuideOpen(!guideOpen)}
@@ -759,7 +800,7 @@ export function MagazineForm({
                             </div>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div id="section-org-slug" className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* Left Column: Industry & Slug */}
                             <div className="space-y-6">
 
@@ -882,7 +923,7 @@ export function MagazineForm({
                             </div>
 
                             {/* 리드 (Lead) */}
-                            <div className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
+                            <div id="section-lead" className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
                                 <div className="flex justify-between items-center pb-1">
                                     <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
                                     <div className="flex gap-2">
@@ -1000,30 +1041,47 @@ export function MagazineForm({
 
                                 <div className="space-y-4">
                                     {formData.bodies.map((body: any, index: number) => (
-                                        <div key={index} className="relative p-5 bg-white border border-slate-200 rounded-xl shadow-sm transition-all hover:border-slate-300">
+                                        <div key={index} id={`section-body-${index}`} className="relative bg-white border border-slate-200 rounded-xl shadow-sm transition-all hover:border-slate-300">
                                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 rounded-l-xl"></div>
-                                            <div className="flex justify-between items-start mb-4">
+                                            {/* Accordion header */}
+                                            <div
+                                                className="flex justify-between items-center p-4 cursor-pointer select-none"
+                                                onClick={() => setExpandedBodyIndex(expandedBodyIndex === index ? -1 : index)}
+                                            >
                                                 <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
                                                     <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs">
                                                         {index + 1}
                                                     </span>
                                                     섹션 {index + 1}
+                                                    {formData.bodies[index]?.title && (
+                                                        <span className="text-slate-400 font-normal text-xs ml-1">— {formData.bodies[index].title.slice(0, 20)}{formData.bodies[index].title.length > 20 ? '…' : ''}</span>
+                                                    )}
                                                 </h4>
-                                                {formData.bodies.length > 1 && (
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => setFormData({
-                                                            ...formData,
-                                                            bodies: formData.bodies.filter((_: any, i: number) => i !== index)
-                                                        })}
-                                                        className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50 -mt-1 -mr-1"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
-                                                )}
+                                                <div className="flex items-center gap-2">
+                                                    {formData.bodies.length > 1 && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={(e) => { e.stopPropagation(); setFormData({
+                                                                ...formData,
+                                                                bodies: formData.bodies.filter((_: any, i: number) => i !== index)
+                                                            }); }}
+                                                            className="h-7 w-7 text-red-400 hover:text-red-600 hover:bg-red-50"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </Button>
+                                                    )}
+                                                    {expandedBodyIndex === index ? (
+                                                        <ChevronUp className="w-4 h-4 text-slate-400" />
+                                                    ) : (
+                                                        <ChevronDown className="w-4 h-4 text-slate-400" />
+                                                    )}
+                                                </div>
                                             </div>
+                                            {/* Accordion content */}
+                                            {expandedBodyIndex === index && (
+                                            <div className="px-5 pb-5">
                                             <div className="space-y-4">
                                                 <div className="space-y-1.5">
                                                     <div className="flex items-center gap-1.5">
@@ -1138,13 +1196,15 @@ export function MagazineForm({
                                                     />
                                                 </div>
                                             </div>
+                                            </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             {/* 클로징 (Closing) */}
-                            <div className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div id="section-closing" className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
                                 <div className="flex justify-between items-center pb-1">
                                     <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
                                     <div className="flex gap-2">
@@ -1240,6 +1300,7 @@ export function MagazineForm({
                                     required
                                 />
                             </div>
+                        </div>
                         </div>
                     </div>
                 ) : (
@@ -1391,9 +1452,14 @@ export function MagazineForm({
                         </Button>
                         <Button
                             type="button"
-                            onClick={(e) => handleSubmit(e, 'PUBLISHED')}
-                            className="h-11 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all active:scale-95 text-white font-semibold"
+                            onClick={handlePublishClick}
+                            className={`h-11 px-10 shadow-md transition-all active:scale-95 font-semibold ${
+                                canPublish
+                                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                    : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                            }`}
                             disabled={isPending}
+                            title={!canPublish ? '제목, 리드, 본문, 클로징을 모두 입력해야 발행할 수 있습니다' : undefined}
                         >
                             {isPending ? (
                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
