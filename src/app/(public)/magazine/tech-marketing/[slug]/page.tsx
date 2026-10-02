@@ -258,12 +258,16 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
     };
 
     const breadcrumb = (
-        <nav aria-label="기사 경로" className="text-[11px] sm:text-xs text-zi-outline font-ui-label flex items-center gap-1.5 flex-wrap">
-            <Link href="/magazine" className="hover:text-zi-secondary transition-colors">매거진</Link>
-            <span>/</span>
-            <Link href="/magazine/tech-marketing" className="hover:text-zi-secondary transition-colors">테크 · 마케팅</Link>
-            <span className="hidden sm:inline">/</span>
-            <span className="text-zi-on-surface-variant font-medium line-clamp-1 hidden sm:inline max-w-sm">{post.title}</span>
+        <nav aria-label="기사 경로" className="text-[13px] sm:text-sm text-zi-outline font-ui-label flex items-center gap-1 sm:gap-1.5 flex-wrap">
+            <Link href="/magazine" className="py-1 px-1 rounded text-zi-primary font-medium hover:text-zi-secondary hover:underline transition-colors">
+                매거진
+            </Link>
+            <span className="text-slate-300">/</span>
+            <Link href="/magazine/tech-marketing" className="py-1 px-1 rounded text-zi-primary font-medium hover:text-zi-secondary hover:underline transition-colors">
+                테크 · 마케팅
+            </Link>
+            <span className="hidden sm:inline text-slate-300">/</span>
+            <span className="text-zi-on-surface-variant font-medium line-clamp-1 hidden sm:inline max-w-sm pl-1">{post.title}</span>
         </nav>
     );
 
