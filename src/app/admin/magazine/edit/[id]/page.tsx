@@ -53,7 +53,7 @@ export default async function EditMagazinePage({ params }: PageProps) {
     const linkedOrgs = (post.organizations ?? []).map((po) => po.organization).filter(Boolean);
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-[1600px] mx-auto space-y-6">
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight line-clamp-2">{post.title}</h1>

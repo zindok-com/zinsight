@@ -560,19 +560,131 @@ export function MagazineForm({
                 {activeTab === 'edit' ? (
                     <div className="flex gap-6 items-start">
                         {/* Desktop side navigation */}
-                        <nav className="hidden lg:flex flex-col gap-0.5 w-40 shrink-0 sticky top-14 self-start py-2 text-[11px] bg-white/80 border border-slate-100 rounded-xl shadow-xs px-1">
-                            <p className="font-bold text-slate-400 uppercase tracking-widest mb-1 px-2 pt-1">섹션 이동</p>
-                            <a href="#section-meta" onClick={(e)=>{e.preventDefault();document.getElementById('section-meta')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">📋 기본 정보</a>
-                            <a href="#section-guide" onClick={(e)=>{e.preventDefault();document.getElementById('section-guide')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">📖 카테고리 안내</a>
-                            <a href="#section-org-slug" onClick={(e)=>{e.preventDefault();document.getElementById('section-org-slug')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">🔗 조직·슬러그</a>
-                            <div className="w-full h-px bg-slate-100 my-1" />
-                            <a href="#section-lead" onClick={(e)=>{e.preventDefault();document.getElementById('section-lead')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-indigo-50 text-indigo-700 hover:text-indigo-900 font-semibold transition-colors truncate">① 리드</a>
-                            {formData.bodies.map((_: any, i: number) => (
-                                <a key={i} href={`#section-body-${i}`} onClick={(e)=>{e.preventDefault();document.getElementById(`section-body-${i}`)?.scrollIntoView({behavior:'smooth',block:'start'});setExpandedBodyIndex(i);}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">
-                                    ② 섹션 {i + 1}{formData.bodies[i]?.title ? ` — ${formData.bodies[i].title.slice(0, 8)}${formData.bodies[i].title.length > 8 ? '…' : ''}` : ''}
-                                </a>
-                            ))}
-                            <a href="#section-closing" onClick={(e)=>{e.preventDefault();document.getElementById('section-closing')?.scrollIntoView({behavior:'smooth',block:'start'})}} className="px-2 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate">③ 클로징</a>
+                        <nav className="hidden lg:flex flex-col gap-0.5 w-56 shrink-0 sticky top-14 self-start py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2">
+                            <p className="font-bold text-slate-400 uppercase tracking-widest mb-2 px-2 pt-1">섹션 이동</p>
+
+                            {/* 기본 정보 */}
+                            <a
+                                href="#section-meta"
+                                onClick={(e)=>{e.preventDefault();document.getElementById('section-meta')?.scrollIntoView({behavior:'smooth',block:'start'})}}
+                                className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="flex items-center gap-1.5 truncate">📋 기본 정보</span>
+                                    {hasTitle ? (
+                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                    ) : (
+                                        <span className="text-slate-300 shrink-0">○</span>
+                                    )}
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-0.5 pl-0.5">
+                                    {hasTitle
+                                        ? `제목 ${formData.title.length}자`
+                                        : <span className="text-amber-500">제목 미입력</span>}
+                                </div>
+                            </a>
+
+                            {/* 카테고리 안내 */}
+                            <a
+                                href="#section-guide"
+                                onClick={(e)=>{e.preventDefault();document.getElementById('section-guide')?.scrollIntoView({behavior:'smooth',block:'start'})}}
+                                className="px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate"
+                            >
+                                📖 카테고리 안내
+                            </a>
+
+                            {/* 조직·슬러그 */}
+                            <a
+                                href="#section-org-slug"
+                                onClick={(e)=>{e.preventDefault();document.getElementById('section-org-slug')?.scrollIntoView({behavior:'smooth',block:'start'})}}
+                                className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span className="truncate">🔗 조직·슬러그</span>
+                                    {formData.slug ? (
+                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                    ) : (
+                                        <span className="text-slate-300 shrink-0">○</span>
+                                    )}
+                                </div>
+                                {formData.slug && (
+                                    <div className="text-[10px] text-slate-400 mt-0.5 pl-0.5 font-mono truncate">/{formData.slug}</div>
+                                )}
+                            </a>
+
+                            <div className="w-full h-px bg-slate-100 my-1.5 mx-1" />
+
+                            {/* 리드 */}
+                            <a
+                                href="#section-lead"
+                                onClick={(e)=>{e.preventDefault();document.getElementById('section-lead')?.scrollIntoView({behavior:'smooth',block:'start'})}}
+                                className="group px-2 py-2 rounded-lg hover:bg-indigo-50 text-indigo-700 hover:text-indigo-900 font-semibold transition-colors"
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span>① 리드</span>
+                                    {hasLead ? (
+                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                    ) : (
+                                        <span className="text-amber-400 shrink-0 font-normal text-[10px]">필수</span>
+                                    )}
+                                </div>
+                                <div className="text-[10px] text-indigo-400 mt-0.5 font-normal">
+                                    {hasLead ? `${formData.lead.length}자` : <span className="text-amber-500">미입력</span>}
+                                </div>
+                            </a>
+
+                            {formData.bodies.map((_: any, i: number) => {
+                                const bodyFilled = formData.bodies[i]?.title.trim() !== '' || formData.bodies[i]?.content.trim() !== '';
+                                return (
+                                    <a
+                                        key={i}
+                                        href={`#section-body-${i}`}
+                                        onClick={(e)=>{e.preventDefault();document.getElementById(`section-body-${i}`)?.scrollIntoView({behavior:'smooth',block:'start'});setExpandedBodyIndex(i);}}
+                                        className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                                    >
+                                        <div className="flex items-center justify-between gap-1">
+                                            <span className="truncate">② 섹션 {i + 1}{formData.bodies[i]?.title ? ` — ${formData.bodies[i].title.slice(0, 8)}${formData.bodies[i].title.length > 8 ? '…' : ''}` : ''}</span>
+                                            {bodyFilled ? (
+                                                <span className="text-emerald-500 shrink-0">✓</span>
+                                            ) : (
+                                                <span className="text-slate-300 shrink-0">○</span>
+                                            )}
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 mt-0.5">
+                                            {bodyFilled ? `${formData.bodies[i].content.length}자` : '미입력'}
+                                        </div>
+                                    </a>
+                                );
+                            })}
+
+                            {/* 클로징 */}
+                            <a
+                                href="#section-closing"
+                                onClick={(e)=>{e.preventDefault();document.getElementById('section-closing')?.scrollIntoView({behavior:'smooth',block:'start'})}}
+                                className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                            >
+                                <div className="flex items-center justify-between gap-1">
+                                    <span>③ 클로징</span>
+                                    {hasClosing ? (
+                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                    ) : (
+                                        <span className="text-amber-400 shrink-0 font-normal text-[10px]">필수</span>
+                                    )}
+                                </div>
+                                <div className="text-[10px] text-slate-400 mt-0.5">
+                                    {hasClosing ? `${formData.closing.length}자` : <span className="text-amber-500">미입력</span>}
+                                </div>
+                            </a>
+
+                            {/* 전체 완료 상태 요약 */}
+                            <div className="mt-2 mx-1 px-2 py-2 rounded-lg bg-slate-50 border border-slate-100">
+                                <div className="flex items-center gap-1.5">
+                                    <div className={`w-2 h-2 rounded-full shrink-0 ${canPublish ? 'bg-emerald-500' : 'bg-amber-400'}`} />
+                                    <span className={`text-[10px] font-semibold ${canPublish ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                        {canPublish ? '발행 준비 완료' : '필수 항목 미완성'}
+                                    </span>
+                                </div>
+                            </div>
                         </nav>
                         {/* Main edit area */}
                         <div className="flex-1 min-w-0 space-y-8">
@@ -582,7 +694,7 @@ export function MagazineForm({
                                 <FileText className="w-4.5 h-4.5 text-slate-500" />
                                 기본 정보 및 메타데이터
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="category" className="text-xs font-semibold text-slate-600">카테고리</Label>
                                     <Select

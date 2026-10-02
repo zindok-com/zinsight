@@ -27,7 +27,7 @@ export default async function NewMagazinePage() {
     ]);
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-[1600px] mx-auto space-y-6">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">새 매거진 포스트 작성</h1>
                 <p className="text-muted-foreground mt-1">진사이트 매거진에 새로운 기사를 등록합니다.</p>
