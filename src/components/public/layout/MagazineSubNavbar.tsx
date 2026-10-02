@@ -34,7 +34,7 @@ export function MagazineSubNavbar({ regions = [] }: MagazineSubNavbarProps) {
         : null;
 
     return (
-        <nav aria-label="매거진 서브 네비게이션" className="sticky top-16 sm:top-20 z-40 w-full border-b border-zi-divider/80 bg-white/95 backdrop-blur-md transition-all duration-200 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <nav aria-label="매거진 서브 네비게이션" className="hidden md:block sticky top-16 sm:top-20 z-40 w-full border-b border-zi-divider/80 bg-white/95 backdrop-blur-md transition-all duration-200 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
             <div className="mx-auto flex max-w-zi-container items-center px-3 sm:px-6">
                 {/* 수평 스크롤 탭 컨테이너 (스크롤바 완전 숨김 및 부드러운 터치 스크롤) */}
                 <div 
