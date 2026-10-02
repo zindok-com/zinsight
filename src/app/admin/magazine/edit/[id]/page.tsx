@@ -98,7 +98,7 @@ export default async function EditMagazinePage({ params }: PageProps) {
                 </Link>
             </div>
 
-            <Card>
+            <Card className="overflow-visible">
                 <CardHeader>
                     <CardTitle>Article Details</CardTitle>
                     <CardDescription>

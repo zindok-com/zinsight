@@ -33,7 +33,7 @@ export default async function NewMagazinePage() {
                 <p className="text-muted-foreground mt-1">진사이트 매거진에 새로운 기사를 등록합니다.</p>
             </div>
 
-            <Card>
+            <Card className="overflow-visible">
                 <CardHeader>
                     <CardTitle>Article Details</CardTitle>
                     <CardDescription>

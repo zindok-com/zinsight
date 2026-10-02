@@ -498,6 +498,86 @@ export function MagazineForm({
         return () => clearTimeout(timer);
     }, [formData.title, formData.summary, formData.thumbnailUrl, formData.slug, formData.authorName, categoryLabel]);
 
+    // 활성 섹션 스크롤 스파이(Scroll Spy) 상태
+    const [activeSectionId, setActiveSectionId] = useState<string>('section-meta');
+
+    // 앵커 이동 및 스크롤 처리 헬퍼
+    const scrollToSection = (e: React.MouseEvent, id: string, bodyIndex?: number) => {
+        e.preventDefault();
+        if (bodyIndex !== undefined) {
+            setExpandedBodyIndex(bodyIndex);
+        }
+        setActiveSectionId(id);
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
+
+    // 스크롤 스파이: IntersectionObserver + Scroll 리스너
+    useEffect(() => {
+        const sectionIds = [
+            'section-meta',
+            'section-guide',
+            'section-org-slug',
+            'section-lead',
+            ...formData.bodies.map((_: any, i: number) => `section-body-${i}`),
+            'section-closing'
+        ];
+
+        const checkActiveSection = () => {
+            const offset = 140; // 상단 sticky 탭 바 높이 + 여유 마진
+            let current = sectionIds[0];
+
+            for (const id of sectionIds) {
+                const el = document.getElementById(id);
+                if (el) {
+                    const rect = el.getBoundingClientRect();
+                    if (rect.top <= offset) {
+                        current = id;
+                    }
+                }
+            }
+            setActiveSectionId(current);
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const visible = entries.filter((e) => e.isIntersecting);
+                if (visible.length > 0) {
+                    const sorted = visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+                    setActiveSectionId(sorted[0].target.id);
+                }
+            },
+            {
+                rootMargin: '-70px 0px -60% 0px',
+                threshold: [0, 0.2]
+            }
+        );
+
+        sectionIds.forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) observer.observe(el);
+        });
+
+        const mainEl = document.querySelector('main');
+        const onScroll = () => {
+            checkActiveSection();
+        };
+
+        mainEl?.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        // 초기 위치 갱신
+        checkActiveSection();
+
+        return () => {
+            observer.disconnect();
+            mainEl?.removeEventListener('scroll', onScroll);
+            window.removeEventListener('scroll', onScroll);
+        };
+    }, [formData.bodies.length]);
+
     return (
         <div className="space-y-6">
             {/* Tab Switched Header & Quick Actions */}
@@ -578,24 +658,29 @@ export function MagazineForm({
                 {activeTab === 'edit' ? (
                     <div className="flex gap-6 items-start">
                         {/* Desktop side navigation */}
-                        <nav className="hidden lg:flex flex-col gap-0.5 w-56 shrink-0 sticky top-14 self-start py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2">
-                            <p className="font-bold text-slate-400 uppercase tracking-widest mb-2 px-2 pt-1">섹션 이동</p>
+                        {/* Desktop side navigation */}
+                        <nav className="hidden lg:flex flex-col gap-1 w-56 shrink-0 sticky top-[68px] self-start py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2 max-h-[calc(100vh-5.5rem)] overflow-y-auto">
+                            <p className="font-bold text-slate-400 uppercase tracking-widest mb-1.5 px-2 pt-1">섹션 이동</p>
 
                             {/* 기본 정보 */}
                             <a
                                 href="#section-meta"
-                                onClick={(e)=>{e.preventDefault();document.getElementById('section-meta')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-                                className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                                onClick={(e) => scrollToSection(e, 'section-meta')}
+                                className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
+                                    activeSectionId === 'section-meta'
+                                        ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
+                                }`}
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="flex items-center gap-1.5 truncate">📋 기본 정보</span>
                                     {hasTitle ? (
-                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                        <span className="text-emerald-500 shrink-0 font-bold">✓</span>
                                     ) : (
-                                        <span className="text-slate-300 shrink-0">○</span>
+                                        <span className="text-slate-300 shrink-0 font-normal">○</span>
                                     )}
                                 </div>
-                                <div className="text-[10px] text-slate-400 mt-0.5 pl-0.5">
+                                <div className={`text-[10px] mt-0.5 pl-0.5 ${activeSectionId === 'section-meta' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
                                     {hasTitle
                                         ? `제목 ${formData.title.length}자`
                                         : <span className="text-amber-500">제목 미입력</span>}
@@ -605,8 +690,12 @@ export function MagazineForm({
                             {/* 카테고리 안내 */}
                             <a
                                 href="#section-guide"
-                                onClick={(e)=>{e.preventDefault();document.getElementById('section-guide')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-                                className="px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors truncate"
+                                onClick={(e) => scrollToSection(e, 'section-guide')}
+                                className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 truncate ${
+                                    activeSectionId === 'section-guide'
+                                        ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
+                                }`}
                             >
                                 📖 카테고리 안내
                             </a>
@@ -614,61 +703,79 @@ export function MagazineForm({
                             {/* 조직·슬러그 */}
                             <a
                                 href="#section-org-slug"
-                                onClick={(e)=>{e.preventDefault();document.getElementById('section-org-slug')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-                                className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                                onClick={(e) => scrollToSection(e, 'section-org-slug')}
+                                className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
+                                    activeSectionId === 'section-org-slug'
+                                        ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
+                                }`}
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span className="truncate">🔗 조직·슬러그</span>
                                     {formData.slug ? (
-                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                        <span className="text-emerald-500 shrink-0 font-bold">✓</span>
                                     ) : (
-                                        <span className="text-slate-300 shrink-0">○</span>
+                                        <span className="text-slate-300 shrink-0 font-normal">○</span>
                                     )}
                                 </div>
                                 {formData.slug && (
-                                    <div className="text-[10px] text-slate-400 mt-0.5 pl-0.5 font-mono truncate">/{formData.slug}</div>
+                                    <div className={`text-[10px] mt-0.5 pl-0.5 font-mono truncate ${activeSectionId === 'section-org-slug' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
+                                        /{formData.slug}
+                                    </div>
                                 )}
                             </a>
 
-                            <div className="w-full h-px bg-slate-100 my-1.5 mx-1" />
+                            <div className="w-full h-px bg-slate-100 my-1 mx-1" />
 
                             {/* 리드 */}
                             <a
                                 href="#section-lead"
-                                onClick={(e)=>{e.preventDefault();document.getElementById('section-lead')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-                                className="group px-2 py-2 rounded-lg hover:bg-indigo-50 text-indigo-700 hover:text-indigo-900 font-semibold transition-colors"
+                                onClick={(e) => scrollToSection(e, 'section-lead')}
+                                className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
+                                    activeSectionId === 'section-lead'
+                                        ? 'bg-indigo-50 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
+                                }`}
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span>① 리드</span>
                                     {hasLead ? (
-                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                        <span className="text-emerald-500 shrink-0 font-bold">✓</span>
                                     ) : (
-                                        <span className="text-amber-400 shrink-0 font-normal text-[10px]">필수</span>
+                                        <span className="text-amber-500 shrink-0 font-semibold text-[10px]">필수</span>
                                     )}
                                 </div>
-                                <div className="text-[10px] text-indigo-400 mt-0.5 font-normal">
+                                <div className={`text-[10px] mt-0.5 ${activeSectionId === 'section-lead' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
                                     {hasLead ? `${formData.lead.length}자` : <span className="text-amber-500">미입력</span>}
                                 </div>
                             </a>
 
                             {formData.bodies.map((_: any, i: number) => {
                                 const bodyFilled = formData.bodies[i]?.title.trim() !== '' || formData.bodies[i]?.content.trim() !== '';
+                                const isSectionActive = activeSectionId === `section-body-${i}`;
                                 return (
                                     <a
                                         key={i}
                                         href={`#section-body-${i}`}
-                                        onClick={(e)=>{e.preventDefault();document.getElementById(`section-body-${i}`)?.scrollIntoView({behavior:'smooth',block:'start'});setExpandedBodyIndex(i);}}
-                                        className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                                        onClick={(e) => scrollToSection(e, `section-body-${i}`, i)}
+                                        className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
+                                            isSectionActive
+                                                ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
+                                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
+                                        }`}
                                     >
                                         <div className="flex items-center justify-between gap-1">
-                                            <span className="truncate">② 섹션 {i + 1}{formData.bodies[i]?.title ? ` — ${formData.bodies[i].title.slice(0, 8)}${formData.bodies[i].title.length > 8 ? '…' : ''}` : ''}</span>
+                                            <span className="truncate">
+                                                ② 섹션 {i + 1}
+                                                {formData.bodies[i]?.title ? ` — ${formData.bodies[i].title.slice(0, 8)}${formData.bodies[i].title.length > 8 ? '…' : ''}` : ''}
+                                            </span>
                                             {bodyFilled ? (
-                                                <span className="text-emerald-500 shrink-0">✓</span>
+                                                <span className="text-emerald-500 shrink-0 font-bold">✓</span>
                                             ) : (
-                                                <span className="text-slate-300 shrink-0">○</span>
+                                                <span className="text-slate-300 shrink-0 font-normal">○</span>
                                             )}
                                         </div>
-                                        <div className="text-[10px] text-slate-400 mt-0.5">
+                                        <div className={`text-[10px] mt-0.5 ${isSectionActive ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
                                             {bodyFilled ? `${formData.bodies[i].content.length}자` : '미입력'}
                                         </div>
                                     </a>
@@ -678,18 +785,22 @@ export function MagazineForm({
                             {/* 클로징 */}
                             <a
                                 href="#section-closing"
-                                onClick={(e)=>{e.preventDefault();document.getElementById('section-closing')?.scrollIntoView({behavior:'smooth',block:'start'})}}
-                                className="group px-2 py-2 rounded-lg hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+                                onClick={(e) => scrollToSection(e, 'section-closing')}
+                                className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
+                                    activeSectionId === 'section-closing'
+                                        ? 'bg-indigo-50 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
+                                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
+                                }`}
                             >
                                 <div className="flex items-center justify-between gap-1">
                                     <span>③ 클로징</span>
                                     {hasClosing ? (
-                                        <span className="text-emerald-500 shrink-0">✓</span>
+                                        <span className="text-emerald-500 shrink-0 font-bold">✓</span>
                                     ) : (
-                                        <span className="text-amber-400 shrink-0 font-normal text-[10px]">필수</span>
+                                        <span className="text-amber-500 shrink-0 font-semibold text-[10px]">필수</span>
                                     )}
                                 </div>
-                                <div className="text-[10px] text-slate-400 mt-0.5">
+                                <div className={`text-[10px] mt-0.5 ${activeSectionId === 'section-closing' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
                                     {hasClosing ? `${formData.closing.length}자` : <span className="text-amber-500">미입력</span>}
                                 </div>
                             </a>
@@ -707,7 +818,7 @@ export function MagazineForm({
                         {/* Main edit area */}
                         <div className="flex-1 min-w-0 space-y-8">
                         {/* 기본 정보 및 메타데이터 카드 */}
-                        <div id="section-meta" className="p-6 bg-slate-50/50 border border-slate-200 rounded-2xl space-y-6">
+                        <div id="section-meta" className="p-6 bg-slate-50/50 border border-slate-200 rounded-2xl space-y-6 scroll-mt-24">
                             <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 pb-3 border-b border-slate-200/60">
                                 <FileText className="w-4.5 h-4.5 text-slate-500" />
                                 기본 정보 및 메타데이터
@@ -834,7 +945,7 @@ export function MagazineForm({
                         </div>
 
                         {/* 카테고리 안내 가이드 */}
-                        <div id="section-guide" className="p-4 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs">
+                        <div id="section-guide" className="p-4 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs scroll-mt-24">
                             <button
                                 type="button"
                                 onClick={() => setGuideOpen(!guideOpen)}
@@ -930,7 +1041,7 @@ export function MagazineForm({
                             </div>
                         )}
 
-                        <div id="section-org-slug" className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div id="section-org-slug" className="grid grid-cols-1 md:grid-cols-2 gap-8 scroll-mt-24">
                             {/* Left Column: Industry & Slug */}
                             <div className="space-y-6">
 
@@ -1053,7 +1164,7 @@ export function MagazineForm({
                             </div>
 
                             {/* 리드 (Lead) */}
-                            <div id="section-lead" className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl">
+                            <div id="section-lead" className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl scroll-mt-24">
                                 <div className="flex justify-between items-center pb-1">
                                     <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
                                     <div className="flex gap-2">
@@ -1171,7 +1282,7 @@ export function MagazineForm({
 
                                 <div className="space-y-4">
                                     {formData.bodies.map((body: any, index: number) => (
-                                        <div key={index} id={`section-body-${index}`} className="relative bg-white border border-slate-200 rounded-xl shadow-sm transition-all hover:border-slate-300">
+                                        <div key={index} id={`section-body-${index}`} className="relative bg-white border border-slate-200 rounded-xl shadow-sm transition-all hover:border-slate-300 scroll-mt-24">
                                             <div className="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 rounded-l-xl"></div>
                                             {/* Accordion header */}
                                             <div
@@ -1334,7 +1445,7 @@ export function MagazineForm({
                             </div>
 
                             {/* 클로징 (Closing) */}
-                            <div id="section-closing" className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div id="section-closing" className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl scroll-mt-24">
                                 <div className="flex justify-between items-center pb-1">
                                     <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
                                     <div className="flex gap-2">
@@ -1434,7 +1545,7 @@ export function MagazineForm({
                         </div>{/* end flex-1 min-w-0 */}
 
                         {/* ─── 우측 실시간 미리보기 패널 (xl+ 전용) ─── */}
-                        <aside className="hidden xl:flex flex-col gap-4 w-80 shrink-0 sticky top-14 self-start">
+                        <aside className="hidden xl:flex flex-col gap-4 w-80 shrink-0 sticky top-[68px] self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto pr-1">
                             {/* 패널 헤더 */}
                             <div className="flex items-center gap-2 px-1">
                                 <Eye className="w-3.5 h-3.5 text-slate-400" />
