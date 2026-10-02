@@ -198,7 +198,7 @@ function getCategoryLabel(category: any) {
 
 interface MagazinePostDetailProps {
     post: any;
-    breadcrumb: React.ReactNode;
+    breadcrumb?: React.ReactNode;
     backLink: string;
     jsonLd: any;
 }
@@ -244,10 +244,12 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                 <div className={post.organizations && post.organizations.length > 0 ? "xl:grid xl:grid-cols-[1fr_280px] xl:gap-12 items-start xl:relative" : ""}>
                     {/* 메인 기사 영역 */}
                     <div className="min-w-0">
-                        {/* 브레드크럼 */}
-                        <div className="mb-4 sm:mb-6">
-                            {breadcrumb}
-                        </div>
+                        {/* 브레드크럼 (전달된 경우에만 표시) */}
+                        {breadcrumb && (
+                            <div className="mb-4 sm:mb-6">
+                                {breadcrumb}
+                            </div>
+                        )}
 
                         {/* 기사 헤더 */}
                         <header className="mb-8 sm:mb-12">
