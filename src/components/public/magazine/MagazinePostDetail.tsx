@@ -293,6 +293,11 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                 <span>•</span>
                                 <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                             </div>
+
+                            {/* Google 선호하는 출처 버튼 (제목/발행자 하단 배치) */}
+                            <div className="mt-4 pt-3.5 border-t border-zi-divider/50">
+                                <PreferredSourceButton />
+                            </div>
                         </header>
 
                         {/* 썸네일 이미지 */}
@@ -426,10 +431,6 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                         })()}
 
                         {/* isPaid 기사 하단 편집 독립성 고지 */}
-                        {/* Google 선호하는 출처 버튼 */}
-                        <div className="mt-8 pt-6 border-t border-zi-divider">
-                            <PreferredSourceButton />
-                        </div>
 
                         {post.isPaid && (
                             <p className="mt-8 text-[11px] text-zi-outline leading-relaxed border-t border-zi-divider pt-5 italic">
