@@ -244,9 +244,9 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                 <div className={post.organizations && post.organizations.length > 0 ? "xl:grid xl:grid-cols-[1fr_280px] xl:gap-12 items-start xl:relative" : ""}>
                     {/* 메인 기사 영역 */}
                     <div className="min-w-0">
-                        {/* 브레드크럼 (전달된 경우에만 표시) */}
+                        {/* 브레드크럼 (모바일 전용 노출, PC에서는 상단 서브네비바와 카테고리 배지가 있으므로 숨김) */}
                         {breadcrumb && (
-                            <div className="mb-4 sm:mb-6">
+                            <div className="mb-4 sm:hidden">
                                 {breadcrumb}
                             </div>
                         )}
