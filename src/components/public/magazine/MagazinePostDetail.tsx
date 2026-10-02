@@ -253,26 +253,36 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
 
                         {/* 기사 헤더 */}
                         <header className="mb-8 sm:mb-12">
-                            {/* 배지 목록 (점 구분자 대신 독립 칩으로 모바일 줄바꿈 최적화) */}
-                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
-                                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-zi-secondary bg-zi-surface-container-high px-2.5 sm:px-3 py-1 rounded-full">
+                            {/* 데스크톱 전용 배지 목록 (모바일에서는 브레드크럼이 카테고리/지역 역할을 하므로 숨김) */}
+                            <div className="hidden sm:flex flex-wrap items-center gap-2 mb-6">
+                                <span className="text-xs font-bold uppercase tracking-wider text-zi-secondary bg-zi-surface-container-high px-3 py-1 rounded-full">
                                     {categoryLabel}
                                 </span>
-                                <span className="text-[11px] sm:text-xs font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-2.5 sm:px-3 py-1 rounded-full border border-indigo-100">
+                                <span className="text-xs font-bold text-indigo-700 uppercase tracking-wider bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
                                     {mainIndustry}
                                 </span>
                                 {post.region && (
-                                    <span className="text-[11px] sm:text-xs font-semibold text-zi-on-surface-variant bg-zi-surface px-2.5 sm:px-3 py-1 rounded-full border border-zi-divider">
+                                    <span className="text-xs font-semibold text-zi-on-surface-variant bg-zi-surface px-3 py-1 rounded-full border border-zi-divider">
                                         {post.region.name}
                                     </span>
                                 )}
                                 {post.isPaid && (
-                                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full flex items-center gap-1">
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
                                         <span aria-hidden="true">✦</span>
                                         {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
                                     </span>
                                 )}
                             </div>
+
+                            {/* 모바일 파트너 표시 (스폰서드 콘텐츠 법적 고지용) */}
+                            {post.isPaid && (
+                                <div className="sm:hidden mb-2.5">
+                                    <span className="inline-flex text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full items-center gap-1">
+                                        <span aria-hidden="true">✦</span>
+                                        {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
+                                    </span>
+                                </div>
+                            )}
 
                             <h1 className="font-h1 text-[22px] sm:text-[30px] lg:text-h1 text-zi-on-surface mb-4 sm:mb-6 leading-snug sm:leading-tight">
                                 {post.title}
