@@ -53,8 +53,8 @@ export default async function EditMagazinePage({ params }: PageProps) {
     const linkedOrgs = (post.organizations ?? []).map((po) => po.organization).filter(Boolean);
 
     return (
-        <div className="max-w-[1600px] mx-auto space-y-6">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="max-w-[1600px] mx-auto space-y-6 lg:h-[calc(100vh-3rem)] lg:flex lg:flex-col">
+            <div className="flex items-start justify-between gap-4 flex-wrap lg:shrink-0">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight line-clamp-2">{post.title}</h1>
                     <p className="text-muted-foreground text-sm mt-1">매거진 포스트 편집</p>
@@ -86,7 +86,7 @@ export default async function EditMagazinePage({ params }: PageProps) {
             </div>
 
 
-            <div className="flex gap-2 border-b">
+            <div className="flex gap-2 border-b lg:shrink-0">
                 <span className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground">
                     편집
                 </span>
@@ -98,14 +98,15 @@ export default async function EditMagazinePage({ params }: PageProps) {
                 </Link>
             </div>
 
-            <Card className="overflow-visible">
-                <CardHeader>
+            {/* lg 이상: 뷰포트 고정 카드 (내부 중앙 컬럼만 스크롤) / 모바일: 자연 높이 + 페이지 스크롤 */}
+            <Card className="overflow-visible lg:overflow-hidden lg:flex-1 lg:min-h-0 lg:flex lg:flex-col">
+                <CardHeader className="lg:shrink-0 lg:pb-4">
                     <CardTitle>Article Details</CardTitle>
                     <CardDescription>
                         Modify the basic information and content structure of the article.
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="lg:flex-1 lg:min-h-0 lg:flex lg:flex-col">
                     <MagazineForm 
                         authors={authors} 
                         regions={regions} 

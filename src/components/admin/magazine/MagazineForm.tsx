@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -501,6 +501,28 @@ export function MagazineForm({
     // 활성 섹션 스크롤 스파이(Scroll Spy) 상태
     const [activeSectionId, setActiveSectionId] = useState<string>('section-meta');
 
+    // lg 이상에서 실제로 스크롤되는 중앙 본문 컬럼 (미리보기 탭에서는 미리보기 래퍼)
+    const scrollAreaRef = useRef<HTMLDivElement | null>(null);
+
+    // 중앙 컬럼이 현재 독립 스크롤 컨테이너인지 (lg 이상에서만 true, 모바일은 페이지 스크롤)
+    const getScrollContainer = (): HTMLDivElement | null => {
+        const el = scrollAreaRef.current;
+        if (!el) return null;
+        const oy = window.getComputedStyle(el).overflowY;
+        return (oy === 'auto' || oy === 'scroll') ? el : null;
+    };
+
+    // 섹션 요소로 스크롤 — lg: 중앙 컬럼 내부 스크롤 / 모바일: 페이지 스크롤
+    const scrollElementIntoView = (el: HTMLElement, behavior: ScrollBehavior) => {
+        const container = getScrollContainer();
+        if (container) {
+            const top = container.scrollTop + el.getBoundingClientRect().top - container.getBoundingClientRect().top - 8;
+            container.scrollTo({ top: Math.max(0, top), behavior });
+        } else {
+            el.scrollIntoView({ behavior, block: 'start' });
+        }
+    };
+
     // 앵커 이동 및 스크롤 처리 헬퍼
     const scrollToSection = (e: React.MouseEvent, id: string, bodyIndex?: number) => {
         e.preventDefault();
@@ -508,14 +530,16 @@ export function MagazineForm({
             setExpandedBodyIndex(bodyIndex);
         }
         setActiveSectionId(id);
-        const el = document.getElementById(id);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
+        // 아코디언 펼침 반영 후 위치 계산
+        requestAnimationFrame(() => {
+            const el = document.getElementById(id);
+            if (el) scrollElementIntoView(el, 'smooth');
+        });
     };
 
-    // 스크롤 스파이: IntersectionObserver + Scroll 리스너
+    // 스크롤 스파이: 중앙 컬럼(lg) 또는 window(모바일) 스크롤 기준
     useEffect(() => {
+        if (activeTab !== 'edit') return;
         const sectionIds = [
             'section-meta',
             'section-guide',
@@ -525,68 +549,49 @@ export function MagazineForm({
             'section-closing'
         ];
 
+        let raf = 0;
         const checkActiveSection = () => {
-            const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60;
+            const container = getScrollContainer();
+            const atBottom = container
+                ? container.scrollTop + container.clientHeight >= container.scrollHeight - 40
+                : window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60;
             if (atBottom) {
                 setActiveSectionId('section-closing');
                 return;
             }
-            const offset = 200; // 상단 sticky 탭 바 높이 + 여유 마진
+            // 기준선: 컨테이너 상단 + 여유(lg) / sticky 탭바 아래(모바일)
+            const threshold = container ? container.getBoundingClientRect().top + 120 : 200;
             let current = sectionIds[0];
-
             for (const id of sectionIds) {
                 const el = document.getElementById(id);
-                if (el) {
-                    const rect = el.getBoundingClientRect();
-                    if (rect.top <= offset) {
-                        current = id;
-                    }
+                if (el && el.getBoundingClientRect().top <= threshold) {
+                    current = id;
                 }
             }
             setActiveSectionId(current);
         };
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 60;
-                if (atBottom) {
-                    setActiveSectionId('section-closing');
-                    return;
-                }
-                const visible = entries.filter((e) => e.isIntersecting);
-                if (visible.length > 0) {
-                    const sorted = visible.sort((a, b) => Math.abs(a.boundingClientRect.top - 120) - Math.abs(b.boundingClientRect.top - 120));
-                    setActiveSectionId(sorted[0].target.id);
-                }
-            },
-            {
-                rootMargin: '-70px 0px -40% 0px',
-                threshold: [0, 0.2]
-            }
-        );
-
-        sectionIds.forEach((id) => {
-            const el = document.getElementById(id);
-            if (el) observer.observe(el);
-        });
-
-        const mainEl = document.querySelector('main');
         const onScroll = () => {
-            checkActiveSection();
+            cancelAnimationFrame(raf);
+            raf = requestAnimationFrame(checkActiveSection);
         };
 
-        mainEl?.addEventListener('scroll', onScroll, { passive: true });
+        const areaEl = scrollAreaRef.current;
+        areaEl?.addEventListener('scroll', onScroll, { passive: true });
         window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
 
         // 초기 위치 갱신
         checkActiveSection();
 
         return () => {
-            observer.disconnect();
-            mainEl?.removeEventListener('scroll', onScroll);
+            cancelAnimationFrame(raf);
+            areaEl?.removeEventListener('scroll', onScroll);
             window.removeEventListener('scroll', onScroll);
+            window.removeEventListener('resize', onScroll);
         };
-    }, [formData.bodies.length]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.bodies.length, activeTab]);
 
     // URL ?scroll= 파라미터 감지하여 해당 섹션으로 스크롤 (딥링크 및 검증 지원)
     useEffect(() => {
@@ -600,18 +605,17 @@ export function MagazineForm({
                     : scrollTarget === 'closing' ? 'section-closing'
                     : `section-${scrollTarget}`;
                 const el = document.getElementById(targetId);
-                if (el) {
-                    el.scrollIntoView({ behavior: 'instant', block: 'start' });
-                }
+                if (el) scrollElementIntoView(el, 'instant');
             }, 600);
             return () => clearTimeout(timer);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     return (
-        <div className="space-y-6">
-            {/* Tab Switched Header & Quick Actions */}
-            <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-4 bg-white/95 backdrop-blur-sm -mx-6 px-6 pt-2">
+        <div className="space-y-6 lg:space-y-0 lg:gap-5 lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+            {/* Tab Switched Header & Quick Actions — 모바일: sticky / lg: 카드 상단 고정(flex-shrink-0) */}
+            <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-4 bg-white/95 backdrop-blur-sm -mx-6 px-6 pt-2 lg:static lg:shrink-0 lg:pt-0 lg:bg-white lg:backdrop-blur-none">
                 <div className="flex">
                     <button
                         type="button"
@@ -684,12 +688,12 @@ export function MagazineForm({
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8">
+            <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8 lg:space-y-0 lg:gap-4 lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
                 {activeTab === 'edit' ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-[15rem_1fr] xl:grid-cols-[15rem_1fr_20rem] gap-6 items-stretch">
-                        {/* 컬럼 1: Desktop side navigation (부모 높이 h-full 만큼 늘어남) */}
-                        <aside className="hidden lg:block h-full min-w-0">
-                            <nav className="sticky top-[68px] flex flex-col gap-1 w-full py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2 max-h-[calc(100vh-5.5rem)] overflow-y-auto overflow-x-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-[15rem_1fr] xl:grid-cols-[15rem_1fr_20rem] lg:grid-rows-[minmax(0,1fr)] gap-6 items-stretch lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+                        {/* 컬럼 1: Desktop side navigation — 고정 컬럼 (항목이 많을 때만 자체 스크롤) */}
+                        <aside className="hidden lg:block min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden">
+                            <nav className="flex flex-col gap-1 w-full py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2 overflow-x-hidden">
                                 <p className="font-bold text-slate-400 uppercase tracking-widest mb-1.5 px-2 pt-1">섹션 이동</p>
 
                                 {/* 기본 정보 */}
@@ -846,8 +850,8 @@ export function MagazineForm({
                                 </div>
                             </nav>
                         </aside>
-                        {/* 컬럼 2: Main edit area (전체 폼 내용 포함) */}
-                        <div className="min-w-0 space-y-8">
+                        {/* 컬럼 2: Main edit area — lg: 이 컬럼만 내부 스크롤 */}
+                        <div ref={scrollAreaRef} className="min-w-0 space-y-8 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 lg:pb-6">
                         {/* 기본 정보 및 메타데이터 카드 */}
                         <div id="section-meta" className="p-6 bg-slate-50/50 border border-slate-200 rounded-2xl space-y-6 scroll-mt-24">
                             <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 pb-3 border-b border-slate-200/60">
@@ -1575,9 +1579,9 @@ export function MagazineForm({
                         </div>
                         </div>
 
-                        {/* ─── 컬럼 3: 우측 실시간 미리보기 컬럼 (h-full 래퍼 + sticky 내부 컨테이너) ─── */}
-                        <aside className="hidden xl:block h-full min-w-0">
-                            <div className="sticky top-[68px] flex flex-col gap-4 w-full max-h-[calc(100vh-5.5rem)] overflow-y-auto overflow-x-hidden pr-0.5">
+                        {/* ─── 컬럼 3: 우측 실시간 미리보기 (고정 컬럼, 중앙 스크롤과 독립) ─── */}
+                        <aside className="hidden xl:block min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden">
+                            <div className="flex flex-col gap-4 w-full pr-0.5 pb-2">
                             {/* 패널 헤더 */}
                             <div className="flex items-center gap-2 px-1">
                                 <Eye className="w-3.5 h-3.5 text-slate-400" />
@@ -1728,7 +1732,8 @@ export function MagazineForm({
 
                     </div>
                 ) : (
-                    /* High-fidelity Live Preview Mode */
+                    /* High-fidelity Live Preview Mode — lg: 카드 내부 스크롤 영역 */
+                    <div ref={scrollAreaRef} className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pb-4">
                     <div className="bg-zi-surface text-zi-on-surface p-6 md:p-10 rounded-xl border border-slate-200 shadow-inner max-w-3xl mx-auto space-y-12 min-h-[500px]">
                         {/* Meta Tags & Category */}
                         <div className="space-y-6">
@@ -1826,10 +1831,11 @@ export function MagazineForm({
                             )}
                         </article>
                     </div>
+                    </div>
                 )}
 
-                {/* Form Buttons — sticky 하단 고정 */}
-                <div className="sticky bottom-0 z-30 flex justify-between items-center gap-3 px-6 py-4 mt-6 bg-white/90 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] -mx-6">
+                {/* Form Buttons — 모바일: sticky 하단 고정 / lg: 카드 하단 고정(flex-shrink-0) */}
+                <div className="sticky bottom-0 z-30 flex justify-between items-center gap-3 px-6 py-4 mt-6 bg-white/90 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] -mx-6 lg:static lg:shrink-0 lg:!mt-0 lg:-mb-6 lg:py-3 lg:bg-white lg:backdrop-blur-none">
                     <p className="text-xs text-slate-400 hidden sm:block">
                         {post ? '기존 포스트를 수정합니다.' : '새 매거진 포스트를 발행합니다.'}
                     </p>
@@ -1841,6 +1847,7 @@ export function MagazineForm({
                             onClick={() => {
                                 setActiveTab(activeTab === 'edit' ? 'preview' : 'edit');
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                                scrollAreaRef.current?.scrollTo({ top: 0 });
                             }}
                         >
                             {activeTab === 'edit' ? (
