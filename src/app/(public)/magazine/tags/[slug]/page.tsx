@@ -152,7 +152,9 @@ export default async function TagArchivePage({ params }: PageProps) {
                                     )}
                                 </span>
                                 <span>•</span>
-                                <span>{new Date(featuredPost.createdAt).toLocaleDateString()}</span>
+                                <time dateTime={new Date(featuredPost.publishedAt || featuredPost.createdAt).toISOString()}>
+                                    {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </time>
                             </div>
                         </div>
                         <div className="lg:col-span-6 aspect-[16/10] w-full order-1 lg:order-2">

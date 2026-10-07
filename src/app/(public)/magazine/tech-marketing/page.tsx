@@ -101,7 +101,9 @@ export default async function TechMarketingPage() {
                                     By {featuredPost.author?.name || featuredPost.authorName || '진사이트 편집부'}
                                 </span>
                                 <span>•</span>
-                                <span>{new Date(featuredPost.createdAt).toLocaleDateString()}</span>
+                                <time dateTime={new Date(featuredPost.publishedAt || featuredPost.createdAt).toISOString()}>
+                                    {new Date(featuredPost.publishedAt || featuredPost.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </time>
                             </div>
                         </div>
                         <div className="lg:col-span-6 aspect-[4/3] w-full order-1 lg:order-2">

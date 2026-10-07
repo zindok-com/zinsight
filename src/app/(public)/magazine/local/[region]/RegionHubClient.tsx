@@ -97,7 +97,9 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                 By {localHeadline.author?.name || localHeadline.authorName || '진사이트 편집부'}
                             </span>
                             <span>•</span>
-                            <span>{new Date(localHeadline.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                            <time dateTime={new Date(localHeadline.publishedAt || localHeadline.createdAt).toISOString()}>
+                                {new Date(localHeadline.publishedAt || localHeadline.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </time>
                         </div>
                     </div>
                     <div className="lg:col-span-6 aspect-[16/10] w-full order-1 lg:order-2">

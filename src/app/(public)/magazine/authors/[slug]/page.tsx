@@ -28,8 +28,11 @@ export default async function AuthorProfilePage({ params }: PageProps) {
         where: { slug },
         include: {
             posts: {
-                where: { deletedAt: null },
-                orderBy: { createdAt: 'desc' },
+                where: { deletedAt: null, status: 'PUBLISHED' },
+                orderBy: [
+                    { publishedAt: 'desc' },
+                    { createdAt: 'desc' }
+                ],
                 take: 20,
                 include: {
                     category: true,
@@ -150,11 +153,13 @@ export default async function AuthorProfilePage({ params }: PageProps) {
                                                 {post.title}
                                             </h3>
                                             <p className="text-xs text-slate-400 mt-auto">
-                                                {new Date(post.createdAt).toLocaleDateString('ko-KR', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric',
-                                                })}
+                                                <time dateTime={new Date(post.publishedAt || post.createdAt).toISOString()}>
+                                                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric',
+                                                    })}
+                                                </time>
                                             </p>
                                         </div>
                                     </Link>

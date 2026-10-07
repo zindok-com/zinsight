@@ -17,6 +17,7 @@ interface MagazinePost {
         name: string;
         slug: string;
     } | null;
+    publishedAt?: Date | null;
     createdAt: Date;
 }
 
@@ -253,7 +254,12 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                 {/* 메타 정보 */}
                                 <div className="mt-auto flex items-center justify-between border-t border-zi-divider pt-4 text-zi-caption text-slate-400 mt-4">
                                     <span className="truncate pr-2">{post.author?.name || post.authorName || '진사이트 편집부'}</span>
-                                    <span className="shrink-0 whitespace-nowrap">{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}</span>
+                                    <time
+                                        dateTime={new Date(post.publishedAt || post.createdAt).toISOString()}
+                                        className="shrink-0 whitespace-nowrap"
+                                    >
+                                        {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                                    </time>
                                 </div>
                             </article>
                         </Link>

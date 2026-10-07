@@ -136,7 +136,9 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                                     <div className="mt-auto flex items-center justify-between border-t border-zi-divider/60 pt-4 text-zi-outline text-ui-label">
                                         <div className="flex items-center gap-1.5">
                                             <Calendar className="w-3.5 h-3.5" />
-                                            <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                            <time dateTime={new Date(post.publishedAt || post.createdAt).toISOString()}>
+                                                {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                                            </time>
                                         </div>
                                         <div className="flex items-center text-indigo-500 font-semibold group-hover:translate-x-1 transition-transform">
                                             읽기 <ChevronRight className="w-4 h-4" />
