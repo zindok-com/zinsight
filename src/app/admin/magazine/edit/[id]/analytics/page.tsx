@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { getArticleAnalyticsSummary } from '@/actions/admin/analytics-actions';
 import { ArticleAnalyticsClient } from './ArticleAnalyticsClient';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Edit3 } from 'lucide-react';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -37,8 +39,8 @@ export default async function ArticleAnalyticsPage({ params, searchParams }: Pag
     const linkedOrgs = (post.organizations ?? []).map((po) => po.organization).filter(Boolean);
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
-            <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div className="max-w-[1600px] mx-auto space-y-6 lg:h-[calc(100vh-3rem)] lg:flex lg:flex-col">
+            <div className="flex items-start justify-between gap-4 flex-wrap lg:shrink-0">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight line-clamp-2">{post.title}</h1>
                     <p className="text-muted-foreground text-sm mt-1">기사 성과 애널리틱스</p>
@@ -52,8 +54,9 @@ export default async function ArticleAnalyticsPage({ params, searchParams }: Pag
                     </Link>
                     <Link
                         href={`/admin/magazine/edit/${id}`}
-                        className="text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors bg-background"
+                        className="text-sm text-muted-foreground hover:text-foreground border rounded-md px-3 py-1.5 transition-colors bg-background flex items-center gap-1.5"
                     >
+                        <Edit3 className="w-3.5 h-3.5 text-indigo-600" />
                         기사 편집
                     </Link>
                     {linkedOrgs.map((org) => (
@@ -68,7 +71,7 @@ export default async function ArticleAnalyticsPage({ params, searchParams }: Pag
                 </div>
             </div>
 
-            <div className="flex gap-2 border-b">
+            <div className="flex gap-2 border-b lg:shrink-0">
                 <Link
                     href={`/admin/magazine/edit/${id}`}
                     className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground"
@@ -79,7 +82,19 @@ export default async function ArticleAnalyticsPage({ params, searchParams }: Pag
                     애널리틱스
                 </span>
             </div>
-            <ArticleAnalyticsClient data={data} postId={Number(id)} currentPeriod={String(period ?? '30')} />
+
+            {/* lg 이상: 뷰포트 고정 카드 (내부 중앙 컬럼만 스크롤) / 모바일: 자연 높이 + 페이지 스크롤 */}
+            <Card className="overflow-visible lg:overflow-hidden lg:flex-1 lg:min-h-0 lg:flex lg:flex-col">
+                <CardHeader className="lg:shrink-0 lg:pb-4">
+                    <CardTitle>Article Analytics</CardTitle>
+                    <CardDescription>
+                        방문자 수, 유입 경로, 전환 지표 및 검색 성과를 분석합니다.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="lg:flex-1 lg:min-h-0 lg:flex lg:flex-col">
+                    <ArticleAnalyticsClient data={data} postId={Number(id)} currentPeriod={String(period ?? '30')} />
+                </CardContent>
+            </Card>
         </div>
     );
 }
