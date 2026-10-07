@@ -28,9 +28,10 @@ export async function getPublicMagazinePosts(keyword?: string) {
             author: true,
             region: true
         },
-        orderBy: {
-            createdAt: 'desc'
-        }
+        orderBy: [
+            { publishedAt: 'desc' },
+            { createdAt: 'desc' }
+        ]
     });
 }
 
@@ -51,9 +52,10 @@ export async function getHeadlineMagazinePosts() {
             author: true,
             region: true
         },
-        orderBy: {
-            createdAt: 'desc'
-        }
+        orderBy: [
+            { publishedAt: 'desc' },
+            { createdAt: 'desc' }
+        ]
     });
 
     return posts.map(post => ({
@@ -67,6 +69,7 @@ export async function getHeadlineMagazinePosts() {
             name: post.author.name,
             slug: post.author.slug,
         } : null,
+        publishedAt: post.publishedAt,
         createdAt: post.createdAt
     }));
 }
@@ -92,9 +95,10 @@ export async function getTechMarketingPosts() {
             },
             author: true
         },
-        orderBy: {
-            createdAt: 'desc'
-        }
+        orderBy: [
+            { publishedAt: 'desc' },
+            { createdAt: 'desc' }
+        ]
     });
 }
 
@@ -127,9 +131,10 @@ export async function getLocalPosts(regionSlug?: string) {
             author: true,
             region: true
         },
-        orderBy: {
-            createdAt: 'desc'
-        }
+        orderBy: [
+            { publishedAt: 'desc' },
+            { createdAt: 'desc' }
+        ]
     });
 }
 

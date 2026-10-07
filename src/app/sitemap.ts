@@ -68,6 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 slug: true,
                 updatedAt: true,
                 createdAt: true,
+                publishedAt: true,
                 category: {
                     select: { isLocal: true }
                 },
@@ -75,9 +76,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                     select: { slug: true }
                 }
             },
-            orderBy: {
-                updatedAt: 'desc',
-            },
+            orderBy: [
+                { publishedAt: 'desc' },
+                { updatedAt: 'desc' },
+            ],
         });
 
         magazineRoutes = magazinePosts.map((post) => {
@@ -86,7 +88,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 : `/magazine/tech-marketing/${post.slug}`;
             return {
                 url: `${baseUrl}${path}`,
-                lastModified: post.updatedAt,
+                lastModified: post.updatedAt || post.publishedAt || post.createdAt,
                 changeFrequency: 'weekly' as const,
                 priority: 0.7,
             };

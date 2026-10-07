@@ -247,8 +247,14 @@ export async function updateMagazinePost(id: number, data: {
         const { summary: extractedSummary, cleanedContent } = processMagazineContent(postData.content, (postData as any).summary);
 
         let publishedAt = oldPost?.publishedAt;
-        if (postData.status === 'PUBLISHED' && oldPost?.status !== 'PUBLISHED' && !publishedAt) {
-            publishedAt = new Date();
+        if (postData.status === 'PUBLISHED') {
+            // 초안에서 최초 발행되거나, 기존 발행일이 없었던 경우 현재 일시로 기록
+            if (oldPost?.status !== 'PUBLISHED' || !publishedAt) {
+                publishedAt = new Date();
+            }
+        } else if (postData.status === 'DRAFT') {
+            // 임시저장(초안)으로 저장되는 경우 발행일을 null로 리셋
+            publishedAt = null;
         }
 
         const post = await prisma.magazinePost.update({

@@ -308,7 +308,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
                     },
                 },
             },
-            orderBy: { magazinePost: { createdAt: 'desc' as const } },
+            orderBy: { magazinePost: { publishedAt: 'desc' as const } },
             take: 10,
         },
         _count: {
@@ -383,7 +383,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         return {
             id: post.id,
             title: post.title,
-            pub_date: post.createdAt,
+            pub_date: post.publishedAt || post.createdAt,
             source: 'ZINSIGHT_MAGAZINE',
             url: link,
             summary: post.summary || parsedLead,

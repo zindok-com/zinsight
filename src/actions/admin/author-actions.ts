@@ -147,9 +147,10 @@ export async function getPublicAuthorBySlug(slug: string) {
                         status: 'PUBLISHED',
                         deletedAt: null
                     },
-                    orderBy: {
-                        createdAt: 'desc'
-                    },
+                    orderBy: [
+                        { publishedAt: 'desc' },
+                        { createdAt: 'desc' }
+                    ],
                     include: {
                         category: true,
                         region: true,

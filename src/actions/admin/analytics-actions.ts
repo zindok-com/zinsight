@@ -108,9 +108,12 @@ export async function getRecentArticlesLeaderboard(periodDays: number = 30, limi
     // 1. 최근 발행 기사 목록 추출
     const recentPosts = await prisma.magazinePost.findMany({
         where: { deletedAt: null, status: 'PUBLISHED' },
-        orderBy: { createdAt: 'desc' },
+        orderBy: [
+            { publishedAt: 'desc' },
+            { createdAt: 'desc' }
+        ],
         take: limit,
-        select: { id: true, title: true, slug: true, createdAt: true },
+        select: { id: true, title: true, slug: true, publishedAt: true, createdAt: true },
     });
 
     if (recentPosts.length === 0) return [];
@@ -127,7 +130,7 @@ export async function getRecentArticlesLeaderboard(periodDays: number = 30, limi
             id: post.id,
             title: post.title,
             slug: post.slug,
-            publishedAt: post.createdAt, // UI 호환성을 위해 이름 유지
+            publishedAt: post.publishedAt || post.createdAt,
             views: stats.views,
             radarClicks: stats.radarClicks,
         };
