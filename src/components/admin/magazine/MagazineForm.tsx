@@ -613,7 +613,7 @@ export function MagazineForm({
     }, []);
 
     return (
-        <div className="space-y-6 lg:space-y-0 lg:gap-5 lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+        <div className="space-y-6 lg:space-y-0 lg:gap-5 lg:flex lg:flex-col lg:flex-1 lg:min-h-0 lg:h-full">
             {/* Tab Switched Header & Quick Actions — 모바일: sticky / lg: 카드 상단 고정(flex-shrink-0) */}
             <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 pb-3 flex-wrap gap-4 bg-white/95 backdrop-blur-sm -mx-6 px-6 pt-2 lg:static lg:shrink-0 lg:pt-0 lg:bg-white lg:backdrop-blur-none">
                 <div className="flex">
@@ -688,9 +688,9 @@ export function MagazineForm({
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8 lg:space-y-0 lg:gap-4 lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+            <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8 lg:space-y-0 lg:gap-4 lg:flex lg:flex-col lg:flex-1 lg:min-h-0 lg:h-full">
                 {activeTab === 'edit' ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-[15rem_1fr] xl:grid-cols-[15rem_1fr_20rem] lg:grid-rows-[minmax(0,1fr)] gap-6 items-stretch lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+                    <div className="grid grid-cols-1 lg:grid-cols-[15rem_1fr] xl:grid-cols-[15rem_1fr_20rem] lg:grid-rows-[minmax(0,1fr)] gap-6 items-stretch lg:flex-1 lg:min-h-0 lg:h-full lg:overflow-hidden">
                         {/* 컬럼 1: Desktop side navigation — 고정 컬럼 (항목이 많을 때만 자체 스크롤) */}
                         <aside className="hidden lg:block min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden">
                             <nav className="flex flex-col gap-1 w-full py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2 overflow-x-hidden">
@@ -1733,7 +1733,7 @@ export function MagazineForm({
                     </div>
                 ) : (
                     /* High-fidelity Live Preview Mode — lg: 카드 내부 스크롤 영역 */
-                    <div ref={scrollAreaRef} className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pb-4">
+                    <div ref={scrollAreaRef} className="lg:flex-1 lg:min-h-0 lg:h-full lg:overflow-y-auto lg:pb-4">
                     <div className="bg-zi-surface text-zi-on-surface p-6 md:p-10 rounded-xl border border-slate-200 shadow-inner max-w-3xl mx-auto space-y-12 min-h-[500px]">
                         {/* Meta Tags & Category */}
                         <div className="space-y-6">

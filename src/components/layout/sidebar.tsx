@@ -90,7 +90,7 @@ export function Sidebar() {
 
             {/* Sidebar Container */}
             <aside className={cn(
-                "bg-slate-900 text-white flex flex-col fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:block",
+                "bg-slate-900 text-white flex flex-col fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:flex md:flex-col md:self-stretch md:min-h-screen",
                 mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-6 border-b border-slate-700">

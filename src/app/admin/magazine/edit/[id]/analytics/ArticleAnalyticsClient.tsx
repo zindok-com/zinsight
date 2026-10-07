@@ -191,7 +191,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
     const totalNvr = nvrData.reduce((s, r) => s + r.sessions, 0);
 
     return (
-        <div className="space-y-6 lg:space-y-0 lg:gap-5 lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
+        <div className="space-y-6 lg:space-y-0 lg:gap-5 lg:flex lg:flex-col lg:flex-1 lg:min-h-0 lg:h-full">
             {showReportModal && post && (
                 <ReportExportModal
                     entityType="article"
@@ -241,7 +241,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
             </div>
 
             {/* 2단 레이아웃 (좌측 네비게이션 + 중앙 스크롤 본문) */}
-            <div className="grid grid-cols-1 lg:grid-cols-[15rem_1fr] lg:grid-rows-[minmax(0,1fr)] gap-6 items-stretch lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-[15rem_1fr] lg:grid-rows-[minmax(0,1fr)] gap-6 items-stretch lg:flex-1 lg:min-h-0 lg:h-full lg:overflow-hidden">
                 {/* 컬럼 1: Desktop side navigation — 고정 컬럼 (내부 스크롤 가능) */}
                 <aside className="hidden lg:block min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden">
                     <nav className="flex flex-col gap-1 w-full py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2 overflow-x-hidden">
