@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         }
     });
 
-    if (!post || post.deletedAt !== null) {
+    if (!post || post.deletedAt !== null || post.status !== 'PUBLISHED') {
         return {
             title: 'Not Found',
             robots: { index: false, follow: false },
@@ -218,6 +218,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
                     `${baseUrl}/img/zinsight_icon.png?ar=4:3`,
                     `${baseUrl}/img/zinsight_icon.png?ar=1:1`
                 ],
+                'dateCreated': post.createdAt.toISOString(),
                 'datePublished': (post.publishedAt || post.createdAt).toISOString(),
                 'dateModified': post.updatedAt.toISOString(),
                 'articleSection': '테크 · 마케팅',

@@ -291,7 +291,12 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                             <div className="flex items-center gap-2.5 sm:gap-4 text-xs sm:text-ui-label font-ui-label text-zi-outline">
                                 <span>발행: {post.author?.name || post.authorName || '진사이트 편집부'}</span>
                                 <span>•</span>
-                                <span>{new Date(post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                <time
+                                    dateTime={(post.publishedAt || post.createdAt).toISOString()}
+                                    itemProp="datePublished"
+                                >
+                                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                </time>
                             </div>
 
                             {/* Google 선호하는 출처 버튼 (제목/발행자 하단 배치) */}

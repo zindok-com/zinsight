@@ -87,7 +87,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         console.error('[generateMetadata] Failed to query local post:', error);
     }
 
-    if (!post || post.deletedAt !== null) {
+    if (!post || post.deletedAt !== null || post.status !== 'PUBLISHED') {
         return {
             title: 'Not Found',
             robots: { index: false, follow: false },
@@ -260,6 +260,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
                     `${baseUrl}/img/zinsight_icon.png?ar=4:3`,
                     `${baseUrl}/img/zinsight_icon.png?ar=1:1`
                 ],
+                'dateCreated': post.createdAt.toISOString(),
                 'datePublished': (post.publishedAt || post.createdAt).toISOString(),
                 'dateModified': post.updatedAt.toISOString(),
                 'articleSection': post.category?.slug === 'edu-collab' ? '산학협력 · 교육' : '로컬 비즈니스',
