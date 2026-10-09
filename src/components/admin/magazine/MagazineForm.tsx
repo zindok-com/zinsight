@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createMagazinePost, updateMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon, ChevronDown, ChevronUp, FileText, List, MoveVertical } from 'lucide-react';
+import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon, ChevronDown, ChevronUp, FileText, List, MoveVertical, Save } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
@@ -360,6 +360,121 @@ export function MagazineForm({
         }
     }, [formData.categoryId, year, month, post, categories]);
 
+    // ── 이탈 방지(뒤로가기 방지) 및 로컬스토리지 자동 임시저장(Auto-draft) 시스템 ──
+    const [isDirty, setIsDirty] = useState(false);
+    const isInitialMount = useRef(true);
+    const draftKey = post ? `zinsight_draft_edit_${post.id}` : 'zinsight_draft_new';
+    const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
+    const [hasRestorableDraft, setHasRestorableDraft] = useState(false);
+    const [draftTimestamp, setDraftTimestamp] = useState<string | null>(null);
+
+    // 폼 내용 수정 감지 (isDirty)
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+        setIsDirty(true);
+    }, [formData, selectedOrganizations]);
+
+    // 1. 브라우저 탭 닫기 / 새로고침 방지
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [isDirty]);
+
+    // 2. 브라우저 뒤로가기(popstate) 방지
+    useEffect(() => {
+        if (!isDirty) return;
+
+        window.history.pushState({ page: 'magazine-editor' }, '', window.location.href);
+
+        const handlePopState = () => {
+            if (isDirty) {
+                const confirmLeave = window.confirm('작성 중인 내용이 저장되지 않았습니다.\n정말 페이지를 벗어나시겠습니까?');
+                if (!confirmLeave) {
+                    window.history.pushState({ page: 'magazine-editor' }, '', window.location.href);
+                } else {
+                    setIsDirty(false);
+                    window.history.back();
+                }
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isDirty]);
+
+    // 3. 로컬스토리지 임시저장본 확인 (마운트 시)
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem(draftKey);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.savedAt && (parsed.formData?.title || parsed.formData?.lead || parsed.formData?.bodies?.[0]?.content)) {
+                    setHasRestorableDraft(true);
+                    const d = new Date(parsed.savedAt);
+                    setDraftTimestamp(`${d.getMonth() + 1}월 ${d.getDate()}일 ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`);
+                }
+            }
+        } catch { }
+    }, [draftKey]);
+
+    // 4. 10초 주기 로컬스토리지 자동 백업
+    useEffect(() => {
+        if (!isDirty) return;
+        const timer = setInterval(() => {
+            try {
+                if (formData.title || formData.lead || formData.bodies?.[0]?.content) {
+                    const draftData = {
+                        formData,
+                        selectedOrganizations,
+                        savedAt: new Date().toISOString()
+                    };
+                    localStorage.setItem(draftKey, JSON.stringify(draftData));
+                    const now = new Date();
+                    setLastSavedTime(`${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`);
+                }
+            } catch { }
+        }, 10000);
+
+        return () => clearInterval(timer);
+    }, [isDirty, formData, selectedOrganizations, draftKey]);
+
+    const restoreDraft = () => {
+        try {
+            const saved = localStorage.getItem(draftKey);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed.formData) {
+                    setFormData(parsed.formData);
+                }
+                if (parsed.selectedOrganizations) {
+                    setSelectedOrganizations(parsed.selectedOrganizations);
+                }
+                setIsDirty(true);
+                setHasRestorableDraft(false);
+                toast.success('임시 저장된 본문을 성공적으로 복원했습니다.');
+            }
+        } catch {
+            toast.error('임시 저장본 복원에 실패했습니다.');
+        }
+    };
+
+    const discardDraft = () => {
+        try {
+            localStorage.removeItem(draftKey);
+        } catch { }
+        setHasRestorableDraft(false);
+        toast.info('임시 저장본을 삭제했습니다.');
+    };
+
     const handleFormKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
         const target = e.target as HTMLElement;
         // Textarea가 아닌 일반 input 등에서 Enter 입력 시 폼 자동 제출(수정/발행 완료) 방지
@@ -424,6 +539,8 @@ export function MagazineForm({
 
                 const wasDraft = post.status === 'DRAFT';
                 if (res.success) {
+                    setIsDirty(false);
+                    try { localStorage.removeItem(draftKey); } catch { }
                     if (isDraft) {
                         toast.success('임시 저장이 완료되었습니다.');
                     } else if (wasDraft) {
@@ -443,6 +560,8 @@ export function MagazineForm({
                 });
 
                 if (res.success) {
+                    setIsDirty(false);
+                    try { localStorage.removeItem(draftKey); } catch { }
                     toast.success(isDraft ? '임시 저장이 완료되었습니다.' : '포스트가 성공적으로 등록되었습니다!');
                     router.push('/admin/magazine');
                 } else {
@@ -668,6 +787,12 @@ export function MagazineForm({
                             )}
                         </div>
                     )}
+                    {lastSavedTime && (
+                        <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-200 font-medium">
+                            <Save className="w-3 h-3 text-emerald-600" />
+                            {lastSavedTime} 자동 보관
+                        </span>
+                    )}
                     <Button
                         type="button"
                         variant="outline"
@@ -697,6 +822,26 @@ export function MagazineForm({
                     </Button>
                 </div>
             </div>
+
+            {hasRestorableDraft && (
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 sm:p-3.5 flex items-center justify-between gap-3 text-amber-950 shadow-sm shrink-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                        <span className="text-xl shrink-0">💾</span>
+                        <div className="min-w-0">
+                            <p className="text-xs sm:text-sm font-bold truncate">작성 중이던 자동 임시 보관본이 있습니다 ({draftTimestamp})</p>
+                            <p className="text-[11px] text-amber-700 truncate">페이지 이탈 전 작성했던 내용을 복구하시겠습니까?</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                        <Button type="button" size="sm" onClick={restoreDraft} className="bg-amber-600 hover:bg-amber-700 text-white font-bold h-7 px-3 text-xs">
+                            복구하기
+                        </Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={discardDraft} className="text-amber-700 hover:bg-amber-100 h-7 px-2 text-xs">
+                            닫기
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} onKeyDown={handleFormKeyDown} className="space-y-8 lg:space-y-0 lg:gap-4 lg:flex lg:flex-col lg:flex-1 lg:min-h-0">
                 {activeTab === 'edit' ? (
@@ -1908,7 +2053,14 @@ export function MagazineForm({
                             type="button"
                             variant="outline"
                             className="h-11 px-8 bg-white"
-                            onClick={() => router.back()}
+                            onClick={() => {
+                                if (isDirty) {
+                                    const confirmLeave = window.confirm('작성 중인 내용이 저장되지 않았습니다.\n정말 취소하고 나가시겠습니까?');
+                                    if (!confirmLeave) return;
+                                }
+                                setIsDirty(false);
+                                router.back();
+                            }}
                             disabled={isPending}
                         >
                             취소
