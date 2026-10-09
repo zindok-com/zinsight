@@ -638,4 +638,49 @@ export async function getBatchArticlesStats(
     return resultMap;
 }
 
+// ── GA4 연동 상태 확인 ───────────────────────────────────────────
+export async function getGA4ConnectionStatus(): Promise<{
+    connected: boolean;
+    propertyId: string;
+    hasCredentials: boolean;
+    error?: string;
+}> {
+    const credentials = loadGoogleCredentials();
+    if (!credentials) {
+        return {
+            connected: false,
+            propertyId: PROPERTY_ID,
+            hasCredentials: false,
+            error: 'Google Service Account 인증 정보가 설정되지 않았습니다.',
+        };
+    }
+
+    try {
+        const client = getClient();
+        if (!client) throw new Error('GA4 클라이언트 초기화 실패');
+
+        const now = new Date().toISOString().split('T')[0];
+        const res = await safeRunReport({
+            property: `properties/${PROPERTY_ID}`,
+            dateRanges: [{ startDate: now, endDate: now }],
+            metrics: [{ name: 'activeUsers' }],
+            limit: 1,
+        });
+
+        return {
+            connected: true,
+            propertyId: PROPERTY_ID,
+            hasCredentials: true,
+        };
+    } catch (err: any) {
+        console.error('[ga4] getGA4ConnectionStatus failed:', err?.message);
+        return {
+            connected: false,
+            propertyId: PROPERTY_ID,
+            hasCredentials: true,
+            error: err?.message || 'GA4 API 통신 오류',
+        };
+    }
+}
+
 

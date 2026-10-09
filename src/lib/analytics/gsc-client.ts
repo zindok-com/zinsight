@@ -251,3 +251,101 @@ export async function getSearchQueries(
     }
 }
 
+// ── 구글 검색 콘솔 연동 상태 확인 ────────────────────────────────
+export async function getGSCConnectionStatus(): Promise<{
+    connected: boolean;
+    siteUrl: string;
+    hasCredentials: boolean;
+    error?: string;
+}> {
+    const credentials = loadGoogleCredentials();
+    if (!credentials) {
+        return {
+            connected: false,
+            siteUrl: SITE_URL,
+            hasCredentials: false,
+            error: 'Google Service Account 인증 정보가 설정되지 않았습니다.',
+        };
+    }
+
+    try {
+        const auth = getAuth();
+        if (!auth) throw new Error('인증 클라이언트를 생성할 수 없습니다.');
+        const sc = google.searchconsole({ version: 'v1', auth });
+
+        // 최근 3일간의 간단한 1건 쿼리로 연동 및 권한 테스트
+        const now = new Date();
+        const end = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const start = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+        await sc.searchanalytics.query({
+            siteUrl: SITE_URL,
+            requestBody: {
+                startDate: start,
+                endDate: end,
+                dimensions: ['date'],
+                rowLimit: 1,
+            },
+        });
+
+        return {
+            connected: true,
+            siteUrl: SITE_URL,
+            hasCredentials: true,
+        };
+    } catch (err: any) {
+        console.error('[gsc] getGSCConnectionStatus failed:', err?.message);
+        return {
+            connected: false,
+            siteUrl: SITE_URL,
+            hasCredentials: true,
+            error: err?.message || '구글 서치콘솔 API 통신 오류',
+        };
+    }
+}
+
+// ── 구글 색인(노출)된 전체 페이지 목록 및 성과 조회 ──────────────
+export interface IndexedPagePerformance {
+    pageUrl: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+}
+
+export async function getIndexedPages(
+    dateRange: DateRange,
+    limit: number = 200
+): Promise<IndexedPagePerformance[]> {
+    try {
+        const auth = getAuth();
+        if (!auth) return [];
+        const sc = google.searchconsole({ version: 'v1', auth });
+
+        const res = await sc.searchanalytics.query({
+            siteUrl: SITE_URL,
+            requestBody: {
+                startDate: dateRange.startDate,
+                endDate: dateRange.endDate,
+                dimensions: ['page'],
+                rowLimit: limit,
+            },
+        });
+
+        const rows = res.data.rows ?? [];
+        return rows
+            .map((row) => ({
+                pageUrl: row.keys?.[0] ?? '',
+                clicks: row.clicks ?? 0,
+                impressions: row.impressions ?? 0,
+                ctr: row.ctr != null ? Math.round(row.ctr * 10000) / 100 : 0,
+                position: row.position != null ? Math.round(row.position * 10) / 10 : 0,
+            }))
+            .filter((p) => p.pageUrl.length > 0)
+            .sort((a, b) => b.impressions - a.impressions);
+    } catch (err) {
+        console.error('[gsc] getIndexedPages failed:', err);
+        return [];
+    }
+}
+
