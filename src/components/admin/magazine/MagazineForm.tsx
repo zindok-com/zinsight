@@ -864,12 +864,9 @@ export function MagazineForm({
                                     <Select
                                         value={formData.categoryId ? String(formData.categoryId) : ''}
                                         onValueChange={(val) => {
-                                            const selectedId = Number(val);
-                                            const selectedCat = categories.find(c => c.id === selectedId);
                                             setFormData({ 
                                                 ...formData, 
                                                 categoryId: val,
-                                                regionId: selectedCat?.isLocal ? formData.regionId : null
                                             });
                                         }}
                                     >
@@ -885,29 +882,39 @@ export function MagazineForm({
                                         </SelectContent>
                                     </Select>
                                 </div>
-                                {isLocal && (
-                                    <div className="space-y-2">
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between">
                                         <Label htmlFor="regionSelect" className="text-xs font-semibold text-slate-600">연계 지역</Label>
-                                        <Select
-                                            value={formData.regionId ? String(formData.regionId) : 'none'}
-                                            onValueChange={(val) => {
-                                                setFormData({ ...formData, regionId: val === 'none' ? null : Number(val) });
-                                            }}
-                                        >
-                                            <SelectTrigger id="regionSelect" className="bg-white border-slate-200">
-                                                <SelectValue placeholder="지역 선택" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">선택 없음</SelectItem>
-                                                {regions.map((reg: any) => (
-                                                    <SelectItem key={reg.id} value={String(reg.id)}>
-                                                        {reg.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        {isLocal ? (
+                                            <span className="text-[10px] text-emerald-600 font-bold">로컬 필수 권장</span>
+                                        ) : (
+                                            <span className="text-[10px] text-slate-400">선택 사항</span>
+                                        )}
                                     </div>
-                                )}
+                                    <Select
+                                        value={formData.regionId ? String(formData.regionId) : 'none'}
+                                        onValueChange={(val) => {
+                                            setFormData({ ...formData, regionId: val === 'none' ? null : Number(val) });
+                                        }}
+                                    >
+                                        <SelectTrigger id="regionSelect" className="bg-white border-slate-200">
+                                            <SelectValue placeholder="지역 선택" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">선택 없음 (전국/공통)</SelectItem>
+                                            {regions.map((reg: any) => (
+                                                <SelectItem key={reg.id} value={String(reg.id)}>
+                                                    {reg.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {isLocal ? (
+                                        <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 기사는 반드시 &apos;연계 지역&apos;을 지정해야 합니다.</p>
+                                    ) : (
+                                        <p className="text-[10px] text-slate-400 mt-1">※ 특정 지자체/지역 관련 뉴스인 경우 연계 지역을 지정할 수 있습니다.</p>
+                                    )}
+                                </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="authorSelect" className="text-xs font-semibold text-slate-600">작성자(발행자)</Label>
                                     <Select
