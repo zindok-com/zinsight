@@ -8,16 +8,11 @@ import { CollapsibleBusinessSummary } from '@/components/public/insight-radar/Co
 import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
 
+import { getGeoCoordinateBySlug } from '@/lib/geo/region-coordinates';
+
 interface PageProps {
     params: Promise<{ id: string }>;
 }
-
-// 지자체별 지리 정보 사전 맵핑 (Geotagging 용)
-const regionGeoMap: Record<string, { lat: number; lng: number; address: string }> = {
-    anyang: { lat: 37.3943, lng: 126.9568, address: 'South Korea, Gyeonggi-do, Anyang-si' },
-    seongnam: { lat: 37.4200, lng: 127.1265, address: 'South Korea, Gyeonggi-do, Seongnam-si' },
-    busan: { lat: 35.1796, lng: 129.0756, address: 'South Korea, Busan' }
-};
 
 // 동적 메타데이터 생성
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -126,7 +121,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         backlinksList = [{ title: '홈페이지 바로가기', url: company.company_url }];
     }
     
-    const geoData = (company.region && regionGeoMap[company.region.slug]) || { lat: 37.5665, lng: 126.9780, address: 'Seoul, South Korea' };
+    const geoData = getGeoCoordinateBySlug(company.region?.slug);
 
     // JSON-LD 구조화 데이터 생성
     const jsonLd = {
