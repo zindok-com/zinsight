@@ -178,19 +178,6 @@ function parseCommaArray(val: any): string {
             const parsed = JSON.parse(val);
             if (Array.isArray(parsed)) return parsed.join(', ');
         } catch { }
-        return val;
-    }
-    return '';
-}
-
-function parseCommaArray(val: any): string {
-    if (!val) return '';
-    if (Array.isArray(val)) return val.join(', ');
-    if (typeof val === 'string') {
-        try {
-            const parsed = JSON.parse(val);
-            if (Array.isArray(parsed)) return parsed.join(', ');
-        } catch { }
         return val.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean).join(', ');
     }
     return '';

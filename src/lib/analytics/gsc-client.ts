@@ -238,13 +238,13 @@ export async function getSearchQueries(
         });
 
         const rows = res.data.rows ?? [];
-        return rows.map((row) => ({
+        return rows.map((row: any) => ({
             query: row.keys?.[0] ?? '',
             clicks: row.clicks ?? 0,
             impressions: row.impressions ?? 0,
             ctr: row.ctr != null ? Math.round(row.ctr * 10000) / 100 : 0,
             position: row.position != null ? Math.round(row.position * 10) / 10 : 0,
-        })).filter((q) => q.query.length > 0);
+        })).filter((q: any) => q.query.length > 0);
     } catch (err) {
         console.error('[gsc] getSearchQueries failed:', err);
         return [];
@@ -334,15 +334,15 @@ export async function getIndexedPages(
 
         const rows = res.data.rows ?? [];
         return rows
-            .map((row) => ({
+            .map((row: any) => ({
                 pageUrl: row.keys?.[0] ?? '',
                 clicks: row.clicks ?? 0,
                 impressions: row.impressions ?? 0,
                 ctr: row.ctr != null ? Math.round(row.ctr * 10000) / 100 : 0,
                 position: row.position != null ? Math.round(row.position * 10) / 10 : 0,
             }))
-            .filter((p) => p.pageUrl.length > 0)
-            .sort((a, b) => b.impressions - a.impressions);
+            .filter((p: any) => p.pageUrl.length > 0)
+            .sort((a: any, b: any) => b.impressions - a.impressions);
     } catch (err) {
         console.error('[gsc] getIndexedPages failed:', err);
         return [];
