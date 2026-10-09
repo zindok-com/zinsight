@@ -243,7 +243,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                         <CollapsibleBusinessSummary
                             text={company.business_summary}
                             fallback="등록된 비즈니스 요약이 없습니다."
-                            className="text-base sm:text-xl text-slate-600 max-w-4xl font-medium"
+                            className="text-[16px] text-slate-600 max-w-4xl font-normal leading-relaxed"
                             bulletColor="text-zi-secondary"
                             paragraphSpacing="space-y-2.5"
                         />

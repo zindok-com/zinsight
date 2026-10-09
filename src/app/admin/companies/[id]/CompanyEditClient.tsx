@@ -183,6 +183,19 @@ function parseCommaArray(val: any): string {
     return '';
 }
 
+function parseCommaArray(val: any): string {
+    if (!val) return '';
+    if (Array.isArray(val)) return val.join(', ');
+    if (typeof val === 'string') {
+        try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return parsed.join(', ');
+        } catch { }
+        return val.split(/[\n,]/).map((s: string) => s.trim()).filter(Boolean).join(', ');
+    }
+    return '';
+}
+
 function parseLinesArray(val: any): string {
     if (!val) return '';
     if (Array.isArray(val)) return val.join('\n');
@@ -211,7 +224,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [hqLocation, setHqLocation] = useState(initialCompany.hq_location || '');
     const [foundedYear, setFoundedYear] = useState(initialCompany.founded_year || '');
     const [ceoName, setCeoName] = useState(initialCompany.ceo_name || '');
-    const [aliases, setAliases] = useState(parseLinesArray(initialCompany.aliases));
+    const [aliases, setAliases] = useState(parseCommaArray(initialCompany.aliases));
     const [keyReferences, setKeyReferences] = useState(parseLinesArray(initialCompany.key_references));
     const [kwProducts, setKwProducts] = useState(kw.products);
     const [kwTechnology, setKwTechnology] = useState(kw.technology);
@@ -420,7 +433,10 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 target_market: kwTargetMarket.split(',').map((s: string) => s.trim()).filter(Boolean),
             };
 
-            const parsedAliases = aliases.split('\n').map((s: string) => s.trim()).filter(Boolean);
+            const parsedAliases = aliases
+                .split(/[\n,]/)
+                .map((s: string) => s.trim())
+                .filter(Boolean);
             const parsedReferences = keyReferences
                 .split('\n')
                 .map((s: string) => s.replace(/^[•\-\*▪]\s*/, '').trim())
@@ -977,10 +993,10 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     <Input
                                         value={aliases}
                                         onChange={e => setAliases(e.target.value)}
-                                        placeholder="안양진흥원\nAPA\n(줄바꿈으로 구분)"
+                                        placeholder="안양진흥원, APA, 진흥원 (쉼표로 구분)"
                                         className="h-8 text-xs"
                                     />
-                                    <p className="text-[10px] text-muted-foreground">줄바꿈으로 구분. 뉴스 크롤링 시 일치 검사에 활용됩니다.</p>
+                                    <p className="text-[10px] text-muted-foreground">쉼표(,)로 구분. 뉴스 크롤링 시 일치 검사에 활용됩니다.</p>
                                 </div>
                                 <div className="space-y-1.5">
                                     <div className="flex items-center justify-between">
