@@ -289,13 +289,17 @@ export function MagazineForm({
                         bodies: parsed.bodies && parsed.bodies.length > 0 
                             ? parsed.bodies 
                             : [{ title: '', content: '' }],
-                        closing: parsed.closing || ''
+                        closing: parsed.closing || '',
+                        thumbnailAlt: parsed.thumbnailAlt || '',
+                        thumbnailCaption: parsed.thumbnailCaption || ''
                     };
                 } else {
                     return {
                         lead: '',
                         bodies: [{ title: '', content: post.content }],
-                        closing: ''
+                        closing: '',
+                        thumbnailAlt: '',
+                        thumbnailCaption: ''
                     };
                 }
             } catch (e) {
@@ -305,7 +309,9 @@ export function MagazineForm({
         return {
             lead: '',
             bodies: [{ title: '', content: '' }],
-            closing: ''
+            closing: '',
+            thumbnailAlt: '',
+            thumbnailCaption: ''
         };
     })();
 
@@ -333,6 +339,8 @@ export function MagazineForm({
         bodies: parsedContent.bodies,
         closing: parsedContent.closing,
         thumbnailUrl: post?.thumbnailUrl || '',
+        thumbnailAlt: parsedContent.thumbnailAlt || '',
+        thumbnailCaption: parsedContent.thumbnailCaption || '',
         categoryId: post?.categoryId ? String(post.categoryId) : (categories.find(c => c.slug === 'newsletter')?.id ? String(categories.find(c => c.slug === 'newsletter').id) : ''),
         status: post?.status || 'PUBLISHED',
         authorId: post?.authorId || null,
@@ -397,7 +405,9 @@ export function MagazineForm({
             const structuredContent = JSON.stringify({
                 lead: formData.lead || '',
                 bodies: validBodies.length > 0 ? validBodies : [{ title: '', content: '' }],
-                closing: formData.closing || ''
+                closing: formData.closing || '',
+                thumbnailAlt: formData.thumbnailAlt || '',
+                thumbnailCaption: formData.thumbnailCaption || '',
             });
 
             const submitPayload = {
@@ -1134,8 +1144,32 @@ export function MagazineForm({
                                     <ImageUpload
                                         value={formData.thumbnailUrl}
                                         onChange={(url) => setFormData({ ...formData, thumbnailUrl: url })}
-                                        onRemove={() => setFormData({ ...formData, thumbnailUrl: '' })}
+                                        onRemove={() => setFormData({ ...formData, thumbnailUrl: '', thumbnailAlt: '', thumbnailCaption: '' })}
                                     />
+                                    {formData.thumbnailUrl && (
+                                        <div className="space-y-3 pt-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                            <div className="space-y-1">
+                                                <Label htmlFor="thumbnailAlt" className="text-xs font-semibold text-slate-700">대표이미지 대체 텍스트 (Alt)</Label>
+                                                <Input
+                                                    id="thumbnailAlt"
+                                                    placeholder="이미지를 설명하는 텍스트 (SEO/스크린리더용, 미입력 시 기사 제목 적용)"
+                                                    value={formData.thumbnailAlt}
+                                                    onChange={(e) => setFormData({ ...formData, thumbnailAlt: e.target.value })}
+                                                    className="h-8 text-xs bg-white"
+                                                />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <Label htmlFor="thumbnailCaption" className="text-xs font-semibold text-slate-700">대표이미지 캡션 / 출처</Label>
+                                                <Input
+                                                    id="thumbnailCaption"
+                                                    placeholder="예: 사진 제공=○○기업 / 안양시청 전경"
+                                                    value={formData.thumbnailCaption}
+                                                    onChange={(e) => setFormData({ ...formData, thumbnailCaption: e.target.value })}
+                                                    className="h-8 text-xs bg-white"
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
