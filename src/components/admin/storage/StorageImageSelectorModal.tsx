@@ -38,32 +38,48 @@ export function StorageImageSelectorModal({ isOpen, onClose, onSelect }: Storage
         }
     }, [isOpen]);
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleFilesUpload = async (fileList: FileList | null) => {
+        if (!fileList || fileList.length === 0) return;
+        const imageFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+        if (imageFiles.length === 0) {
+            toast.error('업로드 가능한 이미지 파일이 없습니다.');
+            return;
+        }
 
         setUploading(true);
-        const file = files[0];
-        const formData = new FormData();
-        formData.append('file', file);
+        let firstUploadedUrl = '';
 
         try {
-            const res = await uploadImageDirect(formData);
-            if (res.success && res.url) {
-                toast.success('이미지가 업로드되었습니다.');
-                // Refresh list and select
+            for (const file of imageFiles) {
+                const formData = new FormData();
+                formData.append('file', file);
+                const res = await uploadImageDirect(formData);
+                if (res.success && res.url) {
+                    if (!firstUploadedUrl) firstUploadedUrl = res.url;
+                }
+            }
+
+            if (firstUploadedUrl) {
+                toast.success(`${imageFiles.length}개의 이미지가 업로드되었습니다.`);
                 await fetchBlobs();
-                onSelect(res.url);
+                onSelect(firstUploadedUrl);
                 onClose();
             } else {
-                toast.error(res.error || '업로드 실패');
+                toast.error('업로드 실패');
             }
         } catch (error) {
             console.error(error);
-            toast.error('업로드 실패');
+            toast.error('업로드 중 오류가 발생했습니다.');
         } finally {
             setUploading(false);
         }
+    };
+
+    const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        handleFilesUpload(e.target.files);
+        if (e.target) e.target.value = '';
     };
 
     const filteredBlobs = blobs.filter(b => {
@@ -73,7 +89,18 @@ export function StorageImageSelectorModal({ isOpen, onClose, onSelect }: Storage
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-            <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
+            <DialogContent 
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(false);
+                    handleFilesUpload(e.dataTransfer.files);
+                }}
+                className={`max-w-3xl max-h-[85vh] flex flex-col p-6 overflow-hidden transition-all ${isDragging ? 'ring-4 ring-indigo-500 bg-indigo-50/20' : ''}`}
+            >
                 <DialogHeader className="pb-2">
                     <DialogTitle className="text-xl font-bold text-slate-800">이미지 보관함에서 선택</DialogTitle>
                     <DialogDescription className="text-xs text-slate-400">
@@ -109,6 +136,7 @@ export function StorageImageSelectorModal({ isOpen, onClose, onSelect }: Storage
                         )}
                         <input
                             type="file"
+                            multiple
                             className="hidden"
                             accept="image/*"
                             onChange={handleUpload}
