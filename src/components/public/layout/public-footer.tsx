@@ -9,7 +9,7 @@ export function PublicFooter() {
                 <div className="flex flex-col items-start justify-between gap-8 sm:gap-12 md:flex-row">
                     {/* 브랜드 블록 */}
                     <div className="max-w-xs">
-                        <span className="mb-3 block text-lg font-bold text-zi-primary">Zinsight</span>
+                        <span className="mb-3 block text-lg font-bold text-zi-primary">진사이트</span>
                         <p className="mb-0 text-[13px] text-slate-500 leading-relaxed">
                             복잡한 데이터를 명료한 인사이트로 전환하여<br className="hidden sm:inline" /> 비즈니스의 미래를 제시합니다.
                         </p>
@@ -24,7 +24,7 @@ export function PublicFooter() {
                         </div>
                         <div className="flex flex-col gap-2 sm:gap-3">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">정보</span>
-                            <Link href="https://www.zindok.com" target="_blank" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">Zinsight 소개</Link>
+                            <Link href="https://www.zindok.com" target="_blank" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">진사이트 소개</Link>
                             <Link href="https://www.zindok.com" target="_blank" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">문의하기</Link>
                         </div>
                         <div className="flex flex-col gap-2 sm:gap-3">
