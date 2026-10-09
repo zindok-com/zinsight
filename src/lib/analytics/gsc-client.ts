@@ -194,3 +194,60 @@ export async function getGenerativeAIPerformance(
     }
 }
 
+// ── 유입 검색 키워드 성과 리포트 ──────────────────────────────────
+export interface SearchQueryPerformance {
+    query: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+}
+
+export async function getSearchQueries(
+    pageUrlOrSlug: string,
+    dateRange: DateRange,
+    limit: number = 30
+): Promise<SearchQueryPerformance[]> {
+    try {
+        const auth = getAuth();
+        if (!auth) return [];
+        const sc = google.searchconsole({ version: 'v1', auth });
+        const targetSlug = extractSlug(pageUrlOrSlug);
+
+        const res = await sc.searchanalytics.query({
+            siteUrl: SITE_URL,
+            requestBody: {
+                startDate: dateRange.startDate,
+                endDate: dateRange.endDate,
+                dimensions: ['query'],
+                dimensionFilterGroups: targetSlug
+                    ? [
+                          {
+                              filters: [
+                                  {
+                                      dimension: 'page',
+                                      operator: 'contains',
+                                      expression: targetSlug,
+                                  },
+                              ],
+                          },
+                      ]
+                    : undefined,
+                rowLimit: limit,
+            },
+        });
+
+        const rows = res.data.rows ?? [];
+        return rows.map((row) => ({
+            query: row.keys?.[0] ?? '',
+            clicks: row.clicks ?? 0,
+            impressions: row.impressions ?? 0,
+            ctr: row.ctr != null ? Math.round(row.ctr * 10000) / 100 : 0,
+            position: row.position != null ? Math.round(row.position * 10) / 10 : 0,
+        })).filter((q) => q.query.length > 0);
+    } catch (err) {
+        console.error('[gsc] getSearchQueries failed:', err);
+        return [];
+    }
+}
+

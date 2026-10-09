@@ -61,7 +61,7 @@ interface Props {
     currentPeriod: string;
 }
 
-type VisitorTab = 'geography' | 'device' | 'hour' | 'returning';
+type VisitorTab = 'geography' | 'device' | 'hour' | 'returning' | 'keyword';
 
 export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
     const router = useRouter();
@@ -162,7 +162,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="기사 데이터를 찾을 수 없습니다." />;
 
-    const { post, linkedOrganizations, summary, pageviews, trafficSources, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, outboundLinkTable } = data;
+    const { post, linkedOrganizations, summary, pageviews, trafficSources, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, searchQueries, outboundLinkTable } = data;
 
     const pvChartData = pageviews.map((r) => ({
         date: r.date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
@@ -634,6 +634,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
                                 { key: 'device' as VisitorTab, label: '🖥 기기' },
                                 { key: 'hour' as VisitorTab, label: '🕐 시간대' },
                                 { key: 'returning' as VisitorTab, label: '🔄 재방문' },
+                                { key: 'keyword' as VisitorTab, label: '🔤 유입 키워드' },
                             ]).map((t) => (
                                 <button
                                     key={t.key}
@@ -730,6 +731,37 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
                                     ))}
                                 </div>
                             ) : <NoData />
+                        )}
+
+                        {visitorTab === 'keyword' && (
+                            searchQueries && searchQueries.length > 0 ? (
+                                <div className="border rounded-xl overflow-hidden bg-card">
+                                    <table className="w-full text-sm">
+                                        <thead className="bg-muted/50">
+                                            <tr>
+                                                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">검색어 (키워드)</th>
+                                                <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">클릭수</th>
+                                                <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">노출수</th>
+                                                <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">CTR</th>
+                                                <th className="text-right px-4 py-2.5 font-medium text-muted-foreground">평균 순위</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {searchQueries.map((q, i) => (
+                                                <tr key={i} className="border-t hover:bg-muted/30 transition-colors">
+                                                    <td className="px-4 py-2.5 font-medium text-foreground">{q.query}</td>
+                                                    <td className="px-4 py-2.5 text-right font-semibold text-indigo-600">{q.clicks.toLocaleString()}</td>
+                                                    <td className="px-4 py-2.5 text-right text-muted-foreground">{q.impressions.toLocaleString()}</td>
+                                                    <td className="px-4 py-2.5 text-right text-muted-foreground">{q.ctr}%</td>
+                                                    <td className="px-4 py-2.5 text-right text-muted-foreground">{q.position}위</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <NoData msg="검색 키워드 데이터가 없습니다. (구글 검색 콘솔 데이터 수집 중)" />
+                            )
                         )}
                     </div>
 
