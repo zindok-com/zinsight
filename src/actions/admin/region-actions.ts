@@ -49,7 +49,11 @@ export async function createRegionAdmin(name: string, slug: string) {
         });
 
         revalidatePath('/magazine');
+        revalidatePath('/insight-radar');
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin/magazine/new');
         revalidatePath('/admin/magazine/regions');
+        revalidatePath('/admin/magazine/headlines');
         return { success: true, data: region };
     } catch (e: any) {
         console.error('Failed to create region:', e);
@@ -88,7 +92,11 @@ export async function updateRegionAdmin(id: number, name: string, slug: string, 
         });
 
         revalidatePath('/magazine');
+        revalidatePath('/insight-radar');
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin/magazine/new');
         revalidatePath('/admin/magazine/regions');
+        revalidatePath('/admin/magazine/headlines');
         return { success: true, data: region };
     } catch (e: any) {
         console.error('Failed to update region:', e);
@@ -104,7 +112,11 @@ export async function deleteRegionAdmin(id: number) {
         });
 
         revalidatePath('/magazine');
+        revalidatePath('/insight-radar');
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin/magazine/new');
         revalidatePath('/admin/magazine/regions');
+        revalidatePath('/admin/magazine/headlines');
         return { success: true };
     } catch (e: any) {
         console.error('Failed to delete region:', e);

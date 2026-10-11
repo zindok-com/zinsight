@@ -213,6 +213,8 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
         lead?: string;
         bodies?: { title: string; content: string }[];
         closing?: string;
+        thumbnailAlt?: string;
+        thumbnailCaption?: string;
     } | null = null;
 
     try {
@@ -307,15 +309,22 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
 
                         {/* 썸네일 이미지 */}
                         {post.thumbnailUrl && (
-                            <div className="mb-12 aspect-[16/9] w-full bg-slate-50 border border-zi-divider/30 rounded-zi-card overflow-hidden relative shadow-sm">
-                                <Image 
-                                    src={post.thumbnailUrl} 
-                                    alt={post.title}
-                                    fill
-                                    priority
-                                    className="object-contain"
-                                />
-                            </div>
+                            <figure className="mb-12 w-full">
+                                <div className="aspect-[16/9] w-full bg-slate-50 border border-zi-divider/30 rounded-zi-card overflow-hidden relative shadow-sm">
+                                    <Image 
+                                        src={post.thumbnailUrl} 
+                                        alt={parsedContent?.thumbnailAlt || post.title}
+                                        fill
+                                        priority
+                                        className="object-contain"
+                                    />
+                                </div>
+                                {parsedContent?.thumbnailCaption && (
+                                    <figcaption className="mt-2.5 text-center text-xs text-slate-500 font-medium">
+                                        {parsedContent.thumbnailCaption}
+                                    </figcaption>
+                                )}
+                            </figure>
                         )}
 
                         {/* 본문 콘텐츠 */}

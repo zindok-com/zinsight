@@ -13,7 +13,9 @@ import {
     Briefcase,
     ShieldCheck,
     Users,
-    Image
+    Image,
+    Globe2,
+    SearchCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -24,6 +26,11 @@ const TOP_MENU_ITEMS = [
     { name: '보안 설정', href: '/admin/settings', icon: ShieldCheck },
     { name: '리다이렉트 관리', href: '/admin/settings/redirects', icon: ShieldCheck },
     { name: '이미지 보관함', href: '/admin/storage', icon: Image },
+];
+
+const SEO_GEO_AEO_ITEMS = [
+    { name: 'SEO·GEO·AEO 관제', href: '/admin/seo-monitoring', icon: Globe2 },
+    { name: '구글 색인 모니터링', href: '/admin/seo-monitoring?tab=indexing', icon: SearchCheck },
 ];
 
 const INSIGHT_RADAR_ITEMS = [
@@ -47,14 +54,16 @@ export function Sidebar() {
     const renderNavItems = (items: typeof INSIGHT_RADAR_ITEMS) => (
         <div className="space-y-1">
             {items.map((item) => {
-                const isActive = pathname === item.href || (
-                    item.href !== '/admin' && 
-                    pathname.startsWith(item.href) && 
-                    !items.some(other => 
-                        other.href !== item.href && 
-                        pathname.startsWith(other.href) && 
-                        other.href.length > item.href.length
-                    )
+                const itemBaseHref = item.href.split('?')[0];
+                const isActive = pathname === itemBaseHref || (
+                    itemBaseHref !== '/admin' && 
+                    pathname.startsWith(itemBaseHref) && 
+                    !items.some(other => {
+                        const otherBase = other.href.split('?')[0];
+                        return otherBase !== itemBaseHref && 
+                            pathname.startsWith(otherBase) && 
+                            otherBase.length > itemBaseHref.length;
+                    })
                 );
                 return (
                     <Link
@@ -105,6 +114,13 @@ export function Sidebar() {
 
                     <div>
                         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3">
+                            검색·AI 최적화 관제
+                        </p>
+                        {renderNavItems(SEO_GEO_AEO_ITEMS)}
+                    </div>
+
+                    <div>
+                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3">
                             Insight Radar
                         </p>
                         {renderNavItems(INSIGHT_RADAR_ITEMS)}
@@ -119,7 +135,7 @@ export function Sidebar() {
                 </nav>
 
                 <div className="p-4 border-t border-slate-700 text-xs text-slate-500 text-center">
-                    v3.1.0 (Magazine Edition)
+                    v3.2.0 (SEO·AEO Edition)
                 </div>
             </aside>
 

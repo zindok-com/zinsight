@@ -16,7 +16,7 @@ export default async function MagazineAeoCTA() {
             <div className="relative z-10 w-full max-w-2xl mx-auto">
                 <div className="mb-6">
                     <span className="inline-block px-3 py-1 rounded-full bg-white/10 text-white/80 text-[10px] font-bold uppercase tracking-widest mb-3 border border-white/10">
-                        Zinsight Radar
+                        진사이트 레이더
                     </span>
                     <h3 className="font-h2 text-[22px] sm:text-[24px] text-white mb-3 leading-tight tracking-tight">
                         최근 인사이트 레이더에 등록된 기업

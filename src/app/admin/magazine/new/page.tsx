@@ -2,6 +2,8 @@ import { prisma } from '@/lib/db';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MagazineForm } from "@/components/admin/magazine/MagazineForm";
 
+export const dynamic = 'force-dynamic';
+
 export default async function NewMagazinePage() {
     // Fetch active authors, regions, and categories for selection
     const [authors, regions, categories] = await Promise.all([

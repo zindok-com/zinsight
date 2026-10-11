@@ -18,21 +18,14 @@ function getCategoryLabel(category: { name?: string; slug: string } | null | und
     }
 }
 
+import { getGeoCoordinateBySlug } from '@/lib/geo/region-coordinates';
+
 export const revalidate = 3600; // 1시간마다 ISR 재생성
 export const dynamicParams = true;
 
 interface PageProps {
     params: Promise<{ region: string; slug: string }>;
 }
-
-
-
-// 지자체별 지리 정보 사전 맵핑 (Geotagging 용)
-const regionGeoMap: Record<string, { lat: number; lng: number; address: string }> = {
-    anyang: { lat: 37.3943, lng: 126.9568, address: 'South Korea, Gyeonggi-do, Anyang-si' },
-    seongnam: { lat: 37.4200, lng: 127.1265, address: 'South Korea, Gyeonggi-do, Seongnam-si' },
-    busan: { lat: 35.1796, lng: 129.0756, address: 'South Korea, Busan' }
-};
 
 export async function generateStaticParams() {
     try {
@@ -193,7 +186,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
     const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
 
-    const geoData = regionGeoMap[regionSlug] || { lat: 37.5665, lng: 126.9780, address: 'Seoul, South Korea' };
+    const geoData = getGeoCoordinateBySlug(regionSlug);
 
     const ldCategoryLabel = getCategoryLabel(post.category);
     const ldKeywords = [

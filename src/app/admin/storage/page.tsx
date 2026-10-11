@@ -133,31 +133,60 @@ export default function StoragePage() {
         );
     };
 
-    // Upload change handler
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files || files.length === 0) return;
+    // Drag and Drop & Multiple Upload State
+    const [isDragging, setIsDragging] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+
+    // Multi-file upload handler (supporting drag & drop)
+    const handleFilesUpload = async (fileList: FileList | null) => {
+        if (!fileList || fileList.length === 0) return;
+        const imageFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+        if (imageFiles.length === 0) {
+            toast.error('업로드 가능한 이미지 파일(PNG, JPG, WEBP 등)이 없습니다.');
+            return;
+        }
 
         setUploading(true);
-        const file = files[0];
-        const formData = new FormData();
-        formData.append('file', file);
+        setUploadProgress({ current: 0, total: imageFiles.length });
 
-        try {
-            const res = await uploadImageDirect(formData);
-            if (res.success && res.url) {
-                toast.success('이미지가 성공적으로 업로드되었습니다!');
-                await fetchBlobsAndUsage(); // Refresh list
-            } else {
-                toast.error(res.error || '업로드 실패');
+        let successCount = 0;
+        let failCount = 0;
+
+        for (let i = 0; i < imageFiles.length; i++) {
+            const file = imageFiles[i];
+            setUploadProgress({ current: i + 1, total: imageFiles.length });
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const res = await uploadImageDirect(formData);
+                if (res.success && res.url) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
+            } catch (error) {
+                console.error(error);
+                failCount++;
             }
-        } catch (error) {
-            console.error(error);
-            toast.error('업로드 중 시스템 오류가 발생했습니다.');
-        } finally {
-            setUploading(false);
-            if (e.target) e.target.value = ''; // Reset input
         }
+
+        setUploading(false);
+        setUploadProgress(null);
+        await fetchBlobsAndUsage();
+
+        if (successCount > 0 && failCount === 0) {
+            toast.success(`${successCount}개의 이미지가 모두 성공적으로 업로드되었습니다!`);
+        } else if (successCount > 0 && failCount > 0) {
+            toast.warning(`${successCount}개 업로드 완료, ${failCount}개 실패.`);
+        } else if (failCount > 0) {
+            toast.error('이미지 업로드에 실패했습니다.');
+        }
+    };
+
+    const handleUploadInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        handleFilesUpload(e.target.files);
+        if (e.target) e.target.value = '';
     };
 
     // Filter blobs by search query
@@ -242,38 +271,67 @@ export default function StoragePage() {
                         <CardDescription className="text-xs text-slate-400">보관함에 새 이미지를 추가합니다.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <label 
-                            className={`border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-indigo-50/20 hover:border-indigo-400 group text-center min-h-[220px] ${
-                                uploading ? 'pointer-events-none opacity-50 bg-slate-50 border-slate-300' : ''
-                            }`}
+                        <div
+                            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                            onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                            onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setIsDragging(false);
+                                handleFilesUpload(e.dataTransfer.files);
+                            }}
+                            className={`border-2 border-dashed rounded-xl p-6 sm:p-8 flex flex-col items-center justify-center transition-all text-center min-h-[220px] ${
+                                isDragging 
+                                    ? 'border-indigo-500 bg-indigo-50/50 scale-[1.02] shadow-inner' 
+                                    : 'border-slate-200 hover:bg-indigo-50/20 hover:border-indigo-400'
+                            } ${uploading ? 'pointer-events-none opacity-60 bg-slate-50 border-slate-300' : 'cursor-pointer'}`}
+                            onClick={() => {
+                                if (!uploading) {
+                                    document.getElementById('storage-file-input')?.click();
+                                }
+                            }}
                         >
                             {uploading ? (
-                                <div className="space-y-3 flex flex-col items-center">
+                                <div className="space-y-3 flex flex-col items-center w-full px-2">
                                     <Loader2 className="h-8 w-8 text-indigo-500 animate-spin" />
-                                    <p className="text-sm font-semibold text-indigo-600">업로드하는 중...</p>
-                                    <p className="text-xs text-slate-400">용량에 따라 몇 초 소요될 수 있습니다.</p>
+                                    <p className="text-sm font-semibold text-indigo-600">
+                                        {uploadProgress ? `이미지 업로드 중... (${uploadProgress.current}/${uploadProgress.total})` : '업로드하는 중...'}
+                                    </p>
+                                    {uploadProgress && uploadProgress.total > 0 && (
+                                        <div className="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                            <div 
+                                                className="bg-indigo-600 h-1.5 transition-all duration-200" 
+                                                style={{ width: `${Math.round((uploadProgress.current / uploadProgress.total) * 100)}%` }}
+                                            />
+                                        </div>
+                                    )}
+                                    <p className="text-xs text-slate-400">네트워크 상황에 따라 잠시 소요될 수 있습니다.</p>
                                 </div>
                             ) : (
                                 <div className="space-y-4 flex flex-col items-center">
-                                    <div className="p-3.5 bg-indigo-50 rounded-full text-indigo-600 group-hover:bg-indigo-100 group-hover:text-indigo-700 transition-colors">
+                                    <div className={`p-3.5 rounded-full transition-colors ${isDragging ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-100 group-hover:text-indigo-700'}`}>
                                         <Upload className="h-6 w-6" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
-                                            파일 클릭하여 업로드
+                                            {isDragging ? '여기에 이미지들을 놓으세요' : '드래그하여 여러 개 바로 첨부'}
                                         </p>
-                                        <p className="text-xs text-slate-400 mt-1">PNG, JPG, JPEG, GIF, WEBP</p>
+                                        <p className="text-xs text-indigo-600/80 font-medium mt-1">또는 클릭하여 파일 다중 선택</p>
+                                        <p className="text-[11px] text-slate-400 mt-1">PNG, JPG, JPEG, GIF, WEBP 지원</p>
                                     </div>
                                 </div>
                             )}
                             <input 
+                                id="storage-file-input"
                                 type="file" 
+                                multiple
                                 className="hidden" 
                                 accept="image/*" 
-                                onChange={handleUpload}
+                                onChange={handleUploadInputChange}
                                 disabled={uploading}
                             />
-                        </label>
+                        </div>
                     </CardContent>
                 </Card>
 

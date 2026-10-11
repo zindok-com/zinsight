@@ -17,6 +17,7 @@ import {
     getPagePerformance,
     getSearchAppearanceBreakdown,
     getGenerativeAIPerformance,
+    getSearchQueries,
 } from '@/lib/analytics/gsc-client';
 
 // ── 링크 추출 헬퍼 (cheerio HTML 파서) ───────────────────────────
@@ -185,6 +186,7 @@ export async function getArticleAnalyticsSummary(
         gscPerf,
         gscAppearance,
         gscGenerativeAI,
+        searchQueries,
         outboundLinkClicks,
     ] = await Promise.all([
         getArticlePageviews(post.slug, dateRange).catch((err) => {
@@ -222,6 +224,10 @@ export async function getArticleAnalyticsSummary(
         getGenerativeAIPerformance(post.slug, gscDateRange).catch((err) => {
             console.error('[analytics] getGenerativeAIPerformance failed:', err?.message, err?.stack);
             return null;
+        }),
+        getSearchQueries(post.slug, gscDateRange).catch((err) => {
+            console.error('[analytics] getSearchQueries failed:', err?.message, err?.stack);
+            return [];
         }),
         getOutboundLinkClicksByUrl(post.slug, dateRange).catch((err) => {
             console.error('[analytics] getOutboundLinkClicksByUrl failed:', err?.message, err?.stack);
@@ -290,6 +296,7 @@ export async function getArticleAnalyticsSummary(
         gsc: gscPerf,
         gscAppearance: gscAppearance ?? [],
         gscGenerativeAI,
+        searchQueries: searchQueries ?? [],
         outboundLinkTable,                  // F-02: 링크별 클릭 상세
     };
 }
@@ -357,6 +364,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         visitorAttributes,
         outboundLinkClicks,
         linkedArticlesWithClicks,
+        searchQueries,
     ] = await Promise.all([
         getArticlePageviews(orgIdentifier, dateRange).catch((err) => {
             console.error('[analytics-org] getArticlePageviews failed:', err?.message, err?.stack);
@@ -405,6 +413,10 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
             console.error('[analytics-org] linkedArticles failed:', err);
             return [];
         }),
+        getSearchQueries(orgIdentifier, buildGscDateRange(periodDays)).catch((err) => {
+            console.error('[analytics-org] getSearchQueries failed:', err);
+            return [];
+        }),
     ]);
 
     const safeArticles = linkedArticlesWithClicks ?? [];
@@ -446,6 +458,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         geography: geography ?? [],
         trafficSources,
         visitorAttributes,
+        searchQueries: searchQueries ?? [],
         outboundLinkTable,               // F-02: 링크별 클릭 상세
         linkedArticles: linkedArticlesWithClicks,
     };
