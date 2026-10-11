@@ -525,8 +525,10 @@ export function MagazineForm({
                 thumbnailCaption: formData.thumbnailCaption || '',
             });
 
+            const { lead, bodies, closing, thumbnailAlt, thumbnailCaption, ...cleanFormData } = formData;
+
             const submitPayload = {
-                ...formData,
+                ...cleanFormData,
                 status: targetStatus,
                 categoryId: Number(formData.categoryId),
                 content: structuredContent,

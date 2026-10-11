@@ -134,6 +134,25 @@ export async function getMagazinePosts() {
     });
 }
 
+const ALLOWED_POST_KEYS = new Set([
+    'title', 'slug', 'content', 'summary', 'thumbnailUrl',
+    'structuredData', 'faqData', 'targetKeywords',
+    'authorName', 'authorId', 'status', 'viewCount',
+    'isInHomeSection', 'isPortalFeatured', 'portalSidePriority',
+    'isTechFeatured', 'isLocalFeatured', 'isPaid', 'price',
+    'isCrossPosted', 'externalLinks', 'publishedAt', 'deletedAt'
+]);
+
+function sanitizeMagazinePostData(raw: Record<string, any>) {
+    const clean: Record<string, any> = {};
+    for (const [key, value] of Object.entries(raw)) {
+        if (ALLOWED_POST_KEYS.has(key)) {
+            clean[key] = value;
+        }
+    }
+    return clean;
+}
+
 export async function createMagazinePost(data: {
     title: string;
     content: string;
@@ -147,7 +166,20 @@ export async function createMagazinePost(data: {
     isPaid?: boolean;
 }) {
     try {
-        const { organizationIds = [], slug: providedSlug, categoryId, regionId = null, targetKeywords = null, lead, bodies, closing, ...postData } = data as any;
+        const { 
+            organizationIds = [], 
+            slug: providedSlug, 
+            categoryId, 
+            regionId = null, 
+            targetKeywords = null, 
+            lead, 
+            bodies, 
+            closing, 
+            thumbnailAlt, 
+            thumbnailCaption, 
+            ...rawPostData 
+        } = data as any;
+        const postData = sanitizeMagazinePostData(rawPostData);
         
         let slug = providedSlug;
 
@@ -192,6 +224,7 @@ export async function createMagazinePost(data: {
         const post = await prisma.magazinePost.create({
             data: {
                 ...postData,
+                title: data.title,
                 content: cleanedContent,
                 summary: extractedSummary,
                 categoryId,
@@ -204,7 +237,7 @@ export async function createMagazinePost(data: {
                         organizationId: id
                     }))
                 }
-            }
+            } as any
         });
 
         await revalidateMagazinePostPaths(post.id);
@@ -233,7 +266,19 @@ export async function updateMagazinePost(id: number, data: {
             select: { slug: true, status: true, publishedAt: true }
         });
 
-        const { organizationIds = [], regionId = null, targetKeywords = null, categoryId, lead, bodies, closing, ...postData } = data as any;
+        const { 
+            organizationIds = [], 
+            regionId = null, 
+            targetKeywords = null, 
+            categoryId, 
+            lead, 
+            bodies, 
+            closing, 
+            thumbnailAlt, 
+            thumbnailCaption, 
+            ...rawPostData 
+        } = data as any;
+        const postData = sanitizeMagazinePostData(rawPostData);
         let slug = data.slug;
 
         // 발행 시 슬러그 서버 검증
@@ -273,7 +318,7 @@ export async function updateMagazinePost(id: number, data: {
                         organizationId: id
                     }))
                 }
-            }
+            } as any
         });
 
         await revalidateMagazinePostPaths(post.id, oldPost?.slug);
