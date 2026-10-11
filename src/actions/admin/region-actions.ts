@@ -24,6 +24,30 @@ export async function getRegionById(id: number) {
 }
 
 
+function revalidateAllRegionConsumers() {
+    try {
+        // 전역 레이아웃 및 주요 페이지 캐시 완전 무효화
+        revalidatePath('/', 'layout');
+        revalidatePath('/magazine');
+        revalidatePath('/magazine/local');
+        revalidatePath('/insight-radar');
+        revalidatePath('/admin');
+        revalidatePath('/admin/magazine');
+        revalidatePath('/admin/magazine/new');
+        revalidatePath('/admin/magazine/edit', 'layout');
+        revalidatePath('/admin/magazine/regions');
+        revalidatePath('/admin/magazine/headlines');
+        revalidatePath('/admin/companies');
+        revalidatePath('/admin/companies', 'layout');
+        revalidatePath('/admin/articles');
+        revalidatePath('/admin/keywords');
+        revalidatePath('/admin/export');
+        revalidatePath('/admin/seo-monitoring');
+    } catch (e) {
+        console.error('Failed to revalidate region consumers:', e);
+    }
+}
+
 // 신규 지자체 등록
 export async function createRegionAdmin(name: string, slug: string) {
     try {
@@ -48,12 +72,7 @@ export async function createRegionAdmin(name: string, slug: string) {
             data: { name: cleanName, slug: cleanSlug, isActive: true }
         });
 
-        revalidatePath('/magazine');
-        revalidatePath('/insight-radar');
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin/magazine/new');
-        revalidatePath('/admin/magazine/regions');
-        revalidatePath('/admin/magazine/headlines');
+        revalidateAllRegionConsumers();
         return { success: true, data: region };
     } catch (e: any) {
         console.error('Failed to create region:', e);
@@ -91,12 +110,7 @@ export async function updateRegionAdmin(id: number, name: string, slug: string, 
             data: { name: cleanName, slug: cleanSlug, isActive }
         });
 
-        revalidatePath('/magazine');
-        revalidatePath('/insight-radar');
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin/magazine/new');
-        revalidatePath('/admin/magazine/regions');
-        revalidatePath('/admin/magazine/headlines');
+        revalidateAllRegionConsumers();
         return { success: true, data: region };
     } catch (e: any) {
         console.error('Failed to update region:', e);
@@ -111,12 +125,7 @@ export async function deleteRegionAdmin(id: number) {
             where: { id }
         });
 
-        revalidatePath('/magazine');
-        revalidatePath('/insight-radar');
-        revalidatePath('/admin/magazine');
-        revalidatePath('/admin/magazine/new');
-        revalidatePath('/admin/magazine/regions');
-        revalidatePath('/admin/magazine/headlines');
+        revalidateAllRegionConsumers();
         return { success: true };
     } catch (e: any) {
         console.error('Failed to delete region:', e);
