@@ -23,10 +23,10 @@ export default async function SeoMonitoringPage({ searchParams }: PageProps) {
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
                         <span>🌐</span>
-                        <span>검색·AI 최적화 관제 (SEO / GEO / AEO)</span>
+                        <span>검색·AI 최적화 관제 (SEO / AEO)</span>
                     </h1>
                     <p className="text-sm text-muted-foreground mt-1">
-                        구글 서치콘솔 색인 현황, GA4 및 네이버 API 연동 상태, 지리 좌표(GEO)와 구조화 데이터(AEO) 적용률을 모니터링합니다.
+                        구글 서치콘솔 색인 현황, GA4 및 네이버 API 연동 상태, 로컬 비즈니스 허브와 구조화 데이터(AEO) 적용률을 모니터링합니다.
                     </p>
                 </div>
             </div>

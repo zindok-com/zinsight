@@ -8,7 +8,6 @@ import {
     XCircle,
     AlertTriangle,
     Search,
-    MapPin,
     Bot,
     ExternalLink,
     Filter,
@@ -25,13 +24,13 @@ interface Props {
     initialTab: string;
 }
 
-type TabType = 'overview' | 'indexing' | 'geo' | 'apis';
+type TabType = 'overview' | 'indexing' | 'apis';
 
 export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, initialTab }: Props) {
     const router = useRouter();
     const pathname = usePathname();
     const [currentTab, setCurrentTab] = useState<TabType>(
-        ['overview', 'indexing', 'geo', 'apis'].includes(initialTab) ? (initialTab as TabType) : 'overview'
+        ['overview', 'indexing', 'apis'].includes(initialTab) ? (initialTab as TabType) : 'overview'
     );
     const [searchFilter, setSearchFilter] = useState('');
     const [indexFilter, setIndexFilter] = useState<'all' | 'indexed' | 'not_indexed'>('all');
@@ -46,7 +45,7 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
         router.push(`${pathname}?period=${currentPeriod}&tab=${t}`);
     };
 
-    const { apiStatus, contentStats, geoRegions } = overview;
+    const { apiStatus, contentStats } = overview;
     const { summary, indexedPagesGsc, articleIndexReport, orgIndexReport } = indexingReport;
 
     // 기사 + 기업 색인 리포트 병합 및 필터링
@@ -99,7 +98,6 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                     {[
                         { key: 'overview', label: '📊 종합 현황', icon: Activity },
                         { key: 'indexing', label: '🔍 구글 색인 목록', icon: Search },
-                        { key: 'geo', label: '📍 GEO 좌표 현황', icon: MapPin },
                         { key: 'apis', label: '⚡ API 연동 진단', icon: Globe },
                     ].map((tab) => {
                         const Icon = tab.icon;
@@ -147,7 +145,7 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
             {currentTab === 'overview' && (
                 <div className="space-y-6">
                     {/* 상단 핵심 지표 카드 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="rounded-xl border bg-card p-5 space-y-1.5 shadow-sm">
                             <div className="flex items-center justify-between text-muted-foreground">
                                 <span className="text-xs font-semibold uppercase tracking-wider">구글 색인 페이지수</span>
@@ -187,20 +185,6 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                             </div>
                             <p className="text-xs text-muted-foreground">Schema.org JSON-LD 적용 기사 비율</p>
                         </div>
-
-                        <div className="rounded-xl border bg-card p-5 space-y-1.5 shadow-sm">
-                            <div className="flex items-center justify-between text-muted-foreground">
-                                <span className="text-xs font-semibold uppercase tracking-wider">GEO 지리 좌표 지원</span>
-                                <MapPin className="w-4 h-4 text-amber-500" />
-                            </div>
-                            <div className="text-3xl font-extrabold text-amber-600">
-                                {geoRegions.filter((r) => r.hasGeo).length}
-                                <span className="text-xs font-normal text-muted-foreground ml-1">
-                                    / {geoRegions.length} 지역
-                                </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground">위도·경도 표준 좌표 매핑 지자체</p>
-                        </div>
                     </div>
 
                     {/* SEO / GEO / AEO 영역별 카드 */}
@@ -238,13 +222,13 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                             </div>
                         </div>
 
-                        {/* 2. GEO (Geographical SEO) */}
+                        {/* 2. LOCAL (로컬 비즈니스 허브) */}
                         <div className="rounded-xl border bg-card p-5 space-y-4">
                             <div className="flex items-center gap-2.5 pb-2 border-b">
-                                <span className="text-xl">📍</span>
+                                <span className="text-xl">🏢</span>
                                 <div>
-                                    <h3 className="font-bold text-foreground">GEO (지리적 로컬 최적화)</h3>
-                                    <p className="text-xs text-muted-foreground">지자체 위도·경도 및 로컬 비즈니스 연계</p>
+                                    <h3 className="font-bold text-foreground">LOCAL (로컬 비즈니스 허브)</h3>
+                                    <p className="text-xs text-muted-foreground">지자체 지면 및 관내 기업·기관 연계</p>
                                 </div>
                             </div>
                             <div className="space-y-3 text-sm">
@@ -257,15 +241,15 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                                     <span className="font-semibold">{contentStats.organizationsCount}개</span>
                                 </div>
                                 <div className="flex justify-between items-center py-1.5 border-b border-border/50">
-                                    <span className="text-muted-foreground">GeoCoordinates 구조</span>
+                                    <span className="text-muted-foreground">지자체 로컬 구조화</span>
                                     <span className="text-xs px-2 py-0.5 rounded font-semibold bg-emerald-50 text-emerald-700">
-                                        Schema.org 지원
+                                        Schema.org Place 표준
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center py-1.5">
-                                    <span className="text-muted-foreground">좌표 매핑 비율</span>
-                                    <span className="font-semibold text-amber-600">
-                                        {Math.round((geoRegions.filter((r) => r.hasGeo).length / (geoRegions.length || 1)) * 100)}%
+                                    <span className="text-muted-foreground">연계 플랫폼</span>
+                                    <span className="text-xs px-2 py-0.5 rounded font-semibold bg-indigo-50 text-indigo-700">
+                                        인사이트 레이더 연동
                                     </span>
                                 </div>
                             </div>
@@ -461,53 +445,6 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                 </div>
             )}
 
-            {/* TAB 3: GEO 좌표 현황 (Geographical SEO) */}
-            {currentTab === 'geo' && (
-                <div className="space-y-6">
-                    <div className="bg-muted/40 p-4 rounded-xl border text-sm text-muted-foreground leading-relaxed">
-                        💡 <strong>GEO 지리 좌표(위도·경도) 시스템:</strong> 로컬 매거진 기사 및 인사이트 레이더 기업 프로필에 대한민국 지자체별 위도(latitude), 경도(longitude) 표준 좌표를 Schema.org <code>Place</code> & <code>GeoCoordinates</code> 로 자동 주입하여 네이버·구글 로컬 검색 및 AI 지리 답변 노출도를 극대화합니다.
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {geoRegions.map((region) => (
-                            <div key={region.id} className="border rounded-xl p-4 bg-card space-y-3 shadow-xs">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-4 h-4 text-primary" />
-                                        <span className="font-bold text-foreground">{region.name}</span>
-                                        <span className="text-xs text-muted-foreground font-mono">({region.slug})</span>
-                                    </div>
-                                    <span className={`text-[11px] px-2 py-0.5 rounded font-semibold ${
-                                        region.hasGeo ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                                    }`}>
-                                        {region.hasGeo ? '좌표 지원' : '좌표 미등록'}
-                                    </span>
-                                </div>
-
-                                {region.hasGeo ? (
-                                    <div className="text-xs space-y-1 bg-muted/40 p-2.5 rounded-lg font-mono">
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">위도(Lat):</span>
-                                            <span className="font-semibold text-foreground">{region.lat}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-muted-foreground">경도(Lng):</span>
-                                            <span className="font-semibold text-foreground">{region.lng}</span>
-                                        </div>
-                                        <div className="pt-1 text-[11px] text-muted-foreground/80 truncate">
-                                            {region.address}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="text-xs text-muted-foreground bg-muted/20 p-2.5 rounded-lg">
-                                        기본 서울 좌표(37.5665, 126.9780)가 기본값으로 적용 중입니다.
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             {/* TAB 4: API 연동 진단 (APIs Diagnostic) */}
             {currentTab === 'apis' && (

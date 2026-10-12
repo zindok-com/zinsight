@@ -18,8 +18,6 @@ function getCategoryLabel(category: { name?: string; slug: string } | null | und
     }
 }
 
-import { getGeoCoordinateBySlug } from '@/lib/geo/region-coordinates';
-
 export const revalidate = 3600; // 1시간마다 ISR 재생성
 export const dynamicParams = true;
 
@@ -186,8 +184,6 @@ export default async function LocalDetailPage({ params }: PageProps) {
     const domain = "www.zinsight.co.kr";
     const baseUrl = `https://${domain}`;
 
-    const geoData = getGeoCoordinateBySlug(regionSlug);
-
     const ldCategoryLabel = getCategoryLabel(post.category);
     const ldKeywords = [
         ldCategoryLabel,
@@ -261,11 +257,6 @@ export default async function LocalDetailPage({ params }: PageProps) {
                 'spatialCoverage': {
                     '@type': 'Place',
                     'name': post.region?.name || 'Local Region',
-                    'geo': {
-                        '@type': 'GeoCoordinates',
-                        'latitude': geoData.lat,
-                        'longitude': geoData.lng
-                    },
                     'address': {
                         '@type': 'PostalAddress',
                         'addressLocality': post.region?.name || 'Local Region',

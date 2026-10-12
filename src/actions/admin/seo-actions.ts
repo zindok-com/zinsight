@@ -8,7 +8,6 @@ import {
     type DateRange,
 } from '@/lib/analytics/gsc-client';
 import { getGA4ConnectionStatus } from '@/lib/analytics/ga4-client';
-import { REGION_GEO_MAP } from '@/lib/geo/region-coordinates';
 
 // ── 날짜 범위 헬퍼 ────────────────────────────────────────────────
 function buildGscDateRange(periodDays: number | 'all'): DateRange {
@@ -48,7 +47,7 @@ export async function getSeoMonitoringOverview() {
     };
 
     // 3. DB 콘텐츠 통계 (매거진 포스트 & 인사이트 레이더 조직)
-    const [publishedPostsCount, structuredPostsCount, localPostsCount, organizationsCount, regions] =
+    const [publishedPostsCount, structuredPostsCount, localPostsCount, organizationsCount] =
         await Promise.all([
             prisma.magazinePost.count({
                 where: { status: 'PUBLISHED', deletedAt: null },
@@ -68,27 +67,7 @@ export async function getSeoMonitoringOverview() {
                 },
             }),
             prisma.organization.count(),
-            prisma.region.findMany({
-                where: { isActive: true },
-                select: { id: true, name: true, slug: true },
-            }),
         ]);
-
-    // 4. GEO 좌표 맵핑 현황
-    const geoStatusList = regions.map((r) => {
-        const lowerSlug = r.slug.toLowerCase();
-        const hasGeo = Boolean(REGION_GEO_MAP[lowerSlug]);
-        const coord = REGION_GEO_MAP[lowerSlug];
-        return {
-            id: r.id,
-            name: r.name,
-            slug: r.slug,
-            hasGeo,
-            lat: coord?.lat ?? null,
-            lng: coord?.lng ?? null,
-            address: coord?.address ?? null,
-        };
-    });
 
     return {
         apiStatus: {
@@ -106,7 +85,6 @@ export async function getSeoMonitoringOverview() {
                     ? Math.round((structuredPostsCount / publishedPostsCount) * 100)
                     : 100,
         },
-        geoRegions: geoStatusList,
     };
 }
 

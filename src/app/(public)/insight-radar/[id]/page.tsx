@@ -8,8 +8,6 @@ import { CollapsibleBusinessSummary } from '@/components/public/insight-radar/Co
 import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
 
-import { getGeoCoordinateBySlug } from '@/lib/geo/region-coordinates';
-
 interface PageProps {
     params: Promise<{ id: string }>;
 }
@@ -120,8 +118,6 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     if (backlinksList.length === 0 && company.company_url) {
         backlinksList = [{ title: '홈페이지 바로가기', url: company.company_url }];
     }
-    
-    const geoData = getGeoCoordinateBySlug(company.region?.slug);
 
     // JSON-LD 구조화 데이터 생성
     const jsonLd = {
@@ -153,12 +149,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 } : undefined,
                 'location': company.region ? {
                     '@type': 'Place',
-                    'name': company.region.name,
-                    'geo': {
-                        '@type': 'GeoCoordinates',
-                        'latitude': geoData.lat,
-                        'longitude': geoData.lng
-                    }
+                    'name': company.region.name
                 } : undefined,
                 'knowsAbout': coreKw?.technology?.join(', ') || undefined,
                 'makesOffer': coreKw?.products?.join(', ') || undefined,
