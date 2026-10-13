@@ -1787,7 +1787,7 @@ export function MagazineForm({
                                     <div className="flex flex-col leading-tight">
                                         <span className="text-[11px] text-slate-700 font-medium">진사이트 | Zinsight</span>
                                         <span className="text-[10px] text-[#006621] truncate max-w-[220px]">
-                                            https://zinsight.co.kr › magazine{preview.slug ? ` › ${preview.slug}` : ''}
+                                            https://www.zinsight.co.kr › magazine{preview.slug ? ` › ${preview.slug}` : ''}
                                         </span>
                                     </div>
                                 </div>
@@ -1863,7 +1863,7 @@ export function MagazineForm({
                                     )}
                                     {/* 텍스트 */}
                                     <div className="p-3 bg-slate-50 border-t border-slate-200">
-                                        <p className="text-[10px] text-slate-400 uppercase font-medium mb-1">zinsight.co.kr</p>
+                                        <p className="text-[10px] text-slate-400 uppercase font-medium mb-1">www.zinsight.co.kr</p>
                                         <p className="text-[13px] font-semibold text-slate-900 line-clamp-2 leading-snug">
                                             {preview.title || <span className="text-slate-300 italic font-normal">제목 미입력</span>}
                                         </p>
