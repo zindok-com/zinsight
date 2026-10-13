@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import MagazinePostDetail from '@/components/public/magazine/MagazinePostDetail';
+import { SITE_BASE_URL } from '@/lib/site';
 
 // MagazinePostDetail과 동일한 카테고리 레이블 매핑 (메타데이터 일치)
 function getCategoryLabel(category: { name?: string; slug: string } | null | undefined): string {
@@ -56,8 +57,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { region: regionSlug, slug } = await params;
-    const domain = "www.zinsight.co.kr";
-    const baseUrl = `https://${domain}`;
+    const baseUrl = SITE_BASE_URL;
 
     let post = null;
     try {
@@ -181,8 +181,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    const domain = "www.zinsight.co.kr";
-    const baseUrl = `https://${domain}`;
+    const baseUrl = SITE_BASE_URL;
 
     const ldCategoryLabel = getCategoryLabel(post.category);
     const ldKeywords = [
@@ -254,6 +253,11 @@ export default async function LocalDetailPage({ params }: PageProps) {
                 'dateModified': post.updatedAt.toISOString(),
                 'articleSection': post.category?.slug === 'edu-collab' ? '산학협력 · 교육' : '로컬 비즈니스',
                 'keywords': ldKeywords.join(', '),
+                ...(post.organizations && post.organizations.length > 0 ? {
+                    'about': post.organizations.map((po: any) => ({
+                        '@id': `${baseUrl}/insight-radar/${po.organization.slug || po.organization.id}#organization`
+                    }))
+                } : {}),
                 'spatialCoverage': {
                     '@type': 'Place',
                     'name': post.region?.name || 'Local Region',

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import MagazinePostDetail from '@/components/public/magazine/MagazinePostDetail';
+import { SITE_BASE_URL } from '@/lib/site';
 
 // MagazinePostDetail과 동일한 카테고리 레이블 매핑 (메타데이터 일치)
 function getCategoryLabel(category: { name?: string; slug: string } | null | undefined): string {
@@ -46,8 +47,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { slug } = await params;
-    const domain = "www.zinsight.co.kr";
-    const baseUrl = `https://${domain}`;
+    const baseUrl = SITE_BASE_URL;
 
     const post = await prisma.magazinePost.findFirst({
         where: { 
@@ -157,8 +157,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
         notFound();
     }
 
-    const domain = "www.zinsight.co.kr";
-    const baseUrl = `https://${domain}`;
+    const baseUrl = SITE_BASE_URL;
 
     const ldCategoryLabel = getCategoryLabel(post.category);
     const ldKeywords = [
@@ -223,6 +222,11 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
                 'dateModified': post.updatedAt.toISOString(),
                 'articleSection': '테크 · 마케팅',
                 'keywords': ldKeywords.join(', '),
+                ...(post.organizations && post.organizations.length > 0 ? {
+                    'about': post.organizations.map((po: any) => ({
+                        '@id': `${baseUrl}/insight-radar/${po.organization.slug || po.organization.id}#organization`
+                    }))
+                } : {}),
                 'mentions': [
                     ...post.organizations.map((po: any) => ({
                         '@type': 'Organization',

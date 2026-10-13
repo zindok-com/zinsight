@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Building2, ArrowRight } from 'lucide-react';
 import { PreferredSourceButton } from '@/components/public/magazine/PreferredSourceButton';
 import { ArticleTracker } from '@/components/public/analytics/ArticleTracker';
+import { serializeJsonLd } from '@/lib/site';
 
 interface HighlightedTextProps {
     text: string;
@@ -240,7 +241,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
             />
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
             <main className="mx-auto max-w-4xl xl:max-w-6xl px-4 sm:px-6 py-5 sm:py-10">
                 <div className={post.organizations && post.organizations.length > 0 ? "xl:grid xl:grid-cols-[1fr_280px] xl:gap-12 items-start xl:relative" : ""}>

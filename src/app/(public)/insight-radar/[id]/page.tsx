@@ -7,6 +7,17 @@ import { OrganizationTracker } from '@/components/public/analytics/ArticleTracke
 import { CollapsibleBusinessSummary } from '@/components/public/insight-radar/CollapsibleBusinessSummary';
 import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
+import {
+    SITE_BASE_URL,
+    buildWebPageId,
+    buildOrganizationId,
+    buildBreadcrumbId,
+    toAbsoluteUrl,
+    serializeJsonLd,
+    parsePostalAddress,
+    parseCleanStringArray,
+    extractFirstParagraph,
+} from '@/lib/site';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -18,9 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const company = await getRadarCompanyDetail(id);
     if (!company) return { title: '조직을 찾을 수 없습니다' };
 
-    const domain = "www.zinsight.co.kr";
-    const baseUrl = `https://${domain}`;
-    const url = `${baseUrl}/insight-radar/${company.slug || company.id}`;
+    const url = `${SITE_BASE_URL}/insight-radar/${company.slug || company.id}`;
     
     let description = company.business_summary;
     const coreKw = parseKeywords(company.core_keywords);
@@ -54,13 +63,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             siteName: '진사이트',
             locale: 'ko_KR',
             // company_logo가 있다면 images에 추가할 수 있지만 현재 없으므로 기본 로고 사용
-            images: [{ url: `${baseUrl}/img/zinsight_icon.png`, width: 1200, height: 630, alt: company.company_name }]
+            images: [{ url: `${SITE_BASE_URL}/img/zinsight_icon.png`, width: 1200, height: 630, alt: company.company_name }]
         },
         twitter: {
             card: 'summary_large_image',
             title,
             description,
-            images: [`${baseUrl}/img/zinsight_icon.png`]
+            images: [`${SITE_BASE_URL}/img/zinsight_icon.png`]
         }
     };
 }
@@ -92,75 +101,129 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     }
 
     const coreKw = parseKeywords(company.core_keywords);
-    const domain = "www.zinsight.co.kr";
-    const baseUrl = `https://${domain}`;
-    const url = `${baseUrl}/insight-radar/${company.slug || company.id}`;
+    const pageSlug = company.slug || String(company.id);
+    const url = `${SITE_BASE_URL}/insight-radar/${pageSlug}`;
 
-    // 백링크 리스트 파싱 (최대 3개)
+    // 백링크 파싱 및 A2: sameAs (에디터 백링크 2·3번 추출)
     const rawBacklinks = company.backlinks;
-    let backlinksList: Array<{ title: string; url: string }> = [];
+    let parsedBacklinks: Array<{ title: string; url: string }> = [];
     if (Array.isArray(rawBacklinks) && rawBacklinks.length > 0) {
-        backlinksList = rawBacklinks.slice(0, 3).map((item: any) => ({
-            title: item.title || '바로가기',
-            url: item.url || '',
-        })).filter(item => item.url.trim() !== '');
+        parsedBacklinks = rawBacklinks;
     } else if (typeof rawBacklinks === 'string') {
         try {
             const parsed = JSON.parse(rawBacklinks);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                backlinksList = parsed.slice(0, 3).map((item: any) => ({
-                    title: item.title || '바로가기',
-                    url: item.url || '',
-                })).filter(item => item.url.trim() !== '');
+            if (Array.isArray(parsed)) {
+                parsedBacklinks = parsed;
             }
         } catch {}
     }
+
+    // 화면 우측 상단 바로가기 버튼용 리스트 (최대 3개)
+    let backlinksList: Array<{ title: string; url: string }> = parsedBacklinks
+        .slice(0, 3)
+        .map((item: any) => ({
+            title: item.title || '바로가기',
+            url: item.url || '',
+        }))
+        .filter((item) => item.url.trim() !== '');
+
     if (backlinksList.length === 0 && company.company_url) {
         backlinksList = [{ title: '홈페이지 바로가기', url: company.company_url }];
     }
 
-    // JSON-LD 구조화 데이터 생성
+    // A2: sameAs - 백링크 2, 3번 (인덱스 1, 2) 배열
+    const sameAsCandidates = parsedBacklinks.slice(1, 3);
+    const sameAsUrls: string[] = [];
+    for (const item of sameAsCandidates) {
+        const rawUrl = typeof item?.url === 'string' ? item.url.trim() : '';
+        if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
+            if (!sameAsUrls.includes(rawUrl)) {
+                sameAsUrls.push(rawUrl);
+            }
+        }
+    }
+
+    // A3: description - 첫 문단만 추출
+    const orgDescription = extractFirstParagraph(company.business_summary);
+
+    // A4: address 분리 (addressRegion, addressLocality, streetAddress, addressCountry: 'KR')
+    const address = parsePostalAddress(company.hq_location, company.region?.name);
+
+    // A5: knowsAbout - 쉼표 기준 배열로 정제
+    const knowsAbout = parseCleanStringArray(coreKw?.technology);
+
+    // A6: makesOffer - 제품/서비스별 Offer 배열
+    const productNames = parseCleanStringArray(coreKw?.products);
+    const makesOffer = productNames.map((name) => ({
+        '@type': 'Offer',
+        'itemOffered': {
+            '@type': 'Service',
+            'name': name,
+        },
+    }));
+
+    // A8: subjectOf - 연결된 매거진 기사 (절대 URL 변환)
+    const subjectOf = company.recentArticles
+        ?.filter((a: any) => a.isMagazine || a.source === 'ZINSIGHT_MAGAZINE')
+        .map((article: any) => ({
+            '@type': 'Article',
+            'headline': article.title,
+            'url': toAbsoluteUrl(article.url),
+        }))
+        .filter((a: any) => a.headline && a.url);
+
+    // A9: logo - 로고 필드 존재 여부 확인 (있을 때만 절대 URL로 출력)
+    const rawLogo = (company as any).logo_url || (company as any).company_logo;
+    const logoUrl = typeof rawLogo === 'string' && rawLogo.trim() ? toAbsoluteUrl(rawLogo) : undefined;
+
+    // alternateName 정제
+    const alternateNames: string[] = Array.isArray(company.aliases)
+        ? (company.aliases as string[]).map((a) => String(a).trim()).filter(Boolean)
+        : [];
+
+    // JSON-LD 구조화 데이터 생성 (최종 목표 @graph 구조: WebPage, BreadcrumbList, Organization)
     const jsonLd = {
         '@context': 'https://schema.org',
         '@graph': [
             {
+                '@type': 'WebPage',
+                '@id': buildWebPageId(url),
+                'url': url,
+                'name': `${company.company_name} 프로필 - 인사이트 레이더`,
+                'about': {
+                    '@id': buildOrganizationId(url),
+                },
+                'breadcrumb': {
+                    '@id': buildBreadcrumbId(url),
+                },
+            },
+            {
                 '@type': 'BreadcrumbList',
-                '@id': `${url}#breadcrumb`,
+                '@id': buildBreadcrumbId(url),
                 'itemListElement': [
-                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': baseUrl },
-                    { '@type': 'ListItem', 'position': 2, 'name': 'Insight Radar', 'item': `${baseUrl}/insight-radar` },
-                    { '@type': 'ListItem', 'position': 3, 'name': company.region?.name || 'Region', 'item': `${baseUrl}/insight-radar?region=${company.region?.id}` },
-                    { '@type': 'ListItem', 'position': 4, 'name': company.company_name, 'item': url }
-                ]
+                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': SITE_BASE_URL },
+                    { '@type': 'ListItem', 'position': 2, 'name': 'Insight Radar', 'item': `${SITE_BASE_URL}/insight-radar` },
+                    { '@type': 'ListItem', 'position': 3, 'name': company.region?.name || 'Region', 'item': `${SITE_BASE_URL}/insight-radar?region=${company.region?.id}` },
+                    { '@type': 'ListItem', 'position': 4, 'name': company.company_name, 'item': url },
+                ],
             },
             {
                 '@type': company.entity_type === '대학/교육기관' ? 'EducationalOrganization' : 'Organization',
-                '@id': `${url}#organization`,
+                '@id': buildOrganizationId(url),
                 'name': company.company_name,
-                'alternateName': company.aliases ? JSON.parse(JSON.stringify(company.aliases)) : undefined,
+                ...(alternateNames.length > 0 ? { 'alternateName': alternateNames } : {}),
+                ...(orgDescription ? { 'description': orgDescription } : {}),
                 'url': company.company_url || url,
-                'foundingDate': company.founded_year || undefined,
-                'founder': company.ceo_name ? { '@type': 'Person', 'name': company.ceo_name } : undefined,
-                'address': company.hq_location ? {
-                    '@type': 'PostalAddress',
-                    'addressLocality': company.region?.name || '',
-                    'streetAddress': company.hq_location,
-                    'addressCountry': 'KR'
-                } : undefined,
-                'location': company.region ? {
-                    '@type': 'Place',
-                    'name': company.region.name
-                } : undefined,
-                'knowsAbout': coreKw?.technology?.join(', ') || undefined,
-                'makesOffer': coreKw?.products?.join(', ') || undefined,
-                'seeks': coreKw?.target_market?.join(', ') || undefined,
-                'subjectOf': company.recentArticles?.map((article: any) => ({
-                    '@type': 'Article',
-                    'headline': article.title,
-                    'url': article.url || undefined
-                }))
-            }
-        ]
+                ...(sameAsUrls.length > 0 ? { 'sameAs': sameAsUrls } : {}),
+                ...(logoUrl ? { 'logo': logoUrl } : {}),
+                ...(company.founded_year ? { 'foundingDate': company.founded_year } : {}),
+                ...(company.ceo_name ? { 'founder': { '@type': 'Person', 'name': company.ceo_name } } : {}),
+                ...(address ? { 'address': address } : {}),
+                ...(knowsAbout.length > 0 ? { 'knowsAbout': knowsAbout } : {}),
+                ...(makesOffer.length > 0 ? { 'makesOffer': makesOffer } : {}),
+                ...(subjectOf && subjectOf.length > 0 ? { 'subjectOf': subjectOf } : {}),
+            },
+        ],
     };
 
     return (
@@ -171,10 +234,10 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 slug={company.slug || String(company.id)}
                 region={company.region?.name ?? null}
             />
-            {/* JSON-LD 삽입 */}
+            {/* JSON-LD 삽입 (HTML 파싱 충돌 방지를 위해 < 문자를 \u003c 로 이스케이프) */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
             <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-6 sm:py-12">
                 {/* ── 뒤로가기 ── */}
