@@ -3,8 +3,17 @@
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
-async function revalidateMagazinePostPaths(postId: number, oldSlug?: string) {
+interface RevalidateOptions {
+    oldSlug?: string;
+    oldRegionSlug?: string | null;
+    oldIsLocal?: boolean;
+}
+
+async function revalidateMagazinePostPaths(postId: number, options?: RevalidateOptions | string) {
     try {
+        const opts: RevalidateOptions = typeof options === 'string' ? { oldSlug: options } : (options || {});
+        const { oldSlug, oldRegionSlug, oldIsLocal } = opts;
+
         const post = await prisma.magazinePost.findUnique({
             where: { id: postId },
             include: { region: true, category: true }
@@ -29,6 +38,7 @@ async function revalidateMagazinePostPaths(postId: number, oldSlug?: string) {
         }
         revalidatePath(`/magazine/${post.slug}`);
 
+        // Current target paths
         if (post.category?.isLocal && post.region?.slug) {
             revalidatePath(`/magazine/local/${post.region.slug}`);
             revalidatePath(`/magazine/local/${post.region.slug}/${post.slug}`);
@@ -39,6 +49,30 @@ async function revalidateMagazinePostPaths(postId: number, oldSlug?: string) {
             revalidatePath(`/magazine/tech-marketing/${post.slug}`);
             if (oldSlug) {
                 revalidatePath(`/magazine/tech-marketing/${oldSlug}`);
+            }
+        }
+
+        // Previous region paths if region was changed
+        if (oldRegionSlug) {
+            revalidatePath(`/magazine/local/${oldRegionSlug}`);
+            revalidatePath(`/magazine/local/${oldRegionSlug}/${post.slug}`);
+            if (oldSlug) {
+                revalidatePath(`/magazine/local/${oldRegionSlug}/${oldSlug}`);
+            }
+        }
+
+        // Previous category paths if category type was changed (local <-> tech-marketing)
+        if (oldIsLocal !== undefined && post.category) {
+            if (oldIsLocal && !post.category.isLocal) {
+                if (oldRegionSlug) {
+                    revalidatePath(`/magazine/local/${oldRegionSlug}`);
+                    revalidatePath(`/magazine/local/${oldRegionSlug}/${post.slug}`);
+                }
+            } else if (!oldIsLocal && post.category.isLocal) {
+                revalidatePath(`/magazine/tech-marketing/${post.slug}`);
+                if (oldSlug) {
+                    revalidatePath(`/magazine/tech-marketing/${oldSlug}`);
+                }
             }
         }
     } catch (e) {
@@ -263,7 +297,7 @@ export async function updateMagazinePost(id: number, data: {
     try {
         const oldPost = await prisma.magazinePost.findUnique({
             where: { id },
-            select: { slug: true, status: true, publishedAt: true }
+            include: { region: true, category: true }
         });
 
         const { 
@@ -321,7 +355,48 @@ export async function updateMagazinePost(id: number, data: {
             } as any
         });
 
-        await revalidateMagazinePostPaths(post.id, oldPost?.slug);
+        // 이미 발행된 포스트에서 지역이나 슬러그, 카테고리가 변경된 경우 SEO 영구 리디렉트(301) 룰 자동 등록
+        if (oldPost && oldPost.status === 'PUBLISHED') {
+            const oldUrl = oldPost.category?.isLocal && oldPost.region?.slug
+                ? `/magazine/local/${oldPost.region.slug}/${oldPost.slug}`
+                : `/magazine/tech-marketing/${oldPost.slug}`;
+
+            const updatedWithRelations = await prisma.magazinePost.findUnique({
+                where: { id: post.id },
+                include: { region: true, category: true }
+            });
+
+            if (updatedWithRelations) {
+                const newUrl = updatedWithRelations.category?.isLocal && updatedWithRelations.region?.slug
+                    ? `/magazine/local/${updatedWithRelations.region.slug}/${updatedWithRelations.slug}`
+                    : `/magazine/tech-marketing/${updatedWithRelations.slug}`;
+
+                if (oldUrl !== newUrl) {
+                    try {
+                        await prisma.redirect.upsert({
+                            where: { sourcePath: oldUrl },
+                            create: {
+                                sourcePath: oldUrl,
+                                targetPath: newUrl,
+                                permanent: true,
+                            },
+                            update: {
+                                targetPath: newUrl,
+                                permanent: true,
+                            }
+                        });
+                    } catch (redirectErr) {
+                        console.error('[updateMagazinePost] Failed to upsert redirect record:', redirectErr);
+                    }
+                }
+            }
+        }
+
+        await revalidateMagazinePostPaths(post.id, {
+            oldSlug: oldPost?.slug,
+            oldRegionSlug: oldPost?.region?.slug,
+            oldIsLocal: oldPost?.category?.isLocal,
+        });
         return { success: true, post };
     } catch (error: any) {
         console.error('Failed to update magazine post:', error);
@@ -344,7 +419,11 @@ export async function deleteMagazinePost(id: number) {
         });
         
         if (postBeforeDelete) {
-            await revalidateMagazinePostPaths(id, postBeforeDelete.slug);
+            await revalidateMagazinePostPaths(id, {
+                oldSlug: postBeforeDelete.slug,
+                oldRegionSlug: postBeforeDelete.region?.slug,
+                oldIsLocal: postBeforeDelete.category?.isLocal,
+            });
         }
         return { success: true };
     } catch (error: any) {

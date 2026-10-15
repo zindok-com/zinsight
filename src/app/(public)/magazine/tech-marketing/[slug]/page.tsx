@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import MagazinePostDetail from '@/components/public/magazine/MagazinePostDetail';
 import { SITE_BASE_URL } from '@/lib/site';
@@ -49,23 +49,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const { slug } = await params;
     const baseUrl = SITE_BASE_URL;
 
-    const post = await prisma.magazinePost.findFirst({
-        where: { 
-            slug,
-            category: { isLocal: false }
-        },
+    const post = await prisma.magazinePost.findUnique({
+        where: { slug },
         include: {
             category: true,
             organizations: { include: { organization: true } },
-            author: true
+            author: true,
+            region: true
         }
     });
 
     if (!post || post.deletedAt !== null || post.status !== 'PUBLISHED') {
+        const currentPath = `/magazine/tech-marketing/${slug}`;
+        const redirectRecord = await prisma.redirect.findUnique({
+            where: { sourcePath: currentPath }
+        });
+        if (redirectRecord) {
+            if (redirectRecord.permanent) {
+                permanentRedirect(redirectRecord.targetPath);
+            } else {
+                redirect(redirectRecord.targetPath);
+            }
+        }
         return {
             title: 'Not Found',
             robots: { index: false, follow: false },
         };
+    }
+
+    // 만약 로컬 카테고리로 변경되었고 지역이 지정되어 있다면 로컬 기사 URL로 영구 리다이렉트
+    if (post.category?.isLocal && post.region) {
+        permanentRedirect(`/magazine/local/${post.region.slug}/${post.slug}`);
     }
 
     const categoryLabel = getCategoryLabel(post.category);
@@ -136,11 +150,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function TechMarketingDetailPage({ params }: PageProps) {
     const { slug } = await params;
 
-    const post = await prisma.magazinePost.findFirst({
-        where: { 
-            slug,
-            category: { isLocal: false }
-        },
+    const post = await prisma.magazinePost.findUnique({
+        where: { slug },
         include: {
             category: true,
             organizations: {
@@ -154,7 +165,23 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
     });
 
     if (!post || post.deletedAt !== null || post.status !== 'PUBLISHED') {
+        const currentPath = `/magazine/tech-marketing/${slug}`;
+        const redirectRecord = await prisma.redirect.findUnique({
+            where: { sourcePath: currentPath }
+        });
+        if (redirectRecord) {
+            if (redirectRecord.permanent) {
+                permanentRedirect(redirectRecord.targetPath);
+            } else {
+                redirect(redirectRecord.targetPath);
+            }
+        }
         notFound();
+    }
+
+    // 만약 로컬 카테고리로 변경되었고 지역이 지정되어 있다면 로컬 기사 URL로 영구 리다이렉트
+    if (post.category?.isLocal && post.region) {
+        permanentRedirect(`/magazine/local/${post.region.slug}/${post.slug}`);
     }
 
     const baseUrl = SITE_BASE_URL;
