@@ -7,7 +7,6 @@ import { OrganizationTracker } from '@/components/public/analytics/ArticleTracke
 import { CollapsibleBusinessSummary } from '@/components/public/insight-radar/CollapsibleBusinessSummary';
 import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
-import { getGeoCoordinateBySlug } from '@/lib/geo/region-coordinates';
 import {
     SITE_BASE_URL,
     buildWebPageId,
@@ -164,8 +163,6 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         backlinksList = [{ title: '홈페이지 바로가기', url: company.company_url }];
     }
 
-    const geoData = getGeoCoordinateBySlug(company.region?.slug);
-
     // sameAs: 공식 웹사이트 및 백링크 URL 통합 (중복 제거)
     const sameAsUrls: string[] = [];
     if (company.company_url && (company.company_url.startsWith('http://') || company.company_url.startsWith('https://'))) {
@@ -264,11 +261,6 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     'location': {
                         '@type': 'Place',
                         'name': company.region.name,
-                        'geo': {
-                            '@type': 'GeoCoordinates',
-                            'latitude': geoData.lat,
-                            'longitude': geoData.lng,
-                        },
                     },
                 } : {}),
                 ...(knowsAbout.length > 0 ? { 'knowsAbout': knowsAbout } : {}),
