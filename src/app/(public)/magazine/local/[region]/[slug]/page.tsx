@@ -309,7 +309,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
                             ? 'EducationalOrganization'
                             : 'Organization',
                         'name': po.organization.company_name,
-                        'sameAs': `${baseUrl}/insight-radar/${po.organization.id}`
+                        'sameAs': `${baseUrl}/insight-radar/${po.organization.slug || po.organization.id}`
                     })),
                 ],
                 ...(post.isPaid && post.organizations.length > 0 ? {
@@ -319,7 +319,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
                             ? 'EducationalOrganization'
                             : 'Organization',
                         'name': post.organizations[0].organization.company_name,
-                        'sameAs': `${baseUrl}/insight-radar/${post.organizations[0].organization.id}`
+                        'sameAs': `${baseUrl}/insight-radar/${post.organizations[0].organization.slug || post.organizations[0].organization.id}`
                     },
                 } : {}),
                 'author': {

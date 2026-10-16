@@ -7,6 +7,7 @@ import { OrganizationTracker } from '@/components/public/analytics/ArticleTracke
 import { CollapsibleBusinessSummary } from '@/components/public/insight-radar/CollapsibleBusinessSummary';
 import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
+import { getGeoCoordinateBySlug } from '@/lib/geo/region-coordinates';
 import {
     SITE_BASE_URL,
     buildWebPageId,
@@ -34,24 +35,36 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     const url = `${SITE_BASE_URL}/insight-radar/${company.slug || company.id}`;
     
-    let description = company.business_summary;
+    const aliases = parseAliases(company.aliases);
+    const aliasesText = aliases.length > 0 ? ` (${aliases.slice(0, 2).join(', ')})` : '';
     const coreKw = parseKeywords(company.core_keywords);
     
+    const keyFeature = coreKw?.technology?.[0] || coreKw?.products?.[0] || '';
+    const regionName = company.region?.name ? `${company.region.name} ` : '';
+
+    // 검색 최적화(SEO) 맞춤 타이틀 생성 (회사명 + 별칭 + 지역 + 핵심키워드)
+    const title = `${company.company_name}${aliasesText} - ${regionName}${keyFeature ? keyFeature + ' ' : ''}기업 분석 프로필 | 진사이트`;
+
+    let description = company.business_summary;
     if (!description) {
-        const products = coreKw?.products?.join(', ') || '';
-        const tech = coreKw?.technology?.join(', ') || '';
-        description = `${company.region?.name || '지역'}에 위치한 ${company.company_name}의 ${products ? products + ' 및 ' : ''}${tech ? tech + ' ' : ''}비즈니스 전문 프로필과 마켓 인사이트를 확인하세요.`;
+        const products = coreKw?.products?.slice(0, 3).join(', ') || '';
+        const tech = coreKw?.technology?.slice(0, 3).join(', ') || '';
+        description = `${regionName ? regionName + '소재 ' : ''}${company.company_name}의 ${products ? products + ' 및 ' : ''}${tech ? tech + ' ' : ''}비즈니스 전문 프로필과 시장 인사이트를 확인하세요.`;
+    } else if (description.length > 150) {
+        description = description.slice(0, 150) + '...';
     }
 
-    const title = `${company.company_name} 프로필 - 인사이트 레이더`;
-    
     const tags = [
         company.company_name,
-        ...(company.aliases ? JSON.parse(JSON.stringify(company.aliases)) : []),
+        ...aliases,
         company.region?.name,
         ...(coreKw?.technology || []),
-        ...(coreKw?.target_market || [])
-    ].filter(Boolean);
+        ...(coreKw?.products || []),
+        ...(coreKw?.target_market || []),
+        '기업 분석',
+        '인사이트 레이더',
+        '진사이트'
+    ].filter(Boolean) as string[];
 
     return {
         title,
@@ -64,8 +77,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             type: 'profile',
             url,
             siteName: '진사이트',
-            locale: 'ko_KR',
-            // company_logo가 있다면 images에 추가할 수 있지만 현재 없으므로 기본 로고 사용
             images: [{ url: `${SITE_BASE_URL}/img/zinsight_icon.png`, width: 1200, height: 630, alt: company.company_name }]
         },
         twitter: {
@@ -92,6 +103,24 @@ function parseKeywords(keywordsStr: any) {
     }
 }
 
+/**
+ * 기업 별칭(aliases)을 안전하게 파싱하는 헬퍼 함수
+ */
+function parseAliases(aliases: any): string[] {
+    if (!aliases) return [];
+    if (Array.isArray(aliases)) return aliases.map(String).filter(Boolean);
+    if (typeof aliases === 'string') {
+        try {
+            const parsed = JSON.parse(aliases);
+            if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean);
+            return aliases.split(',').map((s: string) => s.trim()).filter(Boolean);
+        } catch {
+            return aliases.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+    }
+    return [];
+}
+
 export default async function InsightRadarDetailPage({ params }: PageProps) {
     const { id } = await params;
     const company = await getRadarCompanyDetail(id);
@@ -103,6 +132,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         permanentRedirect(`/insight-radar/${company.slug}`);
     }
 
+    const aliases = parseAliases(company.aliases);
     const coreKw = parseKeywords(company.core_keywords);
     const pageSlug = company.slug || String(company.id);
     const url = `${SITE_BASE_URL}/insight-radar/${pageSlug}`;
@@ -134,10 +164,14 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         backlinksList = [{ title: '홈페이지 바로가기', url: company.company_url }];
     }
 
-    // A2: sameAs - 백링크 2, 3번 (인덱스 1, 2) 배열
-    const sameAsCandidates = parsedBacklinks.slice(1, 3);
+    const geoData = getGeoCoordinateBySlug(company.region?.slug);
+
+    // sameAs: 공식 웹사이트 및 백링크 URL 통합 (중복 제거)
     const sameAsUrls: string[] = [];
-    for (const item of sameAsCandidates) {
+    if (company.company_url && (company.company_url.startsWith('http://') || company.company_url.startsWith('https://'))) {
+        sameAsUrls.push(company.company_url);
+    }
+    for (const item of parsedBacklinks) {
         const rawUrl = typeof item?.url === 'string' ? item.url.trim() : '';
         if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
             if (!sameAsUrls.includes(rawUrl)) {
@@ -146,13 +180,13 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         }
     }
 
-    // A3: description - 첫 문단만 추출
-    const orgDescription = extractFirstParagraph(company.business_summary);
+    // A3: description
+    const orgDescription = company.business_summary || extractFirstParagraph(company.business_summary);
 
-    // A4: address 분리 (addressRegion, addressLocality, streetAddress, addressCountry: 'KR')
+    // A4: address 분리
     const address = parsePostalAddress(company.hq_location, company.region?.name);
 
-    // A5: knowsAbout - 쉼표 기준 배열로 정제
+    // A5: knowsAbout - 정제된 기술 키워드 배열
     const knowsAbout = parseCleanStringArray(coreKw?.technology);
 
     // A6: makesOffer - 제품/서비스별 Offer 배열
@@ -165,48 +199,52 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         },
     }));
 
-    // A8: subjectOf - 연결된 매거진 기사 (절대 URL 변환)
+    // A7: seeks - 타겟 시장 배열
+    const seeks = parseCleanStringArray(coreKw?.target_market);
+
+    // A8: subjectOf - 연결된 관련 기사
     const subjectOf = company.recentArticles
-        ?.filter((a: any) => a.isMagazine || a.source === 'ZINSIGHT_MAGAZINE')
-        .map((article: any) => ({
+        ?.map((article: any) => ({
             '@type': 'Article',
             'headline': article.title,
             'url': toAbsoluteUrl(article.url),
         }))
         .filter((a: any) => a.headline && a.url);
 
-    // A9: logo - 로고 필드 존재 여부 확인 (있을 때만 절대 URL로 출력)
+    // A9: logo - 로고 필드
     const rawLogo = (company as any).logo_url || (company as any).company_logo;
     const logoUrl = typeof rawLogo === 'string' && rawLogo.trim() ? toAbsoluteUrl(rawLogo) : undefined;
 
-    // alternateName 정제
-    const alternateNames: string[] = Array.isArray(company.aliases)
-        ? (company.aliases as string[]).map((a) => String(a).trim()).filter(Boolean)
-        : [];
-
-    // JSON-LD 구조화 데이터 생성 (최종 목표 @graph 구조: WebPage, BreadcrumbList, Organization)
+    // JSON-LD 구조화 데이터 생성 (@graph: ProfilePage, BreadcrumbList, Organization)
     const jsonLd = {
         '@context': 'https://schema.org',
         '@graph': [
             {
-                '@type': 'WebPage',
+                '@type': 'ProfilePage',
                 '@id': buildWebPageId(url),
                 'url': url,
-                'name': `${company.company_name} 프로필 - 인사이트 레이더`,
-                'about': {
-                    '@id': buildOrganizationId(url),
+                'name': `${company.company_name} 기업 분석 프로필`,
+                'description': orgDescription || `${company.company_name}의 비즈니스 프로필 및 기술 분석`,
+                'isPartOf': {
+                    '@type': 'WebSite',
+                    '@id': `${SITE_BASE_URL}/#website`,
+                    'name': '진사이트',
+                    'url': SITE_BASE_URL,
                 },
                 'breadcrumb': {
                     '@id': buildBreadcrumbId(url),
+                },
+                'mainEntity': {
+                    '@id': buildOrganizationId(url),
                 },
             },
             {
                 '@type': 'BreadcrumbList',
                 '@id': buildBreadcrumbId(url),
                 'itemListElement': [
-                    { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': SITE_BASE_URL },
-                    { '@type': 'ListItem', 'position': 2, 'name': 'Insight Radar', 'item': `${SITE_BASE_URL}/insight-radar` },
-                    { '@type': 'ListItem', 'position': 3, 'name': company.region?.name || 'Region', 'item': `${SITE_BASE_URL}/insight-radar?region=${company.region?.id}` },
+                    { '@type': 'ListItem', 'position': 1, 'name': '홈', 'item': SITE_BASE_URL },
+                    { '@type': 'ListItem', 'position': 2, 'name': '인사이트 레이더', 'item': `${SITE_BASE_URL}/insight-radar` },
+                    { '@type': 'ListItem', 'position': 3, 'name': company.region?.name || '지역', 'item': `${SITE_BASE_URL}/insight-radar?region=${company.region?.id}` },
                     { '@type': 'ListItem', 'position': 4, 'name': company.company_name, 'item': url },
                 ],
             },
@@ -214,7 +252,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 '@type': company.entity_type === '대학/교육기관' ? 'EducationalOrganization' : 'Organization',
                 '@id': buildOrganizationId(url),
                 'name': company.company_name,
-                ...(alternateNames.length > 0 ? { 'alternateName': alternateNames } : {}),
+                ...(aliases.length > 0 ? { 'alternateName': aliases } : {}),
                 ...(orgDescription ? { 'description': orgDescription } : {}),
                 'url': company.company_url || url,
                 ...(sameAsUrls.length > 0 ? { 'sameAs': sameAsUrls } : {}),
@@ -222,8 +260,20 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 ...(company.founded_year ? { 'foundingDate': company.founded_year } : {}),
                 ...(company.ceo_name ? { 'founder': { '@type': 'Person', 'name': company.ceo_name } } : {}),
                 ...(address ? { 'address': address } : {}),
+                ...(company.region ? {
+                    'location': {
+                        '@type': 'Place',
+                        'name': company.region.name,
+                        'geo': {
+                            '@type': 'GeoCoordinates',
+                            'latitude': geoData.lat,
+                            'longitude': geoData.lng,
+                        },
+                    },
+                } : {}),
                 ...(knowsAbout.length > 0 ? { 'knowsAbout': knowsAbout } : {}),
                 ...(makesOffer.length > 0 ? { 'makesOffer': makesOffer } : {}),
+                ...(seeks.length > 0 ? { 'seeks': seeks } : {}),
                 ...(subjectOf && subjectOf.length > 0 ? { 'subjectOf': subjectOf } : {}),
             },
         ],
@@ -333,7 +383,9 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 <section className="mb-10 sm:mb-12">
                     <div className="mb-4 sm:mb-6 flex items-center gap-2">
                         <Target className="h-5 w-5 sm:h-6 sm:w-6 text-zi-blue" />
-                        <h2 className="text-xl sm:text-2xl font-bold text-zi-primary font-serif tracking-tight">전략적 포지셔닝</h2>
+                        <h2 className="text-xl sm:text-2xl font-bold text-zi-primary font-serif tracking-tight">
+                            {company.company_name} 전략적 포지셔닝 및 핵심 역량
+                        </h2>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-start">
@@ -379,7 +431,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     <div className="mb-6 sm:mb-8 flex items-center justify-between border-b border-zi-divider pb-3 sm:pb-4">
                         <h2 className="text-xl sm:text-2xl font-bold text-zi-primary font-serif tracking-tight flex items-center gap-2">
                             <Tag className="h-5 w-5 sm:h-6 sm:w-6 text-slate-400" />
-                            Activity Timeline
+                            {company.company_name} 주요 활동 및 관련 기사 타임라인
                         </h2>
                         <span className="px-2.5 sm:px-3 py-0.5 sm:py-1 bg-slate-100 text-slate-600 rounded-full text-xs sm:text-sm font-semibold">
                             총 {company.articleCount.toLocaleString()}건 중 주요 {company.recentArticles.length}건
