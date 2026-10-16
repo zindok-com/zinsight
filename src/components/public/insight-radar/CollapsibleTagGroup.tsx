@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface CollapsibleTagGroupProps {
@@ -70,12 +71,14 @@ export function CollapsibleTagGroup({
                     >
                         {items && items.length > 0 ? (
                             items.map((item, i) => (
-                                <span
+                                <Link
                                     key={i}
-                                    className={`px-2.5 sm:px-3 py-1 ${badgeStyle.bg} ${badgeStyle.text} rounded-full text-xs sm:text-sm font-medium border ${badgeStyle.border}`}
+                                    href={`/insight-radar?q=${encodeURIComponent(item)}`}
+                                    className={`inline-block px-2.5 sm:px-3 py-1 ${badgeStyle.bg} ${badgeStyle.text} hover:opacity-85 hover:shadow-xs transition-all rounded-full text-xs sm:text-sm font-medium border ${badgeStyle.border}`}
+                                    title={`"${item}" 관련 기업 및 기술 검색`}
                                 >
                                     {item}
-                                </span>
+                                </Link>
                             ))
                         ) : (
                             <span className="text-xs sm:text-sm text-slate-400 italic">{emptyText}</span>

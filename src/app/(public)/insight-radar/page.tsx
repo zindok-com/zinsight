@@ -17,30 +17,67 @@ import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompany
 // 검색/필터 파라미터가 없는 기본 페이지는 1시간 캐시, 파라미터가 있으면 동적 렌더링
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-    title: '인사이트 레이더 - AEO·SEO·GEO 관내 기업 동향',
-    description: '산업별 핵심 트렌드, 최신 기술 동향 및 키워드를 실시간으로 조망하는 진사이트의 리스트형 데이터 센터입니다.',
-    alternates: {
-        canonical: 'https://www.zinsight.co.kr/insight-radar',
-    },
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-            index: true,
-            follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
-        },
-    },
-};
-
 interface PageParams {
     regionId?: string;
     entityType?: string;
     q?: string;
     page?: string;
+}
+
+export async function generateMetadata({
+    searchParams,
+}: {
+    searchParams: Promise<PageParams>;
+}): Promise<Metadata> {
+    const params = await searchParams;
+    const query = params.q?.trim();
+    const baseUrl = 'https://www.zinsight.co.kr';
+    const baseCanonical = `${baseUrl}/insight-radar`;
+
+    if (query) {
+        const title = `"${query}" 관련 기업 및 기술 동향 - 인사이트 레이더 | 진사이트`;
+        const description = `진사이트 인사이트 레이더에서 "${query}" 관련 관내 기업, 비즈니스 포지셔닝, 핵심 기술 및 최신 뉴스 타임라인을 확인하세요.`;
+        return {
+            title,
+            description,
+            alternates: {
+                canonical: baseCanonical,
+            },
+            openGraph: {
+                title,
+                description,
+                url: `${baseCanonical}?q=${encodeURIComponent(query)}`,
+                siteName: '진사이트',
+                locale: 'ko_KR',
+            },
+        };
+    }
+
+    return {
+        title: '인사이트 레이더 - 기업 동향 및 기술 분석 데이터 센터 | 진사이트',
+        description: '산업별 핵심 트렌드, 관내 기업 기술 동향 및 비즈니스 포지셔닝을 실시간으로 조망하는 진사이트의 데이터 센터입니다.',
+        alternates: {
+            canonical: baseCanonical,
+        },
+        openGraph: {
+            title: '인사이트 레이더 - 기업 동향 및 기술 분석 데이터 센터 | 진사이트',
+            description: '산업별 핵심 트렌드, 관내 기업 기술 동향 및 비즈니스 포지셔닝을 실시간으로 조망하는 진사이트의 데이터 센터입니다.',
+            url: baseCanonical,
+            siteName: '진사이트',
+            locale: 'ko_KR',
+        },
+        robots: {
+            index: true,
+            follow: true,
+            googleBot: {
+                index: true,
+                follow: true,
+                'max-video-preview': -1,
+                'max-image-preview': 'large',
+                'max-snippet': -1,
+            },
+        },
+    };
 }
 
 export default async function InsightRadarPage({

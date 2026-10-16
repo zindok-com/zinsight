@@ -121,6 +121,10 @@ export async function getRadarCompanies(
                   OR: [
                       { company_name: { contains: searchQuery } },
                       { business_summary: { contains: searchQuery } },
+                      { hq_location: { contains: searchQuery } },
+                      { aliases: { string_contains: searchQuery } },
+                      { core_keywords: { string_contains: searchQuery } },
+                      { region: { name: { contains: searchQuery } } },
                   ],
               }
             : {}),
