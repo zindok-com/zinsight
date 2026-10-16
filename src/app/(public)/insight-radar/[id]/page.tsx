@@ -19,6 +19,9 @@ import {
     extractFirstParagraph,
 } from '@/lib/site';
 
+export const revalidate = 3600; // 1시간마다 ISR 재생성 (크롤러 응답 속도 및 캐시 효율 극대화)
+export const dynamicParams = true;
+
 interface PageProps {
     params: Promise<{ id: string }>;
 }

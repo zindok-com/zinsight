@@ -6,6 +6,12 @@ export async function GET() {
 
   // 다음 웹마스터도구 인증용 주석을 최상단에 배치한 robots.txt 콘텐츠 정의
   const robotsTxt = `#DaumWebMasterTool:78c6bd7dbf36a16c27449f879b8a73f7059a4829426637f8aec5661c43a687d8:whLx8lcYCHguYaKJISJSUA==
+User-agent: Yeti
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /api
+
 User-agent: *
 Allow: /
 Disallow: /admin
