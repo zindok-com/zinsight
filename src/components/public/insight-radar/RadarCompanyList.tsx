@@ -63,12 +63,21 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
 
     if (!companies || companies.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-24 px-6 text-center border border-zi-divider bg-white rounded-zi-card shadow-sm">
+            <div className="flex flex-col items-center justify-center py-16 sm:py-24 px-6 text-center border border-zi-divider bg-white rounded-zi-card shadow-sm">
                 <div className="flex items-center justify-center mb-6">
                     <LottieIcon name="search" size={80} loop autoplay />
                 </div>
                 <h3 className="text-zi-body-lg font-bold text-zi-on-surface mb-2">조직을 찾을 수 없습니다</h3>
                 <p className="text-zi-body-md text-zi-on-surface-variant">해당 조건에 맞는 조직 또는 기업 데이터가 없습니다.</p>
+                {/* 검색 결과가 없을 때 다음 행동을 바로 제공 */}
+                {!isInitialState && (
+                    <Link
+                        href="/insight-radar"
+                        className="mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-zi-btn border border-zi-divider px-5 text-sm font-semibold text-zi-primary hover:bg-zi-surface-container transition-colors"
+                    >
+                        전체 조직 보기 <ArrowRight className="h-4 w-4" />
+                    </Link>
+                )}
             </div>
         );
     }
