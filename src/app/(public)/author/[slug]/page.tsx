@@ -138,7 +138,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                                         <div className="flex items-center gap-1.5">
                                             <Calendar className="w-3.5 h-3.5" />
                                             <time dateTime={new Date(post.publishedAt || post.createdAt).toISOString()}>
-                                                {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+                                                {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', { timeZone: 'Asia/Seoul' })}
                                             </time>
                                         </div>
                                         <div className="flex items-center text-indigo-500 font-semibold group-hover:translate-x-1 transition-transform">

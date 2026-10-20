@@ -442,6 +442,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                               year: 'numeric',
                                               month: '2-digit',
                                               day: '2-digit',
+                                              timeZone: 'Asia/Seoul',
                                           })
                                         : '날짜 없음'
                                     }

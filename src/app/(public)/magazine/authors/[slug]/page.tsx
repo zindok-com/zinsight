@@ -170,6 +170,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
                                                         year: 'numeric',
                                                         month: 'long',
                                                         day: 'numeric',
+                                                        timeZone: 'Asia/Seoul',
                                                     })}
                                                 </time>
                                             </p>

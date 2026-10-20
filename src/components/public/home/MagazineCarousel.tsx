@@ -263,7 +263,7 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                         dateTime={new Date(post.publishedAt || post.createdAt).toISOString()}
                                         className="shrink-0 whitespace-nowrap"
                                     >
-                                        {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '')}
+                                        {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Seoul' }).replace(/\. /g, '.').replace(/\.$/, '')}
                                     </time>
                                 </div>
                             </article>

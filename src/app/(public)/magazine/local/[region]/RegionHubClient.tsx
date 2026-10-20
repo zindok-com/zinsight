@@ -98,7 +98,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                             </span>
                             <span>•</span>
                             <time dateTime={new Date(localHeadline.publishedAt || localHeadline.createdAt).toISOString()}>
-                                {new Date(localHeadline.publishedAt || localHeadline.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                {new Date(localHeadline.publishedAt || localHeadline.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Seoul' })}
                             </time>
                         </div>
                     </div>

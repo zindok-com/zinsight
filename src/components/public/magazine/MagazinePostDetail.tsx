@@ -308,7 +308,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                     dateTime={(post.publishedAt || post.createdAt).toISOString()}
                                     itemProp="datePublished"
                                 >
-                                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                    {new Date(post.publishedAt || post.createdAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Seoul' })}
                                 </time>
                             </div>
 
