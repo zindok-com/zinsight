@@ -290,7 +290,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                             {/* 모바일 파트너 표시 (스폰서드 콘텐츠 법적 고지용) */}
                             {post.isPaid && (
                                 <div className="sm:hidden mb-2.5">
-                                    <span className="inline-flex text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full items-center gap-1">
+                                    <span className="inline-flex text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full items-center gap-1">
                                         <span aria-hidden="true">✦</span>
                                         {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
                                     </span>
@@ -429,7 +429,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                     {/* 텍스트 */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">발행자</span>
+                                            <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">발행자</span>
                                         </div>
                                         <p className="mt-0.5 font-bold text-slate-900 text-base leading-snug">{authorName}</p>
                                         {bio && (
@@ -485,7 +485,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                                     {po.organization.company_name}
                                                 </span>
                                                 {po.organization.entity_type && (
-                                                    <span className="text-[10px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded shrink-0">
+                                                    <span className="text-[11px] font-semibold px-2 py-0.5 bg-slate-100 text-slate-600 rounded shrink-0">
                                                         {po.organization.entity_type}
                                                     </span>
                                                 )}

@@ -127,7 +127,7 @@ export default async function TagArchivePage({ params }: PageProps) {
                     <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 mb-12 sm:mb-16 items-center">
                         <div className="lg:col-span-6 flex flex-col justify-center order-2 lg:order-1">
                             <div className="mb-4">
-                                <span className="font-ui-label text-[10px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
+                                <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
                                     {featuredPost.category?.isLocal && featuredPost.region 
                                         ? `${featuredPost.region.name} ${featuredPost.category.name}` 
                                         : (featuredPost.category?.slug === 'tech-marketing' ? 'Digital Marketing' : 'Newsletter')}
@@ -193,7 +193,7 @@ export default async function TagArchivePage({ params }: PageProps) {
                             <Newspaper className="w-32 h-32 text-white transform rotate-12 translate-x-8 -translate-y-4" />
                         </div>
                         <div className="relative z-10">
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-300">CORE JOURNALISM</span>
+                            <span className="text-[11px] uppercase font-bold tracking-widest text-indigo-300">CORE JOURNALISM</span>
                             <h3 className="text-xl sm:text-2xl font-bold mt-2 mb-3">테크 · 마케팅 저널</h3>
                             <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-sm">
                                 기업의 테크·마케팅 성공 사례와 전략 인사이트를 파트너십 및 자체 리서치 기반으로 다루는 진사이트의 콘텐츠 코너입니다.
@@ -209,7 +209,7 @@ export default async function TagArchivePage({ params }: PageProps) {
                             <Building2 className="w-32 h-32 text-indigo-900 transform rotate-12 translate-x-8 -translate-y-4" />
                         </div>
                         <div className="relative z-10">
-                            <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-600">B2G & SME SYNERGY</span>
+                            <span className="text-[11px] uppercase font-bold tracking-widest text-indigo-600">B2G & SME SYNERGY</span>
                             <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-3">로컬 비즈니스 허브</h3>
                             <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-sm">
                                 전국 주요 지자체의 육성 사업 소식, 관내 테크 스타트업 성공 사례 및 소상공인과의 디지털 상생 기사를 모아보는 특화 지면입니다.
@@ -246,7 +246,7 @@ export default async function TagArchivePage({ params }: PageProps) {
                                                 <div className="h-full w-full transition-all duration-500 group-hover:scale-105 bg-zi-surface-container" />
                                             )}
                                             {(article as any).isPaid && (
-                                                <div className="absolute top-2 right-2 z-10 text-[9px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
+                                                <div className="absolute top-2 right-2 z-10 text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
                                                     파트너
                                                 </div>
                                             )}

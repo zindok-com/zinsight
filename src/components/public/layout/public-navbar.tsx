@@ -93,7 +93,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                                 <div className="grid grid-cols-2 gap-6">
                                     {/* 저널 카테고리 */}
                                     <div className="space-y-3.5">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
+                                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
                                             <Newspaper className="w-3 h-3 text-indigo-500" /> Journals
                                         </span>
                                         <div className="flex flex-col gap-2.5">
@@ -111,7 +111,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
 
                                     {/* 지자체별 지면 */}
                                     <div className="space-y-3.5 border-l border-zi-divider pl-6">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
+                                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
                                             <MapPin className="w-3 h-3 text-rose-500" /> B2G Regions
                                         </span>
                                         <div className="flex flex-col gap-2">

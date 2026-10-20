@@ -131,7 +131,7 @@ export default async function LocalHubPage() {
                                             <div className="flex items-center gap-1.5 mb-2 text-ui-label font-ui-label font-semibold uppercase tracking-wider text-zi-secondary">
                                                 <span>{article.region?.name || '공통'}</span>
                                                 <span>•</span>
-                                                <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">
+                                                <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[11px]">
                                                     {article.category?.name || '로컬 소식'}
                                                 </span>
                                             </div>

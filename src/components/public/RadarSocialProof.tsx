@@ -27,7 +27,7 @@ async function getRecentOrgs(limit: number): Promise<RecentOrg[]> {
 function EntityBadge({ entityType }: { entityType: string | null }) {
     if (entityType !== "대학/교육기관") return null;
     return (
-        <span className="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide text-indigo-300 bg-indigo-900/50 border border-indigo-500/30 rounded-full px-1.5 py-0.5 ml-0.5 flex-shrink-0">
+        <span className="inline-flex items-center gap-0.5 text-[11px] font-bold uppercase tracking-wide text-indigo-300 bg-indigo-900/50 border border-indigo-500/30 rounded-full px-1.5 py-0.5 ml-0.5 flex-shrink-0">
             <GraduationCap className="w-2.5 h-2.5" />
             학교
         </span>
@@ -47,7 +47,7 @@ export default async function RadarSocialProof({ limit = 8 }: { limit?: number }
             <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-1">
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-zi-secondary animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-white/50">
                         Insight Radar
                     </span>
                 </div>

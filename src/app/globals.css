@@ -118,3 +118,21 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* 키보드 포커스 표시: 별도 포커스 스타일이 없는 요소에만 적용되도록 :where로 명시도 0 유지 */
+:where(a, button, [role="button"], input, select, textarea, summary):focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* 모션 줄이기 설정 사용자: 자동 재생 애니메이션·부드러운 스크롤 최소화 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

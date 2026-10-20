@@ -153,12 +153,12 @@ export default async function AuthorProfilePage({ params }: PageProps) {
                                         <div className="p-4 flex-1 flex flex-col gap-2">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 {post.category && (
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                                                    <span className="text-[11px] font-bold uppercase tracking-widest text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
                                                         {post.category.name || post.category.slug}
                                                     </span>
                                                 )}
                                                 {post.region && (
-                                                    <span className="text-[10px] font-semibold text-slate-400">
+                                                    <span className="text-[11px] font-semibold text-slate-400">
                                                         {post.region.name}
                                                     </span>
                                                 )}
