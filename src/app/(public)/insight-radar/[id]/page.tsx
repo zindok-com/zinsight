@@ -42,7 +42,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const regionName = company.region?.name ? `${company.region.name} ` : '';
 
     // 검색 최적화(SEO) 맞춤 타이틀 생성 (회사명 + 별칭 + 지역 + 핵심키워드)
-    const title = `${company.company_name}${aliasesText} - ${regionName}${keyFeature ? keyFeature + ' ' : ''}기업 분석 프로필 | 진사이트`;
+    const title = `${company.company_name}${aliasesText} - ${regionName}${keyFeature ? keyFeature + ' ' : ''}기업 분석 프로필`;
+    // <title>에는 루트 template이 '| 진사이트'를 붙이므로, template이 적용되지 않는 OG/트위터에만 직접 붙임
+    const socialTitle = `${title} | 진사이트`;
 
     let description = company.business_summary;
     if (!description) {
@@ -71,7 +73,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         keywords: tags,
         alternates: { canonical: url },
         openGraph: {
-            title,
+            title: socialTitle,
             description,
             type: 'profile',
             url,
@@ -80,7 +82,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         },
         twitter: {
             card: 'summary_large_image',
-            title,
+            title: socialTitle,
             description,
             images: [`${SITE_BASE_URL}/img/zinsight_icon.png`]
         }

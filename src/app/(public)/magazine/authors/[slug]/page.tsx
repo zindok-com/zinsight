@@ -4,6 +4,7 @@ import Image from 'next/image';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/db';
 import { ArrowLeft, FileText } from 'lucide-react';
+import { buildSocialMetadata, toAbsoluteUrl } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,9 +16,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const { slug } = await params;
     const author = await prisma.author.findUnique({ where: { slug } });
     if (!author) return { title: 'Not Found' };
+    const title = `${author.name} 발행자 프로필`;
+    const description = author.bio || `${author.name}의 발행 기사를 확인하세요.`;
+    const path = `/magazine/authors/${slug}`;
     return {
-        title: `${author.name} 발행자 프로필`,
-        description: author.bio || `${author.name}의 발행 기사를 확인하세요.`,
+        title,
+        description,
+        alternates: { canonical: toAbsoluteUrl(path) },
+        ...buildSocialMetadata({
+            title,
+            description,
+            path,
+            type: 'profile',
+            image: author.avatarUrl ? { url: author.avatarUrl, width: 600, height: 600, alt: author.name } : undefined,
+        }),
     };
 }
 

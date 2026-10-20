@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Shield, FileText, Ban, AlertTriangle, Scale } from 'lucide-react';
+import { buildSocialMetadata } from '@/lib/site';
 
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
@@ -11,6 +12,11 @@ export const metadata: Metadata = {
     alternates: {
         canonical: `${baseUrl}/terms`,
     },
+    ...buildSocialMetadata({
+        title: '이용약관',
+        description: '진사이트 서비스 이용약관. 콘텐츠 저작권 보호, 무단 크롤링 금지 및 면책 조항을 명시합니다.',
+        path: '/terms',
+    }),
 };
 
 const sections = [

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ArrowRight, Building2, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { getLocalPosts, getRegions } from '@/actions/public/magazine-actions';
+import { buildSocialMetadata } from '@/lib/site';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 
@@ -15,6 +16,11 @@ export const metadata: Metadata = {
     alternates: {
         canonical: `${baseUrl}/magazine/local`,
     },
+    ...buildSocialMetadata({
+        title: '로컬 비즈니스 허브 - 관내 기업·지자체 소식',
+        description: '전국 주요 지자체 및 지역 진흥원의 정책 자금, 관내 테크 스타트업 릴레이 인터뷰 및 골목상권 소상공인과의 디지털 상생 스토리를 다룹니다.',
+        path: '/magazine/local',
+    }),
 };
 
 function HighlightedText({ text }: { text: string }) {

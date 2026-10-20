@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Shield, Settings, Info, Lock, Mail, Scale } from 'lucide-react';
+import { buildSocialMetadata } from '@/lib/site';
 
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
@@ -11,6 +12,11 @@ export const metadata: Metadata = {
     alternates: {
         canonical: `${baseUrl}/privacy`,
     },
+    ...buildSocialMetadata({
+        title: '개인정보처리방침',
+        description: '진사이트 개인정보처리방침. 개인정보 수집 목적, 보유 기간, GA4 쿠키 수집 거부 및 보안 관리 대책을 안내합니다.',
+        path: '/privacy',
+    }),
 };
 
 const sections = [

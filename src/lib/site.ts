@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+
 /**
  * 진사이트 (zinsight.co.kr) 전역 사이트 상수 및 메타데이터 / Schema.org JSON-LD 헬퍼
  */
@@ -36,6 +38,46 @@ export function toAbsoluteUrl(pathOrUrl: string | null | undefined): string {
     }
     const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
     return `${SITE_BASE_URL}${cleanPath}`;
+}
+
+/**
+ * 페이지별 OG/트위터 메타데이터 생성.
+ * 페이지가 openGraph/twitter를 지정하지 않으면 루트 레이아웃의 홈 제목이 그대로 노출되므로,
+ * 목록·허브·정적 페이지는 이 헬퍼로 지정합니다.
+ * <title>과 달리 OG/트위터에는 루트 template이 적용되지 않아 '| 진사이트'를 직접 붙입니다.
+ */
+export function buildSocialMetadata({
+    title,
+    description,
+    path,
+    type = 'website',
+    image,
+}: {
+    title: string;
+    description: string;
+    path: string;
+    type?: 'website' | 'profile';
+    image?: { url: string; width?: number; height?: number; alt?: string };
+}): Pick<Metadata, 'openGraph' | 'twitter'> {
+    const socialTitle = `${title} | 진사이트`;
+    const ogImage = image ?? { url: '/img/zinsight_icon.png', alt: '진사이트' };
+    return {
+        openGraph: {
+            type,
+            locale: 'ko_KR',
+            siteName: '진사이트',
+            url: toAbsoluteUrl(path),
+            title: socialTitle,
+            description,
+            images: [ogImage],
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: socialTitle,
+            description,
+            images: [ogImage.url],
+        },
+    };
 }
 
 /**

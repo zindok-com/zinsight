@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { ArrowLeft, BookOpen, Calendar, ChevronRight } from 'lucide-react';
 import { getPublicAuthorBySlug } from '@/actions/admin/author-actions';
 import { Metadata } from 'next';
+import { buildSocialMetadata } from '@/lib/site';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
@@ -18,17 +19,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
     const title = `${author.name} 에디터 프로필`;
     const description = author.bio || `${author.name} 에디터가 작성한 진사이트 매거진 기사 목록입니다.`;
-    const ogImage = author.avatarUrl || '/img/zinsight_icon.png';
 
     return {
         title,
         description,
-        openGraph: {
+        ...buildSocialMetadata({
             title,
             description,
+            path: `/author/${slug}`,
             type: 'profile',
-            images: [{ url: ogImage, width: 600, height: 600, alt: author.name }]
-        }
+            image: author.avatarUrl ? { url: author.avatarUrl, width: 600, height: 600, alt: author.name } : undefined,
+        }),
     };
 }
 

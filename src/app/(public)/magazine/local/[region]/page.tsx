@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { getLocalPosts } from '@/actions/public/magazine-actions';
 import RegionHubClient from './RegionHubClient';
 import { Building2 } from 'lucide-react';
+import { buildSocialMetadata } from '@/lib/site';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 export const dynamicParams = true;
@@ -50,12 +51,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     }
 
+    const title = `${region.name} 비즈니스 허브 - 관내 기업·지원사업 소식`;
+    const description = `${region.name} 관내 혁신 스타트업 성공 사례 및 소상공인 그로스 스토리, 진흥원 자금 혜택을 한데 모은 지자체 전용 지면입니다.`;
+    const path = `/magazine/local/${regionSlug}`;
+
     return {
-        title: `${region.name} 비즈니스 허브 - 관내 기업·지원사업 소식`,
-        description: `${region.name} 관내 혁신 스타트업 성공 사례 및 소상공인 그로스 스토리, 진흥원 자금 혜택을 한데 모은 지자체 전용 지면입니다.`,
+        title,
+        description,
         alternates: {
-            canonical: `${baseUrl}/magazine/local/${regionSlug}`,
+            canonical: `${baseUrl}${path}`,
         },
+        ...buildSocialMetadata({ title, description, path }),
     };
 }
 

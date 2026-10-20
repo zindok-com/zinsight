@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { ArrowRight, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import { getTechMarketingPosts } from '@/actions/public/magazine-actions';
+import { buildSocialMetadata } from '@/lib/site';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 
@@ -15,6 +16,11 @@ export const metadata: Metadata = {
     alternates: {
         canonical: `${baseUrl}/magazine/tech-marketing`,
     },
+    ...buildSocialMetadata({
+        title: '테크·마케팅 저널 - AEO·SEO·GEO 비즈니스 인사이트',
+        description: '인공지능(AI) 시대의 GEO/SEO 마케팅 전략, B2B 리서치 분석 보고서를 다루는 기술 전문 저널 지면입니다.',
+        path: '/magazine/tech-marketing',
+    }),
 };
 
 function HighlightedText({ text }: { text: string }) {

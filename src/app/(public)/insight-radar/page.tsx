@@ -13,6 +13,7 @@ import {
 } from '@/actions/insight-radar-actions';
 import { RadarSearchBar } from '@/components/public/insight-radar/RadarSearchBar';
 import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompanyList';
+import { buildSocialMetadata } from '@/lib/site';
 
 // 검색/필터 파라미터가 없는 기본 페이지는 1시간 캐시, 파라미터가 있으면 동적 렌더링
 export const revalidate = 3600;
@@ -35,7 +36,7 @@ export async function generateMetadata({
     const baseCanonical = `${baseUrl}/insight-radar`;
 
     if (query) {
-        const title = `"${query}" 관련 기업 및 기술 동향 - 인사이트 레이더 | 진사이트`;
+        const title = `"${query}" 관련 기업 및 기술 동향 - 인사이트 레이더`;
         const description = `진사이트 인사이트 레이더에서 "${query}" 관련 관내 기업, 비즈니스 포지셔닝, 핵심 기술 및 최신 뉴스 타임라인을 확인하세요.`;
         return {
             title,
@@ -43,29 +44,19 @@ export async function generateMetadata({
             alternates: {
                 canonical: baseCanonical,
             },
-            openGraph: {
-                title,
-                description,
-                url: `${baseCanonical}?q=${encodeURIComponent(query)}`,
-                siteName: '진사이트',
-                locale: 'ko_KR',
-            },
+            ...buildSocialMetadata({ title, description, path: `/insight-radar?q=${encodeURIComponent(query)}` }),
         };
     }
 
+    const title = '인사이트 레이더 - 기업 동향 및 기술 분석 데이터 센터';
+    const description = '산업별 핵심 트렌드, 관내 기업 기술 동향 및 비즈니스 포지셔닝을 실시간으로 조망하는 진사이트의 데이터 센터입니다.';
     return {
-        title: '인사이트 레이더 - 기업 동향 및 기술 분석 데이터 센터 | 진사이트',
-        description: '산업별 핵심 트렌드, 관내 기업 기술 동향 및 비즈니스 포지셔닝을 실시간으로 조망하는 진사이트의 데이터 센터입니다.',
+        title,
+        description,
         alternates: {
             canonical: baseCanonical,
         },
-        openGraph: {
-            title: '인사이트 레이더 - 기업 동향 및 기술 분석 데이터 센터 | 진사이트',
-            description: '산업별 핵심 트렌드, 관내 기업 기술 동향 및 비즈니스 포지셔닝을 실시간으로 조망하는 진사이트의 데이터 센터입니다.',
-            url: baseCanonical,
-            siteName: '진사이트',
-            locale: 'ko_KR',
-        },
+        ...buildSocialMetadata({ title, description, path: '/insight-radar' }),
         robots: {
             index: true,
             follow: true,
