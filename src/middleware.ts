@@ -62,6 +62,6 @@ export const config = {
          * - /img/, /public/ (정적 에셋)
          * - /.well-known/ (도메인 인증)
          */
-        '/((?!_next/static|_next/image|favicon.ico|sitemap\\.xml|robots\\.txt|rss\\.xml|\\.well-known|img/).*)',
+        '/((?!_next/static|_next/image|favicon.ico|icon.*|apple-touch-icon.*|sitemap\\.xml|robots\\.txt|rss\\.xml|\\.well-known|img/).*)',
     ],
 };
