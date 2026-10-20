@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifyTokenEdge } from '@/lib/edge-token';
 import { LOCAL_TEST_TOKEN } from '@/lib/token-config';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const authToken = request.cookies.get('auth_token');
 
