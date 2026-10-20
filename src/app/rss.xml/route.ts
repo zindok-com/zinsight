@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getMagazinePostPath } from '@/lib/site';
+
+// CDATA 안에 ']]>'가 들어가면 XML이 깨지므로 분할 이스케이프
+const cdata = (text: string) => `<![CDATA[${text.replace(/]]>/g, ']]]]><![CDATA[>')}]]>`;
 
 export async function GET() {
   const domain = "www.zinsight.co.kr";
@@ -48,17 +52,15 @@ export async function GET() {
   // 2. RSS 표준 XML 양식 조립 (기사 + 기업 프로필)
   const postItems = posts.map((post) => {
     const pubDate = new Date(post.publishedAt || post.createdAt).toUTCString();
-    const path = post.category?.isLocal && post.region
-      ? `/magazine/local/${post.region.slug}/${post.slug}`
-      : `/magazine/tech-marketing/${post.slug}`;
-    const itemUrl = `${baseUrl}${path}`;
+    // 한글 등 비ASCII 슬러그도 유효한 URL이 되도록 인코딩
+    const itemUrl = encodeURI(`${baseUrl}${getMagazinePostPath(post)}`);
     return {
       date: new Date(post.publishedAt || post.createdAt),
       xml: `
       <item>
-        <title><![CDATA[${post.title}]]></title>
+        <title>${cdata(post.title)}</title>
         <link>${itemUrl}</link>
-        <description><![CDATA[${post.summary || ''}]]></description>
+        <description>${cdata(post.summary || '')}</description>
         <pubDate>${pubDate}</pubDate>
         <guid>${itemUrl}</guid>
       </item>
@@ -68,15 +70,15 @@ export async function GET() {
 
   const orgItems = organizations.map((org) => {
     const pubDate = new Date(org.updated_at || org.created_at).toUTCString();
-    const itemUrl = `${baseUrl}/insight-radar/${org.slug || org.id}`;
+    const itemUrl = encodeURI(`${baseUrl}/insight-radar/${org.slug || org.id}`);
     const desc = org.business_summary || `${org.region?.name || ''} 관내 기업 ${org.company_name} 비즈니스 분석 프로필`;
     return {
       date: new Date(org.updated_at || org.created_at),
       xml: `
       <item>
-        <title><![CDATA[[기업 프로필] ${org.company_name} - ${org.region?.name ? `${org.region.name} ` : ''}기업 분석 정보]]></title>
+        <title>${cdata(`[기업 프로필] ${org.company_name} - ${org.region?.name ? `${org.region.name} ` : ''}기업 분석 정보`)}</title>
         <link>${itemUrl}</link>
-        <description><![CDATA[${desc}]]></description>
+        <description>${cdata(desc)}</description>
         <pubDate>${pubDate}</pubDate>
         <guid>${itemUrl}</guid>
       </item>

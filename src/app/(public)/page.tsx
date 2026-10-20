@@ -10,6 +10,7 @@ import {
 } from '@/actions/insight-radar-actions';
 import { getHeadlineMagazinePosts } from '@/actions/public/magazine-actions';
 import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
+import { serializeJsonLd } from '@/lib/site';
 
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
 
@@ -96,7 +97,7 @@ export default async function PublicHomePage() {
             {/* JSON-LD 구조화 데이터 */}
             <script
                 type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
             {/* ─────────────────────────────── */}
             {/* Hero 섹션 */}

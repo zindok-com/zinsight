@@ -45,9 +45,10 @@ function stripHtml(html: string): string {
         .replace(/&quot;/g, '"')
         .replace(/&apos;/g, "'")
         .replace(/&#039;/g, "'")
-        .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
+        // &amp;는 마지막에 풀어야 '&amp;lt;' 같은 원문이 '<'로 이중 디코딩되지 않음
+        .replace(/&amp;/g, '&')
         .trim();
 }
 
@@ -57,7 +58,9 @@ async function fetchNaverNews(keyword: string, display: number = 10, sort: 'sim'
             'X-Naver-Client-Id': NAVER_CLIENT_ID,
             'X-Naver-Client-Secret': NAVER_CLIENT_SECRET,
         },
-        params: { query: keyword, display, sort },
+        // 네이버 API 허용 범위(1~100)로 제한하고, 응답 지연 시 서버 액션이 무한 대기하지 않도록 타임아웃 지정
+        params: { query: keyword, display: Math.min(Math.max(Math.floor(display) || 10, 1), 100), sort },
+        timeout: 10_000,
     });
     return response.data?.items ?? [];
 }

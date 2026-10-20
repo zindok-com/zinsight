@@ -15,12 +15,27 @@ async function getHashedPathname(file: File, folder: string): Promise<string> {
     return `${folder}/${hash}.${extension}`;
 }
 
+// 공개 Blob 스토리지에 올라가므로 이미지 형식만 허용 (HTML 등 임의 파일 업로드 방지)
+const ALLOWED_IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.svg']);
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
+function validateImageFile(file: unknown): string | null {
+    if (!(file instanceof File) || file.size === 0) return '파일이 없습니다.';
+    const dot = file.name.lastIndexOf('.');
+    const ext = dot === -1 ? '' : file.name.slice(dot).toLowerCase();
+    if (!ALLOWED_IMAGE_EXTENSIONS.has(ext) || !file.type.startsWith('image/')) {
+        return '이미지 파일(png, jpg, gif, webp, avif, svg)만 업로드할 수 있습니다.';
+    }
+    if (file.size > MAX_IMAGE_BYTES) return '이미지는 10MB 이하만 업로드할 수 있습니다.';
+    return null;
+}
+
 // B-1: Helper to calculate slugified pathname and prevent duplication
 async function getSlugifiedPathname(file: File, folder: string): Promise<string> {
     const originalName = file.name;
     const lastDotIdx = originalName.lastIndexOf('.');
     const baseName = lastDotIdx === -1 ? originalName : originalName.slice(0, lastDotIdx);
-    const extension = lastDotIdx === -1 ? '' : originalName.slice(lastDotIdx);
+    const extension = lastDotIdx === -1 ? '' : originalName.slice(lastDotIdx).toLowerCase();
     
     // Convert to English slug
     let slug = baseName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
@@ -49,8 +64,9 @@ async function getSlugifiedPathname(file: File, folder: string): Promise<string>
 export async function uploadThumbnail(formData: FormData) {
     await requireAdmin();
     const file = formData.get('file') as File;
-    if (!file) {
-        throw new Error('No file provided');
+    const invalid = validateImageFile(file);
+    if (invalid) {
+        throw new Error(invalid);
     }
 
     try {
@@ -96,8 +112,9 @@ export async function deleteBlob(url: string) {
 export async function uploadImageDirect(formData: FormData) {
     await requireAdmin();
     const file = formData.get('file') as File;
-    if (!file) {
-        return { success: false, error: 'No file provided' };
+    const invalid = validateImageFile(file);
+    if (invalid) {
+        return { success: false, error: invalid };
     }
 
     try {
