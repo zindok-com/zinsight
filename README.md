@@ -111,7 +111,7 @@ src/
 DATABASE_URL="mysql://username:password@host:port/database"
 
 # Admin Auth
-ADMIN_PASSCODE=your_admin_password
+JWT_SECRET=your_random_jwt_secret
 
 # Naver News Search API
 NAVER_CLIENT_ID=your_naver_client_id
