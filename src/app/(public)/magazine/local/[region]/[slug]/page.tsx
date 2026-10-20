@@ -325,6 +325,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
                 'author': {
                     '@type': 'Person',
                     'name': post.author?.name || post.authorName || '진사이트 편집부',
+                    ...(post.author?.slug ? { 'url': `${baseUrl}/author/${post.author.slug}` } : {}),
                 },
                 'publisher': {
                     '@type': 'Organization',

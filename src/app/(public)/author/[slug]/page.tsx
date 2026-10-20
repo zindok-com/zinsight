@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { ArrowLeft, BookOpen, Calendar, ChevronRight } from 'lucide-react';
 import { getPublicAuthorBySlug } from '@/actions/admin/author-actions';
 import { Metadata } from 'next';
-import { buildSocialMetadata, getMagazinePostPath } from '@/lib/site';
+import { buildSocialMetadata, getMagazinePostPath, toAbsoluteUrl } from '@/lib/site';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
         title,
         description,
+        alternates: { canonical: toAbsoluteUrl(`/author/${slug}`) },
         ...buildSocialMetadata({
             title,
             description,

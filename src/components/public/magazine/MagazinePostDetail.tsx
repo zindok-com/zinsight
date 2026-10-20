@@ -437,7 +437,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                         )}
                                         {authorSlug && (
                                             <Link
-                                                href={`/magazine/authors/${authorSlug}`}
+                                                href={`/author/${authorSlug}`}
                                                 className="inline-flex items-center gap-1 mt-2.5 text-[12px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                                             >
                                                 발행자 프로필 보기 →

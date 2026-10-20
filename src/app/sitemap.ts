@@ -106,7 +106,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.6,
         }));
 
-        return [...staticRoutes, ...regionRoutes, ...magazineRoutes, ...orgRoutes];
+        // 발행 기사가 있는 필진 프로필 (/author로 통합된 정규 경로)
+        const authors = await prisma.author.findMany({
+            where: { posts: { some: { status: 'PUBLISHED', deletedAt: null } } },
+            select: { slug: true, updatedAt: true },
+        });
+        const authorRoutes: MetadataRoute.Sitemap = authors.map((author) => ({
+            url: `${baseUrl}/author/${author.slug}`,
+            lastModified: author.updatedAt,
+            changeFrequency: 'monthly' as const,
+            priority: 0.4,
+        }));
+
+        return [...staticRoutes, ...regionRoutes, ...magazineRoutes, ...orgRoutes, ...authorRoutes];
     } catch (error) {
         console.error('[sitemap] DB 조회 실패, 기본 목록으로 진행:', error);
     }
