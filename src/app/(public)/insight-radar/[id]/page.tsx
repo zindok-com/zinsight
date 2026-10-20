@@ -357,7 +357,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                         </div>
                         <div className="flex flex-col gap-1 sm:gap-1.5 md:border-l border-white/20 md:pl-8">
                             <span className="text-xs sm:text-sm text-blue-100 font-medium">소재지</span>
-                            <span className="text-sm sm:text-base text-white font-semibold line-clamp-1" title={company.hq_location || '-'}>{company.hq_location || '-'}</span>
+                            <span className="text-sm sm:text-base text-white font-semibold line-clamp-2 md:line-clamp-1 break-keep" title={company.hq_location || '-'}>{company.hq_location || '-'}</span>
                         </div>
                         <div className="flex flex-col gap-1 sm:gap-1.5 md:border-l border-white/20 md:pl-8">
                             <span className="text-xs sm:text-sm text-blue-100 font-medium">조직유형</span>

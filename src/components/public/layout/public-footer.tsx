@@ -17,20 +17,20 @@ export function PublicFooter() {
 
                     {/* 링크 그리드 — 항상 3열 */}
                     <div className="grid grid-cols-3 gap-4 sm:gap-8 md:gap-12 w-full md:w-auto">
-                        <div className="flex flex-col gap-2 sm:gap-3">
+                        <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">탐색</span>
-                            <Link href="/insight-radar" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">인사이트 레이더</Link>
-                            <Link href="/magazine" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">매거진 아카이브</Link>
+                            <Link href="/insight-radar" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">인사이트 레이더</Link>
+                            <Link href="/magazine" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">매거진 아카이브</Link>
                         </div>
-                        <div className="flex flex-col gap-2 sm:gap-3">
+                        <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">정보</span>
-                            <Link href="https://www.zindok.com" target="_blank" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">진사이트 소개</Link>
-                            <Link href="https://www.zindok.com" target="_blank" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">문의하기</Link>
+                            <Link href="https://www.zindok.com" target="_blank" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">진사이트 소개</Link>
+                            <Link href="https://www.zindok.com" target="_blank" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">문의하기</Link>
                         </div>
-                        <div className="flex flex-col gap-2 sm:gap-3">
+                        <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">법령</span>
-                            <Link href="/terms" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">이용약관</Link>
-                            <Link href="/privacy" className="text-[12px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">개인정보처리방침</Link>
+                            <Link href="/terms" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">이용약관</Link>
+                            <Link href="/privacy" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">개인정보처리방침</Link>
                         </div>
                     </div>
                 </div>

@@ -14,17 +14,25 @@ interface StatsCounterProps {
 }
 
 function StatsCounter({ value, duration = 1500 }: StatsCounterProps) {
-    const [count, setCount] = useState(0);
+    // 실제 값으로 시작해 플레이스홀더→컨텐츠 교체 시 숫자가 0으로 튀지 않게 하고,
+    // 마운트 시점에 화면 밖에 있을 때만 0으로 내려두었다가 보이는 순간 카운트업
+    const [count, setCount] = useState(value);
     const [isVisible, setIsVisible] = useState(false);
+    const armed = useRef(false);
     const elementRef = useRef<HTMLSpanElement>(null);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
-                if (entry.isIntersecting) {
-                    setIsVisible(true);
-                    observer.disconnect();
+                if (!entry.isIntersecting) {
+                    if (!armed.current) {
+                        armed.current = true;
+                        setCount(0);
+                    }
+                    return;
                 }
+                if (armed.current) setIsVisible(true);
+                observer.disconnect();
             },
             { threshold: 0.1 }
         );
@@ -71,14 +79,14 @@ interface StatBadgeProps {
 function StatBadge({ icon, label, value, unit, index }: StatBadgeProps) {
     return (
         <div 
-            className="group relative overflow-hidden rounded-zi-card border border-[#30363D] bg-[#161B22] p-5 shadow-none transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-[#38BDF8]"
+            className="group relative overflow-hidden rounded-zi-card border border-[#30363D] bg-[#161B22] p-4 sm:p-5 shadow-none transition-all duration-300 hover:-translate-y-[6px] hover:shadow-[0_8px_30px_rgba(56,189,248,0.25)] hover:border-[#38BDF8]"
             style={{ 
                 animationDelay: `${index * 100}ms`,
                 animationFillMode: 'both' 
             }}
         >
             <div className="relative z-10 flex flex-col items-center text-center">
-                <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-sky-100 border border-sky-200/50 shadow-[0_0_12px_rgba(56,189,248,0.15)] text-sky-700 transition-all duration-300 group-hover:bg-sky-50 group-hover:border-sky-300 group-hover:text-sky-800 group-hover:scale-105">
+                <div className="mb-3 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-sky-100 border border-sky-200/50 shadow-[0_0_12px_rgba(56,189,248,0.15)] text-sky-700 transition-all duration-300 group-hover:bg-sky-50 group-hover:border-sky-300 group-hover:text-sky-800 group-hover:scale-105">
                     {icon}
                 </div>
                 
@@ -138,7 +146,7 @@ export function HomeStatsContent({ totalStats }: HomeStatsContentProps) {
     ];
 
     return (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
             {statsData.map((stat, idx) => (
                 <StatBadge key={stat.label} {...stat} index={idx} />
             ))}
