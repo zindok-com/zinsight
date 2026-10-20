@@ -43,7 +43,7 @@ export default async function CompaniesPage() {
           <h1 className="text-3xl font-bold tracking-tight">조직 관리</h1>
           <p className="text-muted-foreground">기업, 기관, 센터 정보를 관리하고, 레이더 리포트를 등록합니다.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="outline" asChild>
             <Link href="/admin/companies/submissions" className="flex items-center gap-2">
               <ClipboardList className="w-4 h-4" />

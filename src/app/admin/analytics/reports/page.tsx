@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export const metadata = { title: '애널리틱스 리포트 이력 | Zinsight Admin' };
+export const metadata = { title: '애널리틱스 리포트 이력' };
 
 const ENTITY_LABEL: Record<string, string> = {
     article: '📰 기사',

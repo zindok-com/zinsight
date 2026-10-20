@@ -10,12 +10,14 @@ User-agent: Yeti
 Allow: /
 Disallow: /admin
 Disallow: /login
+Disallow: /register
 Disallow: /api
 
 User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /login
+Disallow: /register
 Disallow: /api
 
 Sitemap: ${baseUrl}/sitemap.xml

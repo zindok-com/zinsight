@@ -1388,9 +1388,9 @@ export function MagazineForm({
 
                             {/* 리드 (Lead) */}
                             <div id="section-lead" className="space-y-2 p-5 bg-indigo-50/40 border border-indigo-100 rounded-xl scroll-mt-24">
-                                <div className="flex justify-between items-center pb-1">
+                                <div className="flex flex-wrap justify-between items-center gap-2 pb-1">
                                     <Label htmlFor="lead" className="font-bold text-indigo-800 text-sm">리드 (Lead) <span className="text-red-500">*</span></Label>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -1565,9 +1565,9 @@ export function MagazineForm({
                                                     />
                                                 </div>
                                                 <div className="space-y-1.5">
-                                                    <div className="flex justify-between items-center pb-1">
+                                                    <div className="flex flex-wrap justify-between items-center gap-2 pb-1">
                                                         <Label className="text-xs font-semibold text-slate-600">내용</Label>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-wrap gap-2">
                                                             <Button
                                                                 type="button"
                                                                 variant="outline"
@@ -1669,9 +1669,9 @@ export function MagazineForm({
 
                             {/* 클로징 (Closing) */}
                             <div id="section-closing" className="space-y-2 p-5 bg-slate-50 border border-slate-200 rounded-xl scroll-mt-24">
-                                <div className="flex justify-between items-center pb-1">
+                                <div className="flex flex-wrap justify-between items-center gap-2 pb-1">
                                     <Label htmlFor="closing" className="font-bold text-slate-800 text-sm">클로징 (Closing) <span className="text-red-500">*</span></Label>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                         <Button
                                             type="button"
                                             variant="outline"
@@ -2023,11 +2023,11 @@ export function MagazineForm({
                 )}
 
                 {/* Form Buttons — 모바일: sticky 하단 고정 / lg: 카드 하단 고정(flex-shrink-0) */}
-                <div className="sticky bottom-0 z-30 flex justify-between items-center gap-3 px-6 py-4 mt-6 bg-white/90 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] -mx-6 lg:static lg:shrink-0 lg:!mt-0 lg:-mb-6 lg:py-3 lg:bg-white lg:backdrop-blur-none">
+                <div className="sticky bottom-0 z-30 flex justify-between items-center gap-3 px-4 sm:px-6 py-3 sm:py-4 mt-6 bg-white/90 backdrop-blur-sm border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] -mx-4 sm:-mx-6 lg:static lg:shrink-0 lg:!mt-0 lg:-mb-6 lg:py-3 lg:bg-white lg:backdrop-blur-none">
                     <p className="text-xs text-slate-400 hidden sm:block">
                         {post ? '기존 포스트를 수정합니다.' : '새 매거진 포스트를 발행합니다.'}
                     </p>
-                    <div className="flex items-center gap-3 ml-auto">
+                    <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3 ml-auto">
                         <Button
                             type="button"
                             variant="ghost"
@@ -2050,11 +2050,11 @@ export function MagazineForm({
                                 </>
                             )}
                         </Button>
-                        <div className="w-px h-6 bg-slate-200"></div>
+                        <div className="hidden sm:block w-px h-6 bg-slate-200"></div>
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-11 px-8 bg-white"
+                            className="h-11 px-4 sm:px-8 bg-white"
                             onClick={() => {
                                 if (isDirty) {
                                     const confirmLeave = window.confirm('작성 중인 내용이 저장되지 않았습니다.\n정말 취소하고 나가시겠습니까?');
@@ -2070,7 +2070,7 @@ export function MagazineForm({
                         <Button
                             type="button"
                             variant="outline"
-                            className="h-11 px-6 bg-amber-50 hover:bg-amber-100/80 text-amber-800 border-amber-300 font-semibold"
+                            className="h-11 px-4 sm:px-6 bg-amber-50 hover:bg-amber-100/80 text-amber-800 border-amber-300 font-semibold"
                             onClick={(e) => handleSubmit(e, 'DRAFT')}
                             disabled={isPending}
                         >
@@ -2079,7 +2079,7 @@ export function MagazineForm({
                         <Button
                             type="button"
                             onClick={handlePublishClick}
-                            className={`h-11 px-10 shadow-md transition-all active:scale-95 font-semibold ${
+                            className={`h-11 px-5 sm:px-10 shadow-md transition-all active:scale-95 font-semibold ${
                                 canPublish
                                     ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
                                     : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
