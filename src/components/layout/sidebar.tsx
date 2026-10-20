@@ -18,7 +18,7 @@ import {
     SearchCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const TOP_MENU_ITEMS = [
     { name: '대시보드', href: '/admin', icon: LayoutDashboard },
@@ -50,6 +50,20 @@ const MAGAZINE_ITEMS = [
 export function Sidebar() {
     const pathname = usePathname();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    // 모바일 메뉴가 열려 있을 때 배경 스크롤 잠금 및 Esc로 닫기
+    useEffect(() => {
+        if (!mobileMenuOpen) return;
+        document.body.style.overflow = 'hidden';
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setMobileMenuOpen(false);
+        };
+        document.addEventListener('keydown', onKeyDown);
+        return () => {
+            document.body.style.overflow = '';
+            document.removeEventListener('keydown', onKeyDown);
+        };
+    }, [mobileMenuOpen]);
 
     const renderNavItems = (items: typeof INSIGHT_RADAR_ITEMS) => (
         <div className="space-y-1">
@@ -88,23 +102,32 @@ export function Sidebar() {
     return (
         <>
             {/* Mobile Menu Button */}
-            <div className="md:hidden p-4 border-b flex items-center justify-between">
+            <div className="md:hidden sticky top-0 z-30 bg-white p-4 border-b flex items-center justify-between">
                 <Link href="/" className="font-bold text-lg hover:text-slate-600 transition-colors">
-                    zinsight
+                    진사이트
                 </Link>
-                <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    aria-label={mobileMenuOpen ? '관리자 메뉴 닫기' : '관리자 메뉴 열기'}
+                    aria-expanded={mobileMenuOpen}
+                    aria-controls="admin-sidebar"
+                >
                     <Menu />
                 </Button>
             </div>
 
             {/* Sidebar Container */}
-            <aside className={cn(
-                "bg-slate-900 text-white flex flex-col fixed inset-y-0 left-0 z-50 w-64 transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:flex md:flex-col md:self-stretch md:min-h-screen",
-                mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+            {/* 모바일에서 닫혀 있을 때는 invisible로 키보드 탭 이동 대상에서도 제외 */}
+            <aside id="admin-sidebar" className={cn(
+                "bg-slate-900 text-white flex flex-col fixed inset-y-0 left-0 z-50 w-64 transition-[transform,visibility] duration-300 ease-in-out md:translate-x-0 md:visible md:static md:flex md:flex-col md:self-stretch md:min-h-screen",
+                mobileMenuOpen ? "translate-x-0" : "-translate-x-full invisible"
             )}>
                 <div className="p-6 border-b border-slate-700">
                     <Link href="/" className="hover:text-slate-300 transition-colors block">
-                        <h1 className="text-2xl font-bold tracking-tight">zinsight</h1>
+                        {/* 각 관리자 페이지에 자체 h1이 있으므로 사이드바 로고는 제목 요소로 쓰지 않음 */}
+                        <span className="block text-2xl font-bold tracking-tight">진사이트</span>
                     </Link>
                     <p className="text-xs text-slate-400 mt-1">Admin Dashboard</p>
                 </div>
@@ -144,6 +167,7 @@ export function Sidebar() {
                 <div
                     className="fixed inset-0 bg-black/50 z-40 md:hidden"
                     onClick={() => setMobileMenuOpen(false)}
+                    aria-hidden="true"
                 />
             )}
         </>

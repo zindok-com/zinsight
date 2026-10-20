@@ -310,7 +310,7 @@ export function SecuritySettings() {
                                 ⚠️ 2차 인증(2FA) 등록 안내
                             </h4>
                             <p className="text-xs leading-relaxed font-medium">
-                                Zinsight 관리자 기능은 개별 ID/PW를 사용하는 독립적인 관리자 계정 체계로 운영됩니다. 본인의 보안을 강화하고 다른 관리자를 추가하기 위해 2차 인증을 필수로 설정하는 것을 권장합니다.
+                                진사이트 관리자 기능은 개별 ID/PW를 사용하는 독립적인 관리자 계정 체계로 운영됩니다. 본인의 보안을 강화하고 다른 관리자를 추가하기 위해 2차 인증을 필수로 설정하는 것을 권장합니다.
                             </p>
                             <p className="text-xs leading-relaxed text-slate-500 italic">
                                 * 비밀키는 한 번만 조회되므로, OTP 앱(Google Authenticator 등)에 등록을 완료한 후 아래 코드를 넣어 검증해주세요.

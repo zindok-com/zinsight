@@ -92,7 +92,7 @@ export function LoginForm() {
             <Card className="w-[380px] shadow-lg">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold tracking-tight text-center text-slate-800">
-                        Zinsight Admin
+                        진사이트 관리자
                     </CardTitle>
                     <CardDescription className="text-center">
                         {step === 'credentials' 

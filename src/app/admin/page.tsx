@@ -23,7 +23,7 @@ export default async function Home() {
                     <Building2 className="w-64 h-64 text-white transform rotate-12 translate-x-16 -translate-y-8" />
                 </div>
                 <div className="relative z-10">
-                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Zinsight Admin</h1>
+                    <h1 className="text-3xl font-bold tracking-tight text-white mb-2">진사이트 관리자</h1>
                     <p className="text-indigo-100 max-w-xl text-sm leading-relaxed">
                         환영합니다. 인사이트 레이더 데이터 수집 현황 및 매거진 성과 지표를 한눈에 파악하고 
                         비즈니스 인사이트를 도출해 보세요.
