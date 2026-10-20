@@ -178,7 +178,7 @@ export default async function PublicHomePage() {
             </section>
 
             {/* ─────────────────────────────── */}
-            {/* 인사이트 레이더 현황 섹션 (이동됨) */}
+            {/* 진사이트 현황 섹션: 인사이트 레이더 + 매거진 통계 */}
             {/* ─────────────────────────────── */}
             <section className="bg-[#0B0F19] border-y border-[#30363D] py-10 sm:py-16 relative overflow-hidden">
                 <div className="mx-auto max-w-zi-container px-4 sm:px-6">
@@ -194,11 +194,11 @@ export default async function PublicHomePage() {
                             </span>
                         </div>
                         <h2 className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-white">
-                            인사이트 레이더 현황
+                            진사이트 현황
                         </h2>
                         <p className="mx-auto max-w-2xl text-zi-body-md text-slate-400 break-keep">
-                            진사이트의 AI 분석 엔진이 식별한 관내 핵심 기업의 최신 동향과 성장 인사이트를 <br className="hidden sm:inline" />
-                            실시간으로 모니터링합니다.
+                            인사이트 레이더가 분석한 관내 기업과 수집 기사, <br className="hidden sm:inline" />
+                            그리고 진사이트 매거진이 발행한 기사를 한눈에 확인하세요.
                         </p>
                     </div>
 
