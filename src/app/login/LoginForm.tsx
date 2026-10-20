@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardFooter } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 export function LoginForm() {
@@ -91,9 +91,9 @@ export function LoginForm() {
         <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
             <Card className="w-full max-w-[380px] shadow-lg">
                 <CardHeader className="space-y-1">
-                    <CardTitle className="text-2xl font-bold tracking-tight text-center text-slate-800">
+                    <h1 className="text-2xl font-bold tracking-tight text-center text-slate-800">
                         진사이트 관리자
-                    </CardTitle>
+                    </h1>
                     <CardDescription className="text-center">
                         {step === 'credentials' 
                             ? '관리자 ID와 비밀번호를 입력하세요.' 

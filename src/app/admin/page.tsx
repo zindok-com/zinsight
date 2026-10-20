@@ -33,7 +33,7 @@ export default async function Home() {
 
             {/* Magazine Analytics */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800 tracking-tight">
                         <FileText className="h-5 w-5 text-indigo-600" /> Magazine Performance
                     </h2>
@@ -100,7 +100,7 @@ export default async function Home() {
 
             {/* Insight Radar Stats */}
             <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800 tracking-tight">
                         <Building2 className="h-5 w-5 text-slate-600" /> Insight Radar Status
                     </h2>
