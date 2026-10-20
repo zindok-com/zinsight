@@ -89,7 +89,7 @@ export function LoginForm() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-            <Card className="w-[380px] shadow-lg">
+            <Card className="w-full max-w-[380px] shadow-lg">
                 <CardHeader className="space-y-1">
                     <CardTitle className="text-2xl font-bold tracking-tight text-center text-slate-800">
                         진사이트 관리자
@@ -106,9 +106,11 @@ export function LoginForm() {
                     <form onSubmit={handleCredentialsSubmit}>
                         <CardContent className="space-y-4">
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-slate-600">아이디</label>
+                                <label htmlFor="login-username" className="text-xs font-semibold text-slate-600">아이디</label>
                                 <Input
+                                    id="login-username"
                                     type="text"
+                                    autoComplete="username"
                                     placeholder="Username"
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
@@ -119,9 +121,11 @@ export function LoginForm() {
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold text-slate-600">비밀번호</label>
+                                <label htmlFor="login-password" className="text-xs font-semibold text-slate-600">비밀번호</label>
                                 <Input
+                                    id="login-password"
                                     type="password"
+                                    autoComplete="current-password"
                                     placeholder="Password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -133,7 +137,7 @@ export function LoginForm() {
                         </CardContent>
                         <CardFooter>
                             <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
-                                {loading ? 'Checking...' : 'Sign In'}
+                                {loading ? '확인 중...' : '로그인'}
                             </Button>
                         </CardFooter>
                     </form>
@@ -146,6 +150,8 @@ export function LoginForm() {
                                     inputMode="numeric"
                                     pattern="[0-9]*"
                                     maxLength={6}
+                                    autoComplete="one-time-code"
+                                    aria-label="2차 인증 코드 6자리"
                                     placeholder="6-digit Code"
                                     value={code}
                                     onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
@@ -161,7 +167,7 @@ export function LoginForm() {
                         </CardContent>
                         <CardFooter className="flex flex-col gap-2">
                             <Button type="submit" className="w-full h-11 text-base font-semibold bg-blue-600 hover:bg-blue-700" disabled={loading}>
-                                {loading ? 'Verifying...' : 'Verify OTP'}
+                                {loading ? '확인 중...' : '인증하기'}
                             </Button>
                             <Button 
                                 type="button" 
