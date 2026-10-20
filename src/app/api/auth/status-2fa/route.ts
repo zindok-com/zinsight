@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
-import { verifyTempToken } from '@/lib/temp-token';
+import { verifySessionToken } from '@/lib/temp-token';
 
 export async function GET() {
     try {
@@ -12,7 +12,7 @@ export async function GET() {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const decoded = verifyTempToken(authToken.value);
+        const decoded = verifySessionToken(authToken.value);
         if (!decoded || !decoded.username) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }

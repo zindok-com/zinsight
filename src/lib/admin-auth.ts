@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { verifyTempToken } from './temp-token';
+import { verifySessionToken } from './temp-token';
 import { isDevMode } from './token-config';
 
 /**
@@ -11,7 +11,7 @@ export async function requireAdmin(): Promise<{ username: string }> {
     // 개발 모드는 미들웨어와 동일하게 인증을 생략 (첫 요청에는 테스트 쿠키가 아직 없음)
     if (isDevMode()) return { username: 'local-test-admin' };
     const token = (await cookies()).get('auth_token')?.value;
-    const decoded = token ? verifyTempToken(token) : null;
+    const decoded = token ? verifySessionToken(token) : null;
     if (!decoded || !decoded.username) {
         throw new Error('Unauthorized');
     }

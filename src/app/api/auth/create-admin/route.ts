@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { hashPassword } from '@/lib/password';
 import { verifyTOTP } from '@/lib/totp';
-import { verifyTempToken } from '@/lib/temp-token';
+import { verifySessionToken } from '@/lib/temp-token';
 
 export async function POST(request: Request) {
     try {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const decoded = verifyTempToken(authToken.value);
+        const decoded = verifySessionToken(authToken.value);
         if (!decoded || !decoded.username) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { generateSecret, getOtpauthUri } from '@/lib/totp';
-import { verifyTempToken } from '@/lib/temp-token';
+import { verifySessionToken } from '@/lib/temp-token';
 import QRCode from 'qrcode';
 
 export async function POST() {
@@ -14,7 +14,7 @@ export async function POST() {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        const decoded = verifyTempToken(authToken.value);
+        const decoded = verifySessionToken(authToken.value);
         if (!decoded || !decoded.username) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }

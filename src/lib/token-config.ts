@@ -19,3 +19,12 @@ export function getTokenSecret(): string {
     }
     return 'fallback-secure-key-zinsight-mfa-pending';
 }
+
+/**
+ * 정식 로그인 세션 토큰인지 판별.
+ * 비밀번호만 통과한 2FA 대기 토큰(step: 'mfa_pending')도 같은 키로 서명되므로,
+ * step이 있는 토큰을 세션으로 받아들이면 auth_token 쿠키에 옮겨 넣는 것만으로 2FA를 우회할 수 있음.
+ */
+export function isSessionPayload(payload: Record<string, any> | null): payload is Record<string, any> & { username: string } {
+    return !!payload && typeof payload.username === 'string' && payload.username.length > 0 && payload.step === undefined;
+}

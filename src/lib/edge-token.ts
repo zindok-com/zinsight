@@ -1,5 +1,5 @@
 // 미들웨어(Edge 런타임)용 토큰 검증. temp-token.ts와 동일한 형식을 Web Crypto로 검증합니다.
-import { getTokenSecret, isLocalTestToken } from './token-config';
+import { getTokenSecret, isLocalTestToken, isSessionPayload } from './token-config';
 
 function base64UrlToString(input: string): string {
     const base64 = input.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(input.length / 4) * 4, '=');
@@ -43,7 +43,8 @@ export async function verifyTokenEdge(token: string): Promise<Record<string, any
 
         const data = JSON.parse(serialized);
         if (data.exp && Math.floor(Date.now() / 1000) > data.exp) return null;
-        return data;
+        // 세션 쿠키 검증 전용: 2FA 대기 토큰(step 포함)은 거부
+        return isSessionPayload(data) ? data : null;
     } catch {
         return null;
     }

@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getTokenSecret, isLocalTestToken } from './token-config';
+import { getTokenSecret, isLocalTestToken, isSessionPayload } from './token-config';
 
 /**
  * Signs a payload into a secure HMAC-SHA256 token.
@@ -48,4 +48,12 @@ export function verifyTempToken(token: string): Record<string, any> | null {
     } catch {
         return null;
     }
+}
+
+/**
+ * 관리자 세션(auth_token) 전용 검증. 서명·만료에 더해 2FA 대기 토큰을 거부합니다.
+ */
+export function verifySessionToken(token: string): (Record<string, any> & { username: string }) | null {
+    const payload = verifyTempToken(token);
+    return isSessionPayload(payload) ? payload : null;
 }
