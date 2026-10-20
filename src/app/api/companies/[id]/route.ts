@@ -1,10 +1,14 @@
 import { prisma } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 export async function GET(
     _req: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
+    if (!(await isAdminRequest())) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { id: paramId } = await params;
     const id = Number(paramId);
     if (isNaN(id)) {

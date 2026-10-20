@@ -17,3 +17,13 @@ export async function requireAdmin(): Promise<{ username: string }> {
     }
     return { username: decoded.username };
 }
+
+/** API 라우트용: 관리자 세션이면 true (401 응답 분기에 사용) */
+export async function isAdminRequest(): Promise<boolean> {
+    try {
+        await requireAdmin();
+        return true;
+    } catch {
+        return false;
+    }
+}

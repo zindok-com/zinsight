@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 export async function GET(
     _request: NextRequest,
     { params }: { params: Promise<{ filename: string }> }
 ) {
+    if (!(await isAdminRequest())) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const { filename } = await params;
 
     // Security: ensure no path traversal

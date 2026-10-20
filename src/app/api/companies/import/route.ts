@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { slugifyOrganization } from '@/lib/utils';
+import { isAdminRequest } from '@/lib/admin-auth';
 
 export async function POST(request: Request) {
+  // proxy 보호에 더한 이중 확인 (경로 매처 변경 시에도 무인증 DB 쓰기 방지)
+  if (!(await isAdminRequest())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   try {
     const data = await request.json();
     const region_id = data.region_id;
