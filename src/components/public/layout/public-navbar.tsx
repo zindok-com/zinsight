@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown, ChevronUp, MapPin, Newspaper, Building2 } from 'lucide-react';
@@ -14,16 +14,29 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
     const pathname = usePathname();
     const [isOpen, setIsOpen] = useState(false);
     const [mobileMagazineOpen, setMobileMagazineOpen] = useState(false);
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-    // 메뉴 열릴 때 body 스크롤 잠금
+    const openMenu = () => {
+        // 매거진 하위 페이지에 있으면 아코디언을 펼친 상태로 열어 현재 위치를 바로 보여줌
+        setMobileMagazineOpen(pathname.startsWith('/magazine'));
+        setIsOpen(true);
+    };
+
+    // 메뉴 열릴 때 body 스크롤 잠금, 닫기 버튼으로 포커스 이동, Esc로 닫기
     useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        if (!isOpen) return;
+        document.body.style.overflow = 'hidden';
+        closeButtonRef.current?.focus();
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setIsOpen(false);
+        };
+        document.addEventListener('keydown', onKeyDown);
+        const menuButton = menuButtonRef.current;
         return () => {
             document.body.style.overflow = '';
+            document.removeEventListener('keydown', onKeyDown);
+            menuButton?.focus();
         };
     }, [isOpen]);
 
@@ -63,6 +76,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         {/* 매거진 드롭다운 메뉴 (Hover Trigger) */}
                         <div className="relative group py-2">
                             <button
+                                aria-haspopup="true"
                                 className={cn(
                                     'flex items-center gap-1 text-ui-label font-ui-label tracking-[0.05em] pb-1 transition-all duration-150 group-hover:text-zi-primary',
                                     pathname.startsWith('/magazine')
@@ -71,11 +85,11 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                                 )}
                             >
                                 매거진
-                                <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180" />
+                                <ChevronDown className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 group-focus-within:rotate-180" />
                             </button>
 
                             {/* 드롭다운 서브메뉴 판넬 */}
-                            <div className="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block w-[360px] bg-white border border-zi-divider rounded-zi-card shadow-xl p-5 mt-1 z-50 animate-fade-in before:content-[''] before:absolute before:h-4 before:-top-4 before:left-0 before:right-0">
+                            <div className="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block group-focus-within:block w-[360px] bg-white border border-zi-divider rounded-zi-card shadow-xl p-5 mt-1 z-50 animate-fade-in before:content-[''] before:absolute before:h-4 before:-top-4 before:left-0 before:right-0">
                                 <div className="grid grid-cols-2 gap-6">
                                     {/* 저널 카테고리 */}
                                     <div className="space-y-3.5">
@@ -127,16 +141,18 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             rel="noopener noreferrer"
                             className="rounded-zi-btn border border-zi-primary bg-transparent px-5 py-2 text-ui-label font-ui-label text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
                         >
-                            Zindok 바로가기
+                            진독 바로가기
                         </Link>
                     </nav>
 
                     {/* 모바일 햄버거 버튼 */}
                     <button
-                        className="flex items-center justify-center rounded-md p-2 text-zi-primary transition-colors hover:bg-zi-surface-container md:hidden"
-                        onClick={() => setIsOpen(true)}
+                        ref={menuButtonRef}
+                        className="flex h-11 w-11 items-center justify-center rounded-md text-zi-primary transition-colors hover:bg-zi-surface-container md:hidden"
+                        onClick={openMenu}
                         aria-label="메뉴 열기"
                         aria-expanded={isOpen}
+                        aria-controls="mobile-nav-drawer"
                     >
                         <Menu className="h-6 w-6" />
                     </button>
@@ -148,14 +164,18 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                 <div
                     className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden"
                     onClick={() => setIsOpen(false)}
-                    aria-label="메뉴 닫기"
+                    aria-hidden="true"
                 />
             )}
 
             {/* 모바일 드로어 패널 */}
             {isOpen && (
                 <div
-                    className="fixed right-0 top-0 z-50 h-full w-72 bg-white shadow-2xl md:hidden flex flex-col drawer-slide-in"
+                    id="mobile-nav-drawer"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="사이트 메뉴"
+                    className="fixed right-0 top-0 z-50 h-full w-72 max-w-[85vw] bg-white shadow-2xl md:hidden flex flex-col drawer-slide-in"
                 >
                     {/* 드로어 헤더 */}
                     <div className="flex items-center justify-between border-b border-zi-divider px-6 py-5">
@@ -163,7 +183,8 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             진사이트
                         </span>
                         <button
-                            className="rounded-md p-1.5 text-zi-outline transition-colors hover:bg-zi-surface-container"
+                            ref={closeButtonRef}
+                            className="flex h-10 w-10 items-center justify-center rounded-md text-zi-outline transition-colors hover:bg-zi-surface-container"
                             onClick={() => setIsOpen(false)}
                             aria-label="메뉴 닫기"
                         >
@@ -190,6 +211,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         <div>
                             <button
                                 onClick={() => setMobileMagazineOpen(!mobileMagazineOpen)}
+                                aria-expanded={mobileMagazineOpen}
                                 className={cn(
                                     'flex w-full items-center justify-between rounded-lg px-4 py-3.5 text-[15px] font-medium tracking-wide transition-all',
                                     pathname.startsWith('/magazine')
@@ -210,19 +232,22 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                                 <div className="mt-1 ml-4 pl-4 border-l-2 border-indigo-100 flex flex-col gap-1">
                                     <Link
                                         href="/magazine"
-                                        className="text-slate-700 text-xs font-semibold py-2 hover:text-indigo-600"
+                                        aria-current={pathname === '/magazine' ? 'page' : undefined}
+                                        className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === '/magazine' ? 'text-indigo-600' : 'text-slate-700')}
                                     >
                                         • 매거진 홈
                                     </Link>
                                     <Link
                                         href="/magazine/tech-marketing"
-                                        className="text-slate-700 text-xs font-semibold py-2 hover:text-indigo-600"
+                                        aria-current={pathname === '/magazine/tech-marketing' ? 'page' : undefined}
+                                        className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === '/magazine/tech-marketing' ? 'text-indigo-600' : 'text-slate-700')}
                                     >
                                         • 테크 · 마케팅 저널
                                     </Link>
                                     <Link
                                         href="/magazine/local"
-                                        className="text-slate-700 text-xs font-semibold py-2 hover:text-indigo-600"
+                                        aria-current={pathname === '/magazine/local' ? 'page' : undefined}
+                                        className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === '/magazine/local' ? 'text-indigo-600' : 'text-slate-700')}
                                     >
                                         • 로컬 비즈니스 허브
                                     </Link>
@@ -230,12 +255,13 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                                     {/* 지자체 목록 */}
                                     {regions && regions.length > 0 && (
                                         <div className="mt-2 pt-2 border-t border-slate-100">
-                                            <span className="text-[10px] text-slate-400 font-bold block mb-1">지자체 지면</span>
+                                            <span className="text-[11px] text-slate-400 font-bold block mb-1">지자체 지면</span>
                                             {regions.map((reg) => (
                                                 <Link
                                                     key={reg.id}
                                                     href={`/magazine/local/${reg.slug}`}
-                                                    className="text-slate-500 text-xs font-medium py-1.5 block hover:text-indigo-600"
+                                                    aria-current={pathname.startsWith(`/magazine/local/${reg.slug}`) ? 'page' : undefined}
+                                                    className={cn('text-sm font-medium py-2 block hover:text-indigo-600', pathname.startsWith(`/magazine/local/${reg.slug}`) ? 'text-indigo-600' : 'text-slate-500')}
                                                 >
                                                     - {reg.name} 지면
                                                 </Link>
@@ -255,7 +281,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             rel="noopener noreferrer"
                             className="flex w-full items-center justify-center rounded-zi-btn border border-zi-primary bg-transparent px-5 py-3 text-sm font-semibold text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
                         >
-                            Zindok 바로가기 →
+                            진독 바로가기 →
                         </Link>
                     </div>
                 </div>
