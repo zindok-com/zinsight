@@ -58,7 +58,7 @@ export const metadata: Metadata = {
                 url: "/img/zinsight_icon.png",
                 width: 1200,
                 height: 630,
-                alt: "Zinsight",
+                alt: "진사이트",
             },
         ],
     },

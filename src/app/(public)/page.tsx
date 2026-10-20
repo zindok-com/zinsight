@@ -49,6 +49,7 @@ export default async function PublicHomePage() {
                 '@type': 'Organization',
                 '@id': 'https://www.zinsight.co.kr/#organization',
                 'name': '진사이트',
+                'legalName': '진독',
                 'alternateName': ['Zinsight', '진독', 'Zindok'],
                 'url': 'https://www.zinsight.co.kr',
                 'logo': {
@@ -63,7 +64,7 @@ export default async function PublicHomePage() {
                 'url': 'https://www.zinsight.co.kr',
                 'name': '진사이트',
                 'alternateName': ['Zinsight'],
-                'description': '진사이트(Zinsight)는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
+                'description': '진사이트는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
                 'inLanguage': 'ko-KR',
                 'publisher': {
                     '@id': 'https://www.zinsight.co.kr/#organization',

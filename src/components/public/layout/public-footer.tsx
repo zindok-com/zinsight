@@ -40,7 +40,7 @@ export function PublicFooter() {
             <div className="border-t border-zi-divider">
                 <div className="mx-auto flex max-w-zi-container flex-col items-center justify-between gap-2 px-4 sm:px-6 py-5 md:flex-row">
                     <p className="text-xs font-medium tracking-wide text-slate-400">
-                        © {currentYear} Zinsight. All rights reserved.
+                        © {currentYear} 진독. All rights reserved.
                     </p>
                     <p className="text-xs font-medium tracking-wide text-slate-400">
                         Designed for Intelligent Decision Making.

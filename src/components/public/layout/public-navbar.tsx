@@ -42,7 +42,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         href="/"
                         className="text-xl sm:text-2xl font-bold tracking-tighter text-zi-primary font-h2"
                     >
-                        Zinsight
+                        진사이트
                     </Link>
 
                     {/* 데스크탑 네비게이션 */}
@@ -160,7 +160,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                     {/* 드로어 헤더 */}
                     <div className="flex items-center justify-between border-b border-zi-divider px-6 py-5">
                         <span className="text-lg font-bold tracking-tighter text-zi-primary">
-                            Zinsight
+                            진사이트
                         </span>
                         <button
                             className="rounded-md p-1.5 text-zi-outline transition-colors hover:bg-zi-surface-container"

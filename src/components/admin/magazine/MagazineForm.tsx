@@ -1785,7 +1785,7 @@ export function MagazineForm({
                                         <span className="text-[7px] font-bold text-slate-500">Z</span>
                                     </div>
                                     <div className="flex flex-col leading-tight">
-                                        <span className="text-[11px] text-slate-700 font-medium">진사이트 | Zinsight</span>
+                                        <span className="text-[11px] text-slate-700 font-medium">진사이트</span>
                                         <span className="text-[10px] text-[#006621] truncate max-w-[220px]">
                                             https://www.zinsight.co.kr › magazine{preview.slug ? ` › ${preview.slug}` : ''}
                                         </span>

@@ -36,7 +36,7 @@ export default function TermsPage() {
                         Terms of Service
                     </h1>
                     <p className="text-body-md text-zi-on-surface-variant max-w-lg mx-auto">
-                        Zinsight 플랫폼 및 서비스 이용에 관한 권리와 의무, 핵심적인 법적 제한 사항을 안내해 드립니다.
+                        진사이트 플랫폼 및 서비스 이용에 관한 권리와 의무, 핵심적인 법적 제한 사항을 안내해 드립니다.
                     </p>
                 </div>
 
@@ -100,7 +100,7 @@ export default function TermsPage() {
                                 제1조 (목적)
                             </h2>
                             <p className="text-body-md text-zi-on-surface-variant leading-[1.8]">
-                                본 약관은 주식회사 Zinsight(이하 &quot;회사&quot;)가 운영하는 온라인 B2B 비즈니스 인텔리전스 플랫폼 및 매거진 서비스(이하 &quot;서비스&quot;)를 이용함에 있어, 회사와 회원의 권리, 의무, 책임 사항 및 서비스 이용과 관련된 필수 요건을 규정함을 목적으로 합니다.
+                                본 약관은 진독(이하 &quot;회사&quot;)가 운영하는 온라인 B2B 비즈니스 인텔리전스 플랫폼 및 매거진 서비스(이하 &quot;서비스&quot;)를 이용함에 있어, 회사와 회원의 권리, 의무, 책임 사항 및 서비스 이용과 관련된 필수 요건을 규정함을 목적으로 합니다.
                             </p>
                         </section>
 
@@ -111,7 +111,7 @@ export default function TermsPage() {
                                 제2조 (용어의 정의)
                             </h2>
                             <div className="text-body-md text-zi-on-surface-variant leading-[1.8] flex flex-col gap-3">
-                                <p>1. <strong>&quot;서비스&quot;</strong>라 함은 회사가 제공하는 &apos;인사이트 레이더(Insight Radar)&apos; 기업/산업 데이터 분석 대시보드, &apos;Zinsight 매거진&apos; 뉴스레터 콘텐츠 및 비즈니스 관련 큐레이션 정보 일체를 의미합니다.</p>
+                                <p>1. <strong>&quot;서비스&quot;</strong>라 함은 회사가 제공하는 &apos;인사이트 레이더(Insight Radar)&apos; 기업/산업 데이터 분석 대시보드, &apos;진사이트 매거진&apos; 뉴스레터 콘텐츠 및 비즈니스 관련 큐레이션 정보 일체를 의미합니다.</p>
                                 <p>2. <strong>&quot;회원&quot;</strong>이라 함은 회사의 서비스에 접속하여 본 약관에 동의하고 계정을 등록한 실무자, 기업 또는 개인 이용자를 뜻합니다.</p>
                                 <p>3. <strong>&quot;콘텐츠&quot;</strong>라 함은 서비스상에 게재된 텍스트, 이미지, 수치 분석 데이터, 산업 리포트, 뉴스레터 자료 등 회사가 제작 및 유통하는 모든 유무형의 정보를 의미합니다.</p>
                             </div>
@@ -156,7 +156,7 @@ export default function TermsPage() {
                                         데이터 무단 복제 및 상업적 크롤링 엄격 금지
                                     </h4>
                                     <p className="text-[13.5px] text-zi-on-surface-variant leading-relaxed">
-                                        Zinsight 내의 모든 산업 분류 지표, 뉴스레터 텍스트, 요약 큐레이션 데이터는 회사의 자산입니다. 비즈니스 내부 참고용 외의 무단 도용 및 복제는 민형사상의 대상입니다.
+                                        진사이트 내의 모든 산업 분류 지표, 뉴스레터 텍스트, 요약 큐레이션 데이터는 회사의 자산입니다. 비즈니스 내부 참고용 외의 무단 도용 및 복제는 민형사상의 대상입니다.
                                     </p>
                                 </div>
                             </div>
@@ -182,7 +182,7 @@ export default function TermsPage() {
                                         정보의 참고적 활용 및 비즈니스 결과 면책
                                     </h4>
                                     <p className="text-[13.5px] text-zi-on-surface-variant leading-relaxed">
-                                        Zinsight가 제공하는 정보는 개별 투자, 고용, 상거래 계약 등의 직접적인 손익이나 성공을 보장하지 않습니다. 당사는 의사결정의 참고 자료에 대해서만 보증합니다.
+                                        진사이트가 제공하는 정보는 개별 투자, 고용, 상거래 계약 등의 직접적인 손익이나 성공을 보장하지 않습니다. 당사는 의사결정의 참고 자료에 대해서만 보증합니다.
                                     </p>
                                 </div>
                             </div>

@@ -35,7 +35,7 @@ export default function PrivacyPage() {
                         Privacy Policy
                     </h1>
                     <p className="text-body-md text-zi-on-surface-variant max-w-lg mx-auto">
-                        Zinsight는 회원님의 개인정보를 매우 소중하게 다루며, 개인정보보호법에 의거하여 권리와 보안을 철저하게 준수하고 보호합니다.
+                        진독은 회원님의 개인정보를 매우 소중하게 다루며, 개인정보보호법에 의거하여 권리와 보안을 철저하게 준수하고 보호합니다.
                     </p>
                 </div>
 
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
                                 제1조 (개인정보의 처리 목적)
                             </h2>
                             <div className="text-body-md text-zi-on-surface-variant leading-[1.8] flex flex-col gap-3">
-                                <p>주식회사 Zinsight(이하 &quot;회사&quot;)는 다음의 목적을 위해 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 개인정보보호법 제18조에 따라 사전 동의를 받는 등 필요한 조치를 이행할 예정입니다.</p>
+                                <p>진독(이하 &quot;회사&quot;)는 다음의 목적을 위해 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 개인정보보호법 제18조에 따라 사전 동의를 받는 등 필요한 조치를 이행할 예정입니다.</p>
                                 <p>1. <strong>회원 가입 및 관리</strong>: 가입 의사 확인, 회원제 서비스 제공에 따른 본인 식별·인증, 회원자격 유지·관리, 제한적 본인확인제 시행에 따른 본인확인, 서비스 부정 이용 방지, 각종 고지·통지 등을 목적으로 개인정보를 처리합니다.</p>
                                 <p>2. <strong>B2B 서비스 및 콘텐츠 제공</strong>: 인사이트 레이더(Insight Radar) 대시보드 맞춤 제공, 유료 서비스 요금 결제 및 정산, 뉴스레터 및 타겟 매거진 콘텐츠 발송 등을 목적으로 개인정보를 처리합니다.</p>
                             </div>
@@ -215,7 +215,7 @@ export default function PrivacyPage() {
                                 <div className="bg-zi-surface-container-low border border-zi-divider rounded-zi-card p-5 flex items-start gap-4">
                                     <Mail className="w-5 h-5 text-zi-primary shrink-0 mt-0.5" />
                                     <div className="text-[13.5px] leading-relaxed">
-                                        <p>• <strong>담당 부서</strong>: Zinsight 개인정보보호 및 기술지원 운영실</p>
+                                        <p>• <strong>담당 부서</strong>: 진독 개인정보보호 및 기술지원 운영실</p>
                                         <p>• <strong>보호책임자 직책</strong>: 최고보안책임자 (CISO)</p>
                                         <p>• <strong>문의 이메일</strong>: <a href="mailto:cto@zindok.com" className="text-zi-primary font-semibold hover:underline">cto@zindok.com</a></p>
                                     </div>
