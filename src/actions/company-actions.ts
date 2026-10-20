@@ -222,6 +222,9 @@ export async function getOrganizationInvites() {
 
 // ─── 공개 폼: 초대 토큰 유효성 확인 ──────────────────────────────────
 export async function getInviteByToken(token: string) {
+  if (typeof token !== 'string' || token.length === 0 || token.length > 64) {
+    return { valid: false as const, reason: 'NOT_FOUND' as const };
+  }
   const invite = await prisma.organizationInvite.findUnique({
     where: { token },
     include: { region: { select: { id: true, name: true } } },
@@ -252,27 +255,57 @@ export async function submitOrganizationForm(
     return { success: false, reason: check.reason };
   }
 
-  await prisma.$transaction([
-    prisma.organizationSubmission.create({
+  // 공개 폼 입력 정규화: 길이 제한, URL은 http(s)만 허용 (승인 후 기업 페이지 링크로 노출되므로)
+  const str = (v: unknown, max: number) => {
+    const s = typeof v === 'string' ? v.trim() : '';
+    return s ? s.slice(0, max) : null;
+  };
+  const httpUrl = (v: unknown) => {
+    let s = str(v, 255);
+    if (!s) return null;
+    // 'www.example.com'처럼 스킴 없이 입력한 도메인은 https://를 붙여 살리고, 그 외 스킴은 거부
+    if (!/^[a-z][a-z0-9+.-]*:/i.test(s)) s = `https://${s}`;
+    return /^https?:\/\/\S+$/i.test(s) ? s.slice(0, 255) : null;
+  };
+  const companyName = str(formData?.company_name, 255);
+  const entityType = str(formData?.entity_type, 50);
+  if (!companyName || !entityType) {
+    return { success: false, reason: 'INVALID' as const };
+  }
+  const backlinks = (Array.isArray(formData.backlinks) ? formData.backlinks : [])
+    .slice(0, 10)
+    .map((b) => ({ title: str(b?.title, 100) ?? '', url: httpUrl(b?.url) }))
+    .filter((b): b is { title: string; url: string } => !!b.url);
+  const coreKeywords = (Array.isArray(formData.core_keywords) ? formData.core_keywords : [])
+    .map((k) => str(k, 50))
+    .filter((k): k is string => !!k)
+    .slice(0, 30);
+
+  // 초대 토큰 사용 처리를 조건부 업데이트로 원자화해 동시 제출 시 중복 신청 방지
+  const consumed = await prisma.$transaction(async (tx) => {
+    const { count } = await tx.organizationInvite.updateMany({
+      where: { id: check.invite.id, used_at: null, expires_at: { gt: new Date() } },
+      data: { used_at: new Date() },
+    });
+    if (count === 0) return false;
+    await tx.organizationSubmission.create({
       data: {
         invite_id: check.invite.id,
-        company_name: formData.company_name,
-        entity_type: formData.entity_type,
-        ceo_name: formData.ceo_name ?? null,
-        founded_year: formData.founded_year ?? null,
-        hq_location: formData.hq_location ?? null,
-        company_url: formData.company_url ?? null,
-        business_summary: formData.business_summary ?? null,
-        backlinks: formData.backlinks ?? [],
-        core_keywords: formData.core_keywords ?? [],
+        company_name: companyName,
+        entity_type: entityType,
+        ceo_name: str(formData.ceo_name, 100),
+        founded_year: str(formData.founded_year, 10),
+        hq_location: str(formData.hq_location, 255),
+        company_url: httpUrl(formData.company_url),
+        business_summary: str(formData.business_summary, 5000),
+        backlinks,
+        core_keywords: coreKeywords,
       },
-    }),
-    prisma.organizationInvite.update({
-      where: { id: check.invite.id },
-      data: { used_at: new Date() },
-    }),
-  ]);
+    });
+    return true;
+  });
 
+  if (!consumed) return { success: false, reason: 'USED' as const };
   return { success: true };
 }
 

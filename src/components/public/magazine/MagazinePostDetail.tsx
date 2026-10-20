@@ -4,9 +4,14 @@ import { Building2, ArrowRight } from 'lucide-react';
 import { PreferredSourceButton } from '@/components/public/magazine/PreferredSourceButton';
 import { ArticleTracker } from '@/components/public/analytics/ArticleTracker';
 import { serializeJsonLd } from '@/lib/site';
+import { sanitizeHref } from '@/lib/utils';
 
 interface HighlightedTextProps {
     text: string;
+}
+
+function isInternalHref(url: string): boolean {
+    return url.startsWith('/') || url.startsWith('#') || /^https?:\/\/(www\.)?zinsight\.co\.kr(\/|$)/i.test(url);
 }
 
 function renderHighlightedParts(text: string) {
@@ -24,16 +29,19 @@ function renderHighlightedParts(text: string) {
             const match = part.match(/^\[(.*?)\]\((.*?)(?:\s+"(.*?)")?\)$/);
             if (match) {
                 const linkText = match[1];
-                const url = match[2].trim();
+                const url = sanitizeHref(match[2].trim());
+                if (!url) return linkText;
                 const title = match[3];
                 const isSponsored = title === 'sponsored';
+                // 사이트 내부 링크는 같은 탭에서 열고, 외부 링크만 새 탭으로
+                const internal = isInternalHref(url);
                 const rel = isSponsored ? "sponsored noopener" : "noopener";
                 return (
                     <a 
                         key={i} 
                         href={url} 
-                        target="_blank" 
-                        rel={rel}
+                        target={internal ? undefined : "_blank"} 
+                        rel={internal && !isSponsored ? undefined : rel}
                         className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
                     >
                         {linkText}
@@ -137,7 +145,8 @@ function HighlightedText({ text }: { text: string }) {
                                 src={block.url} 
                                 alt={block.alt || ''} 
                                 loading="lazy"
-                                className="mx-auto rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
+                                decoding="async"
+                                className="mx-auto h-auto max-w-full rounded-zi-card max-h-[450px] object-contain shadow-sm border border-zi-divider/30" 
                             />
                             {block.caption && (
                                 <figcaption className="block text-sm text-slate-600 mt-3 font-medium">{block.caption}</figcaption>

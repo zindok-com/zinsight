@@ -508,7 +508,7 @@ function TimelineItem({
                     isMagazine ? (
                         <Link
                             href={url}
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-650 hover:text-indigo-800 transition-colors"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                         >
                             매거진 기사 보기
                             <ExternalLink className="h-3 w-3 text-indigo-500" />

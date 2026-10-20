@@ -1,4 +1,5 @@
 import React from 'react';
+import { sanitizeHref } from '@/lib/utils';
 
 interface FormattedBusinessSummaryProps {
     text?: string | null;
@@ -52,7 +53,8 @@ function renderHighlightedParts(text: string) {
             const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
             if (match) {
                 const linkText = match[1];
-                const url = match[2];
+                const url = sanitizeHref(match[2]);
+                if (!url) return linkText;
                 return (
                     <a 
                         key={i} 

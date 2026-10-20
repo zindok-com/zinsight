@@ -68,6 +68,13 @@ export interface RadarFilterOptions {
 // 지역 목록 조회 (사이드바/필터용)
 // ─────────────────────────────────────────────
 
+// 서버 액션은 클라이언트가 임의 인자로 직접 호출할 수 있으므로 조회 개수·페이지를 서버에서 제한
+function clampInt(value: unknown, min: number, max: number, fallback: number): number {
+    const n = Math.floor(Number(value));
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(Math.max(n, min), max);
+}
+
 export async function getRadarRegions(): Promise<RadarRegionWithStats[]> {
     const regions = await prisma.region.findMany({
         where: { isActive: true },
@@ -111,7 +118,10 @@ export async function getRadarCompanies(
     page = 1,
     pageSize = 12
 ): Promise<{ companies: RadarCompanyCard[]; total: number; totalPages: number }> {
-    const { regionId, entityType, searchQuery } = filter;
+    page = clampInt(page, 1, 10_000, 1);
+    pageSize = clampInt(pageSize, 1, 50, 12);
+    const { regionId, entityType } = filter;
+    const searchQuery = filter.searchQuery?.slice(0, 100);
 
     const where: any = {
         ...(regionId ? { region_id: regionId } : {}),
@@ -196,7 +206,9 @@ export async function getRadarLatestArticles(
     filter: RadarFilterOptions = {},
     limit = 10
 ): Promise<RadarArticleItem[]> {
-    const { regionId, searchQuery } = filter;
+    limit = clampInt(limit, 1, 50, 10);
+    const { regionId } = filter;
+    const searchQuery = filter.searchQuery?.slice(0, 100);
 
     const where: any = {
         ...(regionId
@@ -248,6 +260,7 @@ export async function getRadarTrendingKeywords(
     regionId?: number,
     limit = 20
 ): Promise<{ id: number; keyword_text: string; count: number; regionName: string }[]> {
+    limit = clampInt(limit, 1, 50, 20);
     const keywords = await prisma.searchKeyword.findMany({
         where: {
             deleted_at: null,
