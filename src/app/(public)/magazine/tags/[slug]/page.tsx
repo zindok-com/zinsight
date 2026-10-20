@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { cache } from 'react';
 import Image from 'next/image';
 import { ArrowRight, Newspaper, Building2 } from 'lucide-react';
 import Link from 'next/link';
@@ -12,29 +13,34 @@ export const revalidate = 1800; // 30분마다 ISR 재생성
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
-export const metadata: Metadata = {
-    title: '매거진 - 테크·마케팅 저널 & 로컬 비즈니스 허브',
-    description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
-    alternates: {
-        canonical: `${baseUrl}/magazine`,
-    },
-    ...buildSocialMetadata({
-        title: '매거진 - 테크·마케팅 저널 & 로컬 비즈니스 허브',
-        description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
-        path: '/magazine',
-    }),
-    robots: {
-        index: true,
-        follow: true,
-        googleBot: {
-            index: true,
-            follow: true,
-            'max-video-preview': -1,
-            'max-image-preview': 'large',
-            'max-snippet': -1,
-        },
-    },
-};
+// 기사가 이 수 이상 모인 태그만 검색 색인 허용 (기사 1~2개짜리 태그 페이지는 얇은 중복 페이지로 평가됨)
+const TAG_INDEX_MIN_POSTS = 3;
+
+// generateMetadata와 페이지 본문이 같은 조회 결과를 공유하도록 요청 단위 캐시
+const getTagPosts = cache((keyword: string) => getPublicMagazinePosts(keyword));
+
+interface TagMetadataProps {
+    params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: TagMetadataProps): Promise<Metadata> {
+    const { slug } = await params;
+    const tag = decodeURIComponent(slug || '');
+    const posts = await getTagPosts(tag);
+    const indexable = posts.length >= TAG_INDEX_MIN_POSTS;
+    const title = `"#${tag}" 관련 기사`;
+    const description = `진사이트 매거진에서 '${tag}' 관련 기사 ${posts.length}건을 모아 보세요.`;
+    const path = `/magazine/tags/${encodeURIComponent(tag)}`;
+    return {
+        title,
+        description,
+        alternates: { canonical: `${baseUrl}${path}` },
+        ...buildSocialMetadata({ title, description, path }),
+        robots: indexable
+            ? { index: true, follow: true, googleBot: { index: true, follow: true, 'max-image-preview': 'large', 'max-snippet': -1 } }
+            : { index: false, follow: true },
+    };
+}
 
 function HighlightedText({ text }: { text: string }) {
     if (!text) return null;
@@ -76,7 +82,7 @@ export default async function TagArchivePage({ params }: PageProps) {
     const isSearchMode = true;
 
     const [allPosts, regions] = await Promise.all([
-        getPublicMagazinePosts(keyword),
+        getTagPosts(keyword),
         getRadarRegions(),
     ]);
 

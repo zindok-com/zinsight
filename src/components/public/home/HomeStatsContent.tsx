@@ -113,7 +113,7 @@ interface HomeStatsContentProps {
         totalCompanies: number;
         totalArticles: number;
         totalRegions: number;
-        totalKeywords: number;
+        totalMagazinePosts: number;
     };
 }
 
@@ -139,9 +139,9 @@ export function HomeStatsContent({ totalStats }: HomeStatsContentProps) {
         },
         { 
             icon: <LottieIcon name="document" size={36} speed={0.7} hover={true} />, 
-            label: '모니터링 키워드', 
-            value: totalStats.totalKeywords, 
-            unit: '개' 
+            label: '발행 매거진', 
+            value: totalStats.totalMagazinePosts, 
+            unit: '건' 
         }
     ];
 

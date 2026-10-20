@@ -13,7 +13,7 @@ function HomeStatsPlaceholder({ totalStats }: HomeStatsProps) {
         { label: '분석 조직', value: totalStats.totalCompanies, unit: '개' },
         { label: '수집 기사', value: totalStats.totalArticles, unit: '건' },
         { label: '지역', value: totalStats.totalRegions, unit: '개' },
-        { label: '모니터링 키워드', value: totalStats.totalKeywords, unit: '개' },
+        { label: '발행 매거진', value: totalStats.totalMagazinePosts, unit: '건' },
     ];
     return (
         <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
@@ -36,7 +36,7 @@ interface HomeStatsProps {
         totalCompanies: number;
         totalArticles: number;
         totalRegions: number;
-        totalKeywords: number;
+        totalMagazinePosts: number;
     };
 }
 

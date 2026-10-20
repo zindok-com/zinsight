@@ -99,14 +99,14 @@ export async function getRadarRegions(): Promise<RadarRegionWithStats[]> {
 // ─────────────────────────────────────────────
 
 export async function getRadarTotalStats() {
-    const [totalCompanies, totalArticles, totalRegions, totalKeywords] = await Promise.all([
+    const [totalCompanies, totalArticles, totalRegions, totalMagazinePosts] = await Promise.all([
         prisma.organization.count(),
         prisma.article.count(),
         prisma.region.count({ where: { isActive: true } }),
-        prisma.searchKeyword.count({ where: { deleted_at: null, is_active: true } })
+        prisma.magazinePost.count({ where: { status: 'PUBLISHED', deletedAt: null } })
     ]);
 
-    return { totalCompanies, totalArticles, totalRegions, totalKeywords };
+    return { totalCompanies, totalArticles, totalRegions, totalMagazinePosts };
 }
 
 // ─────────────────────────────────────────────

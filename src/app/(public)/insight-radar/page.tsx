@@ -44,6 +44,8 @@ export async function generateMetadata({
             alternates: {
                 canonical: baseCanonical,
             },
+            // 기업 키워드 대부분이 한 기업에만 쓰여 검색 결과가 기업 프로필과 사실상 중복 → 색인은 막고 링크는 따라가게 함
+            robots: { index: false, follow: true },
             ...buildSocialMetadata({ title, description, path: `/insight-radar?q=${encodeURIComponent(query)}` }),
         };
     }
