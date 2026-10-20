@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { verifyTokenEdge } from '@/lib/edge-token';
+import { LOCAL_TEST_TOKEN } from '@/lib/token-config';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const authToken = request.cookies.get('auth_token');
 
-    // ── 로컬 테스트 환경 감지 (development 모드 혹은 localhost 접속) ──
-    const isLocalTest = 
-        process.env.NODE_ENV === 'development' ||
-        request.nextUrl.hostname === 'localhost' ||
-        request.nextUrl.hostname === '127.0.0.1';
+    // ── 로컬 테스트 환경 감지 (next dev 모드에서만. Host 헤더는 위조 가능하므로 사용하지 않음) ──
+    const isLocalTest = process.env.NODE_ENV === 'development';
 
     // ── 운영 환경 non-www -> www 301 영구 리다이렉트 (모든 라우트 최우선 적용) ──
     if (!isLocalTest && request.nextUrl.hostname === 'zinsight.co.kr') {
@@ -19,21 +18,26 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(url, 301);
     }
 
-    // ── 인증이 필요한 경로: /admin 하위 전체 ──
-    const isAdminPath = pathname.startsWith('/admin');
+    // ── 인증이 필요한 경로: /admin 하위 전체 및 관리자 전용 API ──
+    const isAdminApi = pathname.startsWith('/api/companies') || pathname.startsWith('/api/snapshots');
+    const isAdminPath = pathname.startsWith('/admin') || isAdminApi;
+    const isAuthenticated = authToken ? (await verifyTokenEdge(authToken.value)) !== null : false;
 
     // ── 인증 관련 예외 경로 ──
     const isLoginPage = pathname === '/login';
 
     // /admin 경로에 비인증 상태로 접근하면 /login으로 리다이렉트 (로컬 테스트 환경 제외)
-    if (isAdminPath && !authToken && !isLocalTest) {
+    if (isAdminPath && !isAuthenticated && !isLocalTest) {
+        if (isAdminApi) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('callbackUrl', pathname);
         return NextResponse.redirect(loginUrl);
     }
 
     // 이미 로그인한 상태에서 /login 접근 시 /admin으로 리다이렉트 (로컬 테스트 환경 제외)
-    if (isLoginPage && authToken && !isLocalTest) {
+    if (isLoginPage && isAuthenticated && !isLocalTest) {
         return NextResponse.redirect(new URL('/admin', request.url));
     }
 
@@ -41,8 +45,8 @@ export function middleware(request: NextRequest) {
 
     // 로컬 테스트용 토큰 및 환경 쿠키 설정
     if (isLocalTest) {
-        if (!authToken) {
-            response.cookies.set('auth_token', 'local-test-token', { path: '/' });
+        if (!isAuthenticated) {
+            response.cookies.set('auth_token', LOCAL_TEST_TOKEN, { path: '/' });
         }
         response.cookies.set('is_local_test', 'true', { path: '/' });
     }

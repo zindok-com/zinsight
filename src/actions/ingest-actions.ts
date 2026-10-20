@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import axios from 'axios';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
@@ -165,6 +166,7 @@ async function ingestItems(
 
 // 키워드 단건 수집
 export async function ingestByKeyword(keywordId: number, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<IngestReport> {
+    await requireAdmin();
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
@@ -195,6 +197,7 @@ export async function ingestByKeyword(keywordId: number, display: number = 10, s
 
 // 지역 단위 수집 (지역에 연결된 모든 활성 키워드로 수집)
 export async function ingestByRegion(regionId: number, display: number = 10, sort: 'sim' | 'date' = 'date'): Promise<IngestReport> {
+    await requireAdmin();
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }
@@ -243,6 +246,7 @@ export async function ingestByOrganization(
     display: number = 10,
     sort: 'sim' | 'date' = 'sim'
 ): Promise<IngestReport> {
+    await requireAdmin();
     if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET) {
         return { success: false, newCount: 0, dupCount: 0, failCount: 0, perKeyword: [], message: 'Naver API keys missing.' };
     }

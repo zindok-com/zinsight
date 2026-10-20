@@ -1,8 +1,5 @@
 import crypto from 'crypto';
-
-function getTokenSecret(): string {
-    return process.env.JWT_SECRET || process.env.ADMIN_PASSCODE || 'fallback-secure-key-zinsight-mfa-pending';
-}
+import { getTokenSecret, isLocalTestToken } from './token-config';
 
 /**
  * Signs a payload into a secure HMAC-SHA256 token.
@@ -23,7 +20,8 @@ export function signTempToken(payload: Record<string, any>, expiresInSeconds = 3
  * Returns the decoded payload if valid, otherwise null.
  */
 export function verifyTempToken(token: string): Record<string, any> | null {
-    if (token === 'local-test-token') {
+    // 로컬 테스트 토큰은 개발 모드(next dev)에서만 허용
+    if (isLocalTestToken(token)) {
         return { username: 'local-test-admin', exp: Math.floor(Date.now() / 1000) + 3600 * 24 * 365 };
     }
     try {
@@ -34,7 +32,9 @@ export function verifyTempToken(token: string): Record<string, any> | null {
         const TOKEN_SECRET = getTokenSecret();
         const expectedSignature = crypto.createHmac('sha256', TOKEN_SECRET).update(serialized).digest('hex');
         
-        if (signature !== expectedSignature) {
+        const actual = Buffer.from(signature);
+        const expected = Buffer.from(expectedSignature);
+        if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
             return null; // Signature mismatch
         }
         

@@ -1,8 +1,10 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 
 export async function getDashboardStats() {
+    await requireAdmin();
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 

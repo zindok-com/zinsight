@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
@@ -30,6 +31,7 @@ export async function submitConsultingRequest(data: {
 }
 
 export async function getConsultingRequests() {
+    await requireAdmin();
     try {
         return await prisma.consultingRequest.findMany({
             orderBy: {

@@ -1,9 +1,11 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 export async function getAuthors() {
+    await requireAdmin();
     try {
         return await prisma.author.findMany({
             orderBy: { name: 'asc' }
@@ -20,6 +22,7 @@ export async function createAuthor(data: {
     avatarUrl?: string;
     bio?: string;
 }) {
+    await requireAdmin();
     try {
         const name = data.name.trim();
         let slug = data.slug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
@@ -62,6 +65,7 @@ export async function updateAuthor(
         bio?: string;
     }
 ) {
+    await requireAdmin();
     try {
         const name = data.name.trim();
         let slug = data.slug.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-');
@@ -113,6 +117,7 @@ export async function updateAuthor(
 }
 
 export async function deleteAuthor(id: number) {
+    await requireAdmin();
     try {
         const author = await prisma.author.findUnique({
             where: { id },

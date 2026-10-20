@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import {
     getGSCConnectionStatus,
@@ -21,6 +22,7 @@ function buildGscDateRange(periodDays: number | 'all'): DateRange {
 
 // ── SEO / GEO / AEO 통합 상태 및 API 연동 진단 조회 ───────────────
 export async function getSeoMonitoringOverview() {
+    await requireAdmin();
     // 1. API 연동 상태 병렬 점검
     const [gscStatus, ga4Status] = await Promise.all([
         getGSCConnectionStatus().catch((err) => ({
@@ -90,6 +92,7 @@ export async function getSeoMonitoringOverview() {
 
 // ── 구글 색인(노출) 페이지 목록 및 사이트맵 비교 분석 ─────────────
 export async function getGoogleIndexingReport(periodDays: number | 'all' = 30) {
+    await requireAdmin();
     const dateRange = buildGscDateRange(periodDays);
 
     // 1. GSC에서 노출된 페이지 목록 조회

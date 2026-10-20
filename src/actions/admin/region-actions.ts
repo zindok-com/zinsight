@@ -1,10 +1,12 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 // 지자체 지역 목록 조회 (테이블이 없을 시 빈 배열 반환)
 export async function getRegionsAdmin() {
+    await requireAdmin();
     try {
         const regions = await prisma.region.findMany({
             orderBy: { name: 'asc' }
@@ -20,6 +22,7 @@ export async function getRegionsAdmin() {
 export const getRegions = getRegionsAdmin;
 
 export async function getRegionById(id: number) {
+    await requireAdmin();
     return prisma.region.findUnique({ where: { id } });
 }
 
@@ -50,6 +53,7 @@ function revalidateAllRegionConsumers() {
 
 // 신규 지자체 등록
 export async function createRegionAdmin(name: string, slug: string) {
+    await requireAdmin();
     try {
         const cleanName = name.trim();
         const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -82,6 +86,7 @@ export async function createRegionAdmin(name: string, slug: string) {
 
 // 지자체 정보 수정
 export async function updateRegionAdmin(id: number, name: string, slug: string, isActive: boolean) {
+    await requireAdmin();
     try {
         const cleanName = name.trim();
         const cleanSlug = slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -120,6 +125,7 @@ export async function updateRegionAdmin(id: number, name: string, slug: string, 
 
 // 지자체 삭제 (연결된 기사들은 Prisma 설정에 따라 regionId = null로 보호됨)
 export async function deleteRegionAdmin(id: number) {
+    await requireAdmin();
     try {
         await prisma.region.delete({
             where: { id }

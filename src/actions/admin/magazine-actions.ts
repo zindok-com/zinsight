@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
@@ -149,6 +150,7 @@ function processMagazineContent(content: string, providedSummary?: string) {
 }
 
 export async function getMagazinePosts() {
+    await requireAdmin();
     return await prisma.magazinePost.findMany({
         where: {
             deletedAt: null
@@ -199,6 +201,7 @@ export async function createMagazinePost(data: {
     targetKeywords?: string | null;
     isPaid?: boolean;
 }) {
+    await requireAdmin();
     try {
         const { 
             organizationIds = [], 
@@ -294,6 +297,7 @@ export async function updateMagazinePost(id: number, data: {
     targetKeywords?: string | null;
     isPaid?: boolean;
 }) {
+    await requireAdmin();
     try {
         const oldPost = await prisma.magazinePost.findUnique({
             where: { id },
@@ -405,6 +409,7 @@ export async function updateMagazinePost(id: number, data: {
 }
 
 export async function deleteMagazinePost(id: number) {
+    await requireAdmin();
     try {
         const postBeforeDelete = await prisma.magazinePost.findUnique({
             where: { id },
@@ -433,6 +438,7 @@ export async function deleteMagazinePost(id: number) {
 }
 
 export async function updateHomeSectionStatus(id: number, active: boolean) {
+    await requireAdmin();
     try {
         await prisma.magazinePost.update({
             where: { id },
@@ -447,6 +453,7 @@ export async function updateHomeSectionStatus(id: number, active: boolean) {
 }
 
 export async function updatePortalFeaturedStatus(id: number, active: boolean) {
+    await requireAdmin();
     try {
         await prisma.$transaction(async (tx) => {
             if (active) {
@@ -469,6 +476,7 @@ export async function updatePortalFeaturedStatus(id: number, active: boolean) {
 }
 
 export async function updatePortalSidePriority(id: number, priority: number) {
+    await requireAdmin();
     try {
         await prisma.$transaction(async (tx) => {
             if (priority > 0) {
@@ -491,6 +499,7 @@ export async function updatePortalSidePriority(id: number, priority: number) {
 }
 
 export async function migrateMagazineContent() {
+    await requireAdmin();
     try {
         const posts = await prisma.magazinePost.findMany();
         let migratedCount = 0;
@@ -522,6 +531,7 @@ export async function migrateMagazineContent() {
 }
 
 export async function updateMultipleMagazinePostsStatus(ids: number[], status: string) {
+    await requireAdmin();
     try {
         const posts = await prisma.magazinePost.findMany({
             where: { id: { in: ids } },
@@ -569,6 +579,7 @@ export async function updateMultipleMagazinePostsStatus(ids: number[], status: s
 }
 
 export async function updateTechFeaturedStatus(id: number, active: boolean) {
+    await requireAdmin();
     try {
         await prisma.$transaction(async (tx) => {
             if (active) {
@@ -591,6 +602,7 @@ export async function updateTechFeaturedStatus(id: number, active: boolean) {
 }
 
 export async function updateLocalFeaturedStatus(id: number, active: boolean) {
+    await requireAdmin();
     try {
         const post = await prisma.magazinePost.findUnique({
             where: { id },
@@ -620,6 +632,7 @@ export async function updateLocalFeaturedStatus(id: number, active: boolean) {
 }
 
 export async function getMagazineCategories() {
+    await requireAdmin();
     try {
         return await prisma.magazineCategory.findMany({
             orderBy: { id: 'asc' }

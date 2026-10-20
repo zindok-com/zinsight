@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { slugifyOrganization } from '@/lib/utils';
@@ -23,6 +24,7 @@ export async function updateCompany(
     is_featured?: boolean;
   }
 ) {
+  await requireAdmin();
   try {
     const { is_featured, slug, ...companyData } = data;
 
@@ -59,6 +61,7 @@ export async function updateCompany(
 }
 
 export async function toggleCompanyFeatured(id: number, is_featured: boolean) {
+  await requireAdmin();
   try {
     const updatedCompany = await prisma.organization.update({
       where: { id },
@@ -74,6 +77,7 @@ export async function toggleCompanyFeatured(id: number, is_featured: boolean) {
 }
 
 export async function searchOrganizations(query: string) {
+  await requireAdmin();
   try {
     const orgs = await prisma.organization.findMany({
       where: {
@@ -104,6 +108,7 @@ export async function createOrganizationInline(data: {
   region_id: number;
   backlinks?: any;
 }) {
+  await requireAdmin();
   try {
     const slugValue = data.slug && data.slug.trim() !== ''
       ? slugifyOrganization(data.slug)
@@ -131,6 +136,7 @@ export async function createOrganizationInline(data: {
 }
 
 export async function linkArticleToCompany(articleId: number, companyId: number) {
+  await requireAdmin();
   try {
     const existing = await prisma.companyArticle.findFirst({
       where: {
@@ -160,6 +166,7 @@ export async function linkArticleToCompany(articleId: number, companyId: number)
 }
 
 export async function unlinkArticleFromCompany(articleId: number, companyId: number) {
+  await requireAdmin();
   try {
     await prisma.companyArticle.deleteMany({
       where: {
@@ -184,6 +191,7 @@ export async function createOrganizationInvite(data: {
   region_id: number;
   label?: string;
 }) {
+  await requireAdmin();
   const { randomUUID } = await import('crypto');
   const token = randomUUID().replace(/-/g, '');
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7일 후
@@ -202,6 +210,7 @@ export async function createOrganizationInvite(data: {
 }
 
 export async function getOrganizationInvites() {
+  await requireAdmin();
   return prisma.organizationInvite.findMany({
     orderBy: { created_at: 'desc' },
     include: {
@@ -269,6 +278,7 @@ export async function submitOrganizationForm(
 
 // ─── 어드민: 신청 목록 조회 ───────────────────────────────────────────
 export async function getOrganizationSubmissions(status?: string) {
+  await requireAdmin();
   return prisma.organizationSubmission.findMany({
     where: status ? { status } : undefined,
     orderBy: { created_at: 'desc' },
@@ -280,6 +290,7 @@ export async function getOrganizationSubmissions(status?: string) {
 
 // ─── 어드민: 신청 승인 → 조직(companies) 등록 ──────────────────────
 export async function approveOrganizationSubmission(submissionId: number) {
+  await requireAdmin();
   const submission = await prisma.organizationSubmission.findUnique({
     where: { id: submissionId },
     include: { invite: { include: { region: true } } },
@@ -322,6 +333,7 @@ export async function approveOrganizationSubmission(submissionId: number) {
 
 // ─── 어드민: 신청 반려 ───────────────────────────────────────────────
 export async function rejectOrganizationSubmission(submissionId: number) {
+  await requireAdmin();
   await prisma.organizationSubmission.update({
     where: { id: submissionId },
     data: { status: 'REJECTED', reviewed_at: new Date() },
@@ -332,6 +344,7 @@ export async function rejectOrganizationSubmission(submissionId: number) {
 
 // ─── 어드민: 초대 링크 무효화 ─────────────────────────────────────────
 export async function revokeOrganizationInvite(inviteId: number) {
+  await requireAdmin();
   await prisma.organizationInvite.update({
     where: { id: inviteId },
     data: { used_at: new Date() },

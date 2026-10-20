@@ -1,10 +1,12 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 // 리다이렉트 전체 목록 조회
 export async function getRedirects() {
+    await requireAdmin();
     try {
         const redirects = await prisma.redirect.findMany({
             orderBy: {
@@ -20,6 +22,7 @@ export async function getRedirects() {
 
 // 리다이렉트 규칙 추가
 export async function createRedirect(sourcePath: string, targetPath: string, permanent: boolean = true) {
+    await requireAdmin();
     try {
         // 간단한 입력 검증 및 정규화
         const cleanSource = sourcePath.trim().toLowerCase();
@@ -65,6 +68,7 @@ export async function createRedirect(sourcePath: string, targetPath: string, per
 
 // 리다이렉트 규칙 삭제
 export async function deleteRedirect(id: number) {
+    await requireAdmin();
     try {
         await prisma.redirect.delete({
             where: { id }

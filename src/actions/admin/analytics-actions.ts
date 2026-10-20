@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import * as cheerio from 'cheerio';
 import {
@@ -59,6 +60,7 @@ function buildGscDateRange(periodDays: number | 'all'): DateRange {
 
 // ── 전체 대시보드 통계 ────────────────────────────────────────────
 export async function getDashboardAnalytics(periodDays: number = 7) {
+    await requireAdmin();
     const dateRange = buildDateRange(periodDays);
     const ga4Data = await getGlobalDashboardStats(dateRange);
 
@@ -93,6 +95,7 @@ export async function getDashboardAnalytics(periodDays: number = 7) {
 // NOTE: ViewTracker 삭제로 viewCount는 더 이상 갱신되지 않는 레거시 값임.
 //       기사 목록 UI에서는 표시하지 않는 것을 권장하며, 이 함수는 기본 메타만 반환.
 export async function getPostsWithAnalytics() {
+    await requireAdmin();
     const posts = await prisma.magazinePost.findMany({
         where: { deletedAt: null },
         include: { author: true, category: true, region: true },
@@ -106,6 +109,7 @@ export async function getPostsWithAnalytics() {
 
 // ── 기사 성과 순위표 (F-12) ───────────────────────────────────────
 export async function getRecentArticlesLeaderboard(periodDays: number = 30, limit: number = 50) {
+    await requireAdmin();
     // 1. 최근 발행 기사 목록 추출
     const recentPosts = await prisma.magazinePost.findMany({
         where: { deletedAt: null, status: 'PUBLISHED' },
@@ -148,6 +152,7 @@ export async function getArticleAnalyticsSummary(
     postId: number,
     periodDays: number | 'all' = 30,
 ) {
+    await requireAdmin();
     const post = await prisma.magazinePost.findUnique({
         where: { id: postId },
         include: {
@@ -305,6 +310,7 @@ export async function getArticleAnalyticsSummary(
 
 // ── 기사 전환 퍼널 (B-01 수정: DB viewCount → GA4 pageviews) ─────
 export async function getArticleFunnel(postId: number, periodDays: number | 'all' = 30) {
+    await requireAdmin();
     const post = await prisma.magazinePost.findUnique({
         where: { id: postId },
         select: { slug: true },
@@ -326,6 +332,7 @@ export async function getArticleFunnel(postId: number, periodDays: number | 'all
 
 // ── 조직 프로필 애널리틱스 (F-08/F-13/F-02 포함, B-03 수정) ──────────
 export async function getOrgAnalyticsSummary(orgId: number, periodDays: number | 'all' = 30) {
+    await requireAdmin();
     const org = await prisma.organization.findUnique({
         where: { id: orgId },
         include: {
@@ -481,6 +488,7 @@ export async function saveAnalyticsReport({
     periodDays: number;
     dataSnapshot: object;
 }) {
+    await requireAdmin();
     return prisma.analyticsReport.create({
         data: {
             entityType,
@@ -499,6 +507,7 @@ export async function getAnalyticsReports(options?: {
     entityId?: number;
     limit?: number;
 }) {
+    await requireAdmin();
     return prisma.analyticsReport.findMany({
         where: {
             ...(options?.entityType ? { entityType: options.entityType } : {}),
@@ -521,6 +530,7 @@ export async function getAnalyticsReports(options?: {
 
 // ── 리포트 스냅샷 단건 조회 (다시 보기용) ──────────────────────────
 export async function getAnalyticsReportById(id: number) {
+    await requireAdmin();
     return prisma.analyticsReport.findUnique({
         where: { id },
     });

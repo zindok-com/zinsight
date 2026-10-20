@@ -1,9 +1,11 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
 export async function getKeywords(regionId: number, includeDeleted = false) {
+    await requireAdmin();
     return prisma.searchKeyword.findMany({
         where: {
             region_id: regionId,
@@ -14,6 +16,7 @@ export async function getKeywords(regionId: number, includeDeleted = false) {
 }
 
 export async function getActiveKeywordsForRegion(regionId: number) {
+    await requireAdmin();
     return prisma.searchKeyword.findMany({
         where: { region_id: regionId, is_active: true, deleted_at: null },
         orderBy: { created_at: 'asc' },
@@ -26,6 +29,7 @@ export async function createKeyword(data: {
     keyword_type?: string;
     is_active?: boolean;
 }) {
+    await requireAdmin();
     const keyword = await prisma.searchKeyword.create({
         data: {
             region_id: data.region_id,
@@ -43,6 +47,7 @@ export async function updateKeyword(id: number, data: {
     keyword_type?: string;
     is_active?: boolean;
 }) {
+    await requireAdmin();
     const keyword = await prisma.searchKeyword.update({
         where: { id },
         data,
@@ -52,6 +57,7 @@ export async function updateKeyword(id: number, data: {
 }
 
 export async function softDeleteKeyword(id: number) {
+    await requireAdmin();
     await prisma.searchKeyword.update({
         where: { id },
         data: { deleted_at: new Date(), is_active: false }
@@ -60,6 +66,7 @@ export async function softDeleteKeyword(id: number) {
 }
 
 export async function restoreKeyword(id: number) {
+    await requireAdmin();
     await prisma.searchKeyword.update({
         where: { id },
         data: { deleted_at: null, is_active: true }
@@ -68,6 +75,7 @@ export async function restoreKeyword(id: number) {
 }
 
 export async function toggleKeywordActive(id: number, is_active: boolean) {
+    await requireAdmin();
     await prisma.searchKeyword.update({ where: { id }, data: { is_active } });
     revalidatePath('/keywords');
 }

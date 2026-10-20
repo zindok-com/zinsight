@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 
 export interface ArticleFilter {
@@ -23,6 +24,7 @@ function monthRange(ym: string): { gte: Date; lte: Date } {
 }
 
 export async function getArticles(filter: ArticleFilter) {
+    await requireAdmin();
     const { regionId, keywordId, source, createdMonth, pubMonth, page = 1, pageSize = 50 } = filter;
 
     const ingestionFilter: any = {
@@ -68,6 +70,7 @@ export async function getArticles(filter: ArticleFilter) {
 }
 
 export async function getConsolidatedArticlesForExport(regionIds: number[], month: string, filterType: 'pub_date' | 'created_at') {
+    await requireAdmin();
     const [year, mon] = month.split('-').map(Number);
     const fromDate = new Date(year, mon - 1, 1);
     const toDate = new Date(year, mon, 0, 23, 59, 59);
@@ -99,6 +102,7 @@ export async function getConsolidatedArticlesForExport(regionIds: number[], mont
 }
 
 export async function deleteArticlesByDate(dateString: string, regionId?: number) {
+    await requireAdmin();
     try {
         const startOfDay = new Date(dateString);
         startOfDay.setHours(0, 0, 0, 0);
@@ -132,6 +136,7 @@ export async function deleteArticlesByDate(dateString: string, regionId?: number
 }
 
 export async function searchArticlesByTitle(query: string) {
+    await requireAdmin();
     if (!query || query.trim().length === 0) {
         return [];
     }

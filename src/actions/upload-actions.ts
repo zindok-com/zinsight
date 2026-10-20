@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { put, list, del, copy } from '@vercel/blob';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
@@ -46,6 +47,7 @@ async function getSlugifiedPathname(file: File, folder: string): Promise<string>
 }
 
 export async function uploadThumbnail(formData: FormData) {
+    await requireAdmin();
     const file = formData.get('file') as File;
     if (!file) {
         throw new Error('No file provided');
@@ -67,6 +69,7 @@ export async function uploadThumbnail(formData: FormData) {
 
 // List all blobs from the storage
 export async function listAllBlobs() {
+    await requireAdmin();
     try {
         const { blobs } = await list();
         return { success: true, blobs };
@@ -78,6 +81,7 @@ export async function listAllBlobs() {
 
 // Delete a blob by URL
 export async function deleteBlob(url: string) {
+    await requireAdmin();
     try {
         await del(url);
         revalidatePath('/admin/storage');
@@ -90,6 +94,7 @@ export async function deleteBlob(url: string) {
 
 // Direct image upload for storage management
 export async function uploadImageDirect(formData: FormData) {
+    await requireAdmin();
     const file = formData.get('file') as File;
     if (!file) {
         return { success: false, error: 'No file provided' };
@@ -111,6 +116,7 @@ export async function uploadImageDirect(formData: FormData) {
 
 // Get all image URLs currently used in magazine posts
 export async function getUsedImageUrls() {
+    await requireAdmin();
     try {
         const [posts, authors] = await Promise.all([
             prisma.magazinePost.findMany({
@@ -165,6 +171,7 @@ export async function getUsedImageUrls() {
 
 // Delete multiple blobs by URLs
 export async function deleteMultipleBlobs(urls: string[]) {
+    await requireAdmin();
     try {
         if (urls.length === 0) {
             return { success: true };
@@ -180,6 +187,7 @@ export async function deleteMultipleBlobs(urls: string[]) {
 
 // B-3: Rename a blob and replace all its references in the database
 export async function renameBlobTransaction(oldUrl: string, oldPathname: string, newFileName: string) {
+    await requireAdmin();
     if (!oldUrl || !oldPathname || !newFileName) {
         return { success: false, error: '잘못된 요청입니다.' };
     }

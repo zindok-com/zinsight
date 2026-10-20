@@ -1,5 +1,6 @@
 'use server';
 
+import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { getConsolidatedArticlesForExport } from './article-actions';
 
@@ -15,6 +16,7 @@ export async function generateConsolidatedSnapshot(regionIds: number[], month: s
     articleCount?: number;
     message: string;
 }> {
+    await requireAdmin();
     if (regionIds.length === 0) {
         return { success: false, message: '하나 이상의 지역을 선택해야 합니다.' };
     }
@@ -94,6 +96,7 @@ export interface SnapshotInfo {
 }
 
 export async function listSnapshots(regionSlug?: string, month?: string): Promise<SnapshotInfo[]> {
+    await requireAdmin();
     const dbSnapshots = await prisma.snapshot.findMany({
         where: {
             ...(regionSlug ? { slug: regionSlug } : {}),
@@ -119,5 +122,6 @@ export async function listSnapshots(regionSlug?: string, month?: string): Promis
 }
 
 export async function getSnapshotContent(filename: string) {
+    await requireAdmin();
     return prisma.snapshot.findUnique({ where: { filename } });
 }
