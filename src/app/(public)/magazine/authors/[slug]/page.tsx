@@ -79,6 +79,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
                                 src={author.avatarUrl}
                                 alt={author.name}
                                 fill
+                                sizes="96px"
                                 className="rounded-full object-cover border-4 border-white shadow-lg"
                             />
                         </div>
@@ -138,6 +139,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
                                                     src={post.thumbnailUrl}
                                                     alt={post.title}
                                                     fill
+                                                    sizes="(max-width: 640px) 100vw, 450px"
                                                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
                                             </div>

@@ -119,6 +119,7 @@ export default async function TechMarketingPage() {
                                         src={featuredPost.thumbnailUrl} 
                                         alt={featuredPost.title}
                                         fill
+                                        sizes="(max-width: 1024px) 100vw, 640px"
                                         className="object-cover transition-transform duration-700 group-hover:scale-105"
                                         priority
                                     />
@@ -150,6 +151,7 @@ export default async function TechMarketingPage() {
                                                     src={article.thumbnailUrl} 
                                                     alt={article.title}
                                                     fill
+                                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                                                     className="object-cover transition-all duration-500 group-hover:scale-105"
                                                 />
                                             ) : (

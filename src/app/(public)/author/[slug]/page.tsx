@@ -63,6 +63,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                                     src={author.avatarUrl}
                                     alt={author.name}
                                     fill
+                                    sizes="128px"
                                     className="object-cover"
                                     priority
                                 />
@@ -117,6 +118,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                                                 src={post.thumbnailUrl} 
                                                 alt={post.title}
                                                 fill
+                                                sizes="(max-width: 768px) 100vw, 500px"
                                                 className="object-cover transition-all duration-500 group-hover:scale-105"
                                             />
                                         ) : (

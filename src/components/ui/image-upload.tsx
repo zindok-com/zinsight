@@ -87,6 +87,7 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
                             src={value}
                             alt="Thumbnail"
                             fill
+                            sizes="400px"
                             className="object-cover"
                         />
                         <button

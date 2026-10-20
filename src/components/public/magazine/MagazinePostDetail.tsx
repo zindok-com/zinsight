@@ -326,6 +326,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                         src={post.thumbnailUrl} 
                                         alt={parsedContent?.thumbnailAlt || post.title}
                                         fill
+                                        sizes="(max-width: 896px) 100vw, 896px"
                                         priority
                                         className="object-contain"
                                     />

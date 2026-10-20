@@ -109,6 +109,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                     src={localHeadline.thumbnailUrl} 
                                     alt={localHeadline.title}
                                     fill
+                                    sizes="(max-width: 1024px) 100vw, 640px"
                                     className="object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                                     priority
                                 />
@@ -169,6 +170,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                             src={article.thumbnailUrl} 
                                             alt={article.title}
                                             fill
+                                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
                                             className="object-cover transition-all duration-500 group-hover:scale-105"
                                         />
                                     ) : (
