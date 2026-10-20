@@ -61,9 +61,9 @@ export function RadarSearchBar({ regions, currentRegionId, currentQuery }: Radar
                     <Sparkles className="w-3.5 h-3.5 text-blue-200" />
                     Insight Radar
                 </div>
-                <h2 className="text-[22px] sm:text-3xl md:text-4xl font-extrabold text-white mb-2 sm:mb-3 tracking-tight break-keep">
+                <h1 className="text-[22px] sm:text-3xl md:text-4xl font-extrabold text-white mb-2 sm:mb-3 tracking-tight break-keep">
                     관심 있는 조직과 기술 트렌드를 탐색하세요
-                </h2>
+                </h1>
                 <p className="text-blue-100 text-[13px] sm:text-sm md:text-base max-w-2xl font-medium">
                     관내 기업·기관을 지역별로 탐색하세요
                 </p>

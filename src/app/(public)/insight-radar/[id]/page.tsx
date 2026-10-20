@@ -286,7 +286,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
-            <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-6 sm:py-12">
+            <div className="mx-auto max-w-zi-container px-4 sm:px-6 py-6 sm:py-12">
                 {/* ── 뒤로가기 ── */}
                 <Link
                     href="/insight-radar"
@@ -458,7 +458,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                         )}
                     </div>
                 </section>
-            </main>
+            </div>
         </div>
     );
 }

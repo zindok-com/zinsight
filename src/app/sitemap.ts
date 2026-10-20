@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
+import { getMagazinePostPath } from '@/lib/site';
 
 // sitemap 자체도 1시간마다 재생성
 export const revalidate = 3600;
@@ -83,9 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         });
 
         magazineRoutes = magazinePosts.map((post) => {
-            const path = post.category?.isLocal && post.region 
-                ? `/magazine/local/${post.region.slug}/${post.slug}`
-                : `/magazine/tech-marketing/${post.slug}`;
+            const path = getMagazinePostPath(post);
             return {
                 url: `${baseUrl}${path}`,
                 lastModified: post.updatedAt || post.publishedAt || post.createdAt,

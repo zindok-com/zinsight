@@ -338,7 +338,7 @@ export default async function PublicHomePage() {
 
                     {/* 매거진 캐러셀 */}
                     <div className="mt-8">
-                        <MagazineCarousel posts={headlinePosts as any} />
+                        <MagazineCarousel posts={headlinePosts} />
                     </div>
                 </div>
             </section>

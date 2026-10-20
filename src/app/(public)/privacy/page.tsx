@@ -31,7 +31,7 @@ const sections = [
 export default function PrivacyPage() {
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface pb-24">
-            <main className="mx-auto max-w-[1024px] px-6 pt-16">
+            <div className="mx-auto max-w-[1024px] px-6 pt-16">
                 
                 {/* ─────────────────────────────── */}
                 {/* 헤더 섹션 */}
@@ -233,7 +233,7 @@ export default function PrivacyPage() {
                     </div>
                 </div>
 
-            </main>
+            </div>
         </div>
     );
 }

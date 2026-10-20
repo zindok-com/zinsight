@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { ArrowLeft, BookOpen, Calendar, ChevronRight } from 'lucide-react';
 import { getPublicAuthorBySlug } from '@/actions/admin/author-actions';
 import { Metadata } from 'next';
-import { buildSocialMetadata } from '@/lib/site';
+import { buildSocialMetadata, getMagazinePostPath } from '@/lib/site';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
@@ -43,7 +43,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface pb-24">
-            <main className="mx-auto max-w-[1024px] px-6 pt-12">
+            <div className="mx-auto max-w-[1024px] px-6 pt-12">
                 {/* Back Link */}
                 <Link 
                     href="/magazine" 
@@ -107,7 +107,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                             const categoryLabel = post.category?.name || '인사이트';
                             return (
                                 <Link 
-                                    href={`/magazine/${post.slug}`} 
+                                    href={getMagazinePostPath(post)} 
                                     key={post.id} 
                                     className="flex flex-col group cursor-pointer"
                                 >
@@ -150,7 +150,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                         })}
                     </div>
                 )}
-            </main>
+            </div>
         </div>
     );
 }

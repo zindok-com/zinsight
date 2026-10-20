@@ -41,6 +41,19 @@ export function toAbsoluteUrl(pathOrUrl: string | null | undefined): string {
 }
 
 /**
+ * 매거진 기사의 정규 경로. /magazine/[slug]는 이 경로로 301 리다이렉트만 하므로 내부 링크는 항상 이 함수를 사용합니다.
+ */
+export function getMagazinePostPath(post: {
+    slug: string;
+    category?: { isLocal: boolean } | null;
+    region?: { slug: string } | null;
+}): string {
+    return post.category?.isLocal && post.region
+        ? `/magazine/local/${post.region.slug}/${post.slug}`
+        : `/magazine/tech-marketing/${post.slug}`;
+}
+
+/**
  * 페이지별 OG/트위터 메타데이터 생성.
  * 페이지가 openGraph/twitter를 지정하지 않으면 루트 레이아웃의 홈 제목이 그대로 노출되므로,
  * 목록·허브·정적 페이지는 이 헬퍼로 지정합니다.

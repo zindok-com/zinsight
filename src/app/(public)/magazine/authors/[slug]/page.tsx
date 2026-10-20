@@ -60,7 +60,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface pb-24">
-            <main className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
+            <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-14">
                 {/* 뒤로가기 */}
                 <Link
                     href="/magazine"
@@ -180,7 +180,7 @@ export default async function AuthorProfilePage({ params }: PageProps) {
                         </div>
                     )}
                 </section>
-            </main>
+            </div>
         </div>
     );
 }

@@ -243,7 +243,8 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
             />
-            <main className="mx-auto max-w-4xl xl:max-w-6xl px-4 sm:px-6 py-5 sm:py-10">
+            {/* 모바일 플로팅 프로필 버튼이 본문 마지막 내용을 가리지 않도록 하단 여백 확보 */}
+            <div className={`mx-auto max-w-4xl xl:max-w-6xl px-4 sm:px-6 py-5 sm:py-10 ${post.organizations && post.organizations.length > 0 ? 'pb-24 sm:pb-24 xl:pb-10' : ''}`}>
                 <div className={post.organizations && post.organizations.length > 0 ? "xl:grid xl:grid-cols-[1fr_280px] xl:gap-12 items-start xl:relative" : ""}>
                     {/* 메인 기사 영역 */}
                     <div className="min-w-0">
@@ -504,17 +505,17 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                         </aside>
                     )}
                 </div>
-            </main>
+            </div>
 
             {/* 모바일/태블릿 플로팅 퀵 버튼 (<xl) */}
             {post.organizations && post.organizations.length > 0 && (
-                <div className="xl:hidden fixed bottom-6 right-6 z-40">
+                <div className="xl:hidden fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 max-w-[calc(100vw-2rem)]">
                     <Link
                         href={`/insight-radar/${post.organizations[0].organization.slug || post.organizations[0].organization.id}`}
-                        className="flex items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-bold text-xs rounded-full shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all border border-indigo-500"
+                        className="flex min-h-11 items-center gap-2 px-4 py-3 bg-indigo-600 text-white font-bold text-xs rounded-full shadow-2xl hover:bg-indigo-700 active:scale-95 transition-all border border-indigo-500"
                     >
-                        <Building2 className="w-4 h-4" />
-                        <span>{post.organizations[0].organization.company_name} 프로필 →</span>
+                        <Building2 className="w-4 h-4 shrink-0" />
+                        <span className="truncate">{post.organizations[0].organization.company_name} 프로필 →</span>
                     </Link>
                 </div>
             )}

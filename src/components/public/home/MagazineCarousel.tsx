@@ -10,6 +10,7 @@ interface MagazinePost {
     title: string;
     summary: string | null;
     slug: string;
+    href: string;
     thumbnailUrl: string | null;
     industryName: string;
     authorName: string | null;
@@ -196,12 +197,16 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                 className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-4 px-4 sm:px-0 scroll-pl-4 sm:scroll-pl-0 sm:gap-8 lg:gap-12"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
             >
-                {clonedPosts.map((post, index) => (
+                {clonedPosts.map((post, index) => {
+                    // 무한 순환용 복제본(앞·뒤 세트)은 보조기술·키보드 탐색에서 제외해 기사가 3번 읽히지 않도록 함
+                    const isClone = hasMultiple && (index < posts.length || index >= posts.length * 2);
+                    return (
                     <div 
                         key={`${post.id}-${index}`} 
                         className="w-[82vw] flex-shrink-0 snap-start sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-32px)] lg:flex-shrink-0"
+                        aria-hidden={isClone || undefined}
                     >
-                        <Link href={`/magazine/${post.slug}`} className="group/card block h-full">
+                        <Link href={post.href} className="group/card block h-full" tabIndex={isClone ? -1 : undefined}>
                             <article className="flex h-full flex-col">
                                 {/* 이미지 영역 */}
                                 <div 
@@ -264,12 +269,13 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                             </article>
                         </Link>
                     </div>
-                ))}
+                    );
+                })}
             </div>
 
             {/* 모바일 전용 dot indicator (기사가 2개 이상일 때만 표시) */}
             {hasMultiple && (
-                <div className="flex justify-center gap-1.5 mt-2 lg:hidden">
+                <div className="flex justify-center mt-1 lg:hidden">
                     {posts.map((_, i) => (
                         <button
                             key={i}
@@ -282,13 +288,19 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                     }
                                 }
                             }}
-                            className={`h-1.5 rounded-full transition-all duration-300 ${
-                                i === activeIndex
-                                    ? 'w-6 bg-zi-primary'
-                                    : 'w-1.5 bg-zi-outline-variant'
-                            }`}
+                            className="flex h-8 items-center justify-center px-2"
                             aria-label={`슬라이드 ${i + 1}로 이동`}
-                        />
+                            aria-current={i === activeIndex || undefined}
+                        >
+                            {/* 점 자체는 작게 두고 버튼 영역을 넓혀 터치 대상 확보 */}
+                            <span
+                                className={`block h-1.5 rounded-full transition-all duration-300 ${
+                                    i === activeIndex
+                                        ? 'w-6 bg-zi-primary'
+                                        : 'w-1.5 bg-zi-outline-variant'
+                                }`}
+                            />
+                        </button>
                     ))}
                 </div>
             )}

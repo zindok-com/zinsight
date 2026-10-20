@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/db';
+import { getMagazinePostPath } from '@/lib/site';
 
 export async function getPublicMagazinePosts(keyword?: string) {
     const where: any = { 
@@ -63,6 +64,8 @@ export async function getHeadlineMagazinePosts() {
         title: post.title,
         summary: post.summary,
         slug: post.slug,
+        href: getMagazinePostPath(post),
+        industryName: post.category?.name ?? '',
         thumbnailUrl: post.thumbnailUrl,
         authorName: post.authorName,
         author: post.author ? {

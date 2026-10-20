@@ -55,7 +55,7 @@ export default async function LocalHubPage() {
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
-            <main className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
+            <div className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
                 {/* 브레드크럼 */}
                 <div className="mb-4 text-xs text-zi-outline font-ui-label flex items-center gap-1.5">
                     <Link href="/magazine" className="hover:text-zi-secondary transition-colors">Magazine</Link>
@@ -157,7 +157,7 @@ export default async function LocalHubPage() {
                         )}
                     </div>
                 </section>
-            </main>
+            </div>
         </div>
     );
 }
