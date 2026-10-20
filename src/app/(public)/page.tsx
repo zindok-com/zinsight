@@ -10,7 +10,7 @@ import {
 } from '@/actions/insight-radar-actions';
 import { getHeadlineMagazinePosts } from '@/actions/public/magazine-actions';
 import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
-import { serializeJsonLd } from '@/lib/site';
+import { serializeJsonLd, SITE_DESCRIPTION } from '@/lib/site';
 
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
 
@@ -65,7 +65,7 @@ export default async function PublicHomePage() {
                 'url': 'https://www.zinsight.co.kr',
                 'name': '진사이트',
                 'alternateName': ['Zinsight'],
-                'description': '진사이트는 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 융합하여 비즈니스 가치를 입증하는 고품격 하이브리드 마케팅 인텔리전스 미디어입니다.',
+                'description': SITE_DESCRIPTION,
                 'inLanguage': 'ko-KR',
                 'publisher': {
                     '@id': 'https://www.zinsight.co.kr/#organization',

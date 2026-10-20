@@ -7,6 +7,9 @@ import type { Metadata } from 'next';
 export const SITE_DOMAIN = 'www.zinsight.co.kr';
 export const SITE_BASE_URL = `https://${SITE_DOMAIN}`;
 
+// 사이트 대표 설명: 메타 description·OG·트위터·WebSite 스키마 공통 (네이버 권장 80자 이내 유지)
+export const SITE_DESCRIPTION = '진사이트는 관내 기업 리서치와 AEO·SEO·GEO 검색 최적화 인사이트를 전하는 비즈니스 미디어입니다.';
+
 /**
  * Schema.org @id 생성 헬퍼
  */
