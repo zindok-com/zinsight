@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { signTempToken } from '@/lib/temp-token';
-import { verifyPassword } from '@/lib/password';
+import { verifyPassword, needsRehash, hashPassword } from '@/lib/password';
 
 export async function POST(request: Request) {
     try {
@@ -19,6 +19,18 @@ export async function POST(request: Request) {
 
         if (!admin || !verifyPassword(password, admin.password_hash)) {
             return NextResponse.json({ success: false, error: 'Invalid username or password' }, { status: 401 });
+        }
+
+        // 구형(반복 횟수 낮은) 해시는 비밀번호를 알고 있는 이 시점에 강화된 형식으로 교체
+        if (needsRehash(admin.password_hash)) {
+            try {
+                await prisma.admin.update({
+                    where: { id: admin.id },
+                    data: { password_hash: hashPassword(password) },
+                });
+            } catch (rehashError) {
+                console.error('Password rehash failed:', rehashError);
+            }
         }
 
         // 2FA 활성화 상태 확인
