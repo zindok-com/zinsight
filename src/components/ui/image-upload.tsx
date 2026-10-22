@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, X, ImageIcon, Loader2 } from 'lucide-react';
-import { uploadThumbnail } from '@/actions/upload-actions';
+import { getMediaUploadUrl } from '@/actions/upload';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
@@ -29,8 +29,8 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error('파일 크기는 5MB 이하여야 합니다.');
+        if (file.size > 20 * 1024 * 1024) {
+            toast.error('파일 크기는 20MB 이하여야 합니다.');
             return;
         }
 
@@ -64,17 +64,33 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
         if (!isValidDimension) return;
 
         setIsUploading(true);
-        const formData = new FormData();
-        formData.append('file', file);
 
         try {
-            const result = await uploadThumbnail(formData);
-            onChange(result.url);
+            // 1단계: Server Action을 통해 Presigned PUT URL 및 최종 공개 URL 발급
+            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, file.type, 'thumbnails');
+
+            // 2단계: 브라우저에서 NCP Object Storage로 직접 PUT 업로드
+            const uploadRes = await fetch(uploadUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': file.type,
+                    'x-amz-acl': 'public-read',
+                },
+                body: file,
+            });
+
+            if (!uploadRes.ok) {
+                throw new Error(`스토리지 업로드 실패 (HTTP ${uploadRes.status})`);
+            }
+
+            onChange(fileUrl);
             toast.success('이미지가 업로드되었습니다.');
-        } catch (error) {
-            toast.error('업로드 실패했습니다.');
+        } catch (error: any) {
+            console.error('Direct upload error:', error);
+            toast.error(error?.message || '업로드 실패했습니다.');
         } finally {
             setIsUploading(false);
+            if (e.target) e.target.value = '';
         }
     };
 
@@ -151,7 +167,7 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
                     </div>
                     
                     <p className="text-[10px] text-slate-500 mt-2 font-medium">
-                        {validateWidth ? '필수 사이즈: 가로 1200px 이상 (5MB 이하)' : '권장 사이즈: 1:1 비율 (5MB 이하)'}
+                        {validateWidth ? '필수 사이즈: 가로 1200px 이상 (최대 20MB)' : '권장 사이즈: 1:1 비율 (최대 20MB)'}
                     </p>
                 </div>
             </div>

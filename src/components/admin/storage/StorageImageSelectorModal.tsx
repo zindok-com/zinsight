@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { listAllBlobs, uploadImageDirect } from '@/actions/upload-actions';
+import { listAllBlobs } from '@/actions/upload-actions';
+import { getMediaUploadUrl } from '@/actions/upload';
 import { Loader2, Search, Upload, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -53,11 +54,18 @@ export function StorageImageSelectorModal({ isOpen, onClose, onSelect }: Storage
 
         try {
             for (const file of imageFiles) {
-                const formData = new FormData();
-                formData.append('file', file);
-                const res = await uploadImageDirect(formData);
-                if (res.success && res.url) {
-                    if (!firstUploadedUrl) firstUploadedUrl = res.url;
+                const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, file.type, 'images');
+                const uploadRes = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': file.type,
+                        'x-amz-acl': 'public-read',
+                    },
+                    body: file,
+                });
+
+                if (uploadRes.ok && fileUrl) {
+                    if (!firstUploadedUrl) firstUploadedUrl = fileUrl;
                 }
             }
 

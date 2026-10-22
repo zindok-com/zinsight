@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { listAllBlobs, deleteBlob, uploadImageDirect, getUsedImageUrls, deleteMultipleBlobs, renameBlobTransaction } from '@/actions/upload-actions';
+import { listAllBlobs, deleteBlob, getUsedImageUrls, deleteMultipleBlobs, renameBlobTransaction } from '@/actions/upload-actions';
+import { getMediaUploadUrl } from '@/actions/upload';
 import { toast } from 'sonner';
 import { Loader2, Trash2, Copy, Check, Upload, Image as ImageIcon, Search, ExternalLink, RefreshCw, Eraser, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -137,7 +138,7 @@ export default function StoragePage() {
     const [isDragging, setIsDragging] = useState(false);
     const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
-    // Multi-file upload handler (supporting drag & drop)
+    // Multi-file upload handler (2-step Presigned URL direct upload)
     const handleFilesUpload = async (fileList: FileList | null) => {
         if (!fileList || fileList.length === 0) return;
         const imageFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
@@ -155,12 +156,19 @@ export default function StoragePage() {
         for (let i = 0; i < imageFiles.length; i++) {
             const file = imageFiles[i];
             setUploadProgress({ current: i + 1, total: imageFiles.length });
-            const formData = new FormData();
-            formData.append('file', file);
 
             try {
-                const res = await uploadImageDirect(formData);
-                if (res.success && res.url) {
+                const { uploadUrl } = await getMediaUploadUrl(file.name, file.type, 'images');
+                const uploadRes = await fetch(uploadUrl, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': file.type,
+                        'x-amz-acl': 'public-read',
+                    },
+                    body: file,
+                });
+
+                if (uploadRes.ok) {
                     successCount++;
                 } else {
                     failCount++;
@@ -234,7 +242,7 @@ export default function StoragePage() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">이미지 보관함</h1>
                     <p className="text-sm text-slate-500 mt-1.5">
-                        Vercel Blob 스토리지를 관리하고, 매거진 포스트에서 사용 중인지 여부를 실시간으로 모니터링합니다.
+                        NCP Object Storage를 관리하고, 매거진 포스트에서 사용 중인지 여부를 실시간으로 모니터링합니다.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
