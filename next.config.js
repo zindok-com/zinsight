@@ -11,6 +11,16 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: 'https',
+                hostname: 'kr.object.ncloudstorage.com',
+                pathname: '/zinsight-media/**',
+            },
+            // 기존 Vercel Blob 주소는 마이그레이션 과도기 동안 유지
+            {
+                protocol: 'https',
+                hostname: '*.public.blob.vercel-storage.com',
+            },
+            {
+                protocol: 'https',
                 hostname: '**.public.blob.vercel-storage.com',
                 port: '',
             },
