@@ -37,13 +37,12 @@ async function buildUniqueObjectKey(
         let continuationToken: string | undefined = undefined;
 
         do {
-            const response = await s3Client.send(
-                new ListObjectsV2Command({
-                    Bucket: bucket,
-                    Prefix: `${folder}/${slug}`,
-                    ContinuationToken: continuationToken,
-                })
-            );
+            const command: ListObjectsV2Command = new ListObjectsV2Command({
+                Bucket: bucket,
+                Prefix: `${folder}/${slug}`,
+                ContinuationToken: continuationToken,
+            });
+            const response = await s3Client.send(command);
             for (const obj of response.Contents ?? []) {
                 if (obj.Key) existingKeys.add(obj.Key);
             }
