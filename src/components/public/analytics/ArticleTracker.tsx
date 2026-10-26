@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { recordVisitorNetworkPing } from '@/actions/visitor-org-actions';
 
 declare global {
     interface Window {
@@ -38,8 +39,17 @@ interface ArticleTrackerProps {
 }
 
 export function ArticleTracker({ postId, slug, category, region }: ArticleTrackerProps) {
-    // 1. article_view: 기사 진입 시 1회 발생
+    // 1. article_view: 기사 진입 시 1회 발생 + B2B 기관 IP 역추적 로깅
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            recordVisitorNetworkPing({
+                pagePath: window.location.pathname,
+                pageType: 'magazine',
+                targetId: postId,
+                targetName: document.title.replace(/\s*\|\s*진사이트.*$/i, '').trim() || slug,
+                referrer: document.referrer || null,
+            }).catch(() => {});
+        }
         if (typeof window === 'undefined' || !window.gtag) return;
         window.gtag('event', 'article_view', {
             article_id: postId,
@@ -106,8 +116,17 @@ interface OrganizationTrackerProps {
 }
 
 export function OrganizationTracker({ orgId, slug, region }: OrganizationTrackerProps) {
-    // 1. organization_profile_view: 조직 프로필 진입 시 발생
+    // 1. organization_profile_view: 조직 프로필 진입 시 발생 + B2B 기관 IP 역추적 로깅
     useEffect(() => {
+        if (typeof window !== 'undefined') {
+            recordVisitorNetworkPing({
+                pagePath: window.location.pathname,
+                pageType: 'radar',
+                targetId: orgId,
+                targetName: document.title.replace(/\s*기업 분석 프로필.*$/i, '').replace(/\s*\|\s*진사이트.*$/i, '').trim() || slug || String(orgId),
+                referrer: document.referrer || null,
+            }).catch(() => {});
+        }
         if (typeof window === 'undefined' || !window.gtag) return;
         window.gtag('event', 'organization_profile_view', {
             organization_id: orgId,

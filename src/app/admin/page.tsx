@@ -5,16 +5,19 @@ import { Building2, Tags, Newspaper, CalendarDays, Eye, FileText, Users, Trendin
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PlatformTrafficBreakdownCard } from "@/components/admin/analytics/PlatformTrafficBreakdownCard";
+import { RealtimeAndB2BVisitorsCard } from "@/components/admin/analytics/RealtimeAndB2BVisitorsCard";
+import { getVisitorOrgLogs } from "@/actions/visitor-org-actions";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-    const [stats, analytics] = await Promise.all([
+    const [stats, analytics, visitorOrgData] = await Promise.all([
         getDashboardStats(),
-        getDashboardAnalytics(7)
+        getDashboardAnalytics(7),
+        getVisitorOrgLogs(30),
     ]);
 
-    const { summary, platformBreakdown } = analytics;
+    const { summary, platformBreakdown, realtimeOverview } = analytics;
 
     return (
         <div className="space-y-10 pb-8">
@@ -103,6 +106,14 @@ export default async function Home() {
                     rows={platformBreakdown ?? []}
                     title="🌐 사이트 전체 유입처 랭킹 (최근 7일)"
                     subtitle="네이버, 구글, 다음, 빙(Bing), ChatGPT, Perplexity 등 플랫폼별 실유입 비중 (GA4)"
+                />
+
+                {/* 실시간 접속자 및 B2B 기관/기업 네트워크 IP 역추적 */}
+                <RealtimeAndB2BVisitorsCard
+                    realtime={realtimeOverview}
+                    visitorLogs={visitorOrgData.logs}
+                    b2bCount={visitorOrgData.b2bCount}
+                    totalLogCount={visitorOrgData.totalCount}
                 />
             </div>
 
