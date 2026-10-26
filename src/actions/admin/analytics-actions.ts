@@ -7,6 +7,8 @@ import {
     getArticlePageviews,
     getArticleEventCounts,
     getTrafficSourceDetailed,
+    getPlatformTrafficBreakdown,
+    getRealtimeOverview,
     getVisitorAttributes,
     getVisitorGeography,
     getGlobalDashboardStats,
@@ -62,7 +64,11 @@ function buildGscDateRange(periodDays: number | 'all'): DateRange {
 export async function getDashboardAnalytics(periodDays: number = 7) {
     await requireAdmin();
     const dateRange = buildDateRange(periodDays);
-    const ga4Data = await getGlobalDashboardStats(dateRange);
+    const [ga4Data, platformBreakdown, realtimeOverview] = await Promise.all([
+        getGlobalDashboardStats(dateRange).catch(() => null),
+        getPlatformTrafficBreakdown(null, dateRange).catch(() => []),
+        getRealtimeOverview().catch(() => null),
+    ]);
 
     if (ga4Data && ga4Data.dailyData.length > 0) {
         const dauData = ga4Data.dailyData.map((d) => ({ date: d.date, dau: d.dau }));
@@ -72,14 +78,18 @@ export async function getDashboardAnalytics(periodDays: number = 7) {
             views: d.views,
             uniqueViews: d.dau,
         }));
+        const totalSessions = ga4Data.summary.totalSessions;
+        const totalViews = ga4Data.summary.totalViews;
         return {
             dauData,
             performanceData,
+            platformBreakdown: platformBreakdown ?? [],
+            realtimeOverview,
             summary: {
                 totalDau: ga4Data.summary.totalDau,
-                totalImpressions: ga4Data.summary.totalSessions,
-                totalViews: ga4Data.summary.totalViews,
-                avgCtr: 0,
+                totalImpressions: totalSessions,
+                totalViews,
+                avgCtr: totalSessions > 0 ? Math.round((totalViews / totalSessions) * 100) : 0,
             },
         };
     }
@@ -87,6 +97,8 @@ export async function getDashboardAnalytics(periodDays: number = 7) {
     return {
         dauData: [],
         performanceData: [],
+        platformBreakdown: platformBreakdown ?? [],
+        realtimeOverview,
         summary: { totalDau: 0, totalImpressions: 0, totalViews: 0, avgCtr: 0 },
     };
 }
@@ -186,6 +198,7 @@ export async function getArticleAnalyticsSummary(
         radarClicks,
         outboundClicks,
         trafficSources,
+        platformBreakdown,
         geography,
         visitorAttributes,
         gscPerf,
@@ -208,6 +221,10 @@ export async function getArticleAnalyticsSummary(
         }),
         getTrafficSourceDetailed(post.slug, dateRange).catch((err) => {
             console.error('[analytics] getTrafficSourceDetailed failed:', err?.message, err?.stack);
+            return [];
+        }),
+        getPlatformTrafficBreakdown(post.slug, dateRange).catch((err) => {
+            console.error('[analytics] getPlatformTrafficBreakdown failed:', err?.message, err?.stack);
             return [];
         }),
         getVisitorGeography(post.slug, dateRange).catch((err) => {
@@ -296,6 +313,7 @@ export async function getArticleAnalyticsSummary(
         },
         pageviews: pageviews ?? [],
         trafficSources,
+        platformBreakdown: platformBreakdown ?? [],
         geography: geography ?? [],
         visitorAttributes,
         gsc: gscPerf,
@@ -368,6 +386,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         articleClicksFromProfile,
         geography,
         trafficSources,
+        platformBreakdown,
         visitorAttributes,
         outboundLinkClicks,
         linkedArticlesWithClicks,
@@ -391,6 +410,10 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         }),
         getTrafficSourceDetailed(orgIdentifier, dateRange).catch((err) => {
             console.error('[analytics-org] getTrafficSourceDetailed failed:', err?.message, err?.stack);
+            return [];
+        }),
+        getPlatformTrafficBreakdown(orgIdentifier, dateRange).catch((err) => {
+            console.error('[analytics-org] getPlatformTrafficBreakdown failed:', err?.message, err?.stack);
             return [];
         }),
         getVisitorAttributes(orgIdentifier, dateRange).catch((err) => {
@@ -464,6 +487,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         pageviews: profileViews ?? [],
         geography: geography ?? [],
         trafficSources,
+        platformBreakdown: platformBreakdown ?? [],
         visitorAttributes,
         searchQueries: searchQueries ?? [],
         outboundLinkTable,               // F-02: 링크별 클릭 상세
@@ -535,4 +559,3 @@ export async function getAnalyticsReportById(id: number) {
         where: { id },
     });
 }
-

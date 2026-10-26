@@ -9,6 +9,7 @@ import {
 import Link from 'next/link';
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
 import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
+import { PlatformTrafficBreakdownCard } from '@/components/admin/analytics/PlatformTrafficBreakdownCard';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 
@@ -66,7 +67,7 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="조직 데이터를 찾을 수 없습니다." />;
 
-    const { org, summary, pageviews, geography, trafficSources, visitorAttributes, searchQueries, linkedArticles, outboundLinkTable } = data;
+    const { org, summary, pageviews, geography, trafficSources, platformBreakdown, visitorAttributes, searchQueries, linkedArticles, outboundLinkTable } = data;
 
 
     const pvChartData = pageviews.map((r) => ({
@@ -263,6 +264,13 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
                     </TooltipProvider>
                 </div>
             )}
+
+            {/* 세부 유입 플랫폼 랭킹 (네이버, 구글, 다음, 빙, AI 등) */}
+            <PlatformTrafficBreakdownCard
+                rows={platformBreakdown ?? []}
+                title="🌐 세부 유입 플랫폼 랭킹 (네이버·구글·다음·빙·AI)"
+                subtitle="이 조직 프로필로 유입된 검색포털 및 AI 서비스별 세션 점유율"
+            />
 
             {/* F-13 방문자 속성 탭 */}
             <div className="space-y-3">

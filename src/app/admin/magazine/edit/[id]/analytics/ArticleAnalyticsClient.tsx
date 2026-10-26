@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
 import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
+import { PlatformTrafficBreakdownCard } from '@/components/admin/analytics/PlatformTrafficBreakdownCard';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info, FileSpreadsheet } from 'lucide-react';
 
@@ -162,7 +163,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="기사 데이터를 찾을 수 없습니다." />;
 
-    const { post, linkedOrganizations, summary, pageviews, trafficSources, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, searchQueries, outboundLinkTable } = data;
+    const { post, linkedOrganizations, summary, pageviews, trafficSources, platformBreakdown, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, searchQueries, outboundLinkTable } = data;
 
     const pvChartData = pageviews.map((r) => ({
         date: r.date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
@@ -507,6 +508,12 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
                             )}
                         </div>
 
+                            <PlatformTrafficBreakdownCard
+                                rows={platformBreakdown ?? []}
+                                title="🌐 세부 유입 플랫폼 랭킹 (네이버·구글·다음·빙·AI)"
+                                subtitle="이 기사로 유입된 검색포털 및 AI 서비스별 세션 점유율"
+                                compact
+                            />
                         <div id="section-gsc" className="scroll-mt-6 space-y-3">
                             <SectionHeader title="🔍 Search Console 성과" />
                             {gsc ? (

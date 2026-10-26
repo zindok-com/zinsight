@@ -1,5 +1,11 @@
 import { BetaAnalyticsDataClient } from '@google-analytics/data';
-import type { CustomChannel, ChannelRow, VisitorAttributes } from './types';
+import type {
+    CustomChannel,
+    ChannelRow,
+    PlatformTrafficRow,
+    RealtimeOverview,
+    VisitorAttributes,
+} from './types';
 import { measured } from './types';
 import { loadGoogleCredentials } from './google-credentials';
 
@@ -323,22 +329,159 @@ export async function getGlobalDashboardStats(dateRange: DateRange): Promise<Glo
 }
 
 // ── AI/검색엔진/SNS 분류 상수 ──────────────────────────────────────
-const AI_DOMAINS = ['chatgpt.com', 'perplexity.ai', 'gemini.google.com', 'claude.ai', 'copilot.microsoft.com', 'you.com', 'kagi.com'];
-const SEARCH_ENGINES = ['google', 'naver', 'daum', 'bing', 'yahoo', 'duckduckgo'];
-const SNS_DOMAINS = ['instagram.com', 'youtube.com', 'facebook.com', 'linkedin.com', 'x.com', 'twitter.com', 'threads.net', 'tiktok.com'];
+const AI_DOMAINS = ['chatgpt.com', 'chat.openai.com', 'openai.com', 'perplexity.ai', 'perplexity', 'gemini.google.com', 'claude.ai', 'copilot.microsoft.com', 'you.com', 'kagi.com', 'wrtn.ai', 'liner'];
+const SEARCH_ENGINES = ['google', 'naver', 'daum', 'bing', 'yahoo', 'duckduckgo', 'zum'];
+const SNS_DOMAINS = ['instagram.com', 'instagram', 'youtube.com', 'youtu.be', 'facebook.com', 'fb.com', 'linkedin.com', 'x.com', 'twitter.com', 't.co', 'threads.net', 'tiktok.com', 'kakao'];
 
 function classifyChannel(source: string, medium: string, defaultGroup: string): CustomChannel {
     const s = source?.toLowerCase() ?? '';
     const m = medium?.toLowerCase() ?? '';
     if (AI_DOMAINS.some((d) => s.includes(d))) return 'ai_service';
     if (SNS_DOMAINS.some((d) => s.includes(d)) || m === 'social') return 'sns';
-    if (SEARCH_ENGINES.some((e) => s.includes(e)) && (m === 'organic' || m === '(none)')) return 'search';
+    if (SEARCH_ENGINES.some((e) => s.includes(e)) && (m === 'organic' || m === 'referral' || m === '(none)')) return 'search';
     if (defaultGroup?.toLowerCase().includes('organic search')) return 'search';
     if (s === '(direct)' || m === '(none)' || defaultGroup?.toLowerCase() === 'direct') return 'direct';
     return 'other';
 }
 
-// ── 유입 채널 세분화 (F-08) ──────────────────────────────────────────
+function normalizePlatform(source: string, medium: string, defaultGroup: string): {
+    key: string;
+    label: string;
+    category: CustomChannel;
+    color: string;
+} {
+    const s = (source || '').toLowerCase().trim();
+    const m = (medium || '').toLowerCase().trim();
+
+    // 1. 생성형 AI 플랫폼
+    if (s.includes('chatgpt') || s.includes('openai')) {
+        return { key: 'chatgpt', label: 'ChatGPT', category: 'ai_service', color: '#10a37f' };
+    }
+    if (s.includes('perplexity')) {
+        return { key: 'perplexity', label: 'Perplexity', category: 'ai_service', color: '#20808d' };
+    }
+    if (s.includes('gemini.google')) {
+        return { key: 'gemini', label: 'Google Gemini', category: 'ai_service', color: '#8e75b2' };
+    }
+    if (s.includes('claude')) {
+        return { key: 'claude', label: 'Claude', category: 'ai_service', color: '#d97757' };
+    }
+    if (s.includes('copilot')) {
+        return { key: 'copilot', label: 'MS Copilot', category: 'ai_service', color: '#6366f1' };
+    }
+    if (s.includes('wrtn') || s.includes('liner') || s.includes('you.com') || s.includes('kagi')) {
+        return { key: s, label: `AI (${source})`, category: 'ai_service', color: '#8b5cf6' };
+    }
+
+    // 2. 주요 검색엔진 (네이버, 구글, 다음, 빙, 줌, 야후 등)
+    if (s.includes('naver')) {
+        return { key: 'naver', label: '네이버 (Naver)', category: 'search', color: '#03c75a' };
+    }
+    if (s.includes('google')) {
+        return { key: 'google', label: '구글 (Google)', category: 'search', color: '#4285f4' };
+    }
+    if (s.includes('daum')) {
+        return { key: 'daum', label: '다음 (Daum)', category: 'search', color: '#ff5722' };
+    }
+    if (s.includes('bing') || s.includes('msn')) {
+        return { key: 'bing', label: '빙 (Bing)', category: 'search', color: '#008373' };
+    }
+    if (s.includes('zum')) {
+        return { key: 'zum', label: '줌 (ZUM)', category: 'search', color: '#2563eb' };
+    }
+    if (s.includes('yahoo') || s.includes('duckduckgo')) {
+        return { key: s, label: source, category: 'search', color: '#3b82f6' };
+    }
+
+    // 3. 소셜 미디어 (SNS)
+    if (s.includes('instagram')) {
+        return { key: 'instagram', label: '인스타그램', category: 'sns', color: '#e1306c' };
+    }
+    if (s.includes('youtube') || s.includes('youtu.be')) {
+        return { key: 'youtube', label: '유튜브', category: 'sns', color: '#ff0000' };
+    }
+    if (s.includes('facebook') || s.includes('fb.com')) {
+        return { key: 'facebook', label: '페이스북', category: 'sns', color: '#1877f2' };
+    }
+    if (s.includes('threads')) {
+        return { key: 'threads', label: 'Threads', category: 'sns', color: '#111827' };
+    }
+    if (s.includes('x.com') || s.includes('twitter') || s === 't.co') {
+        return { key: 'x', label: 'X (트위터)', category: 'sns', color: '#0f172a' };
+    }
+    if (s.includes('linkedin')) {
+        return { key: 'linkedin', label: '링크드인', category: 'sns', color: '#0a66c2' };
+    }
+    if (s.includes('kakao')) {
+        return { key: 'kakao', label: '카카오톡/채널', category: 'sns', color: '#f59e0b' };
+    }
+
+    // 4. 직접 방문
+    if (s === '(direct)' || (m === '(none)' && !s) || defaultGroup?.toLowerCase() === 'direct') {
+        return { key: 'direct', label: '직접 방문 (Direct)', category: 'direct', color: '#10b981' };
+    }
+
+    // 5. 기타 외부 레퍼럴 / 미분류
+    const cleanSource = source && source !== '(not set)' ? source : '기타 외부 유입';
+    return {
+        key: `other:${cleanSource.toLowerCase()}`,
+        label: cleanSource,
+        category: classifyChannel(source, medium, defaultGroup),
+        color: '#64748b',
+    };
+}
+
+interface RawTrafficRow {
+    defaultGroup: string;
+    source: string;
+    medium: string;
+    sessions: number;
+    avgDuration: number;
+}
+
+async function fetchRawTrafficRows(slug: string | null, dateRange: DateRange): Promise<RawTrafficRow[]> {
+    const cacheKey = `raw_traffic:${slug ?? '__ALL__'}:${dateRange.startDate}:${dateRange.endDate}`;
+    const cached = getFromCache<RawTrafficRow[]>(cacheKey);
+    if (cached) return cached;
+
+    const params: any = {
+        property: `properties/${PROPERTY_ID}`,
+        dateRanges: [dateRange],
+        dimensions: [
+            { name: 'sessionDefaultChannelGroup' },
+            { name: 'sessionSource' },
+            { name: 'sessionMedium' },
+        ],
+        metrics: [
+            { name: 'sessions' },
+            { name: 'averageSessionDuration' },
+        ],
+        orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+    };
+
+    if (slug && slug.trim()) {
+        params.dimensionFilter = {
+            filter: {
+                fieldName: 'pagePath',
+                stringFilter: { matchType: 'CONTAINS', value: slug.trim() },
+            },
+        };
+    }
+
+    const [res] = await safeRunReport(params);
+    const rows: RawTrafficRow[] = (res.rows ?? []).map((row: any) => ({
+        defaultGroup: row.dimensionValues?.[0]?.value ?? '',
+        source: row.dimensionValues?.[1]?.value ?? '',
+        medium: row.dimensionValues?.[2]?.value ?? '',
+        sessions: Number(row.metricValues?.[0]?.value ?? 0),
+        avgDuration: Number(row.metricValues?.[1]?.value ?? 0),
+    }));
+
+    setToCache(cacheKey, rows, 120);
+    return rows;
+}
+
+// ── 유입 채널 세분화 (F-08: 5대 채널 그룹) ─────────────────────────
 export async function getTrafficSourceDetailed(slug: string, dateRange: DateRange): Promise<ChannelRow[]> {
     const CHANNEL_LABELS: Record<CustomChannel, string> = {
         ai_service: '🤖 AI 서비스',
@@ -348,28 +491,8 @@ export async function getTrafficSourceDetailed(slug: string, dateRange: DateRang
         other: '기타',
     };
     try {
-        const [res] = await safeRunReport({
-            property: `properties/${PROPERTY_ID}`,
-            dateRanges: [dateRange],
-            dimensions: [
-                { name: 'sessionDefaultChannelGroup' },
-                { name: 'sessionSource' },
-                { name: 'sessionMedium' },
-            ],
-            metrics: [
-                { name: 'sessions' },
-                { name: 'averageSessionDuration' },
-            ],
-            dimensionFilter: {
-                filter: {
-                    fieldName: 'pagePath',
-                    stringFilter: { matchType: 'CONTAINS', value: slug },
-                },
-            },
-            orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
-        });
+        const rows = await fetchRawTrafficRows(slug, dateRange);
 
-        // GA4 rows를 커스텀 채널로 리매핑 후 집계
         const buckets: Record<CustomChannel, { sessions: number; durationSum: number; count: number }> = {
             ai_service: { sessions: 0, durationSum: 0, count: 0 },
             search: { sessions: 0, durationSum: 0, count: 0 },
@@ -378,16 +501,11 @@ export async function getTrafficSourceDetailed(slug: string, dateRange: DateRang
             other: { sessions: 0, durationSum: 0, count: 0 },
         };
 
-        for (const row of res.rows ?? []) {
-            const defaultGroup = row.dimensionValues?.[0]?.value ?? '';
-            const source = row.dimensionValues?.[1]?.value ?? '';
-            const medium = row.dimensionValues?.[2]?.value ?? '';
-            const sessions = Number(row.metricValues?.[0]?.value ?? 0);
-            const avgDuration = Number(row.metricValues?.[1]?.value ?? 0);
-            const ch = classifyChannel(source, medium, defaultGroup);
-            buckets[ch].sessions += sessions;
-            buckets[ch].durationSum += avgDuration * sessions;
-            buckets[ch].count += sessions;
+        for (const row of rows) {
+            const ch = classifyChannel(row.source, row.medium, row.defaultGroup);
+            buckets[ch].sessions += row.sessions;
+            buckets[ch].durationSum += row.avgDuration * row.sessions;
+            buckets[ch].count += row.sessions;
         }
 
         return (Object.keys(buckets) as CustomChannel[])
@@ -404,6 +522,120 @@ export async function getTrafficSourceDetailed(slug: string, dateRange: DateRang
     } catch (err) {
         console.error('[ga4] getTrafficSourceDetailed failed:', err);
         return [];
+    }
+}
+
+// ── 세부 플랫폼별 유입 랭킹 (네이버, 구글, 다음, 빙, ChatGPT, Perplexity 등) ──
+export async function getPlatformTrafficBreakdown(
+    slug: string | null,
+    dateRange: DateRange,
+): Promise<PlatformTrafficRow[]> {
+    try {
+        const rows = await fetchRawTrafficRows(slug, dateRange);
+
+        const map = new Map<
+            string,
+            {
+                key: string;
+                label: string;
+                category: CustomChannel;
+                color: string;
+                sessions: number;
+                durationSum: number;
+            }
+        >();
+
+        let totalSessions = 0;
+
+        for (const row of rows) {
+            if (row.sessions <= 0) continue;
+            totalSessions += row.sessions;
+            const info = normalizePlatform(row.source, row.medium, row.defaultGroup);
+            const existing = map.get(info.key);
+            if (existing) {
+                existing.sessions += row.sessions;
+                existing.durationSum += row.avgDuration * row.sessions;
+            } else {
+                map.set(info.key, {
+                    ...info,
+                    sessions: row.sessions,
+                    durationSum: row.avgDuration * row.sessions,
+                });
+            }
+        }
+
+        return Array.from(map.values())
+            .sort((a, b) => b.sessions - a.sessions)
+            .map((item) => ({
+                key: item.key,
+                label: item.label,
+                category: item.category,
+                color: item.color,
+                sessions: item.sessions,
+                sharePct:
+                    totalSessions > 0
+                        ? Math.round((item.sessions / totalSessions) * 1000) / 10
+                        : 0,
+                avgDuration:
+                    item.sessions > 0 ? Math.round(item.durationSum / item.sessions) : 0,
+            }));
+    } catch (err) {
+        console.error('[ga4] getPlatformTrafficBreakdown failed:', err);
+        return [];
+    }
+}
+
+// ── GA4 Realtime 실시간 접속자 및 접속 도시/페이지 조회 ──────────────
+export async function getRealtimeOverview(): Promise<RealtimeOverview | null> {
+    const cacheKey = 'ga4_realtime_overview';
+    const cached = getFromCache<RealtimeOverview>(cacheKey);
+    if (cached) return cached;
+
+    const client = getClient();
+    if (!client) return null;
+
+    try {
+        const [cityRes, pageRes] = await Promise.all([
+            ga4Queue.run(() =>
+                client.runRealtimeReport({
+                    property: `properties/${PROPERTY_ID}`,
+                    dimensions: [{ name: 'city' }],
+                    metrics: [{ name: 'activeUsers' }],
+                    limit: 10,
+                })
+            ),
+            ga4Queue.run(() =>
+                client.runRealtimeReport({
+                    property: `properties/${PROPERTY_ID}`,
+                    dimensions: [{ name: 'unifiedScreenName' }],
+                    metrics: [{ name: 'activeUsers' }],
+                    limit: 5,
+                })
+            ),
+        ]);
+
+        const topCities = (cityRes[0]?.rows ?? []).map((r: any) => ({
+            city: r.dimensionValues?.[0]?.value ?? 'Unknown',
+            activeUsers: Number(r.metricValues?.[0]?.value ?? 0),
+        }));
+
+        const topPages = (pageRes[0]?.rows ?? []).map((r: any) => ({
+            screenName: r.dimensionValues?.[0]?.value ?? '진사이트',
+            activeUsers: Number(r.metricValues?.[0]?.value ?? 0),
+        }));
+
+        const activeUsers30m = topCities.reduce((sum, r) => sum + r.activeUsers, 0);
+
+        const overview: RealtimeOverview = {
+            activeUsers30m,
+            topCities,
+            topPages,
+        };
+        setToCache(cacheKey, overview, 30);
+        return overview;
+    } catch (err) {
+        console.error('[ga4] getRealtimeOverview failed:', err);
+        return null;
     }
 }
 
@@ -660,7 +892,7 @@ export async function getGA4ConnectionStatus(): Promise<{
         if (!client) throw new Error('GA4 클라이언트 초기화 실패');
 
         const now = new Date().toISOString().split('T')[0];
-        const res = await safeRunReport({
+        await safeRunReport({
             property: `properties/${PROPERTY_ID}`,
             dateRanges: [{ startDate: now, endDate: now }],
             metrics: [{ name: 'activeUsers' }],
@@ -682,5 +914,3 @@ export async function getGA4ConnectionStatus(): Promise<{
         };
     }
 }
-
-

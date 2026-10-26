@@ -1,4 +1,4 @@
-﻿// ── 신뢰도 등급 공통 응답 구조 (F-10) ──────────────────────────────
+// ── 신뢰도 등급 공통 응답 구조 (F-10) ──────────────────────────────
 // measured    : GA4 Data API 기반 실측 데이터
 // third_party : Search Console 등 제3자 제공 데이터
 // unmeasurable: AI 개요/LLM 노출 등 구조적으로 얻을 수 없는 항목
@@ -48,6 +48,24 @@ export interface ChannelRow {
     channelLabel: string;
     sessions: MetricValue<number>;
     avgDuration: MetricValue<number>;
+}
+
+// ── 세부 플랫폼별 유입 랭킹 (네이버, 구글, 다음, 빙, ChatGPT, Perplexity 등) ──
+export interface PlatformTrafficRow {
+    key: string;
+    label: string;
+    category: CustomChannel;
+    color: string;
+    sessions: number;
+    sharePct: number;
+    avgDuration: number;
+}
+
+// ── 실시간 접속자 현황 (GA4 Realtime API) ──────────────────────────
+export interface RealtimeOverview {
+    activeUsers30m: number;
+    topCities: { city: string; activeUsers: number }[];
+    topPages: { screenName: string; activeUsers: number }[];
 }
 
 // ── 방문자 속성 (F-13) ──────────────────────────────────────────────

@@ -2,9 +2,10 @@ import { getPostsWithAnalytics, getDashboardAnalytics, getRecentArticlesLeaderbo
 import { prisma } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Users, Eye, MousePointerClick, TrendingUp, FileText } from "lucide-react";
+import { Plus, Users, Eye, TrendingUp, FileText } from "lucide-react";
 import Link from "next/link";
 import { MagazineListTable } from "@/components/admin/magazine/MagazineListTable";
+import { PlatformTrafficBreakdownCard } from "@/components/admin/analytics/PlatformTrafficBreakdownCard";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ export default async function MagazinePage() {
         getRecentArticlesLeaderboard(30, 50)
     ]);
 
-    const { summary } = analytics;
+    const { summary, platformBreakdown } = analytics;
 
     return (
         <div className="space-y-6">
@@ -75,6 +76,13 @@ export default async function MagazinePage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <PlatformTrafficBreakdownCard
+                rows={platformBreakdown ?? []}
+                title="🌐 매거진 유입처 랭킹 (최근 7일)"
+                subtitle="네이버, 구글, 다음, 빙(Bing), ChatGPT, Perplexity 등 플랫폼별 유입 비중 (GA4)"
+                compact
+            />
 
             <Card>
                 <CardHeader>

@@ -1,9 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardStats } from "@/actions/dashboard-actions";
 import { getDashboardAnalytics } from "@/actions/admin/analytics-actions";
 import { Building2, Tags, Newspaper, CalendarDays, Eye, FileText, Users, TrendingUp, MousePointerClick, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { PlatformTrafficBreakdownCard } from "@/components/admin/analytics/PlatformTrafficBreakdownCard";
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,7 @@ export default async function Home() {
         getDashboardAnalytics(7)
     ]);
 
-    const { summary } = analytics;
+    const { summary, platformBreakdown } = analytics;
 
     return (
         <div className="space-y-10 pb-8">
@@ -59,14 +60,14 @@ export default async function Home() {
 
                     <Card className="hover:-translate-y-1 hover:shadow-md transition-all duration-300 border-l-4 border-l-indigo-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">총 노출수</CardTitle>
+                            <CardTitle className="text-sm font-medium">총 세션수</CardTitle>
                             <div className="w-8 h-8 rounded-full bg-indigo-50 flex items-center justify-center">
                                 <Eye className="h-4 w-4 text-indigo-600" />
                             </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{summary.totalImpressions.toLocaleString()}</div>
-                            <p className="text-xs text-muted-foreground mt-1">리스트 노출 합산</p>
+                            <p className="text-xs text-muted-foreground mt-1">최근 7일 전체 유입 세션</p>
                         </CardContent>
                     </Card>
 
@@ -85,17 +86,24 @@ export default async function Home() {
 
                     <Card className="hover:-translate-y-1 hover:shadow-md transition-all duration-300 border-l-4 border-l-emerald-500">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">평균 CTR</CardTitle>
+                            <CardTitle className="text-sm font-medium">세션당 페이지뷰율</CardTitle>
                             <div className="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
                                 <TrendingUp className="h-4 w-4 text-emerald-600" />
                             </div>
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-emerald-600">{summary.avgCtr}%</div>
-                            <p className="text-xs text-muted-foreground mt-1">조회수 대비 클릭률</p>
+                            <p className="text-xs text-muted-foreground mt-1">세션 대비 열람 비율</p>
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* 세부 유입처 랭킹 (네이버, 구글, 다음, 빙, AI 등) */}
+                <PlatformTrafficBreakdownCard
+                    rows={platformBreakdown ?? []}
+                    title="🌐 사이트 전체 유입처 랭킹 (최근 7일)"
+                    subtitle="네이버, 구글, 다음, 빙(Bing), ChatGPT, Perplexity 등 플랫폼별 실유입 비중 (GA4)"
+                />
             </div>
 
             {/* Insight Radar Stats */}
