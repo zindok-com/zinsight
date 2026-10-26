@@ -13,6 +13,8 @@ export async function updateCompany(
     slug?: string;
     entity_type?: string;
     company_url?: string;
+    logo_url?: string | null;
+    logo_source_url?: string | null;
     business_summary?: string;
     core_keywords?: any;
     founded_year?: string;
@@ -107,6 +109,8 @@ export async function createOrganizationInline(data: {
   entity_type?: string;
   region_id: number;
   backlinks?: any;
+  logo_url?: string | null;
+  logo_source_url?: string | null;
 }) {
   await requireAdmin();
   try {
@@ -124,6 +128,8 @@ export async function createOrganizationInline(data: {
         entity_type: data.entity_type || '기업',
         region_id: data.region_id,
         backlinks: data.backlinks || null,
+        logo_url: data.logo_url || null,
+        logo_source_url: data.logo_source_url || null,
       }
     });
     revalidatePath('/admin/companies');
@@ -245,6 +251,8 @@ export async function submitOrganizationForm(
     founded_year?: string;
     hq_location?: string;
     company_url?: string;
+    logo_url?: string | null;
+    logo_source_url?: string | null;
     business_summary?: string;
     backlinks?: Array<{ title: string; url: string }>;
     core_keywords?: string[];
@@ -297,6 +305,8 @@ export async function submitOrganizationForm(
         founded_year: str(formData.founded_year, 10),
         hq_location: str(formData.hq_location, 255),
         company_url: httpUrl(formData.company_url),
+        logo_url: str(formData.logo_url, 512),
+        logo_source_url: str(formData.logo_source_url, 512),
         business_summary: str(formData.business_summary, 5000),
         backlinks,
         core_keywords: coreKeywords,
@@ -346,6 +356,8 @@ export async function approveOrganizationSubmission(submissionId: number) {
         founded_year: submission.founded_year,
         hq_location: submission.hq_location,
         company_url: submission.company_url,
+        logo_url: submission.logo_url,
+        logo_source_url: submission.logo_source_url,
         business_summary: submission.business_summary,
         backlinks: submission.backlinks ?? [],
         core_keywords: submission.core_keywords ?? [],

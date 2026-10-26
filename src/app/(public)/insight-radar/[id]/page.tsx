@@ -304,9 +304,17 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     <div className="border-b border-slate-200 pb-8 sm:pb-10 mb-6 sm:mb-8">
                         <div className="mb-4 sm:mb-6">
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6 mb-4 sm:mb-6">
-                                <h1 className="flex-1 min-w-0 text-2xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
-                                    {company.company_name}
-                                </h1>
+                                <div className="flex items-center gap-4 flex-1 min-w-0">
+                                    {company.logo_url && (
+                                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white border border-slate-200 shadow-sm p-2 flex items-center justify-center shrink-0 overflow-hidden">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={company.logo_url} alt={`${company.company_name} 로고`} className="max-w-full max-h-full object-contain" />
+                                        </div>
+                                    )}
+                                    <h1 className="flex-1 min-w-0 text-2xl sm:text-4xl lg:text-5xl font-bold text-[#001736] font-serif tracking-tight">
+                                        {company.company_name}
+                                    </h1>
+                                </div>
                                 {backlinksList.length > 0 && (
                                     <div className="flex flex-wrap items-center gap-2 shrink-0 pt-0 sm:pt-1">
                                         {backlinksList.map((link, idx) => (

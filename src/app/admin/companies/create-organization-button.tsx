@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Loader2, Info, X } from 'lucide-react';
 import { createOrganizationInline } from '@/actions/company-actions';
+import { CompanyLogoUpload } from '@/components/admin/companies/CompanyLogoUpload';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
@@ -24,6 +25,8 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
         hq_location: string;
         entity_type: string;
         region_id: number;
+        logo_url: string;
+        logo_source_url: string;
         backlinks: Array<{ title: string; url: string }>;
     }>({
         company_name: '',
@@ -33,6 +36,8 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
         hq_location: '',
         entity_type: '기업',
         region_id: 1, // Default
+        logo_url: '',
+        logo_source_url: '',
         backlinks: [{ title: '홈페이지 바로가기', url: '' }],
     });
 
@@ -64,6 +69,8 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
                     hq_location: '',
                     entity_type: '기업',
                     region_id: 1,
+                    logo_url: '',
+                    logo_source_url: '',
                     backlinks: [{ title: '홈페이지 바로가기', url: '' }],
                 });
                 router.refresh();
@@ -86,7 +93,7 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
                     새 조직 등록
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-white">
+            <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto bg-white">
                 <form onSubmit={handleSubmit}>
                     <DialogHeader>
                         <DialogTitle className="text-lg font-bold text-slate-800">새 조직 등록</DialogTitle>
@@ -129,6 +136,18 @@ export function CreateOrganizationButton({ regions = [] }: { regions?: any[] }) 
                         </div>
 
                         {/* 외부 백링크 입력 (최대 3개) */}
+                        <div className="space-y-1.5 pt-2 border-t border-slate-100">
+                            <Label className="text-xs font-bold text-slate-700">로고 이미지 및 원본 첨부 (선택)</Label>
+                            <CompanyLogoUpload
+                                compact
+                                logoUrl={newOrg.logo_url}
+                                logoSourceUrl={newOrg.logo_source_url}
+                                onLogoUrlChange={(url) => setNewOrg((prev) => ({ ...prev, logo_url: url }))}
+                                onLogoSourceUrlChange={(url) => setNewOrg((prev) => ({ ...prev, logo_source_url: url }))}
+                            />
+                        </div>
+
+                        {/* 외부 백링크 (최대 3개) */}
                         <div className="space-y-2 pt-2 border-t border-slate-100">
                             <div className="flex items-center justify-between">
                                 <Label className="text-xs font-bold text-slate-700">외부 백링크 (최대 3개)</Label>

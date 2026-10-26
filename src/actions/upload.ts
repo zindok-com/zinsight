@@ -4,7 +4,7 @@ import { PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client, NCP_STORAGE_BUCKET, NCP_STORAGE_ENDPOINT } from '@/lib/storage';
 
-export type UploadFolder = 'thumbnails' | 'videos' | 'images';
+export type UploadFolder = 'thumbnails' | 'videos' | 'images' | 'logos' | 'attachments';
 
 export interface MediaUploadTicket {
     uploadUrl: string;

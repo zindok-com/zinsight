@@ -115,8 +115,13 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
                         <div className="p-4 sm:p-6 pb-3.5 sm:pb-5 border-b border-zi-divider/50 flex-grow-0">
                             <div className="flex items-start justify-between gap-3 sm:gap-4 mb-2 sm:mb-3">
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl ${theme.iconBg} transition-transform duration-300 group-hover:scale-110 shadow-sm border border-white`}>
-                                        <LottieIcon name={iconName} size={36} hover={true} loop={false} autoplay={false} />
+                                    <div className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl ${company.logo_url ? 'bg-white p-1.5 border-slate-200' : theme.iconBg + ' border-white'} transition-transform duration-300 group-hover:scale-110 shadow-sm border overflow-hidden`}>
+                                        {company.logo_url ? (
+                                            /* eslint-disable-next-line @next/next/no-img-element */
+                                            <img src={company.logo_url} alt={company.company_name} className="max-w-full max-h-full object-contain" />
+                                        ) : (
+                                            <LottieIcon name={iconName} size={36} hover={true} loop={false} autoplay={false} />
+                                        )}
                                     </div>
                                     <div className="flex flex-col min-w-0">
                                         <h3 className="font-bold text-[16px] sm:text-[17px] text-zi-on-surface group-hover:text-zi-primary transition-colors line-clamp-1 leading-snug">

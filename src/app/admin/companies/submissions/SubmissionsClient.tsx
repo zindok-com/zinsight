@@ -22,6 +22,8 @@ type Submission = {
     founded_year: string | null;
     hq_location: string | null;
     company_url: string | null;
+    logo_url?: string | null;
+    logo_source_url?: string | null;
     business_summary: string | null;
     backlinks: any;
     core_keywords: any;
@@ -195,6 +197,35 @@ export function SubmissionsClient({ submissions }: Props) {
                                 <InfoRow label="본사소재지" value={selected.hq_location} />
                                 <InfoRow label="홈페이지" value={selected.company_url} />
                             </div>
+
+                            {(selected.logo_url || selected.logo_source_url) && (
+                                <div className="flex flex-wrap items-center gap-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                                    {selected.logo_url && (
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-12 h-12 rounded-lg bg-white border border-slate-200 p-1.5 flex items-center justify-center">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={selected.logo_url} alt="로고" className="max-w-full max-h-full object-contain" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-slate-800">웹 표시용 로고</p>
+                                                <a href={selected.logo_url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-indigo-600 hover:underline">
+                                                    이미지 원본 보기
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {selected.logo_source_url && (
+                                        <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
+                                            <div>
+                                                <p className="text-xs font-semibold text-amber-800">인쇄/제작용 원본 (.ai/.eps/.pdf)</p>
+                                                <a href={selected.logo_source_url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-medium text-indigo-600 hover:underline">
+                                                    원본 파일 다운로드
+                                                </a>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {selected.business_summary && (
                                 <div>

@@ -1,8 +1,9 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { submitOrganizationForm } from '@/actions/company-actions';
+import { CompanyLogoUpload } from '@/components/admin/companies/CompanyLogoUpload';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,8 @@ export function OrgRegisterForm({ token }: Props) {
         founded_year: '',
         hq_location: '',
         company_url: '',
+        logo_url: '',
+        logo_source_url: '',
         business_summary: '',
         core_keywords: ['', '', ''],
         backlinks: [{ title: '홈페이지 바로가기', url: '' }] as Backlink[],
@@ -175,6 +178,18 @@ export function OrgRegisterForm({ token }: Props) {
                             onChange={(e) => update('business_summary', e.target.value)}
                         />
                     </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardContent className="pt-6 space-y-4">
+                    <SectionTitle>조직 로고 및 제작용 원본 파일 (선택)</SectionTitle>
+                    <CompanyLogoUpload
+                        logoUrl={form.logo_url}
+                        logoSourceUrl={form.logo_source_url}
+                        onLogoUrlChange={(url) => update('logo_url', url)}
+                        onLogoSourceUrlChange={(url) => update('logo_source_url', url)}
+                    />
                 </CardContent>
             </Card>
 

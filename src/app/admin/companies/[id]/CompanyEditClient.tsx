@@ -45,6 +45,7 @@ import {
 } from '@/actions/company-actions';
 import { ingestByOrganization } from '@/actions/ingest-actions';
 import { searchArticlesByTitle } from '@/actions/article-actions';
+import { CompanyLogoUpload } from '@/components/admin/companies/CompanyLogoUpload';
 
 interface Region {
     id: number;
@@ -105,6 +106,8 @@ interface CompanyData {
     slug: string | null;
     entity_type: string | null;
     company_url: string | null;
+    logo_url?: string | null;
+    logo_source_url?: string | null;
     business_summary: string | null;
     core_keywords: any;
     founded_year: string | null;
@@ -220,6 +223,8 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
         parseBacklinks(initialCompany.backlinks, initialCompany.company_url)
     );
     const [isFeatured, setIsFeatured] = useState(initialCompany.is_featured);
+    const [logoUrl, setLogoUrl] = useState(initialCompany.logo_url || '');
+    const [logoSourceUrl, setLogoSourceUrl] = useState(initialCompany.logo_source_url || '');
 
     // 탭 상태
     const [activeTab, setActiveTab] = useState<'linked' | 'ingested'>('linked');
@@ -443,6 +448,8 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 aliases: parsedAliases,
                 key_references: parsedReferences,
                 is_featured: isFeatured,
+                logo_url: logoUrl.trim() || null,
+                logo_source_url: logoSourceUrl.trim() || null,
             });
 
             if (res.success && res.company) {
@@ -777,6 +784,16 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                         className="h-9"
                                     />
                                 </div>
+                            </div>
+
+                            <div className="pt-2 border-t border-slate-100 space-y-2">
+                                <Label className="text-xs font-semibold">조직 로고 및 제작용 원본 파일 (SVG, PNG, JPG, WebP / .AI, .EPS, .PDF)</Label>
+                                <CompanyLogoUpload
+                                    logoUrl={logoUrl}
+                                    logoSourceUrl={logoSourceUrl}
+                                    onLogoUrlChange={setLogoUrl}
+                                    onLogoSourceUrlChange={setLogoSourceUrl}
+                                />
                             </div>
 
                             <div className="pt-2 flex items-center justify-between p-3 bg-muted/40 rounded-lg border border-dashed">

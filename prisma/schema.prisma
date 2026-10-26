@@ -81,6 +81,8 @@ model Organization {
   aliases          Json?    // 별칭 리스트 (문자열 배열)
   entity_type      String   @default("기업") @db.VarChar(50)
   company_url      String?  @db.VarChar(255)
+  logo_url         String?  @db.VarChar(512) // 웹 표시용 로고 (PNG, JPG, SVG, WebP)
+  logo_source_url  String?  @db.VarChar(512) // 인쇄/제작용 원본 파일 (.ai, .eps, .pdf, .svg)
   business_summary String?  @db.Text
   core_keywords    Json?
   founded_year     String?  @db.VarChar(10)
@@ -129,6 +131,8 @@ model OrganizationSubmission {
   founded_year     String?   @db.VarChar(10)
   hq_location      String?   @db.VarChar(255)
   company_url      String?   @db.VarChar(255)
+  logo_url         String?   @db.VarChar(512) // 웹 표시용 로고 (PNG, JPG, SVG, WebP)
+  logo_source_url  String?   @db.VarChar(512) // 인쇄/제작용 원본 파일 (.ai, .eps, .pdf, .svg)
   business_summary String?   @db.Text
   backlinks        Json?
   core_keywords    Json?
@@ -334,5 +338,51 @@ model AnalyticsReport {
 
   @@index([entityType, entityId])
   @@map("analytics_reports")
+}
+
+// ─── B2B 기관/기업 네트워크 IP 역추적 방문 로그 ─────────────────────
+model VisitorOrgLog {
+  id          Int      @id @default(autoincrement())
+  ip_hash     String   @db.VarChar(64)   // 개인정보 보호를 위한 SHA-256 해시 IP
+  org_name    String   @db.VarChar(255)  // 식별된 기업/기관/대학교/지자체 네트워크명
+  asn         String?  @db.VarChar(64)   // AS 번호 (예: AS4766)
+  isp_name    String?  @db.VarChar(255)  // ISP 또는 네트워크 소유 기관 원문
+  city        String?  @db.VarChar(100)  // 접속 도시 (예: Anyang-si, Seoul)
+  country     String?  @db.VarChar(10)   // 국가 코드 (예: KR)
+  page_path   String   @db.VarChar(512)  // 방문 경로
+  page_type   String   @default("other") @db.VarChar(30) // 'magazine' | 'radar' | 'home' | 'other'
+  target_id   Int?                       // 포스트 ID 또는 조직 ID
+  target_name String?  @db.VarChar(255)  // 열람한 포스트/조직명
+  referrer    String?  @db.VarChar(512)  // 유입 레퍼러
+  is_b2b      Boolean  @default(false)   // 일반 통신사(KT/SKB/LGU+)가 아닌 기업/기관 전용망 여부
+  visited_at  DateTime @default(now())
+
+  @@index([visited_at])
+  @@index([is_b2b, visited_at])
+  @@index([page_type, target_id])
+  @@map("visitor_org_logs")
+}
+
+// ─── AEO 'Answer Index' (AI 답변 인용 지표) 감사 이력 ────────────────
+model AeoAuditLog {
+  id                Int      @id @default(autoincrement())
+  entity_type       String   @db.VarChar(30)   // 'organization' | 'article' | 'lead_magnet'
+  organization_id   Int?                       // Organization.id (해당 시)
+  post_id           Int?                       // MagazinePost.id (해당 시)
+  target_name       String   @db.VarChar(255)  // 진단 대상 기업/기관/기사명
+  region_name       String?  @db.VarChar(100)  // 타겟 지역명
+  industry_keywords String?  @db.VarChar(512)  // 진단 타겟 키워드
+  answer_index      Int      @default(0)       // 0 ~ 100 종합 점수
+  mention_rate      Int      @default(0)       // AI 답변 내 브랜드 언급률 (0~100%)
+  citation_rate     Int      @default(0)       // 진사이트 출처/구조화 인용 기여율 (0~100%)
+  prompt_count      Int      @default(0)       // 시뮬레이션 프롬프트 수 (5~10개)
+  engine_summary    Json?                      // 엔진별 점수 요약 (ChatGPT, Gemini, Perplexity, Google AI)
+  prompt_results    Json?                      // 개별 프롬프트 시뮬레이션 감사 상세 결과
+  audited_at        DateTime @default(now())
+
+  @@index([entity_type, organization_id, audited_at])
+  @@index([entity_type, post_id, audited_at])
+  @@index([target_name, audited_at])
+  @@map("aeo_audit_logs")
 }
 
