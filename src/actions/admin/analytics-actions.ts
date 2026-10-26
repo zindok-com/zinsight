@@ -22,6 +22,10 @@ import {
     getGenerativeAIPerformance,
     getSearchQueries,
 } from '@/lib/analytics/gsc-client';
+import {
+    getOrRunAeoAuditForArticle,
+    getOrRunAeoAuditForOrganization,
+} from '@/actions/aeo-actions';
 
 // ── 링크 추출 헬퍼 (cheerio HTML 파서) ───────────────────────────
 function extractExternalLinks(htmlContent: string): string[] {
@@ -206,6 +210,7 @@ export async function getArticleAnalyticsSummary(
         gscGenerativeAI,
         searchQueries,
         outboundLinkClicks,
+        aeoAudit,
     ] = await Promise.all([
         getArticlePageviews(post.slug, dateRange).catch((err) => {
             console.error('[analytics] getArticlePageviews failed:', err?.message, err?.stack);
@@ -255,6 +260,7 @@ export async function getArticleAnalyticsSummary(
             console.error('[analytics] getOutboundLinkClicksByUrl failed:', err?.message, err?.stack);
             return [];
         }),
+        getOrRunAeoAuditForArticle(post.id, false).catch(() => null),
     ]);
 
     const views = pageviews?.reduce((s, r) => s + r.views, 0) ?? 0;
@@ -321,6 +327,7 @@ export async function getArticleAnalyticsSummary(
         gscGenerativeAI,
         searchQueries: searchQueries ?? [],
         outboundLinkTable,                  // F-02: 링크별 클릭 상세
+        aeoAudit: aeoAudit ?? null,
     };
 }
 
@@ -391,6 +398,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         outboundLinkClicks,
         linkedArticlesWithClicks,
         searchQueries,
+        aeoAudit,
     ] = await Promise.all([
         getArticlePageviews(orgIdentifier, dateRange).catch((err) => {
             console.error('[analytics-org] getArticlePageviews failed:', err?.message, err?.stack);
@@ -447,6 +455,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
             console.error('[analytics-org] getSearchQueries failed:', err);
             return [];
         }),
+        getOrRunAeoAuditForOrganization(org.id, false).catch(() => null),
     ]);
 
     const safeArticles = linkedArticlesWithClicks ?? [];
@@ -492,6 +501,7 @@ export async function getOrgAnalyticsSummary(orgId: number, periodDays: number |
         searchQueries: searchQueries ?? [],
         outboundLinkTable,               // F-02: 링크별 클릭 상세
         linkedArticles: linkedArticlesWithClicks,
+        aeoAudit: aeoAudit ?? null,
     };
 }
 

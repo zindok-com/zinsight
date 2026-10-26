@@ -10,6 +10,7 @@ import {
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
 import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
 import { PlatformTrafficBreakdownCard } from '@/components/admin/analytics/PlatformTrafficBreakdownCard';
+import { AeoAnswerIndexSection } from '@/components/admin/analytics/AeoAnswerIndexSection';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info, FileSpreadsheet } from 'lucide-react';
 
@@ -112,6 +113,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
     useEffect(() => {
         const sectionIds = [
             'section-summary',
+            'section-aeo',
             'section-trend',
             'section-channels',
             'section-gsc',
@@ -163,7 +165,7 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="기사 데이터를 찾을 수 없습니다." />;
 
-    const { post, linkedOrganizations, summary, pageviews, trafficSources, platformBreakdown, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, searchQueries, outboundLinkTable } = data;
+    const { post, linkedOrganizations, summary, pageviews, trafficSources, platformBreakdown, geography, visitorAttributes, gsc, gscAppearance, gscGenerativeAI, searchQueries, outboundLinkTable, aeoAudit } = data;
 
     const pvChartData = pageviews.map((r) => ({
         date: r.date.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3'),
@@ -360,6 +362,29 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
 
                         {/* 방문자 속성 */}
                         <a
+                            href="#section-aeo"
+                            onClick={(e) => scrollToSection(e, 'section-aeo')}
+                            className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
+                                activeSectionId === 'section-aeo'
+                                    ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
+                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
+                            }`}
+                        >
+                            <div className="flex items-center justify-between gap-1 min-w-0">
+                                <span className="truncate">🤖 AI 인용 지수</span>
+                                {aeoAudit && (
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-700">
+                                        {aeoAudit.answerIndex}점
+                                    </span>
+                                )}
+                            </div>
+                            <div className={`text-[10px] mt-0.5 pl-0.5 truncate ${activeSectionId === 'section-aeo' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
+                                Answer Index 감사
+                            </div>
+                        </a>
+
+                        {/* 방문자 속성 (기존) */}
+                        <a
                             href="#section-visitors"
                             onClick={(e) => scrollToSection(e, 'section-visitors')}
                             className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
@@ -433,6 +458,15 @@ export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
                             />
                             <StatCard label="아웃바운드 클릭" value={summary.outboundClicks?.toLocaleString() ?? '—'} />
                         </div>
+                    </div>
+
+                    {/* 1-B. AEO Answer Index (AI 답변 인용 지수) */}
+                    <div id="section-aeo" className="scroll-mt-6">
+                        <AeoAnswerIndexSection
+                            initialAudit={aeoAudit}
+                            entityType="article"
+                            entityId={post.id}
+                        />
                     </div>
 
                     {/* 2. 날짜별 조회수 */}

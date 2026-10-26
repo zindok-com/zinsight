@@ -13,6 +13,7 @@ import {
 } from '@/actions/insight-radar-actions';
 import { RadarSearchBar } from '@/components/public/insight-radar/RadarSearchBar';
 import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompanyList';
+import { AeoLeadMagnetBanner } from '@/components/public/aeo/AeoLeadMagnetBanner';
 import { buildSocialMetadata } from '@/lib/site';
 
 // 검색/필터 파라미터가 없는 기본 페이지는 1시간 캐시, 파라미터가 있으면 동적 렌더링
@@ -109,6 +110,9 @@ export default async function InsightRadarPage({
             {/* 페이지 헤더 */}
             {/* ─────────────────────────────── */}
             <div className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
+
+                {/* ── 무료 AEO 'Answer Index' AI 인용 지수 진단 리드 마그넷 배너 ── */}
+                <AeoLeadMagnetBanner />
 
                 {/* ── 통합 검색 및 필터 섹션 ── */}
                 <RadarSearchBar 

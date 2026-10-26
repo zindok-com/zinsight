@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { CHANNEL_COLORS } from '@/lib/analytics/types';
 import { ReportExportModal } from '@/components/admin/analytics/ReportExportModal';
 import { PlatformTrafficBreakdownCard } from '@/components/admin/analytics/PlatformTrafficBreakdownCard';
+import { AeoAnswerIndexSection } from '@/components/admin/analytics/AeoAnswerIndexSection';
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Info } from 'lucide-react';
 
@@ -67,7 +68,7 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
 
     if (!data) return <NoData msg="조직 데이터를 찾을 수 없습니다." />;
 
-    const { org, summary, pageviews, geography, trafficSources, platformBreakdown, visitorAttributes, searchQueries, linkedArticles, outboundLinkTable } = data;
+    const { org, summary, pageviews, geography, trafficSources, platformBreakdown, visitorAttributes, searchQueries, linkedArticles, outboundLinkTable, aeoAudit } = data;
 
 
     const pvChartData = pageviews.map((r) => ({
@@ -157,6 +158,13 @@ export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
                     <p className="text-[11px] text-muted-foreground">프로필에서 연관 기사로 이동</p>
                 </div>
             </div>
+
+            {/* AEO Answer Index (AI 답변 인용 지수 & 월간 리포트 성과 증명) */}
+            <AeoAnswerIndexSection
+                initialAudit={aeoAudit}
+                entityType="organization"
+                entityId={org.id}
+            />
 
             {/* 날짜별 조회수 */}
             <div className="space-y-3">

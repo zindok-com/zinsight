@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { saveAnalyticsReport } from '@/actions/admin/analytics-actions';
@@ -90,6 +90,7 @@ export function ReportExportModal({
                     <div className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground space-y-0.5">
                         <p>📅 기간: {periodLabel[currentPeriod] ?? currentPeriod}</p>
                         <p>🕒 기준일: {today}</p>
+                        <p>🤖 포함 지표: AEO Answer Index (AI 인용률 변화) · 세부 플랫폼 유입처 · 전환 퍼널</p>
                         <p>✅ 생성 시 데이터가 스냅샷으로 저장됩니다. 이력 → 관리 &gt; 애널리틱스 리포트</p>
                     </div>
 
