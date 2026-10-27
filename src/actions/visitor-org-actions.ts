@@ -400,3 +400,78 @@ export async function getVisitorOrgLogs(limit = 30): Promise<{
         };
     }
 }
+
+export interface VisitorOrgAnalytics {
+    tableReady: boolean;
+    totalVisits: number;
+    b2bVisits: number;
+    uniqueB2bOrgs: number;
+    topOrgs: { orgName: string; visits: number; lastVisitedAt: Date; city: string | null }[];
+    topContents: { pageType: string; targetName: string; pagePath: string; visits: number }[];
+    pageTypeShare: { pageType: string; visits: number }[];
+    recentLogs: VisitorOrgLogItem[];
+}
+
+// ── 관제 센터: 기간별 B2B 기관 방문 분석 ─────────────────────────────
+export async function getVisitorOrgAnalytics(periodDays: number | 'all' = 30): Promise<VisitorOrgAnalytics> {
+    await requireAdmin();
+    const since = periodDays === 'all' ? undefined : new Date(Date.now() - periodDays * 24 * 60 * 60 * 1000);
+    const inPeriod = since ? { visited_at: { gte: since } } : {};
+    try {
+        const [totalVisits, b2bVisits, orgGroups, contentGroups, typeGroups, recentLogs] = await Promise.all([
+            prisma.visitorOrgLog.count({ where: inPeriod }),
+            prisma.visitorOrgLog.count({ where: { ...inPeriod, is_b2b: true } }),
+            prisma.visitorOrgLog.groupBy({
+                by: ['org_name'],
+                where: { ...inPeriod, is_b2b: true },
+                _count: { _all: true },
+                _max: { visited_at: true, city: true },
+                orderBy: { _count: { org_name: 'desc' } },
+                take: 30,
+            }),
+            prisma.visitorOrgLog.groupBy({
+                by: ['page_type', 'target_name', 'page_path'],
+                where: { ...inPeriod, is_b2b: true, page_type: { in: ['magazine', 'radar'] } },
+                _count: { _all: true },
+                orderBy: { _count: { page_path: 'desc' } },
+                take: 15,
+            }),
+            prisma.visitorOrgLog.groupBy({
+                by: ['page_type'],
+                where: { ...inPeriod, is_b2b: true },
+                _count: { _all: true },
+            }),
+            prisma.visitorOrgLog.findMany({
+                where: inPeriod,
+                orderBy: { visited_at: 'desc' },
+                take: 100,
+            }),
+        ]);
+        const uniqueB2bOrgs = (await prisma.visitorOrgLog.groupBy({ by: ['org_name'], where: { ...inPeriod, is_b2b: true } })).length;
+
+        return {
+            tableReady: true,
+            totalVisits,
+            b2bVisits,
+            uniqueB2bOrgs,
+            topOrgs: orgGroups.map((g) => ({
+                orgName: g.org_name,
+                visits: g._count._all,
+                lastVisitedAt: g._max.visited_at as Date,
+                city: g._max.city ?? null,
+            })),
+            topContents: contentGroups.map((g) => ({
+                pageType: g.page_type,
+                targetName: g.target_name || g.page_path,
+                pagePath: g.page_path,
+                visits: g._count._all,
+            })),
+            pageTypeShare: typeGroups
+                .map((g) => ({ pageType: g.page_type, visits: g._count._all }))
+                .sort((a, b) => b.visits - a.visits),
+            recentLogs,
+        };
+    } catch {
+        return { tableReady: false, totalVisits: 0, b2bVisits: 0, uniqueB2bOrgs: 0, topOrgs: [], topContents: [], pageTypeShare: [], recentLogs: [] };
+    }
+}

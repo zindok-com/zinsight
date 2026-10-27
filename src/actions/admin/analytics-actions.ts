@@ -569,3 +569,21 @@ export async function getAnalyticsReportById(id: number) {
         where: { id },
     });
 }
+
+// ── 관제 센터: 사이트 전체 유입 분석 (기간 선택) ─────────────────────
+export async function getSiteTrafficAnalytics(periodDays: number | 'all' = 30) {
+    await requireAdmin();
+    const dateRange = buildDateRange(periodDays);
+    const [platformBreakdown, realtimeOverview, ga4Data] = await Promise.all([
+        getPlatformTrafficBreakdown(null, dateRange).catch(() => []),
+        getRealtimeOverview().catch(() => null),
+        getGlobalDashboardStats(dateRange).catch(() => null),
+    ]);
+    return {
+        dateRange,
+        platformBreakdown: platformBreakdown ?? [],
+        realtimeOverview,
+        summary: ga4Data?.summary ?? null,
+        dailyData: ga4Data?.dailyData ?? [],
+    };
+}

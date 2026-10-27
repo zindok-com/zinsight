@@ -17,25 +17,30 @@ import {
     Building2,
     Copy,
     Check,
+    Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/site';
+import { TrafficAnalyticsTab } from '@/components/admin/analytics/TrafficAnalyticsTab';
 
 interface Props {
     overview: Awaited<ReturnType<typeof import('@/actions/admin/seo-actions').getSeoMonitoringOverview>>;
     indexingReport: Awaited<ReturnType<typeof import('@/actions/admin/seo-actions').getGoogleIndexingReport>>;
     currentPeriod: string;
     initialTab: string;
+    traffic: Awaited<ReturnType<typeof import('@/actions/admin/analytics-actions').getSiteTrafficAnalytics>> | null;
+    visitors: Awaited<ReturnType<typeof import('@/actions/visitor-org-actions').getVisitorOrgAnalytics>> | null;
 }
 
-type TabType = 'overview' | 'indexing' | 'apis';
+type TabType = 'overview' | 'traffic' | 'indexing' | 'apis';
+const TAB_KEYS: TabType[] = ['overview', 'traffic', 'indexing', 'apis'];
+const PERIOD_LABEL: Record<string, string> = { '7': '최근 7일', '30': '최근 30일', '90': '최근 90일', all: '전체 기간' };
 
-export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, initialTab }: Props) {
+export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, initialTab, traffic, visitors }: Props) {
     const router = useRouter();
     const pathname = usePathname();
-    const [currentTab, setCurrentTab] = useState<TabType>(
-        ['overview', 'indexing', 'apis'].includes(initialTab) ? (initialTab as TabType) : 'overview'
-    );
+    // 탭은 URL(?tab=)을 기준으로 결정: 사이드바 링크로 이동해도 화면이 함께 바뀌도록 로컬 상태로 고정하지 않음
+    const currentTab: TabType = TAB_KEYS.includes(initialTab as TabType) ? (initialTab as TabType) : 'overview';
     const [searchFilter, setSearchFilter] = useState('');
     const [indexFilter, setIndexFilter] = useState<'all' | 'indexed' | 'not_indexed'>('all');
     const [entityFilter, setEntityFilter] = useState<'all' | 'article' | 'org'>('all');
@@ -61,7 +66,6 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
     };
 
     const handleTabChange = (t: TabType) => {
-        setCurrentTab(t);
         router.push(`${pathname}?period=${currentPeriod}&tab=${t}`);
     };
 
@@ -117,6 +121,7 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                 <div className="flex gap-2 overflow-x-auto">
                     {[
                         { key: 'overview', label: '📊 종합 현황', icon: Activity },
+                        { key: 'traffic', label: '📈 유입·방문자', icon: Users },
                         { key: 'indexing', label: '🔍 구글 색인 목록', icon: Search },
                         { key: 'apis', label: '⚡ API 연동 진단', icon: Globe },
                     ].map((tab) => {
@@ -126,7 +131,8 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                             <button
                                 key={tab.key}
                                 onClick={() => handleTabChange(tab.key as TabType)}
-                                className={`flex items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                                aria-current={active ? 'page' : undefined}
+                                className={`flex shrink-0 items-center gap-2 px-3.5 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
                                     active
                                         ? 'bg-primary text-primary-foreground shadow-sm'
                                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -160,6 +166,19 @@ export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, i
                     ))}
                 </div>
             </div>
+
+            {/* TAB: 유입·방문자 (GA4 플랫폼 유입 + 실시간 + B2B 기관 방문) */}
+            {currentTab === 'traffic' && (
+                traffic && visitors ? (
+                    <TrafficAnalyticsTab
+                        periodLabel={PERIOD_LABEL[currentPeriod] ?? `최근 ${currentPeriod}일`}
+                        traffic={traffic}
+                        visitors={visitors}
+                    />
+                ) : (
+                    <div className="p-8 text-center text-muted-foreground">유입 데이터를 불러오는 중입니다...</div>
+                )
+            )}
 
             {/* TAB 1: 종합 현황 (Overview) */}
             {currentTab === 'overview' && (

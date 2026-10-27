@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
     LayoutDashboard,
@@ -16,6 +16,8 @@ import {
     Image,
     Globe2,
     SearchCheck,
+    TrendingUp,
+    PlugZap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useEffect } from 'react';
@@ -28,9 +30,12 @@ const TOP_MENU_ITEMS = [
     { name: '이미지 보관함', href: '/admin/storage', icon: Image },
 ];
 
+// 관제 센터는 한 페이지의 탭 구성이므로 ?tab= 값까지 비교해 현재 탭만 활성 표시
 const SEO_GEO_AEO_ITEMS = [
-    { name: 'SEO·GEO·AEO 관제', href: '/admin/seo-monitoring', icon: Globe2 },
+    { name: '관제 종합 현황', href: '/admin/seo-monitoring?tab=overview', icon: Globe2 },
+    { name: '유입·실시간 방문자', href: '/admin/seo-monitoring?tab=traffic', icon: TrendingUp },
     { name: '구글 색인 모니터링', href: '/admin/seo-monitoring?tab=indexing', icon: SearchCheck },
+    { name: 'API 연동 진단', href: '/admin/seo-monitoring?tab=apis', icon: PlugZap },
 ];
 
 const INSIGHT_RADAR_ITEMS = [
@@ -49,6 +54,7 @@ const MAGAZINE_ITEMS = [
 
 export function Sidebar() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // 모바일 메뉴가 열려 있을 때 배경 스크롤 잠금 및 Esc로 닫기
@@ -68,8 +74,11 @@ export function Sidebar() {
     const renderNavItems = (items: typeof INSIGHT_RADAR_ITEMS) => (
         <div className="space-y-1">
             {items.map((item) => {
-                const itemBaseHref = item.href.split('?')[0];
-                const isActive = pathname === itemBaseHref || (
+                const [itemBaseHref, itemQuery] = item.href.split('?');
+                const itemTab = itemQuery ? new URLSearchParams(itemQuery).get('tab') : null;
+                const isActive = itemTab
+                    ? pathname === itemBaseHref && (searchParams.get('tab') ?? 'overview') === itemTab
+                    : pathname === itemBaseHref || (
                     itemBaseHref !== '/admin' && 
                     pathname.startsWith(itemBaseHref) && 
                     !items.some(other => {
@@ -90,6 +99,7 @@ export function Sidebar() {
                                 : "text-slate-300 hover:bg-slate-800 hover:text-white"
                         )}
                         onClick={() => setMobileMenuOpen(false)}
+                        aria-current={isActive ? 'page' : undefined}
                     >
                         <item.icon className="h-5 w-5" />
                         {item.name}

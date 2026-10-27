@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Toaster } from 'sonner';
 
@@ -16,7 +17,10 @@ export const metadata = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex min-h-screen flex-col md:flex-row">
-            <Sidebar />
+            {/* Sidebar는 useSearchParams를 쓰므로 Suspense 경계 필요 */}
+            <Suspense fallback={<div className="hidden md:block w-64 shrink-0 bg-slate-900" />}>
+                <Sidebar />
+            </Suspense>
             <main className="flex-1 p-6 min-w-0">
                 {children}
             </main>

@@ -133,7 +133,7 @@ export function PlatformTrafficBreakdownCard({
                                 >
                                     {badge.label}
                                 </span>
-                                <span className="w-32 sm:w-36 font-medium text-slate-800 truncate shrink-0" title={row.label}>
+                                <span className="w-32 sm:w-36 min-w-0 font-medium text-slate-800 truncate shrink" title={row.label}>
                                     {row.label}
                                 </span>
                                 <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden min-w-[60px]">
