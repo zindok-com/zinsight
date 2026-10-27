@@ -15,9 +15,12 @@ import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
 import { VideoInsertModal } from '@/components/admin/magazine/VideoInsertModal';
-import { extractYouTubeId, isDirectVideoUrl } from '@/lib/video';
 import { ImageDetailsModal } from '@/components/admin/magazine/ImageDetailsModal';
 import OrganizationSelector from '@/components/admin/magazine/OrganizationSelector';
+import { MagazineSectionNav, MagazineRoutingGuide } from '@/components/admin/magazine/MagazineSectionNav';
+import { MagazineSidePreview } from '@/components/admin/magazine/MagazineSidePreview';
+import { MagazineFullPreview } from '@/components/admin/magazine/MagazineFullPreview';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -37,6 +40,7 @@ export function MagazineForm({
     post?: any 
 }) {
     const router = useRouter();
+    const confirm = useConfirm();
     const [isPending, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');
     const [guideOpen, setGuideOpen] = useState(false);
@@ -862,164 +866,15 @@ export function MagazineForm({
                 {activeTab === 'edit' ? (
                     <div className="grid grid-cols-1 lg:grid-cols-[15rem_1fr] xl:grid-cols-[15rem_1fr_20rem] lg:grid-rows-[minmax(0,1fr)] gap-6 items-stretch lg:flex-1 lg:min-h-0 lg:h-full lg:overflow-hidden">
                         {/* 컬럼 1: Desktop side navigation — 고정 컬럼 (항목이 많을 때만 자체 스크롤) */}
-                        <aside className="hidden lg:block min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden">
-                            <nav className="flex flex-col gap-1 w-full py-3 text-[11px] bg-white border border-slate-200 rounded-xl shadow-sm px-2 overflow-x-hidden">
-                                <p className="font-bold text-slate-400 uppercase tracking-widest mb-1.5 px-2 pt-1">섹션 이동</p>
-
-                                {/* 기본 정보 */}
-                                <a
-                                    href="#section-meta"
-                                    onClick={(e) => scrollToSection(e, 'section-meta')}
-                                    className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
-                                        activeSectionId === 'section-meta'
-                                            ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between gap-1 min-w-0">
-                                        <span className="flex items-center gap-1.5 truncate">📋 기본 정보</span>
-                                        {hasTitle ? (
-                                            <span className="text-emerald-500 shrink-0 font-bold">✓</span>
-                                        ) : (
-                                            <span className="text-slate-300 shrink-0 font-normal">○</span>
-                                        )}
-                                    </div>
-                                    <div className={`text-[10px] mt-0.5 pl-0.5 truncate ${activeSectionId === 'section-meta' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
-                                        {hasTitle
-                                            ? `제목 ${formData.title.length}자`
-                                            : <span className="text-amber-500">제목 미입력</span>}
-                                    </div>
-                                </a>
-
-                                {/* 카테고리 안내 */}
-                                <a
-                                    href="#section-guide"
-                                    onClick={(e) => scrollToSection(e, 'section-guide')}
-                                    className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 truncate ${
-                                        activeSectionId === 'section-guide'
-                                            ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
-                                    }`}
-                                >
-                                    📖 카테고리 안내
-                                </a>
-
-                                {/* 조직·슬러그 */}
-                                <a
-                                    href="#section-org-slug"
-                                    onClick={(e) => scrollToSection(e, 'section-org-slug')}
-                                    className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
-                                        activeSectionId === 'section-org-slug'
-                                            ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between gap-1 min-w-0">
-                                        <span className="truncate">🔗 조직·슬러그</span>
-                                        {formData.slug ? (
-                                            <span className="text-emerald-500 shrink-0 font-bold">✓</span>
-                                        ) : (
-                                            <span className="text-slate-300 shrink-0 font-normal">○</span>
-                                        )}
-                                    </div>
-                                    {formData.slug && (
-                                        <div className={`text-[10px] mt-0.5 pl-0.5 font-mono truncate ${activeSectionId === 'section-org-slug' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
-                                            /{formData.slug}
-                                        </div>
-                                    )}
-                                </a>
-
-                                <div className="w-full h-px bg-slate-100 my-1 mx-1" />
-
-                                {/* 리드 */}
-                                <a
-                                    href="#section-lead"
-                                    onClick={(e) => scrollToSection(e, 'section-lead')}
-                                    className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
-                                        activeSectionId === 'section-lead'
-                                            ? 'bg-indigo-50 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between gap-1 min-w-0">
-                                        <span className="truncate">① 리드</span>
-                                        {hasLead ? (
-                                            <span className="text-emerald-500 shrink-0 font-bold">✓</span>
-                                        ) : (
-                                            <span className="text-amber-500 shrink-0 font-semibold text-[10px]">필수</span>
-                                        )}
-                                    </div>
-                                    <div className={`text-[10px] mt-0.5 truncate ${activeSectionId === 'section-lead' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
-                                        {hasLead ? `${formData.lead.length}자` : <span className="text-amber-500">미입력</span>}
-                                    </div>
-                                </a>
-
-                                {formData.bodies.map((_: any, i: number) => {
-                                    const bodyFilled = formData.bodies[i]?.title.trim() !== '' || formData.bodies[i]?.content.trim() !== '';
-                                    const isSectionActive = activeSectionId === `section-body-${i}`;
-                                    return (
-                                        <a
-                                            key={i}
-                                            href={`#section-body-${i}`}
-                                            onClick={(e) => scrollToSection(e, `section-body-${i}`, i)}
-                                            className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
-                                                isSectionActive
-                                                    ? 'bg-indigo-50/80 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
-                                                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
-                                            }`}
-                                        >
-                                            <div className="flex items-center justify-between gap-1 min-w-0">
-                                                <span className="truncate">
-                                                    ② 섹션 {i + 1}
-                                                    {formData.bodies[i]?.title ? ` — ${formData.bodies[i].title.slice(0, 8)}${formData.bodies[i].title.length > 8 ? '…' : ''}` : ''}
-                                                </span>
-                                                {bodyFilled ? (
-                                                    <span className="text-emerald-500 shrink-0 font-bold">✓</span>
-                                                ) : (
-                                                    <span className="text-slate-300 shrink-0 font-normal">○</span>
-                                                )}
-                                            </div>
-                                            <div className={`text-[10px] mt-0.5 truncate ${isSectionActive ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
-                                                {bodyFilled ? `${formData.bodies[i].content.length}자` : '미입력'}
-                                            </div>
-                                        </a>
-                                    );
-                                })}
-
-                                {/* 클로징 */}
-                                <a
-                                    href="#section-closing"
-                                    onClick={(e) => scrollToSection(e, 'section-closing')}
-                                    className={`group px-2.5 py-2 rounded-lg transition-all border-l-2 ${
-                                        activeSectionId === 'section-closing'
-                                            ? 'bg-indigo-50 text-indigo-900 font-bold border-indigo-600 shadow-2xs'
-                                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border-transparent'
-                                    }`}
-                                >
-                                    <div className="flex items-center justify-between gap-1 min-w-0">
-                                        <span className="truncate">③ 클로징</span>
-                                        {hasClosing ? (
-                                            <span className="text-emerald-500 shrink-0 font-bold">✓</span>
-                                        ) : (
-                                            <span className="text-amber-500 shrink-0 font-semibold text-[10px]">필수</span>
-                                        )}
-                                    </div>
-                                    <div className={`text-[10px] mt-0.5 truncate ${activeSectionId === 'section-closing' ? 'text-indigo-600 font-medium' : 'text-slate-400'}`}>
-                                        {hasClosing ? `${formData.closing.length}자` : <span className="text-amber-500">미입력</span>}
-                                    </div>
-                                </a>
-
-                                {/* 전체 완료 상태 요약 */}
-                                <div className="mt-2 mx-1 px-2 py-2 rounded-lg bg-slate-50 border border-slate-100">
-                                    <div className="flex items-center gap-1.5">
-                                        <div className={`w-2 h-2 rounded-full shrink-0 ${canPublish ? 'bg-emerald-500' : 'bg-amber-400'}`} />
-                                        <span className={`text-[10px] font-semibold truncate ${canPublish ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                            {canPublish ? '발행 준비 완료' : '필수 항목 미완성'}
-                                        </span>
-                                    </div>
-                                </div>
-                            </nav>
-                        </aside>
+                        <MagazineSectionNav
+                            activeSectionId={activeSectionId}
+                            hasTitle={hasTitle}
+                            hasLead={hasLead}
+                            hasClosing={hasClosing}
+                            canPublish={canPublish}
+                            formData={formData}
+                            scrollToSection={scrollToSection}
+                        />
                         {/* 컬럼 2: Main edit area — lg: 이 컬럼만 내부 스크롤 */}
                         <div ref={scrollAreaRef} className="min-w-0 space-y-8 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:pr-2 lg:pb-6">
                         {/* 기본 정보 및 메타데이터 카드 */}
@@ -1157,67 +1012,7 @@ export function MagazineForm({
                         </div>
 
                         {/* 카테고리 안내 가이드 */}
-                        <div id="section-guide" className="p-4 bg-gradient-to-r from-slate-50 to-indigo-50/10 border border-slate-200 rounded-xl space-y-4 text-xs text-slate-600 shadow-xs scroll-mt-24">
-                            <button
-                                type="button"
-                                onClick={() => setGuideOpen(!guideOpen)}
-                                className="w-full flex items-center justify-between font-semibold text-slate-800 text-sm hover:text-indigo-600 transition-colors focus:outline-none"
-                            >
-                                <span className="flex items-center gap-2">
-                                    <Info className="w-4 h-4 text-indigo-600" />
-                                    매거진 카테고리 & URL 라우팅 가이드
-                                </span>
-                                {guideOpen ? (
-                                    <ChevronUp className="w-4 h-4 text-slate-400" />
-                                ) : (
-                                    <ChevronDown className="w-4 h-4 text-slate-400" />
-                                )}
-                            </button>
-                            {guideOpen && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-200/60">
-                                    {/* 테크 & 마케팅 지면 그룹 */}
-                                    <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
-                                        <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
-                                            Core 테크 지면 (URL: <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded text-[11px]">/magazine/tech-marketing/*</code>)
-                                        </h4>
-                                        <div className="space-y-3 pl-3 border-l border-slate-100">
-                                            <div className="space-y-1">
-                                                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">뉴스레터 (NEWSLETTER)</span>
-                                                <p className="text-slate-500">주 단위 기술 트렌드 및 요약 분석 지면</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[10px]">디지털 마케팅 (INTELLIGENCE_REPORT)</span>
-                                                <p className="text-slate-500">SEO, GEO를 활용한 디지털 마케팅 분석 리포트</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 로컬 비즈니스 지면 그룹 */}
-                                    <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
-                                        <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
-                                            로컬 비즈니스 지면 (URL: <code className="text-emerald-600 bg-emerald-50 px-1 py-0.5 rounded text-[11px]">/magazine/local/[지자체]/*</code>)
-                                        </h4>
-                                        <div className="space-y-3 pl-3 border-l border-slate-100">
-                                            <div className="space-y-1">
-                                                <span className="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-[10px]">기업 스포트라이트 (VALLEY_NOW)</span>
-                                                <p className="text-slate-500">관내 스타트업, 소상공인, 전통기업 심층 인터뷰 및 성장 성공사례 (기존 '밸리 나우' + 'SME 그로스' 통합)</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded text-[10px]">지원사업 · 정책 브리핑 (LOCAL_SME)</span>
-                                                <p className="text-slate-500">관내 및 도 산하 진흥원의 지원사업, 정책자금, 공모전 공고 요약 브리핑 (민간 정보 피드)</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <span className="font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded text-[10px]">산학협력 · 교육 (EDU_COLLAB)</span>
-                                                <p className="text-slate-500">관내 대학 및 산학협력단의 협력 사업, 인재양성 프로그램 소식. isPaid 시 &apos;협력 기관&apos; 배지 표시.</p>
-                                            </div>
-                                            <p className="text-[10px] text-emerald-600 font-semibold mt-1">※ 로컬 기사는 반드시 &apos;연계 지역&apos;을 지정해야 합니다.</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        <MagazineRoutingGuide guideOpen={guideOpen} setGuideOpen={setGuideOpen} />
 
                         {/* Newsletter Specific: Year/Month */}
                         {activeCategorySlug === 'newsletter' && (
@@ -1811,258 +1606,15 @@ export function MagazineForm({
                         </div>
 
                         {/* ─── 컬럼 3: 우측 실시간 미리보기 (고정 컬럼, 중앙 스크롤과 독립) ─── */}
-                        <aside className="hidden xl:block min-w-0 min-h-0 h-full overflow-y-auto overflow-x-hidden">
-                            <div className="flex flex-col gap-4 w-full pr-0.5 pb-2">
-                            {/* 패널 헤더 */}
-                            <div className="flex items-center gap-2 px-1">
-                                <Eye className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">실시간 미리보기</span>
-                            </div>
-
-                            {/* ① 구글 검색 스니펫 */}
-                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-2">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">구글 검색 스니펫</p>
-                                {/* Favicon + URL 행 */}
-                                <div className="flex items-center gap-2">
-                                    <div className="w-4 h-4 rounded-full bg-slate-200 shrink-0 flex items-center justify-center">
-                                        <span className="text-[7px] font-bold text-slate-500">Z</span>
-                                    </div>
-                                    <div className="flex flex-col leading-tight">
-                                        <span className="text-[11px] text-slate-700 font-medium">진사이트</span>
-                                        <span className="text-[10px] text-[#006621] truncate max-w-[220px]">
-                                            https://www.zinsight.co.kr › magazine{preview.slug ? ` › ${preview.slug}` : ''}
-                                        </span>
-                                    </div>
-                                </div>
-                                {/* 제목 */}
-                                <p className="text-[16px] text-[#1a0dab] leading-snug font-normal hover:underline cursor-pointer line-clamp-2">
-                                    {preview.title
-                                        ? (preview.title.length > 60 ? preview.title.slice(0, 60) + '...' : preview.title)
-                                        : <span className="text-slate-300 italic text-sm">제목 미입력</span>
-                                    }
-                                    {preview.title.length > 0 && (
-                                        <span className="text-[11px] ml-1 text-slate-400 font-normal not-italic">| 진사이트</span>
-                                    )}
-                                </p>
-                                {/* 설명 */}
-                                <p className="text-[13px] text-[#4d5156] leading-snug line-clamp-3">
-                                    {preview.summary
-                                        ? (preview.summary.length > 155 ? preview.summary.slice(0, 155) + '...' : preview.summary)
-                                        : <span className="text-slate-300 italic">요약(Meta Description) 미입력 — 리드 첫 문장에서 자동 생성됩니다</span>
-                                    }
-                                </p>
-                                {/* 글자 수 게이지 */}
-                                {preview.title && (
-                                    <div className="pt-2 border-t border-slate-100 space-y-1">
-                                        <div className="flex justify-between text-[10px] text-slate-400">
-                                            <span>제목</span>
-                                            <span className={preview.title.length > 60 ? 'text-red-500 font-bold' : preview.title.length > 50 ? 'text-amber-500' : 'text-emerald-600'}>
-                                                {preview.title.length} / 60자
-                                            </span>
-                                        </div>
-                                        <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full transition-all ${preview.title.length > 60 ? 'bg-red-400' : preview.title.length > 50 ? 'bg-amber-400' : 'bg-emerald-400'}`}
-                                                style={{ width: `${Math.min((preview.title.length / 60) * 100, 100)}%` }}
-                                            />
-                                        </div>
-                                        <div className="flex justify-between text-[10px] text-slate-400">
-                                            <span>설명</span>
-                                            <span className={(preview.summary?.length || 0) > 155 ? 'text-red-500 font-bold' : (preview.summary?.length || 0) > 130 ? 'text-emerald-600' : 'text-slate-400'}>
-                                                {preview.summary?.length || 0} / 155자
-                                            </span>
-                                        </div>
-                                        <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-                                            <div
-                                                className={`h-full rounded-full transition-all ${(preview.summary?.length || 0) > 155 ? 'bg-red-400' : (preview.summary?.length || 0) > 130 ? 'bg-emerald-400' : 'bg-slate-300'}`}
-                                                style={{ width: `${Math.min(((preview.summary?.length || 0) / 155) * 100, 100)}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* ② OG 카드 (SNS 공유) */}
-                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SNS 공유 미리보기 (OG 카드)</p>
-                                <div className="border border-slate-200 rounded-lg overflow-hidden">
-                                    {/* 썸네일 */}
-                                    {preview.thumbnailUrl ? (
-                                        <div className="w-full aspect-[1.91/1] bg-slate-100 overflow-hidden">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={preview.thumbnailUrl}
-                                                alt="OG 이미지"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="w-full aspect-[1.91/1] bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                                            <div className="text-center">
-                                                <ImageIcon className="w-8 h-8 text-slate-300 mx-auto mb-1" />
-                                                <p className="text-[10px] text-slate-400">썸네일 미설정</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* 텍스트 */}
-                                    <div className="p-3 bg-slate-50 border-t border-slate-200">
-                                        <p className="text-[10px] text-slate-400 uppercase font-medium mb-1">www.zinsight.co.kr</p>
-                                        <p className="text-[13px] font-semibold text-slate-900 line-clamp-2 leading-snug">
-                                            {preview.title || <span className="text-slate-300 italic font-normal">제목 미입력</span>}
-                                        </p>
-                                        {preview.summary && (
-                                            <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-snug">
-                                                {preview.summary}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-slate-400 text-center">카카오톡·트위터·슬랙 공유 시 이렇게 보입니다</p>
-                            </div>
-
-                            {/* ③ 매거진 카드 미리보기 */}
-                            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">매거진 카드 미리보기</p>
-                                <div className="border border-slate-200 rounded-xl overflow-hidden">
-                                    {/* 썸네일 */}
-                                    {preview.thumbnailUrl ? (
-                                        <div className="w-full aspect-[16/9] bg-slate-100 overflow-hidden">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={preview.thumbnailUrl}
-                                                alt="카드 이미지"
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="w-full aspect-[16/9] bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
-                                            <ImageIcon className="w-6 h-6 text-slate-300" />
-                                        </div>
-                                    )}
-                                    {/* 카드 텍스트 */}
-                                    <div className="p-3 space-y-2">
-                                        <div className="flex items-center gap-1.5">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                                {preview.categoryLabel || 'Newsletter'}
-                                            </span>
-                                        </div>
-                                        <p className="text-[13px] font-semibold text-slate-900 line-clamp-2 leading-snug">
-                                            {preview.title || <span className="text-slate-300 italic font-normal">제목 미입력</span>}
-                                        </p>
-                                        <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                                            <span>By {preview.authorName}</span>
-                                            <span>·</span>
-                                            <span>{new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-slate-400 text-center">매거진 목록 페이지에서 이렇게 보입니다</p>
-                            </div>
-                        </div>
-                    </aside>
-
+                        <MagazineSidePreview preview={preview} />
                     </div>
                 ) : (
                     /* High-fidelity Live Preview Mode — lg: 카드 내부 스크롤 영역 */
-                    <div ref={scrollAreaRef} className="lg:flex-1 lg:min-h-0 lg:h-full lg:overflow-y-auto lg:pb-4">
-                    <div className="bg-zi-surface text-zi-on-surface p-6 md:p-10 rounded-xl border border-slate-200 shadow-inner max-w-3xl mx-auto space-y-12 min-h-[500px]">
-                        {/* Meta Tags & Category */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-3">
-                                <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1.5 rounded-full text-zi-blue font-bold">
-                                    {categoryLabel}
-                                </span>
-                            </div>
-
-                            <h1 className="font-h1 text-[32px] md:text-[38px] leading-[1.2] text-zi-primary tracking-tight font-serif font-bold">
-                                {formData.title || '제목이 여기에 표시됩니다'}
-                            </h1>
-
-                            <div className="flex items-center justify-between border-y border-zi-surface-container py-4 mt-8">
-                                <div className="flex items-center gap-4 text-zi-outline text-[13px]">
-                                    <span className="text-zi-on-surface font-semibold">
-                                        By {formData.authorName}
-                                    </span>
-                                    <span>•</span>
-                                    <span>
-                                        {new Date().toLocaleDateString('ko-KR', { 
-                                            year: 'numeric', 
-                                            month: 'long', 
-                                            day: 'numeric' 
-                                        })}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Thumbnail */}
-                        {formData.thumbnailUrl ? (
-                            <div className="w-full aspect-[16/9] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative shadow-sm">
-                                <img
-                                    src={formData.thumbnailUrl}
-                                    alt={formData.title}
-                                    className="object-cover w-full h-full"
-                                />
-                            </div>
-                        ) : (
-                            <div className="w-full aspect-[16/9] bg-slate-100 rounded-zi-card flex flex-col items-center justify-center border-2 border-dashed border-slate-200 text-slate-400 text-sm">
-                                <span>썸네일 이미지가 설정되지 않았습니다</span>
-                                <span className="text-xs text-slate-300 mt-1">이미지를 올리면 미리보기에 자동으로 렌더링됩니다</span>
-                            </div>
-                        )}
-
-                        {/* Body Content */}
-                        <article className="max-w-none space-y-12">
-                            {/* Lead */}
-                            {formData.lead ? (
-                                <div className="text-[17px] leading-[1.7] text-zi-on-surface border-l-4 border-zi-blue pl-6 py-2 bg-gradient-to-r from-zi-blue/5 to-transparent rounded-r-lg">
-                                    <HighlightedText text={formData.lead} />
-                                </div>
-                            ) : (
-                                <div className="text-slate-400 italic text-sm">리드문구가 작성되지 않았습니다.</div>
-                            )}
-
-                            {/* Bodies */}
-                            {formData.bodies && formData.bodies.map((body: any, idx: number) => {
-                                if (!body.title && !body.content) return null;
-                                return (
-                                    <section key={idx} className="flex flex-col gap-4">
-                                        {body.title && (
-                                            <h2 className="font-h2 text-[22px] md:text-[24px] text-zi-primary border-b border-zi-surface-container-highest pb-3 flex items-center gap-2 font-semibold">
-                                                <span className="text-zi-blue text-[20px] opacity-50 font-serif italic">{(idx + 1).toString().padStart(2, '0')}.</span>
-                                                {body.title}
-                                            </h2>
-                                        )}
-                                        {body.content ? (
-                                            <div className="text-[15px] leading-relaxed text-zi-on-surface-variant">
-                                                <HighlightedText text={body.content} />
-                                            </div>
-                                        ) : (
-                                            <div className="text-slate-300 italic text-xs">내용이 비어 있습니다.</div>
-                                        )}
-                                    </section>
-                                );
-                            })}
-
-                            {/* Closing */}
-                            {formData.closing ? (
-                                <div className="mt-8 p-6 bg-zi-surface-container-low rounded-zi-card border border-zi-surface-container-highest text-[15px]">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-2 h-2 rounded-full bg-zi-blue" />
-                                        <span className="font-ui-label text-xs font-bold text-zi-secondary uppercase tracking-widest">
-                                            Closing Thoughts
-                                        </span>
-                                    </div>
-                                    <div className="text-zi-on-surface-variant">
-                                        <HighlightedText text={formData.closing} />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-slate-400 italic text-sm">클로징 문구가 작성되지 않았습니다.</div>
-                            )}
-                        </article>
-                    </div>
-                    </div>
+                    <MagazineFullPreview
+                        formData={formData}
+                        categoryLabel={categoryLabel}
+                        scrollAreaRef={scrollAreaRef}
+                    />
                 )}
 
                 {/* Form Buttons — 모바일: sticky 하단 고정 / lg: 카드 하단 고정(flex-shrink-0) */}
@@ -2098,9 +1650,14 @@ export function MagazineForm({
                             type="button"
                             variant="outline"
                             className="h-11 px-4 sm:px-8 bg-white"
-                            onClick={() => {
+                            onClick={async () => {
                                 if (isDirty) {
-                                    const confirmLeave = window.confirm('작성 중인 내용이 저장되지 않았습니다.\n정말 취소하고 나가시겠습니까?');
+                                    const confirmLeave = await confirm({
+                                        title: '작성 취소 확인',
+                                        description: '작성 중인 내용이 저장되지 않았습니다. 정말 취소하고 나가시겠습니까?',
+                                        confirmText: '나가기',
+                                        variant: 'destructive',
+                                    });
                                     if (!confirmLeave) return;
                                 }
                                 setIsDirty(false);
@@ -2169,251 +1726,5 @@ export function MagazineForm({
                 onInsert={handleVideoInsertConfirm}
             />
         </div>
-    );
-}
-
-function renderHighlightedParts(text: string) {
-    const parts = text.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
-    return parts.map((part, i) => {
-        if (part.startsWith('**{') && part.endsWith('}**')) {
-            const content = part.slice(3, -3);
-            return (
-                <span key={i} className="font-bold text-zi-blue underline decoration-zi-blue/30 underline-offset-4">
-                    {content}
-                </span>
-            );
-        }
-        if (part.startsWith('**') && part.endsWith('**')) {
-            const content = part.slice(2, -2);
-            return (
-                <span key={i} className="font-bold text-zi-blue">
-                    {content}
-                </span>
-            );
-        }
-        if (part.startsWith('[') && part.endsWith(')')) {
-            const match = part.match(/^\[(.*?)\]\((.*?)\)$/);
-            if (match) {
-                const linkText = match[1];
-                const url = match[2];
-                return (
-                    <a 
-                        key={i} 
-                        href={url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="font-bold text-zi-blue underline underline-offset-4 decoration-zi-blue/30 hover:text-zi-blue/80 transition-colors"
-                    >
-                        {linkText}
-                    </a>
-                );
-            }
-        }
-        return part;
-    });
-}
-
-type HighlightBlock = 
-    | { type: 'image'; url: string; alt?: string; caption?: string }
-    | { type: 'video'; url: string; youtubeId?: string | null; caption?: string }
-    | { type: 'divider' }
-    | { type: 'spacer'; size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }
-    | { type: 'bullet'; text: string }
-    | { type: 'paragraph'; text: string };
-
-// Inline custom parser for **text** -> zi-blue, **{text}** -> zi-blue + underline, and bullet points
-function HighlightedText({ text }: { text: string }) {
-    if (!text) return null;
-    
-    const lines = text.split('\n');
-    const blocks: HighlightBlock[] = [];
-    let emptyLineCount = 0;
-
-    const flushSpacers = () => {
-        if (emptyLineCount === 1) {
-            blocks.push({ type: 'spacer', size: 'sm' });
-        } else if (emptyLineCount === 2) {
-            blocks.push({ type: 'spacer', size: 'md' });
-        } else if (emptyLineCount >= 3) {
-            blocks.push({ type: 'spacer', size: 'lg' });
-        }
-        emptyLineCount = 0;
-    };
-
-    for (const rawLine of lines) {
-        const trimmed = rawLine.trim();
-
-        if (!trimmed) {
-            emptyLineCount++;
-            continue;
-        }
-
-        flushSpacers();
-
-        // 1. 구분선 매칭 (---, ***, ___)
-        if (/^(\-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
-            blocks.push({ type: 'divider' });
-            continue;
-        }
-
-        // 2. 명시적 여백 태그 매칭 ([여백], [여백:좁게], [여백:sm], [space:xs] 등)
-        if (/^\[(여백|space|spacer)(:?(xs|sm|md|lg|xl|좁게|미세|보통|중간|넓게)?)\]$/i.test(trimmed)) {
-            const match = trimmed.match(/^\[(여백|space|spacer)(:?(xs|sm|md|lg|xl|좁게|미세|보통|중간|넓게)?)\]$/i);
-            const sizeRaw = match?.[2]?.replace(':', '').toLowerCase() || 'xs';
-            let size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' = 'xs';
-            if (sizeRaw === 'xs' || sizeRaw === '좁게' || sizeRaw === '미세') size = 'xs';
-            else if (sizeRaw === 'sm') size = 'sm';
-            else if (sizeRaw === 'md' || sizeRaw === '보통' || sizeRaw === '중간') size = 'md';
-            else if (sizeRaw === 'lg' || sizeRaw === '넓게') size = 'lg';
-            else if (sizeRaw === 'xl') size = 'xl';
-            blocks.push({ type: 'spacer', size });
-            continue;
-        }
-
-        // 3. Markdown 미디어 (![alt](url "caption") - 이미지 및 동영상 통합)
-        const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+(?:"(.*?)"|'(.*?)'|\((.*?)\)))?\)$/);
-        if (imgMatch) {
-            const alt = imgMatch[1].trim();
-            const mediaUrl = imgMatch[2].trim();
-            const caption = imgMatch[3] || imgMatch[4] || imgMatch[5];
-            const ytId = extractYouTubeId(mediaUrl);
-            if (alt.toLowerCase() === 'video' || alt.toLowerCase() === 'youtube' || ytId || isDirectVideoUrl(mediaUrl)) {
-                blocks.push({ type: 'video', url: mediaUrl, youtubeId: ytId, caption });
-            } else {
-                blocks.push({ type: 'image', alt, url: mediaUrl, caption });
-            }
-            continue;
-        }
-
-        // 4. Raw 동영상 URL 또는 유튜브 링크 단독 라인
-        if (/^https?:\/\/\S+$/i.test(trimmed)) {
-            const ytId = extractYouTubeId(trimmed);
-            if (ytId || isDirectVideoUrl(trimmed)) {
-                blocks.push({ type: 'video', url: trimmed, youtubeId: ytId });
-                continue;
-            }
-        }
-
-        // 4-2. Raw 이미지 URL
-        const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
-        if (rawUrlMatch) {
-            blocks.push({ type: 'image', url: rawUrlMatch[0], alt: 'Image' });
-            continue;
-        }
-
-        // 5. 글머리 기호 (•, ▪ 또는 단독 -, * 뒤에 공백)
-        const bulletMatch = trimmed.match(/^(?:([•▪])\s*|([\-\*])(?!\2)\s+)(.*)$/);
-        if (bulletMatch) {
-            blocks.push({ type: 'bullet', text: bulletMatch[3].trim() });
-            continue;
-        }
-
-        // 6. 일반 단락
-        blocks.push({ type: 'paragraph', text: rawLine });
-    }
-
-    return (
-        <>
-            {blocks.map((block, idx) => {
-                if (block.type === 'video') {
-                    return (
-                        <figure key={idx} className="block my-8 text-center m-0">
-                            {block.youtubeId ? (
-                                <div className="aspect-video w-full max-w-2xl mx-auto rounded-zi-card overflow-hidden bg-black shadow-sm border border-zi-surface-container">
-                                    <iframe
-                                        src={`https://www.youtube-nocookie.com/embed/${block.youtubeId}`}
-                                        title={block.caption || 'YouTube video player'}
-                                        className="w-full h-full border-0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                        allowFullScreen
-                                    />
-                                </div>
-                            ) : (
-                                <video
-                                    src={block.url}
-                                    controls
-                                    playsInline
-                                    preload="metadata"
-                                    className="mx-auto w-full max-w-2xl max-h-[420px] rounded-zi-card bg-black shadow-sm border border-zi-surface-container"
-                                />
-                            )}
-                            {block.caption && (
-                                <figcaption className="block text-sm text-slate-600 mt-3 font-medium">{block.caption}</figcaption>
-                            )}
-                        </figure>
-                    );
-                }
-
-                if (block.type === 'image') {
-                    return (
-                        <figure key={idx} className="block my-8 text-center m-0">
-                            <img 
-                                src={block.url} 
-                                alt={block.alt || ''} 
-                                className="mx-auto rounded-zi-card max-h-[300px] object-contain shadow-sm border border-zi-surface-container" 
-                            />
-                            {block.caption && (
-                                <figcaption className="block text-sm text-slate-600 mt-3 font-medium">{block.caption}</figcaption>
-                            )}
-                        </figure>
-                    );
-                }
-
-                if (block.type === 'divider') {
-                    return (
-                        <span key={idx} className="block py-4">
-                            <hr className="border-slate-200" />
-                        </span>
-                    );
-                }
-
-                if (block.type === 'spacer') {
-                    const hClass = 
-                        block.size === 'xs' ? 'h-[5px]' :
-                        block.size === 'sm' ? 'h-2.5' :
-                        block.size === 'md' ? 'h-[18px]' :
-                        block.size === 'lg' ? 'h-7' : 'h-10';
-                    return <span key={idx} className={`block ${hClass}`} aria-hidden="true" />;
-                }
-
-                if (block.type === 'bullet') {
-                    return (
-                        <span key={idx} className="flex items-start gap-2.5 mb-2.5 pl-1.5 last:mb-0">
-                            <span className="font-bold shrink-0 select-none text-zi-blue leading-relaxed">•</span>
-                            <span className="flex-1 leading-relaxed">
-                                {renderHighlightedParts(block.text)}
-                            </span>
-                        </span>
-                    );
-                }
-
-                return (
-                    <span key={idx} className="block mb-2.5 last:mb-0 leading-[1.8]">
-                        {renderHighlightedParts(block.text)}
-                    </span>
-                );
-            })}
-        </>
-    );
-}
-
-// Simple Badge component
-function Badge({ 
-    children, 
-    variant = 'default', 
-    className = '' 
-}: { 
-    children: React.ReactNode, 
-    variant?: 'default' | 'outline', 
-    className?: string 
-}) {
-    const variants = {
-        default: 'bg-slate-900 text-white',
-        outline: 'border border-slate-200 text-slate-950'
-    };
-    return (
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${variants[variant]} ${className}`}>
-            {children}
-        </span>
     );
 }

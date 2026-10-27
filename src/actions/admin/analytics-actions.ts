@@ -109,7 +109,6 @@ export async function getPostsWithAnalytics() {
             title: true,
             slug: true,
             status: true,
-            isFeatured: true,
             thumbnailUrl: true,
             authorId: true,
             authorName: true,
