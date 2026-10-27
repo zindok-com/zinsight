@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info, Plus, HelpCircle, BarChart3 } from 'lucide-react';
+import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info, Plus, HelpCircle, BarChart3, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { deleteMagazinePost, updateMagazinePost, updateMultipleMagazinePostsStatus } from '@/actions/admin/magazine-actions';
+import { getMagazinePostDetailById } from '@/actions/admin/analytics-actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -35,16 +36,39 @@ export function MagazineListTable({
     categories?: any[] 
 }) {
     const [selectedPost, setSelectedPost] = useState<any | null>(null);
+    const [loadingDetail, setLoadingDetail] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [editForm, setEditForm] = useState<any>({});
 
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT' | 'HIDDEN'>('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 15;
     const router = useRouter();
+
+    const filteredPosts = posts.filter((post) => {
+        if (statusFilter !== 'ALL' && post.status !== statusFilter) return false;
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase();
+            return (
+                post.title?.toLowerCase().includes(q) ||
+                post.slug?.toLowerCase().includes(q) ||
+                post.authorName?.toLowerCase().includes(q) ||
+                post.region?.name?.toLowerCase().includes(q)
+            );
+        }
+        return true;
+    });
+
+    const totalPages = Math.max(1, Math.ceil(filteredPosts.length / PAGE_SIZE));
+    const safePage = Math.min(currentPage, totalPages);
+    const paginatedPosts = filteredPosts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
     const handleSelectAll = (checked: boolean) => {
         if (checked) {
-            setSelectedIds(posts.map(p => p.id));
+            setSelectedIds(paginatedPosts.map(p => p.id));
         } else {
             setSelectedIds([]);
         }
@@ -85,36 +109,51 @@ export function MagazineListTable({
         }
     };
 
-    const handleRowClick = (post: any) => {
+    const handleRowClick = async (post: any) => {
         setSelectedPost(post);
+        setLoadingDetail(true);
 
+        let fullPost = post;
+        if (post.content === undefined) {
+            try {
+                const detail = await getMagazinePostDetailById(post.id);
+                if (detail) {
+                    fullPost = { ...post, ...detail };
+                    setSelectedPost(fullPost);
+                }
+            } catch {
+                // fallback
+            }
+        }
+        setLoadingDetail(false);
+
+        const rawContent = fullPost.content || '';
         let parsedData = { lead: '', bodies: [{ title: '', content: '' }], closing: '' };
         try {
-            const parsed = JSON.parse(post.content);
+            const parsed = JSON.parse(rawContent);
             if (parsed.lead || parsed.bodies || parsed.closing) {
                 parsedData.lead = parsed.lead || '';
                 parsedData.bodies = parsed.bodies?.length ? parsed.bodies : [{ title: '', content: '' }];
                 parsedData.closing = parsed.closing || '';
             } else {
-                parsedData.bodies = [{ title: '기존 내용', content: post.content }];
+                parsedData.bodies = [{ title: '기존 내용', content: rawContent }];
             }
         } catch (e) {
-            // JSON이 아니라면 기존 텍스트(마크다운 등)를 첫 번째 본문에 할당
-            parsedData.bodies = [{ title: '기존 내용', content: post.content }];
+            parsedData.bodies = [{ title: '기존 내용', content: rawContent }];
         }
 
         setEditForm({
-            title: post.title,
-            slug: post.slug,
-            summary: post.summary || '',
-            categoryId: post.categoryId,
+            title: fullPost.title,
+            slug: fullPost.slug,
+            summary: fullPost.summary || '',
+            categoryId: fullPost.categoryId,
             lead: parsedData.lead,
             bodies: parsedData.bodies,
             closing: parsedData.closing,
-            thumbnailUrl: post.thumbnailUrl || '',
-            status: post.status,
-            authorId: post.authorId || null,
-            authorName: post.authorName || '진사이트 편집부'
+            thumbnailUrl: fullPost.thumbnailUrl || '',
+            status: fullPost.status,
+            authorId: fullPost.authorId || null,
+            authorName: fullPost.authorName || '진사이트 편집부'
         });
     };
 
@@ -227,6 +266,44 @@ export function MagazineListTable({
                 </div>
             )}
 
+            {/* 검색 및 상태 필터 바 */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    <Input
+                        placeholder="제목, 슬러그, 발행자, 지역 검색..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        className="pl-9 h-9 text-sm"
+                    />
+                </div>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                    {([
+                        { key: 'ALL', label: '전체' },
+                        { key: 'PUBLISHED', label: '발행됨' },
+                        { key: 'DRAFT', label: '초안' },
+                        { key: 'HIDDEN', label: '숨김' },
+                    ] as const).map((tab) => (
+                        <Button
+                            key={tab.key}
+                            type="button"
+                            size="sm"
+                            variant={statusFilter === tab.key ? 'default' : 'outline'}
+                            className="h-8 text-xs"
+                            onClick={() => {
+                                setStatusFilter(tab.key);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            {tab.label}
+                        </Button>
+                    ))}
+                </div>
+            </div>
+
             <div className="overflow-x-auto border rounded-md">
                 <TooltipProvider delayDuration={150}>
                     <Table>
@@ -234,7 +311,7 @@ export function MagazineListTable({
                             <TableRow>
                                 <TableHead className="w-[50px] pl-4">
                                     <Checkbox
-                                        checked={selectedIds.length === posts.length && posts.length > 0}
+                                        checked={paginatedPosts.length > 0 && paginatedPosts.every(p => selectedIds.includes(p.id))}
                                         onCheckedChange={handleSelectAll}
                                     />
                                 </TableHead>
@@ -249,7 +326,7 @@ export function MagazineListTable({
                             </TableRow>
                         </TableHeader>
                     <TableBody>
-                        {posts.map((post) => (
+                        {paginatedPosts.map((post) => (
                             <TableRow
                                 key={post.id}
                                 className={`cursor-pointer hover:bg-slate-50 transition-colors ${selectedIds.includes(post.id) ? 'bg-indigo-50/40 hover:bg-indigo-50/60' : ''}`}
@@ -367,6 +444,44 @@ export function MagazineListTable({
                 </Table>
                 </TooltipProvider>
             </div>
+
+            {/* 페이지네이션 컨트롤 */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-2 text-xs text-slate-600">
+                    <div>
+                        총 <span className="font-semibold text-slate-900">{filteredPosts.length}</span>건 중{' '}
+                        <span className="font-semibold text-slate-900">
+                            {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredPosts.length)}
+                        </span>
+                        건 표시
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2.5"
+                            disabled={safePage <= 1}
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <span className="px-2.5 font-semibold text-slate-800">
+                            {safePage} / {totalPages}
+                        </span>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2.5"
+                            disabled={safePage >= totalPages}
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             <Sheet open={!!selectedPost} onOpenChange={(open) => {
                 if (!open) {
@@ -667,7 +782,11 @@ export function MagazineListTable({
                                             </div>
                                         ) : (
                                             <div className="p-6 bg-white border rounded-md prose prose-sm max-w-none text-slate-700">
-                                                {(() => {
+                                                {loadingDetail ? (
+                                                    <div className="flex items-center justify-center py-8 text-slate-400 text-xs gap-2">
+                                                        <Loader2 className="w-4 h-4 animate-spin" /> 본문 데이터를 불러오는 중...
+                                                    </div>
+                                                ) : (() => {
                                                     try {
                                                         const parsed = JSON.parse(selectedPost.content);
                                                         if (!parsed.lead && !parsed.bodies?.length && !parsed.closing) {

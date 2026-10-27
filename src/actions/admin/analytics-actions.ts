@@ -64,15 +64,11 @@ function buildGscDateRange(periodDays: number | 'all'): DateRange {
     return { startDate: start.toISOString().split('T')[0], endDate };
 }
 
-// ── 전체 대시보드 통계 ────────────────────────────────────────────
+// ── 전체 대시보드 요약 통계 (핵심 지표 1종만 조회, 상세는 관제 센터에서 조회) ──
 export async function getDashboardAnalytics(periodDays: number = 7) {
     await requireAdmin();
     const dateRange = buildDateRange(periodDays);
-    const [ga4Data, platformBreakdown, realtimeOverview] = await Promise.all([
-        getGlobalDashboardStats(dateRange).catch(() => null),
-        getPlatformTrafficBreakdown(null, dateRange).catch(() => []),
-        getRealtimeOverview().catch(() => null),
-    ]);
+    const ga4Data = await getGlobalDashboardStats(dateRange).catch(() => null);
 
     if (ga4Data && ga4Data.dailyData.length > 0) {
         const dauData = ga4Data.dailyData.map((d) => ({ date: d.date, dau: d.dau }));
@@ -87,8 +83,6 @@ export async function getDashboardAnalytics(periodDays: number = 7) {
         return {
             dauData,
             performanceData,
-            platformBreakdown: platformBreakdown ?? [],
-            realtimeOverview,
             summary: {
                 totalDau: ga4Data.summary.totalDau,
                 totalImpressions: totalSessions,
@@ -101,26 +95,53 @@ export async function getDashboardAnalytics(periodDays: number = 7) {
     return {
         dauData: [],
         performanceData: [],
-        platformBreakdown: platformBreakdown ?? [],
-        realtimeOverview,
         summary: { totalDau: 0, totalImpressions: 0, totalViews: 0, avgCtr: 0 },
     };
 }
 
-// ── 포스트 목록 (GA4/GSC 데이터 없이 DB 기반, 목록 UI용) ─────────
-// NOTE: ViewTracker 삭제로 viewCount는 더 이상 갱신되지 않는 레거시 값임.
-//       기사 목록 UI에서는 표시하지 않는 것을 권장하며, 이 함수는 기본 메타만 반환.
+// ── 포스트 목록 (대용량 본문 content 제외, 목록 UI 필수 필드만 select) ──
 export async function getPostsWithAnalytics() {
     await requireAdmin();
     const posts = await prisma.magazinePost.findMany({
         where: { deletedAt: null },
-        include: { author: true, category: true, region: true },
+        select: {
+            id: true,
+            title: true,
+            slug: true,
+            status: true,
+            isFeatured: true,
+            thumbnailUrl: true,
+            authorId: true,
+            authorName: true,
+            categoryId: true,
+            regionId: true,
+            publishedAt: true,
+            createdAt: true,
+            author: { select: { id: true, name: true } },
+            category: { select: { id: true, name: true, slug: true, isLocal: true } },
+            region: { select: { id: true, name: true, slug: true } },
+        },
         orderBy: { createdAt: 'desc' },
     });
     return posts.map((post) => ({
         ...post,
         authorName: post.author?.name || post.authorName,
     }));
+}
+
+// ── 포스트 단건 상세 (목록에서 행 클릭 시 미리보기 드로어용 온디맨드 조회) ──
+export async function getMagazinePostDetailById(postId: number) {
+    await requireAdmin();
+    return prisma.magazinePost.findUnique({
+        where: { id: postId },
+        select: {
+            id: true,
+            summary: true,
+            content: true,
+            viewCount: true,
+            updatedAt: true,
+        },
+    });
 }
 
 // ── 기사 성과 순위표 (F-12) ───────────────────────────────────────

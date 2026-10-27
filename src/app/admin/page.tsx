@@ -1,23 +1,32 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDashboardStats } from "@/actions/dashboard-actions";
 import { getDashboardAnalytics } from "@/actions/admin/analytics-actions";
-import { Building2, Tags, Newspaper, CalendarDays, Eye, FileText, Users, TrendingUp, MousePointerClick, ArrowRight } from "lucide-react";
+import {
+    Building2,
+    Tags,
+    Newspaper,
+    CalendarDays,
+    Eye,
+    FileText,
+    Users,
+    TrendingUp,
+    MousePointerClick,
+    ArrowRight,
+    Globe2,
+    SearchCheck,
+} from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { PlatformTrafficBreakdownCard } from "@/components/admin/analytics/PlatformTrafficBreakdownCard";
-import { RealtimeAndB2BVisitorsCard } from "@/components/admin/analytics/RealtimeAndB2BVisitorsCard";
-import { getVisitorOrgLogs } from "@/actions/visitor-org-actions";
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-    const [stats, analytics, visitorOrgData] = await Promise.all([
+    const [stats, analytics] = await Promise.all([
         getDashboardStats(),
         getDashboardAnalytics(7),
-        getVisitorOrgLogs(30),
     ]);
 
-    const { summary, platformBreakdown, realtimeOverview } = analytics;
+    const { summary } = analytics;
 
     return (
         <div className="space-y-10 pb-8">
@@ -29,7 +38,7 @@ export default async function Home() {
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold tracking-tight text-white mb-2">진사이트 관리자</h1>
                     <p className="text-indigo-100 max-w-xl text-sm leading-relaxed">
-                        환영합니다. 인사이트 레이더 데이터 수집 현황 및 매거진 성과 지표를 한눈에 파악하고 
+                        환영합니다. 인사이트 레이더 데이터 수집 현황 및 매거진 성과 지표를 한눈에 파악하고
                         비즈니스 인사이트를 도출해 보세요.
                     </p>
                 </div>
@@ -101,20 +110,32 @@ export default async function Home() {
                     </Card>
                 </div>
 
-                {/* 세부 유입처 랭킹 (네이버, 구글, 다음, 빙, AI 등) */}
-                <PlatformTrafficBreakdownCard
-                    rows={platformBreakdown ?? []}
-                    title="🌐 사이트 전체 유입처 랭킹 (최근 7일)"
-                    subtitle="네이버, 구글, 다음, 빙(Bing), ChatGPT, Perplexity 등 플랫폼별 실유입 비중 (GA4)"
-                />
-
-                {/* 실시간 접속자 및 B2B 기관/기업 네트워크 IP 역추적 */}
-                <RealtimeAndB2BVisitorsCard
-                    realtime={realtimeOverview}
-                    visitorLogs={visitorOrgData.logs}
-                    b2bCount={visitorOrgData.b2bCount}
-                    totalLogCount={visitorOrgData.totalCount}
-                />
+                {/* 관제 센터 상세 유입·방문자·색인 바로가기 카드 */}
+                <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50/70 via-white to-slate-50 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                            <Globe2 className="w-4 h-4 text-indigo-600" />
+                            상세 유입 채널(네이버·구글·AI) 및 실시간·B2B 방문자 분석
+                        </div>
+                        <p className="text-xs text-slate-600">
+                            플랫폼별 세부 유입 비중, GA4 실시간 접속 현황, 기업·공공기관 IP 역추적 로그는 관제 센터에서 통합 제공합니다.
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <Link href="/admin/seo-monitoring?tab=traffic">
+                            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5">
+                                <TrendingUp className="w-3.5 h-3.5" />
+                                유입·실시간 방문자 보기
+                            </Button>
+                        </Link>
+                        <Link href="/admin/seo-monitoring?tab=indexing">
+                            <Button size="sm" variant="outline" className="border-slate-200 text-slate-700 hover:bg-slate-100 gap-1.5">
+                                <SearchCheck className="w-3.5 h-3.5" />
+                                구글 색인 모니터링
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
             </div>
 
             {/* Insight Radar Stats */}
@@ -179,49 +200,49 @@ export default async function Home() {
                         <div className="flex p-4 rounded-xl border bg-slate-50/50 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">1</div>
                             <div>
-                                <h4 className="font-semibold text-sm text-slate-800">산업 등록</h4>
-                                <p className="text-xs text-muted-foreground mt-1">Industries 메뉴에서 모니터링할 산업 카테고리를 생성합니다.</p>
+                                <h4 className="font-semibold text-sm text-slate-800">지역(지자체) 및 조직 등록</h4>
+                                <p className="text-xs text-muted-foreground mt-1">지역(지자체) 관리 및 조직 관리 메뉴에서 모니터링할 지자체와 기업·기관 프로필을 등록합니다.</p>
                             </div>
                         </div>
                         <div className="flex p-4 rounded-xl border bg-slate-50/50 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">2</div>
                             <div>
                                 <h4 className="font-semibold text-sm text-slate-800">키워드 설정</h4>
-                                <p className="text-xs text-muted-foreground mt-1">Keywords 메뉴에서 산업별로 핵심 검색 키워드를 추가하세요.</p>
+                                <p className="text-xs text-muted-foreground mt-1">키워드 관리 메뉴에서 지역별로 핵심 검색 키워드를 추가하세요.</p>
                             </div>
                         </div>
                         <div className="flex p-4 rounded-xl border bg-slate-50/50 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">3</div>
                             <div>
-                                <h4 className="font-semibold text-sm text-slate-800">기사 수집 및 분석</h4>
-                                <p className="text-xs text-muted-foreground mt-1">Articles에서 수집된 기사를 확인하고 인사이트를 확보하세요.</p>
+                                <h4 className="font-semibold text-sm text-slate-800">기사 수집 및 조직 연결</h4>
+                                <p className="text-xs text-muted-foreground mt-1">기사 관리에서 수집된 기사를 확인하고 연관 조직과 연결해 인사이트를 확보하세요.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-slate-800">📝 Magazine 가이드</h3>
+                    <h3 className="text-lg font-bold text-slate-800">✍️ Magazine 발행 가이드</h3>
                     <div className="space-y-3">
-                        <div className="flex p-4 rounded-xl border bg-indigo-50/50 border-indigo-100 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
+                        <div className="flex p-4 rounded-xl border bg-indigo-50/30 border-indigo-100 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">1</div>
                             <div>
-                                <h4 className="font-semibold text-sm text-slate-800">새 포스트 작성</h4>
-                                <p className="text-xs text-muted-foreground mt-1">Magazine Posts 메뉴 우측 상단의 New Post를 클릭합니다.</p>
+                                <h4 className="font-semibold text-sm text-slate-800">아티클 작성 및 로컬 매핑</h4>
+                                <p className="text-xs text-muted-foreground mt-1">매거진 에디터에서 기사를 작성하고 연관된 지자체나 지역 기업을 연결하세요.</p>
                             </div>
                         </div>
-                        <div className="flex p-4 rounded-xl border bg-indigo-50/50 border-indigo-100 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
+                        <div className="flex p-4 rounded-xl border bg-indigo-50/30 border-indigo-100 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">2</div>
                             <div>
-                                <h4 className="font-semibold text-sm text-slate-800">내용 및 산업 매핑</h4>
-                                <p className="text-xs text-muted-foreground mt-1">고품질 기사를 작성하고 관련 산업군 태그를 매핑하여 등록하세요.</p>
+                                <h4 className="font-semibold text-sm text-slate-800">헤드라인 배치</h4>
+                                <p className="text-xs text-muted-foreground mt-1">발행된 주요 기사를 메인 페이지나 로컬 지면의 헤드라인으로 설정하여 주목도를 높이세요.</p>
                             </div>
                         </div>
-                        <div className="flex p-4 rounded-xl border bg-indigo-50/50 border-indigo-100 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
+                        <div className="flex p-4 rounded-xl border bg-indigo-50/30 border-indigo-100 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">3</div>
                             <div>
-                                <h4 className="font-semibold text-sm text-slate-800">성과 측정</h4>
-                                <p className="text-xs text-muted-foreground mt-1">포스트 발행 후 노출수, 조회수, CTR을 모니터링하여 독자 반응을 확인하세요.</p>
+                                <h4 className="font-semibold text-sm text-slate-800">실시간 유입 및 리드 확인</h4>
+                                <p className="text-xs text-muted-foreground mt-1">관제 센터와 기사별 애널리틱스에서 검색 유입과 전환율을 추적하고 리드 문의를 관리하세요.</p>
                             </div>
                         </div>
                     </div>

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Plus, Users, Eye, TrendingUp, FileText } from "lucide-react";
 import Link from "next/link";
 import { MagazineListTable } from "@/components/admin/magazine/MagazineListTable";
-import { PlatformTrafficBreakdownCard } from "@/components/admin/analytics/PlatformTrafficBreakdownCard";
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +17,7 @@ export default async function MagazinePage() {
         getRecentArticlesLeaderboard(30, 50)
     ]);
 
-    const { summary, platformBreakdown } = analytics;
+    const { summary } = analytics;
 
     return (
         <div className="space-y-6">
@@ -27,11 +26,18 @@ export default async function MagazinePage() {
                     <h1 className="text-3xl font-bold tracking-tight">매거진 포스트 관리</h1>
                     <p className="text-muted-foreground">고도화된 마케팅 기사 데이터를 관리하고 발행합니다.</p>
                 </div>
-                <Link href="/admin/magazine/new">
-                    <Button className="bg-indigo-600 hover:bg-indigo-700">
-                        <Plus className="w-4 h-4 mr-2" /> 새 포스트 등록
-                    </Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                    <Link href="/admin/seo-monitoring?tab=traffic">
+                        <Button variant="outline" size="sm" className="text-slate-700">
+                            <TrendingUp className="w-4 h-4 mr-1.5 text-indigo-600" /> 유입 채널 분석
+                        </Button>
+                    </Link>
+                    <Link href="/admin/magazine/new">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700">
+                            <Plus className="w-4 h-4 mr-2" /> 새 포스트 등록
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -77,13 +83,6 @@ export default async function MagazinePage() {
                 </Card>
             </div>
 
-            <PlatformTrafficBreakdownCard
-                rows={platformBreakdown ?? []}
-                title="🌐 매거진 유입처 랭킹 (최근 7일)"
-                subtitle="네이버, 구글, 다음, 빙(Bing), ChatGPT, Perplexity 등 플랫폼별 유입 비중 (GA4)"
-                compact
-            />
-
             <Card>
                 <CardHeader>
                     <CardTitle>포스트 목록</CardTitle>
@@ -97,10 +96,10 @@ export default async function MagazinePage() {
                             등록된 포스트가 없습니다. 첫 번째 매거진 포스트를 등록해 보세요.
                         </div>
                     ) : (
-                        <MagazineListTable 
-                            posts={posts as any} 
-                            authors={authors} 
-                            categories={categories} 
+                        <MagazineListTable
+                            posts={posts as any}
+                            authors={authors}
+                            categories={categories}
                         />
                     )}
                 </CardContent>
