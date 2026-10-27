@@ -498,38 +498,6 @@ export async function updatePortalSidePriority(id: number, priority: number) {
     }
 }
 
-export async function migrateMagazineContent() {
-    await requireAdmin();
-    try {
-        const posts = await prisma.magazinePost.findMany();
-        let migratedCount = 0;
-
-        for (const post of posts) {
-            // 이미 JSON 형태라면 스킵
-            if (post.content.trim().startsWith('{')) continue;
-
-            const { summary, cleanedContent } = processMagazineContent(post.content, post.summary || undefined);
-
-            await prisma.magazinePost.update({
-                where: { id: post.id },
-                data: {
-                    content: cleanedContent,
-                    summary: summary
-                }
-            });
-            migratedCount++;
-        }
-
-        revalidatePath('/magazine');
-        revalidatePath('/');
-        revalidatePath('/admin');
-        return { success: true, count: migratedCount };
-    } catch (error: any) {
-        console.error('Migration failed:', error);
-        return { success: false, error: error.message };
-    }
-}
-
 export async function updateMultipleMagazinePostsStatus(ids: number[], status: string) {
     await requireAdmin();
     try {

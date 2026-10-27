@@ -370,6 +370,7 @@ export async function approveOrganizationSubmission(submissionId: number) {
     }),
   ]);
 
+  revalidatePath('/admin', 'layout');
   revalidatePath('/admin/companies');
   revalidatePath('/admin/companies/submissions');
   revalidatePath('/insight-radar');
@@ -383,6 +384,7 @@ export async function rejectOrganizationSubmission(submissionId: number) {
     where: { id: submissionId },
     data: { status: 'REJECTED', reviewed_at: new Date() },
   });
+  revalidatePath('/admin', 'layout');
   revalidatePath('/admin/companies/submissions');
   return { success: true };
 }
