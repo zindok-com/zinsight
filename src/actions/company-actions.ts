@@ -3,7 +3,7 @@
 import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { slugifyOrganization } from '@/lib/utils';
+import { slugifyOrganization, safeHttpUrl } from '@/lib/utils';
 
 export async function updateCompany(
   id: number,
@@ -305,8 +305,8 @@ export async function submitOrganizationForm(
         founded_year: str(formData.founded_year, 10),
         hq_location: str(formData.hq_location, 255),
         company_url: httpUrl(formData.company_url),
-        logo_url: str(formData.logo_url, 512),
-        logo_source_url: str(formData.logo_source_url, 512),
+        logo_url: safeHttpUrl(str(formData.logo_url, 512)) ?? null,
+        logo_source_url: safeHttpUrl(str(formData.logo_source_url, 512)) ?? null,
         business_summary: str(formData.business_summary, 5000),
         backlinks,
         core_keywords: coreKeywords,

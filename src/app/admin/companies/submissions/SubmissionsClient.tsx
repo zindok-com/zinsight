@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CheckCircle2, XCircle, Eye, Globe, MapPin, Calendar, User, Building2 } from 'lucide-react';
 import { FormattedBusinessSummary } from '@/components/public/insight-radar/FormattedBusinessSummary';
+import { safeHttpUrl } from '@/lib/utils';
 
 type Region = { id: number; name: string };
 type Invite = { id: number; region: Region; label: string | null };
@@ -208,7 +209,7 @@ export function SubmissionsClient({ submissions }: Props) {
                                             </div>
                                             <div>
                                                 <p className="text-xs font-semibold text-slate-800">웹 표시용 로고</p>
-                                                <a href={selected.logo_url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-indigo-600 hover:underline">
+                                                <a href={safeHttpUrl(selected.logo_url)} target="_blank" rel="noopener noreferrer" className="text-[11px] text-indigo-600 hover:underline">
                                                     이미지 원본 보기
                                                 </a>
                                             </div>
@@ -218,7 +219,7 @@ export function SubmissionsClient({ submissions }: Props) {
                                         <div className="flex items-center gap-2 border-l border-slate-200 pl-4">
                                             <div>
                                                 <p className="text-xs font-semibold text-amber-800">인쇄/제작용 원본 (.ai/.eps/.pdf)</p>
-                                                <a href={selected.logo_source_url} target="_blank" rel="noopener noreferrer" className="text-[11px] font-medium text-indigo-600 hover:underline">
+                                                <a href={safeHttpUrl(selected.logo_source_url)} target="_blank" rel="noopener noreferrer" className="text-[11px] font-medium text-indigo-600 hover:underline">
                                                     원본 파일 다운로드
                                                 </a>
                                             </div>

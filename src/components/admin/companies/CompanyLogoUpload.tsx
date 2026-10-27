@@ -4,12 +4,16 @@ import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, FileCode2, X, Loader2, Download, CheckCircle2, Info } from 'lucide-react';
 import { getMediaUploadUrl } from '@/actions/upload';
 
+import { safeHttpUrl } from '@/lib/utils';
+
 interface CompanyLogoUploadProps {
     logoUrl: string;
     logoSourceUrl: string;
     onLogoUrlChange: (url: string) => void;
     onLogoSourceUrlChange: (url: string) => void;
     compact?: boolean;
+    /** 공개 기관 등록 폼에서 사용할 때 초대 토큰 (업로드 권한 확인용) */
+    inviteToken?: string;
 }
 
 const WEB_LOGO_EXTS = ['png', 'jpg', 'jpeg', 'svg', 'webp'];
@@ -21,6 +25,7 @@ export function CompanyLogoUpload({
     onLogoUrlChange,
     onLogoSourceUrlChange,
     compact = false,
+    inviteToken,
 }: CompanyLogoUploadProps) {
     const logoInputRef = useRef<HTMLInputElement>(null);
     const sourceInputRef = useRef<HTMLInputElement>(null);
@@ -67,7 +72,7 @@ export function CompanyLogoUpload({
                     ? 'image/webp'
                     : 'image/jpeg');
 
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'logos');
+            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'logos', inviteToken);
             const res = await fetch(uploadUrl, {
                 method: 'PUT',
                 headers: {
@@ -118,7 +123,7 @@ export function CompanyLogoUpload({
                     ? 'application/pdf'
                     : 'application/postscript');
 
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'attachments');
+            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'attachments', inviteToken);
             const res = await fetch(uploadUrl, {
                 method: 'PUT',
                 headers: {
@@ -273,7 +278,7 @@ export function CompanyLogoUpload({
                                         {extractFileName(logoSourceUrl)}
                                     </div>
                                     <a
-                                        href={logoSourceUrl}
+                                        href={safeHttpUrl(logoSourceUrl)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-[11px] font-medium text-indigo-600 hover:underline inline-flex items-center gap-1 mt-0.5"

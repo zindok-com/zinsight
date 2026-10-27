@@ -189,6 +189,7 @@ export function OrgRegisterForm({ token }: Props) {
                         logoSourceUrl={form.logo_source_url}
                         onLogoUrlChange={(url) => update('logo_url', url)}
                         onLogoSourceUrlChange={(url) => update('logo_source_url', url)}
+                        inviteToken={token}
                     />
                 </CardContent>
             </Card>

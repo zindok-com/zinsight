@@ -25,3 +25,9 @@ export function sanitizeHref(url: string): string | null {
     if (trimmed.startsWith('#')) return trimmed;
     return null;
 }
+
+/** 외부 입력 URL을 링크·저장에 쓸 때 http(s)만 허용. 그 외(javascript: 등)는 undefined. */
+export function safeHttpUrl(url: string | null | undefined): string | undefined {
+    const trimmed = (url ?? '').trim();
+    return /^https?:\/\/\S+$/i.test(trimmed) ? trimmed : undefined;
+}
