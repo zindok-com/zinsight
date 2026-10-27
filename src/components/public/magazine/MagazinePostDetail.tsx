@@ -5,6 +5,7 @@ import { PreferredSourceButton } from '@/components/public/magazine/PreferredSou
 import { ArticleTracker } from '@/components/public/analytics/ArticleTracker';
 import { serializeJsonLd } from '@/lib/site';
 import { sanitizeHref } from '@/lib/utils';
+import { extractYouTubeId, isDirectVideoUrl } from '@/components/admin/magazine/VideoInsertModal';
 
 interface HighlightedTextProps {
     text: string;
@@ -55,6 +56,7 @@ function renderHighlightedParts(text: string) {
 
 type HighlightBlock = 
     | { type: 'image'; url: string; alt?: string; caption?: string }
+    | { type: 'video'; url: string; youtubeId?: string | null; caption?: string }
     | { type: 'divider' }
     | { type: 'spacer'; size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }
     | { type: 'bullet'; text: string }
@@ -109,15 +111,31 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 3. Markdown 이미지 (![alt](url "caption") or ![alt](url 'caption') or ![alt](url (caption)))
+        // 3. Markdown 미디어 (![alt](url "caption") - 이미지 및 동영상 통합)
         const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+(?:"(.*?)"|'(.*?)'|\((.*?)\)))?\)$/);
         if (imgMatch) {
+            const alt = imgMatch[1].trim();
+            const mediaUrl = imgMatch[2].trim();
             const caption = imgMatch[3] || imgMatch[4] || imgMatch[5];
-            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption });
+            const ytId = extractYouTubeId(mediaUrl);
+            if (alt.toLowerCase() === 'video' || alt.toLowerCase() === 'youtube' || ytId || isDirectVideoUrl(mediaUrl)) {
+                blocks.push({ type: 'video', url: mediaUrl, youtubeId: ytId, caption });
+            } else {
+                blocks.push({ type: 'image', alt, url: mediaUrl, caption });
+            }
             continue;
         }
 
-        // 4. Raw 이미지 URL
+        // 4. Raw 동영상 URL 또는 유튜브 링크 단독 라인
+        if (/^https?:\/\/\S+$/i.test(trimmed)) {
+            const ytId = extractYouTubeId(trimmed);
+            if (ytId || isDirectVideoUrl(trimmed)) {
+                blocks.push({ type: 'video', url: trimmed, youtubeId: ytId });
+                continue;
+            }
+        }
+
+        // 4-2. Raw 이미지 URL
         const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
         if (rawUrlMatch) {
             blocks.push({ type: 'image', url: rawUrlMatch[0], alt: 'Image' });
@@ -138,6 +156,35 @@ function HighlightedText({ text }: { text: string }) {
     return (
         <>
             {blocks.map((block, idx) => {
+                if (block.type === 'video') {
+                    return (
+                        <figure key={idx} className="block my-8 text-center m-0">
+                            {block.youtubeId ? (
+                                <div className="aspect-video w-full max-w-3xl mx-auto rounded-zi-card overflow-hidden bg-black shadow-sm border border-zi-divider/30">
+                                    <iframe
+                                        src={`https://www.youtube-nocookie.com/embed/${block.youtubeId}`}
+                                        title={block.caption || 'YouTube video player'}
+                                        className="w-full h-full border-0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            ) : (
+                                <video
+                                    src={block.url}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                    className="mx-auto w-full max-w-3xl max-h-[520px] rounded-zi-card bg-black shadow-sm border border-zi-divider/30"
+                                />
+                            )}
+                            {block.caption && (
+                                <figcaption className="block text-sm text-slate-600 mt-3 font-medium">{block.caption}</figcaption>
+                            )}
+                        </figure>
+                    );
+                }
+
                 if (block.type === 'image') {
                     return (
                         <figure key={idx} className="block my-8 text-center m-0">

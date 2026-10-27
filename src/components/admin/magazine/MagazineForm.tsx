@@ -9,11 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { createMagazinePost, updateMagazinePost } from '@/actions/admin/magazine-actions';
-import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon, ChevronDown, ChevronUp, FileText, List, MoveVertical, Save } from 'lucide-react';
+import { Loader2, Info, Plus, Trash2, Edit3, Eye, Image as ImageIcon, Link as LinkIcon, Video, ChevronDown, ChevronUp, FileText, List, MoveVertical, Save } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
+import { VideoInsertModal, extractYouTubeId, isDirectVideoUrl } from '@/components/admin/magazine/VideoInsertModal';
 import { ImageDetailsModal } from '@/components/admin/magazine/ImageDetailsModal';
 import OrganizationSelector from '@/components/admin/magazine/OrganizationSelector';
 import {
@@ -41,6 +42,7 @@ export function MagazineForm({
     const [expandedBodyIndex, setExpandedBodyIndex] = useState<number>(0);
     const [activeTextareaId, setActiveTextareaId] = useState<string | null>(null);
     const [activeLinkTextareaId, setActiveLinkTextareaId] = useState<string | null>(null);
+    const [activeVideoTextareaId, setActiveVideoTextareaId] = useState<string | null>(null);
 
     // 우측 미리보기 패널용 디바운스 상태
     const [preview, setPreview] = useState({ title: '', summary: '', thumbnailUrl: '', slug: '', authorName: '진사이트 편집부', categoryLabel: '' });
@@ -135,6 +137,16 @@ export function MagazineForm({
 
     const handleInsertLink = (textareaId: string) => {
         setActiveLinkTextareaId(textareaId);
+    };
+
+    const handleInsertVideo = (textareaId: string) => {
+        setActiveVideoTextareaId(textareaId);
+    };
+
+    const handleVideoInsertConfirm = (markdown: string) => {
+        if (!activeVideoTextareaId) return;
+        insertTextAtCursor(activeVideoTextareaId, markdown);
+        setActiveVideoTextareaId(null);
     };
 
     const handleLinkInsertConfirm = (text: string, url: string, linkType: 'normal' | 'sponsored') => {
@@ -1466,6 +1478,16 @@ export function MagazineForm({
                                             <ImageIcon className="w-3.5 h-3.5 text-indigo-600" />
                                             보관함 이미지 삽입
                                         </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleInsertVideo('lead')}
+                                            className="h-7 px-2.5 text-xs bg-white border-rose-200 text-rose-700 hover:bg-rose-50 font-semibold gap-1"
+                                        >
+                                            <Video className="w-3.5 h-3.5 text-rose-600" />
+                                            동영상 삽입
+                                        </Button>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-1.5 pb-1">
@@ -1643,6 +1665,16 @@ export function MagazineForm({
                                                                 <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
                                                                 보관함 이미지 삽입
                                                             </Button>
+                                                            <Button
+                                                                type="button"
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => handleInsertVideo(`body-${index}`)}
+                                                                className="h-7 px-2.5 text-xs bg-white border-rose-200 text-rose-700 hover:bg-rose-50 font-semibold gap-1"
+                                                            >
+                                                                <Video className="w-3.5 h-3.5 text-rose-500" />
+                                                                동영상 삽입
+                                                            </Button>
                                                         </div>
                                                     </div>
                                                     <Textarea
@@ -1746,6 +1778,16 @@ export function MagazineForm({
                                         >
                                             <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
                                             보관함 이미지 삽입
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => handleInsertVideo('closing')}
+                                            className="h-7 px-2.5 text-xs bg-white border-rose-200 text-rose-700 hover:bg-rose-50 font-semibold gap-1"
+                                        >
+                                            <Video className="w-3.5 h-3.5 text-rose-500" />
+                                            동영상 삽입
                                         </Button>
                                     </div>
                                 </div>
@@ -2119,6 +2161,12 @@ export function MagazineForm({
                 onClose={() => setActiveLinkTextareaId(null)}
                 onInsert={handleLinkInsertConfirm}
             />
+
+            <VideoInsertModal
+                isOpen={activeVideoTextareaId !== null}
+                onClose={() => setActiveVideoTextareaId(null)}
+                onInsert={handleVideoInsertConfirm}
+            />
         </div>
     );
 }
@@ -2166,6 +2214,7 @@ function renderHighlightedParts(text: string) {
 
 type HighlightBlock = 
     | { type: 'image'; url: string; alt?: string; caption?: string }
+    | { type: 'video'; url: string; youtubeId?: string | null; caption?: string }
     | { type: 'divider' }
     | { type: 'spacer'; size: 'xs' | 'sm' | 'md' | 'lg' | 'xl' }
     | { type: 'bullet'; text: string }
@@ -2220,15 +2269,31 @@ function HighlightedText({ text }: { text: string }) {
             continue;
         }
 
-        // 3. Markdown 이미지 (![alt](url "caption") or ![alt](url 'caption') or ![alt](url (caption)))
+        // 3. Markdown 미디어 (![alt](url "caption") - 이미지 및 동영상 통합)
         const imgMatch = trimmed.match(/^!\[(.*?)\]\((.*?)(?:\s+(?:"(.*?)"|'(.*?)'|\((.*?)\)))?\)$/);
         if (imgMatch) {
+            const alt = imgMatch[1].trim();
+            const mediaUrl = imgMatch[2].trim();
             const caption = imgMatch[3] || imgMatch[4] || imgMatch[5];
-            blocks.push({ type: 'image', alt: imgMatch[1], url: imgMatch[2].trim(), caption });
+            const ytId = extractYouTubeId(mediaUrl);
+            if (alt.toLowerCase() === 'video' || alt.toLowerCase() === 'youtube' || ytId || isDirectVideoUrl(mediaUrl)) {
+                blocks.push({ type: 'video', url: mediaUrl, youtubeId: ytId, caption });
+            } else {
+                blocks.push({ type: 'image', alt, url: mediaUrl, caption });
+            }
             continue;
         }
 
-        // 4. Raw 이미지 URL
+        // 4. Raw 동영상 URL 또는 유튜브 링크 단독 라인
+        if (/^https?:\/\/\S+$/i.test(trimmed)) {
+            const ytId = extractYouTubeId(trimmed);
+            if (ytId || isDirectVideoUrl(trimmed)) {
+                blocks.push({ type: 'video', url: trimmed, youtubeId: ytId });
+                continue;
+            }
+        }
+
+        // 4-2. Raw 이미지 URL
         const rawUrlMatch = trimmed.match(/^https?:\/\/\S+\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?\S+)?$/i);
         if (rawUrlMatch) {
             blocks.push({ type: 'image', url: rawUrlMatch[0], alt: 'Image' });
@@ -2249,6 +2314,35 @@ function HighlightedText({ text }: { text: string }) {
     return (
         <>
             {blocks.map((block, idx) => {
+                if (block.type === 'video') {
+                    return (
+                        <figure key={idx} className="block my-8 text-center m-0">
+                            {block.youtubeId ? (
+                                <div className="aspect-video w-full max-w-2xl mx-auto rounded-zi-card overflow-hidden bg-black shadow-sm border border-zi-surface-container">
+                                    <iframe
+                                        src={`https://www.youtube-nocookie.com/embed/${block.youtubeId}`}
+                                        title={block.caption || 'YouTube video player'}
+                                        className="w-full h-full border-0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            ) : (
+                                <video
+                                    src={block.url}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                    className="mx-auto w-full max-w-2xl max-h-[420px] rounded-zi-card bg-black shadow-sm border border-zi-surface-container"
+                                />
+                            )}
+                            {block.caption && (
+                                <figcaption className="block text-sm text-slate-600 mt-3 font-medium">{block.caption}</figcaption>
+                            )}
+                        </figure>
+                    );
+                }
+
                 if (block.type === 'image') {
                     return (
                         <figure key={idx} className="block my-8 text-center m-0">
