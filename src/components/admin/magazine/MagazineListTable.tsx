@@ -13,6 +13,7 @@ import { deleteMagazinePost, updateMagazinePost, updateMultipleMagazinePostsStat
 import { getMagazinePostDetailById } from '@/actions/admin/analytics-actions';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import {
     Sheet,
     SheetContent,
@@ -47,6 +48,7 @@ export function MagazineListTable({
     const [currentPage, setCurrentPage] = useState(1);
     const PAGE_SIZE = 15;
     const router = useRouter();
+    const confirm = useConfirm();
 
     const filteredPosts = posts.filter((post) => {
         if (statusFilter !== 'ALL' && post.status !== statusFilter) return false;
@@ -99,7 +101,7 @@ export function MagazineListTable({
 
     const handleDelete = async (e: React.MouseEvent, id: number) => {
         e.stopPropagation();
-        if (!confirm('정말 이 포스트를 삭제하시겠습니까?')) return;
+        if (!(await confirm({ title: '매거진 포스트 삭제', description: '정말 이 포스트를 삭제하시겠습니까?', confirmText: '삭제', variant: 'destructive' }))) return;
 
         const res = await deleteMagazinePost(id);
         if (res.success) {

@@ -9,6 +9,7 @@ import {
   FileJson 
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -43,15 +44,15 @@ export function ImportButton() {
       const result = await response.json();
 
       if (response.ok) {
-        alert(`가져오기 성공!\n추가된 기업: ${result.results.addedCompanies}\n업데이트된 기업: ${result.results.updatedCompanies}\n추가된 기사 연결: ${result.results.addedArticles}`);
+        toast.success('데이터 가져오기 완료', { description: `추가 기업: ${result.results.addedCompanies}건 · 업데이트: ${result.results.updatedCompanies}건 · 기사 연결: ${result.results.addedArticles}건` });
         setOpen(false);
         setJsonText('');
         router.refresh();
       } else {
-        alert(`오류 발생: ${result.error}`);
+        toast.error(`오류 발생: ${result.error}`);
       }
     } catch (error: any) {
-      alert(`요청 중 오류 발생: ${error.message}`);
+      toast.error(`요청 중 오류 발생: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
@@ -66,7 +67,7 @@ export function ImportButton() {
       const jsonData = JSON.parse(text);
       await handleImport(jsonData);
     } catch (error: any) {
-      alert(`파일 읽기 오류: ${error.message}`);
+      toast.error(`파일 읽기 오류: ${error.message}`);
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -76,7 +77,7 @@ export function ImportButton() {
 
   const handleTextImport = async () => {
     if (!jsonText.trim()) {
-      alert('JSON 코드를 입력해주세요.');
+      toast.error('JSON 코드를 입력해주세요.');
       return;
     }
 
@@ -84,7 +85,7 @@ export function ImportButton() {
       const jsonData = JSON.parse(jsonText);
       await handleImport(jsonData);
     } catch (error: any) {
-      alert(`JSON 파싱 오류: ${error.message}\n올바른 JSON 형식인지 확인해주세요.`);
+      toast.error(`JSON 파싱 오류: ${error.message}`);
     }
   };
 

@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getRegionsAdmin, createRegionAdmin, updateRegionAdmin, deleteRegionAdmin } from '@/actions/admin/region-actions';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Trash2, Plus, RefreshCw, Edit2, Check, X, ShieldAlert } from 'lucide-react';
 
 export default function RegionsPage() {
+    const confirm = useConfirm();
     const [regions, setRegions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     
@@ -90,7 +92,7 @@ export default function RegionsPage() {
     };
 
     const handleDelete = async (id: number, name: string) => {
-        if (!confirm(`정말 "${name}" 지면을 완전히 삭제하시겠습니까? 연결된 기사들은 지자체 정보가 '선택 없음'으로 초기화됩니다.`)) return;
+        if (!(await confirm(`정말 "${name}" 지면을 완전히 삭제하시겠습니까? 연결된 기사들은 지자체 정보가 '선택 없음'으로 초기화됩니다.`))) return;
 
         const res = await deleteRegionAdmin(id);
         if (res.success) {

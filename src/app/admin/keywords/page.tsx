@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { getRegions } from '@/actions/admin/region-actions';
 import {
     getKeywords,
@@ -104,6 +105,7 @@ function KeywordForm({
 }
 
 export default function KeywordsPage() {
+    const confirm = useConfirm();
     const [regions, setRegions] = useState<Region[]>([]);
     const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
     const [keywords, setKeywords] = useState<Keyword[]>([]);
@@ -156,7 +158,7 @@ export default function KeywordsPage() {
     }
 
     async function handleSoftDelete(id: number, text: string) {
-        if (!confirm(`"${text}" 키워드를 삭제하시겠습니까?`)) return;
+        if (!(await confirm(`"${text}" 키워드를 삭제하시겠습니까?`))) return;
         await softDeleteKeyword(id);
         toast.success('키워드가 삭제되었습니다.');
         reload();

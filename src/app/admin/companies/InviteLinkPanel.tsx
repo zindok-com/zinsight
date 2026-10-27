@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Link2, Copy, Ban, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { createOrganizationInvite, revokeOrganizationInvite } from '@/actions/company-actions';
 import { useRouter } from 'next/navigation';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 type Region = { id: number; name: string };
 type Invite = {
@@ -31,6 +32,7 @@ interface Props {
 
 export function InviteLinkPanel({ regions, invites }: Props) {
     const router = useRouter();
+    const confirm = useConfirm();
     const [open, setOpen] = useState(false);
     const [creating, setCreating] = useState(false);
     const [regionId, setRegionId] = useState<string>('');
@@ -69,7 +71,7 @@ export function InviteLinkPanel({ regions, invites }: Props) {
     };
 
     const handleRevoke = async (inviteId: number) => {
-        if (!confirm('이 링크를 무효화하시겠습니까?')) return;
+        if (!(await confirm('이 링크를 무효화하시겠습니까?'))) return;
         await revokeOrganizationInvite(inviteId);
         toast.success('링크가 무효화되었습니다.');
         router.refresh();

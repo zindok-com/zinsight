@@ -6,12 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { listAllBlobs, deleteBlob, getUsedImageUrls, deleteMultipleBlobs, renameBlobTransaction } from '@/actions/upload-actions';
 import { getMediaUploadUrl } from '@/actions/upload';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Loader2, Trash2, Copy, Check, Upload, Image as ImageIcon, Search, ExternalLink, RefreshCw, Eraser, Edit } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function StoragePage() {
+    const confirm = useConfirm();
     const [blobs, setBlobs] = useState<any[]>([]);
     const [usedUrls, setUsedUrls] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
@@ -77,7 +79,7 @@ export default function StoragePage() {
             confirmMsg += `\n(현재 사용 중이지 않은 이미지이므로 안전하게 삭제 가능합니다.)`;
         }
 
-        const confirmDelete = window.confirm(confirmMsg);
+        const confirmDelete = await confirm({ title: '보관함 이미지 삭제', description: confirmMsg, confirmText: '영구 삭제', variant: 'destructive' });
         if (!confirmDelete) return;
 
         toast.promise(
@@ -106,15 +108,13 @@ export default function StoragePage() {
         }
 
         const count = unusedBlobs.length;
-        const confirm1 = window.confirm(
-            `현재 발행된 매거진 포스트에서 사용 중이지 않은 이미지 ${count}개를 일괄 삭제하시겠습니까?\n이 작업은 영구적으로 미디어를 제거합니다.`
-        );
+        const confirm1 = await confirm({
+            title: '미사용 이미지 일괄 삭제',
+            description: `현재 발행된 매거진 포스트에서 사용 중이지 않은 이미지 ${count}개를 일괄 영구 삭제하시겠습니까?\n삭제된 이미지는 복구할 수 없습니다.`,
+            confirmText: `${count}개 일괄 삭제`,
+            variant: 'destructive',
+        });
         if (!confirm1) return;
-
-        const confirm2 = window.confirm(
-            `⚠️ 경고 (최종 확인)\n\n정말로 미사용 이미지 ${count}개를 일괄 영구 삭제하시겠습니까?\n삭제된 이미지는 절대 복구할 수 없습니다.`
-        );
-        if (!confirm2) return;
 
         toast.promise(
             async () => {

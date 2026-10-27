@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import {
     getAuthors,
     createAuthor,
@@ -35,6 +36,7 @@ type Author = {
 };
 
 export default function AuthorsPage() {
+    const confirm = useConfirm();
     const [authors, setAuthors] = useState<Author[]>([]);
     const [loading, setLoading] = useState(true);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -132,7 +134,7 @@ export default function AuthorsPage() {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('정말 이 발행자를 삭제하시겠습니까?\n해당 발행자가 작성한 기사의 작성자 명은 유지되지만, 클릭 가능한 프로필 페이지 연결은 해제됩니다.')) {
+        if (!(await confirm('정말 이 발행자를 삭제하시겠습니까?\n해당 발행자가 작성한 기사의 작성자 명은 유지되지만, 클릭 가능한 프로필 페이지 연결은 해제됩니다.'))) {
             return;
         }
 

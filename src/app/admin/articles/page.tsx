@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { getRegions } from '@/actions/admin/region-actions';
 import { getKeywords } from '@/actions/keyword-actions';
 import { getArticles, deleteArticlesByDate } from '@/actions/article-actions';
@@ -329,6 +330,7 @@ function ArticleDrawer({ article, onClose, onRefresh }: { article: ArticleItem; 
 
 // ─── 메인 페이지 ──────────────────────────────────────────────────────────────
 export default function ArticlesPage() {
+    const confirm = useConfirm();
     const [regions, setRegions] = useState<Region[]>([]);
     const [selectedRegionId, setSelectedRegionId] = useState<number | null>(null);
     const [initialLoading, setInitialLoading] = useState(true);
@@ -493,9 +495,12 @@ export default function ArticlesPage() {
             return;
         }
 
-        const confirmFirst = window.confirm(
-            `정말로 ${deleteDate}에 수집된 이 지역의 모든 기사를 데이터베이스에서 영구 삭제하시겠습니까?\n이 작업은 즉시 실행되며 복구할 수 없습니다.`
-        );
+        const confirmFirst = await confirm({
+            title: '수집 기사 영구 삭제',
+            description: `정말로 ${deleteDate}에 수집된 이 지역의 모든 기사를 데이터베이스에서 영구 삭제하시겠습니까?\n이 작업은 즉시 실행되며 복구할 수 없습니다.`,
+            confirmText: '영구 삭제',
+            variant: 'destructive',
+        });
         if (!confirmFirst) return;
 
         setDeleteLoading(true);

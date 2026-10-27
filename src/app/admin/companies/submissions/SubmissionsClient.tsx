@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { toast } from 'sonner';
 import { approveOrganizationSubmission, rejectOrganizationSubmission } from '@/actions/company-actions';
 import { Badge } from '@/components/ui/badge';
@@ -46,6 +47,7 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
 
 export function SubmissionsClient({ submissions }: Props) {
     const router = useRouter();
+    const confirm = useConfirm();
     const [selected, setSelected] = useState<Submission | null>(null);
     const [loading, setLoading] = useState<number | null>(null);
     const [filterStatus, setFilterStatus] = useState<string>('ALL');
@@ -55,7 +57,7 @@ export function SubmissionsClient({ submissions }: Props) {
         : submissions.filter((s) => s.status === filterStatus);
 
     const handleApprove = async (id: number) => {
-        if (!confirm('이 신청서를 승인하고 조직을 등록하시겠습니까?')) return;
+        if (!(await confirm('이 신청서를 승인하고 조직을 등록하시겠습니까?'))) return;
         setLoading(id);
         try {
             const res = await approveOrganizationSubmission(id);
@@ -72,7 +74,7 @@ export function SubmissionsClient({ submissions }: Props) {
     };
 
     const handleReject = async (id: number) => {
-        if (!confirm('이 신청서를 반려하시겠습니까?')) return;
+        if (!(await confirm('이 신청서를 반려하시겠습니까?'))) return;
         setLoading(id);
         try {
             await rejectOrganizationSubmission(id);

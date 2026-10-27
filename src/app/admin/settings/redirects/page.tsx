@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getRedirects, createRedirect, deleteRedirect } from '@/actions/admin/redirect-actions';
 import { toast } from 'sonner';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Trash2, Plus, RefreshCw, ArrowRight, ExternalLink } from 'lucide-react';
 
 export default function RedirectsPage() {
+    const confirm = useConfirm();
     const [redirects, setRedirects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     
@@ -55,7 +57,7 @@ export default function RedirectsPage() {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('정말 이 리다이렉트 규칙을 삭제하시겠습니까?')) return;
+        if (!(await confirm('정말 이 리다이렉트 규칙을 삭제하시겠습니까?'))) return;
         
         const res = await deleteRedirect(id);
         if (res.success) {
