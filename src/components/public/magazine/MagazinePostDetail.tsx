@@ -5,7 +5,7 @@ import { PreferredSourceButton } from '@/components/public/magazine/PreferredSou
 import { ArticleTracker } from '@/components/public/analytics/ArticleTracker';
 import { serializeJsonLd } from '@/lib/site';
 import { sanitizeHref } from '@/lib/utils';
-import { extractYouTubeId, isDirectVideoUrl } from '@/components/admin/magazine/VideoInsertModal';
+import { extractYouTubeId, isDirectVideoUrl } from '@/lib/video';
 
 interface HighlightedTextProps {
     text: string;

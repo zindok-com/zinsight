@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ImageUpload } from '@/components/ui/image-upload';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 import { LinkInsertModal } from '@/components/admin/magazine/LinkInsertModal';
-import { VideoInsertModal, extractYouTubeId, isDirectVideoUrl } from '@/components/admin/magazine/VideoInsertModal';
+import { VideoInsertModal } from '@/components/admin/magazine/VideoInsertModal';
+import { extractYouTubeId, isDirectVideoUrl } from '@/lib/video';
 import { ImageDetailsModal } from '@/components/admin/magazine/ImageDetailsModal';
 import OrganizationSelector from '@/components/admin/magazine/OrganizationSelector';
 import {

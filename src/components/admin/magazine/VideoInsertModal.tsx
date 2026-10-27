@@ -15,27 +15,9 @@ import {
     Film,
 } from 'lucide-react';
 import { getMediaUploadUrl } from '@/actions/upload';
+import { extractYouTubeId, isDirectVideoUrl } from '@/lib/video';
 
-export function extractYouTubeId(url: string): string | null {
-    if (!url) return null;
-    const trimmed = url.trim();
-    const patterns = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube-nocookie\.com\/embed\/|youtube\.com\/shorts\/|youtube\.com\/live\/)([a-zA-Z0-9_-]{11})/,
-        /[?&]v=([a-zA-Z0-9_-]{11})/,
-    ];
-    for (const pattern of patterns) {
-        const match = trimmed.match(pattern);
-        if (match && match[1]) {
-            return match[1];
-        }
-    }
-    return null;
-}
-
-export function isDirectVideoUrl(url: string): boolean {
-    if (!url) return false;
-    return /\.(mp4|webm|mov|m4v|ogg)(\?.*)?$/i.test(url.trim());
-}
+export { extractYouTubeId, isDirectVideoUrl };
 
 interface VideoInsertModalProps {
     isOpen: boolean;
