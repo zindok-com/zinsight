@@ -251,11 +251,11 @@ async function computeSyntheticAudit(params: {
         if (idx === 0 && geminiCheck?.customSnippet) {
             simulatedSnippet = geminiCheck.customSnippet;
         } else if (mentioned && citedSource) {
-            simulatedSnippet = `[진사이트 인사이트 레이더·매거진 출처 인용] ${targetName}은(는) ${regionLabel} 기반의 ${entityCategory}(으)로, ${kw1} 및 ${kw2} 분야에서 구조화된 프로필과 검증된 기사 레퍼런스를 보유하고 있습니다.`;
+            simulatedSnippet = `[내부 준비도: 우수] ${targetName}은(는) ${regionLabel} 기반의 ${entityCategory}(으)로, ${kw1} 및 ${kw2} 분야에서 구조화된 프로필과 연결 기사 레퍼런스가 충분히 확보되어 있습니다.`;
         } else if (mentioned) {
-            simulatedSnippet = `${targetName}이(가) 답변 후보로 언급되나, 외부 AI 엔진이 신뢰할 수 있는 심층 매거진 기사·FAQ 구조화 데이터(JSON-LD) 보강 시 출처 링크 인용률이 상승합니다.`;
+            simulatedSnippet = `${targetName}이(가) 기본 프로필 정보는 등록되어 있으나, 심층 매거진 기사·FAQ 구조화 데이터(JSON-LD)를 추가하면 내부 준비도 점수가 향상됩니다.`;
         } else {
-            simulatedSnippet = `현재 해당 산업·지역 일반 질의에서 ${targetName}의 구조화 데이터 시그널이 부족하여 경쟁 엔티티가 우선 노출됩니다. 리빙 프로필 키워드 및 매거진 아티클 발행이 권장됩니다.`;
+            simulatedSnippet = `[내부 준비도: 보강 필요] 현재 해당 질문 유형에 대응할 ${targetName}의 핵심 키워드·요약문·연관 기사 데이터가 부족합니다. 프로필 키워드 및 아티클 보강을 권장합니다.`;
         }
 
         return {
