@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_DESCRIPTION } from '@/lib/site';
 import Script from 'next/script';
-import { Inter } from "next/font/google";
+import { Inter, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,14 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+// 제목용 명조체: 같은 도메인에서 셀프 호스팅(외부 CSS 렌더 차단 제거).
+// 가변 폰트(weight 미지정)로 400·600·700을 한 벌의 파일로 처리해 굵기별 중복 다운로드 제거.
+// 한글은 글자 범위별로 수십 개 파일로 나뉘므로 preload를 끄고 실제 쓰인 글자 파일만 받게 함.
+const notoSerifKR = Noto_Serif_KR({
+    display: "swap",
+    preload: false,
+    variable: "--font-serif",
+});
 
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
@@ -78,18 +86,11 @@ export default function RootLayout({
     const gaId = process.env.NEXT_PUBLIC_GA_ID ? process.env.NEXT_PUBLIC_GA_ID : 'G-JV3R82PMH4';
     return (
         <html lang="ko" suppressHydrationWarning>
-            <head>
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap"
-                />
-            </head>
             <body
                 className={cn(
                     "min-h-screen bg-zi-surface font-sans antialiased text-zi-on-surface",
-                    inter.variable
+                    inter.variable,
+                    notoSerifKR.variable
                 )}
             >
                 {children}

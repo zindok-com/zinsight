@@ -7,7 +7,6 @@
 @layer base {
   :root {
     --font-pretendard: 'Pretendard Variable';
-    --font-serif: 'Noto Serif KR', serif;
     --background: 249 100% 99%; /* #faf9fe */
     --foreground: 214 9% 11%; /* #1a1c1f */
 
