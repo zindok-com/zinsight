@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_DESCRIPTION } from '@/lib/site';
 import Script from 'next/script';
-import { Inter, Noto_Serif_KR } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
@@ -9,12 +9,6 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const notoSerifKR = Noto_Serif_KR({
-    subsets: ["latin"],
-    weight: ["400", "600", "700"],
-    display: "swap",
-    variable: "--font-serif",
-});
 
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
@@ -81,13 +75,20 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const gaId = process.env.NEXT_PUBLIC_GA_ID?process.env.NEXT_PUBLIC_GA_ID : 'G-JV3R82PMH4';
+    const gaId = process.env.NEXT_PUBLIC_GA_ID ? process.env.NEXT_PUBLIC_GA_ID : 'G-JV3R82PMH4';
     return (
         <html lang="ko" suppressHydrationWarning>
+            <head>
+                <link rel="preconnect" href="https://fonts.googleapis.com" />
+                <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                <link
+                    rel="stylesheet"
+                    href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap"
+                />
+            </head>
             <body
                 className={cn(
                     "min-h-screen bg-zi-surface font-sans antialiased text-zi-on-surface",
-                    notoSerifKR.variable,
                     inter.variable
                 )}
             >
