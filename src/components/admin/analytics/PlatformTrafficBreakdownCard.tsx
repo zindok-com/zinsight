@@ -116,26 +116,34 @@ export function PlatformTrafficBreakdownCard({
 
             {/* 전체 유입처 상세 랭킹 */}
             {safeRows.length > 0 ? (
-                <div className="space-y-2 pt-2 border-t border-slate-100">
+                <div className="space-y-2.5 pt-2 border-t border-slate-100">
                     {(compact ? safeRows.slice(0, 8) : safeRows).map((row, idx) => {
                         const barWidth = maxSessions > 0 ? (row.sessions / maxSessions) * 100 : 0;
                         const badge = CATEGORY_BADGE[row.category] ?? CATEGORY_BADGE.other;
                         return (
                             <div
                                 key={row.key}
-                                className="flex items-center gap-2.5 text-xs sm:text-sm py-1"
+                                className="flex items-center gap-3 text-xs sm:text-sm py-1"
                             >
-                                <span className="w-5 text-xs font-bold text-slate-400 text-right shrink-0">
-                                    {idx + 1}
-                                </span>
-                                <span
-                                    className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border shrink-0 ${badge.className}`}
-                                >
-                                    {badge.label}
-                                </span>
-                                <span className="w-32 sm:w-36 min-w-0 font-medium text-slate-800 truncate shrink" title={row.label}>
-                                    {row.label}
-                                </span>
+                                {/* 좌측 고정 너비 라벨 영역 (순위 + 카테고리 배지 + 플랫폼명) */}
+                                <div className="w-48 sm:w-56 shrink-0 flex items-center gap-2 min-w-0">
+                                    <span className="w-5 text-xs font-bold text-slate-400 text-right shrink-0 tabular-nums">
+                                        {idx + 1}
+                                    </span>
+                                    <span
+                                        className={`w-[64px] inline-flex items-center justify-center py-0.5 rounded text-[10px] font-semibold border shrink-0 ${badge.className}`}
+                                    >
+                                        {badge.label}
+                                    </span>
+                                    <span
+                                        className="flex-1 min-w-0 font-medium text-slate-800 truncate"
+                                        title={row.label}
+                                    >
+                                        {row.label}
+                                    </span>
+                                </div>
+
+                                {/* 중앙 막대 그래프 영역 (모든 행 동일 시작점 정렬) */}
                                 <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden min-w-[60px]">
                                     <div
                                         className="h-2 rounded-full transition-all"
@@ -145,7 +153,9 @@ export function PlatformTrafficBreakdownCard({
                                         }}
                                     />
                                 </div>
-                                <div className="w-28 sm:w-36 text-right shrink-0 flex items-center justify-end gap-1.5">
+
+                                {/* 우측 수치 영역 */}
+                                <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1.5 tabular-nums">
                                     <span className="font-bold text-slate-900">
                                         {row.sessions.toLocaleString()}회
                                     </span>
@@ -154,7 +164,7 @@ export function PlatformTrafficBreakdownCard({
                                     </span>
                                 </div>
                                 {!compact && (
-                                    <span className="hidden sm:inline-block w-16 text-right text-xs text-slate-400 shrink-0">
+                                    <span className="hidden sm:inline-block w-16 text-right text-xs text-slate-400 shrink-0 tabular-nums">
                                         {formatDuration(row.avgDuration)}
                                     </span>
                                 )}
