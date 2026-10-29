@@ -110,6 +110,10 @@ interface CompanyData {
     company_url: string | null;
     logo_url?: string | null;
     logo_source_url?: string | null;
+    video_url?: string | null;
+    video_poster_url?: string | null;
+    brochure_url?: string | null;
+    inquiry_url?: string | null;
     business_summary: string | null;
     core_keywords: any;
     founded_year: string | null;
@@ -228,6 +232,10 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [isFeatured, setIsFeatured] = useState(initialCompany.is_featured);
     const [logoUrl, setLogoUrl] = useState(initialCompany.logo_url || '');
     const [logoSourceUrl, setLogoSourceUrl] = useState(initialCompany.logo_source_url || '');
+    const [videoUrl, setVideoUrl] = useState(initialCompany.video_url || '');
+    const [videoPosterUrl, setVideoPosterUrl] = useState(initialCompany.video_poster_url || '');
+    const [brochureUrl, setBrochureUrl] = useState(initialCompany.brochure_url || '');
+    const [inquiryUrl, setInquiryUrl] = useState(initialCompany.inquiry_url || '');
 
     // 탭 상태
     const [activeTab, setActiveTab] = useState<'linked' | 'ingested'>('linked');
@@ -453,6 +461,10 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 is_featured: isFeatured,
                 logo_url: logoUrl.trim() || null,
                 logo_source_url: logoSourceUrl.trim() || null,
+                video_url: videoUrl.trim() || null,
+                video_poster_url: videoPosterUrl.trim() || null,
+                brochure_url: brochureUrl.trim() || null,
+                inquiry_url: inquiryUrl.trim() || null,
             });
 
             if (res.success && res.company) {
@@ -818,6 +830,58 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     onChange={e => setIsFeatured(e.target.checked)}
                                     className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                                 />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* 프로필 영상·소개자료·문의 연결 카드 (값이 없으면 공개 프로필에서 해당 블록·버튼 숨김) */}
+                    <Card>
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-base">프로필 영상 · 소개자료 · 문의</CardTitle>
+                            <CardDescription>비워 두면 공개 프로필에서 해당 영상 블록과 버튼이 표시되지 않습니다.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="org-video-url" className="text-xs font-semibold">소개 영상 URL</Label>
+                                    <Input
+                                        id="org-video-url"
+                                        value={videoUrl}
+                                        onChange={e => setVideoUrl(e.target.value)}
+                                        placeholder="https://...mp4 또는 유튜브 주소"
+                                        className="h-9"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="org-video-poster" className="text-xs font-semibold">영상 포스터 이미지 URL</Label>
+                                    <Input
+                                        id="org-video-poster"
+                                        value={videoPosterUrl}
+                                        onChange={e => setVideoPosterUrl(e.target.value)}
+                                        placeholder="https://... (유튜브는 비워 두면 자동 썸네일)"
+                                        className="h-9"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="org-brochure" className="text-xs font-semibold">소개자료 다운로드 URL</Label>
+                                    <Input
+                                        id="org-brochure"
+                                        value={brochureUrl}
+                                        onChange={e => setBrochureUrl(e.target.value)}
+                                        placeholder="https://...pdf"
+                                        className="h-9"
+                                    />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="org-inquiry" className="text-xs font-semibold">문의하기 연결처</Label>
+                                    <Input
+                                        id="org-inquiry"
+                                        value={inquiryUrl}
+                                        onChange={e => setInquiryUrl(e.target.value)}
+                                        placeholder="mailto:contact@... / tel:031... / https://폼 주소"
+                                        className="h-9"
+                                    />
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

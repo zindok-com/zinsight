@@ -15,6 +15,10 @@ export async function updateCompany(
     company_url?: string;
     logo_url?: string | null;
     logo_source_url?: string | null;
+    video_url?: string | null;
+    video_poster_url?: string | null;
+    brochure_url?: string | null;
+    inquiry_url?: string | null;
     business_summary?: string;
     core_keywords?: any;
     founded_year?: string;
@@ -28,7 +32,7 @@ export async function updateCompany(
 ) {
   await requireAdmin();
   try {
-    const { is_featured, slug, ...companyData } = data;
+    const { is_featured, slug, video_url, video_poster_url, brochure_url, inquiry_url, ...companyData } = data;
 
     const formattedSlug = slug && slug.trim() !== ''
       ? slugifyOrganization(slug)
@@ -41,6 +45,11 @@ export async function updateCompany(
         slug: formattedSlug,
         is_featured,
         region_id: regionId,
+        // 공개 프로필에 링크·미디어로 렌더링되므로 허용 스킴만 저장 (javascript: 등 차단)
+        ...(video_url !== undefined ? { video_url: safeHttpUrl(video_url) ?? null } : {}),
+        ...(video_poster_url !== undefined ? { video_poster_url: safeHttpUrl(video_poster_url) ?? null } : {}),
+        ...(brochure_url !== undefined ? { brochure_url: safeHttpUrl(brochure_url) ?? null } : {}),
+        ...(inquiry_url !== undefined ? { inquiry_url: safeInquiryUrl(inquiry_url) } : {}),
       },
       include: {
         region: true,
@@ -55,11 +64,19 @@ export async function updateCompany(
     revalidatePath('/admin/companies');
     revalidatePath(`/admin/companies/${id}`);
     revalidatePath('/insight-radar');
+    revalidatePath(`/insight-radar/${updatedCompany.slug || id}`);
     return { success: true, company: updatedCompany };
   } catch (error: any) {
     console.error('Failed to update company:', error);
     return { success: false, error: error.message };
   }
+}
+
+// 문의 연결처: 웹 폼(http/https), 메일(mailto:), 전화(tel:)만 허용
+function safeInquiryUrl(url: string | null): string | null {
+  const trimmed = (url ?? '').trim();
+  if (/^mailto:\S+$/i.test(trimmed) || /^tel:[0-9+\-() ]+$/i.test(trimmed)) return trimmed;
+  return safeHttpUrl(trimmed) ?? null;
 }
 
 export async function toggleCompanyFeatured(id: number, is_featured: boolean) {
