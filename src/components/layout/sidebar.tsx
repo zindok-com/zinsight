@@ -23,6 +23,7 @@ import {
     FileCheck2,
     Sparkles,
     ClipboardList,
+    QrCode,
     type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ const CONTENT_ITEMS: NavItem[] = [
 const SETTINGS_ITEMS: NavItem[] = [
     { name: '보안 설정', href: '/admin/settings', icon: ShieldCheck },
     { name: '리다이렉트 관리', href: '/admin/settings/redirects', icon: ArrowLeftRight },
+    { name: 'QR 연결 관리', href: '/admin/settings/qr-links', icon: QrCode },
 ];
 
 export function Sidebar({ pendingSubmissionsCount = 0 }: { pendingSubmissionsCount?: number }) {
