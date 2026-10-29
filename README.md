@@ -33,7 +33,7 @@ Next.js 15(App Router)와 Prisma ORM, MariaDB를 기반으로 구축되었으며
 - **시맨틱 이미지 시스템 v2.0**:
   - 에디터 내 대체 텍스트(`alt`)와 캡션(`figcaption`)의 분리 입력 및 기존 삽입 이미지 재편집 지원
   - 웹 접근성 기준(명도 대비 4.5:1 이상)을 충족하는 `<figure>`, `<img>`, `<figcaption>` 시맨틱 렌더링
-  - Vercel Blob 업로드 시 영문 슬러그 파일명 자동 보존 및 중복 방지 접미사 처리
+  - 이미지 업로드 시 영문 슬러그 파일명 자동 보존 및 중복 방지 접미사 처리
   - 스토리지 보관함에서 파일명 변경 시 기사 본문 및 썸네일 URL을 자동 일괄 치환하는 무결성 트랜잭션
 - **파트너 콘텐츠 및 저자 시스템**:
   - 유료 기사 및 산학협력 대상 '파트너' / '협력 기관' 배지 노출
@@ -65,7 +65,7 @@ Next.js 15(App Router)와 Prisma ORM, MariaDB를 기반으로 구축되었으며
 | **Language** | [TypeScript 5+](https://www.typescriptlang.org/) |
 | **ORM** | [Prisma ORM 7+](https://www.prisma.io/) (`@prisma/adapter-mariadb`) |
 | **Database** | MariaDB / MySQL |
-| **File Storage** | [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) |
+| **File Storage** | [NCP Object Storage](https://www.ncloud.com/product/storage/objectStorage) (S3 호환, `@aws-sdk/client-s3`) |
 | **Styling & UI** | Tailwind CSS, [shadcn/ui](https://ui.shadcn.com/) (Radix UI), Lucide Icons |
 | **Charts** | Recharts |
 | **Data APIs** | Naver Search News API, Google Analytics Data API (GA4), Google Search Console API |
@@ -89,7 +89,7 @@ src/
 │   │   ├── companies/            # 관내 기업·기관 관리 및 임포트
 │   │   ├── keywords/             # 지역별 수집 키워드 관리
 │   │   ├── articles/             # 수집된 뉴스 기사 관리
-│   │   ├── storage/              # Vercel Blob 이미지 스토리지 관리 (파일명 변경/삭제)
+│   │   ├── storage/              # NCP Object Storage 이미지 스토리지 관리 (파일명 변경/삭제)
 │   │   └── export/               # 월간 통합 엑셀 스냅샷 내보내기
 │   └── api/                      # 서버리스 API 엔드포인트
 ├── actions/                      # Server Actions (DB CRUD, 크롤링, 애널리틱스)
@@ -117,8 +117,12 @@ JWT_SECRET=your_random_jwt_secret
 NAVER_CLIENT_ID=your_naver_client_id
 NAVER_CLIENT_SECRET=your_naver_client_secret
 
-# Vercel Blob Storage
-BLOB_READ_WRITE_TOKEN=your_blob_token
+# NCP Object Storage (S3 호환)
+NCP_STORAGE_ACCESS_KEY=your_ncp_access_key
+NCP_STORAGE_SECRET_KEY=your_ncp_secret_key
+NCP_STORAGE_BUCKET=zinsight-media
+NCP_STORAGE_ENDPOINT=https://kr.object.ncloudstorage.com
+NCP_STORAGE_REGION=kr-standard
 
 # Google Analytics 4 & Search Console
 GA4_PROPERTY_ID=your_ga4_property_id
