@@ -144,6 +144,19 @@ export function OrganizationTracker({ orgId, slug, region }: OrganizationTracker
             const href = target.getAttribute('href') || '';
             const fullUrl = target.href;
 
+            // (CTA) 문의하기·소개자료 버튼: data-ga-event 속성으로 지정한 이벤트 전송
+            const ctaEvent = target.getAttribute('data-ga-event');
+            if (ctaEvent === 'cta_inquiry_click' || ctaEvent === 'cta_download_click') {
+                if (window.gtag) {
+                    window.gtag('event', ctaEvent, {
+                        organization_id: orgId,
+                        organization_slug: slug || String(orgId),
+                        cta_placement: target.getAttribute('data-ga-placement') || 'unknown',
+                    });
+                }
+                return;
+            }
+
             // (A) 조직 프로필에서 매거진 기사로 이동 클릭 감지 (/magazine/...)
             if (href.startsWith('/magazine/') || fullUrl.includes('/magazine/')) {
                 const parts = fullUrl.split('/magazine/');
