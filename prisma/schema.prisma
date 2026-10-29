@@ -90,6 +90,10 @@ model Organization {
   ceo_name         String?  @db.VarChar(100)
   key_references   Json?
   backlinks        Json?    // 외부 백링크 리스트 (최대 3개: [{ title, url }])
+  video_url        String?  @db.VarChar(512) // 소개 영상 (자체 mp4 또는 유튜브 URL)
+  video_poster_url String?  @db.VarChar(512) // 영상 포스터 이미지
+  brochure_url     String?  @db.VarChar(512) // 소개자료 다운로드 URL
+  inquiry_url      String?  @db.VarChar(512) // 문의 연결처 (mailto:, tel:, 폼 URL)
   is_featured      Boolean  @default(false)
   region_id        Int      @map("region_id")
   created_at       DateTime @default(now())
@@ -99,6 +103,7 @@ model Organization {
   company_articles CompanyArticle[]
   magazinePosts    MagazinePostOrganization[]
   ingestions       ArticleIngestion[]
+  qrLinks          QrLink[]
 
   @@unique([company_name])
   @@index([region_id])
@@ -386,3 +391,34 @@ model AeoAuditLog {
   @@map("aeo_audit_logs")
 }
 
+// ─── 명함 QR 연결 주소 (/go/[code]) ───────────────────────────────
+// 인쇄된 QR 주소는 고정하고, 도착 화면(mode)은 어드민에서 바꿀 수 있도록 별도 관리
+model QrLink {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique @db.VarChar(50)
+  organization_id Int
+  mode            String   @default("profile") @db.VarChar(20) // profile | video-first
+  is_active       Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  organization Organization  @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  scans        QrScanDaily[]
+
+  @@index([organization_id])
+  @@map("qr_links")
+}
+
+// QR 스캔 일자별 집계 (IP·UA 원문 미저장, 건수만 누적)
+model QrScanDaily {
+  id         Int      @id @default(autoincrement())
+  qr_link_id Int
+  date       DateTime @db.Date // KST 기준 일자
+  device     String   @db.VarChar(10) // mobile | desktop
+  count      Int      @default(0)
+
+  qr_link QrLink @relation(fields: [qr_link_id], references: [id], onDelete: Cascade)
+
+  @@unique([qr_link_id, date, device])
+  @@map("qr_scan_daily")
+}
