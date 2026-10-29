@@ -1,79 +1,49 @@
-'use client';
-
-import React from 'react';
 import Link from 'next/link';
-import { Newspaper, Tag, ArrowRight } from 'lucide-react';
+import { ArrowRight, SearchX } from 'lucide-react';
 import type { RadarCompanyCard } from '@/actions/insight-radar-actions';
-import { LottieIcon, LottieIconName } from '@/components/ui/LottieIcon';
+import {
+    extractRadarTagline,
+    flattenRadarKeywords,
+    formatCompanyAge,
+    formatRadarDate,
+    getOrgInitial,
+    parseRadarKeywords,
+} from '@/lib/radar';
 
 interface RadarCompanyListProps {
     companies: RadarCompanyCard[];
     isInitialState?: boolean;
 }
 
-/**
- * 기업의 핵심 키워드를 파싱하는 헬퍼 함수
- */
-function parseKeywords(keywordsStr: any) {
-    if (!keywordsStr) return null;
-    try {
-        if (typeof keywordsStr === 'string') {
-            return JSON.parse(keywordsStr);
-        }
-        return keywordsStr as { products?: string[]; technology?: string[]; target_market?: string[] };
-    } catch {
-        return null;
-    }
+function OrgMark({ name, logoUrl, size }: { name: string; logoUrl?: string | null; size: 'sm' | 'md' }) {
+    const box = size === 'md' ? 'h-10 w-10 text-base' : 'h-9 w-9 text-sm';
+    return (
+        <span className={`flex ${box} shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white font-bold text-zi-primary`}>
+            {logoUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img src={logoUrl} alt="" loading="lazy" className="max-h-full max-w-full object-contain p-1" />
+            ) : (
+                <span aria-hidden="true">{getOrgInitial(name)}</span>
+            )}
+        </span>
+    );
 }
 
-// 조직 타입(entity_type)에 따른 컬러 테마 및 Lottie 아이콘 매핑
-const ENTITY_CONFIG = {
-    '기업': { 
-        theme: { border: 'border-t-blue-500', iconBg: 'bg-blue-50', badgeBg: 'bg-blue-50', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', articleBg: 'bg-blue-600', arrowHover: 'group-hover:text-blue-600' },
-        icon: 'network' as LottieIconName
-    },
-    '스타트업': {
-        theme: { border: 'border-t-orange-500', iconBg: 'bg-orange-50', badgeBg: 'bg-orange-50', badgeText: 'text-orange-700', badgeBorder: 'border-orange-200', articleBg: 'bg-orange-600', arrowHover: 'group-hover:text-orange-600' },
-        icon: 'bulb' as LottieIconName
-    },
-    '기관': {
-        theme: { border: 'border-t-emerald-500', iconBg: 'bg-emerald-50', badgeBg: 'bg-emerald-50', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', articleBg: 'bg-emerald-600', arrowHover: 'group-hover:text-emerald-600' },
-        icon: 'management' as LottieIconName
-    },
-    '학교': {
-        theme: { border: 'border-t-purple-600', iconBg: 'bg-purple-50', badgeBg: 'bg-purple-50', badgeText: 'text-purple-700', badgeBorder: 'border-purple-200', articleBg: 'bg-purple-600', arrowHover: 'group-hover:text-purple-600' },
-        icon: 'rules' as LottieIconName
-    },
-    'default': {
-        theme: { border: 'border-t-cyan-500', iconBg: 'bg-cyan-50', badgeBg: 'bg-cyan-50', badgeText: 'text-cyan-700', badgeBorder: 'border-cyan-200', articleBg: 'bg-cyan-600', arrowHover: 'group-hover:text-cyan-600' },
-        icon: 'team' as LottieIconName
-    }
-};
-
-const getEntityConfig = (entityType?: string | null) => {
-    if (!entityType) return ENTITY_CONFIG.default;
-    if (entityType.includes('스타트업')) return ENTITY_CONFIG['스타트업'];
-    if (entityType.includes('대학') || entityType.includes('학교') || entityType.includes('교육')) return ENTITY_CONFIG['학교'];
-    if (entityType.includes('기관') || entityType.includes('진흥원') || entityType.includes('센터')) return ENTITY_CONFIG['기관'];
-    if (entityType.includes('기업')) return ENTITY_CONFIG['기업'];
-    return ENTITY_CONFIG.default;
-};
-
+/**
+ * 조직 목록. 데스크톱(lg 이상)은 시맨틱 테이블, 모바일은 컴팩트 카드.
+ * 두 표현 모두 서버 렌더링되며 조직명은 실제 <a href> 링크.
+ */
 export function RadarCompanyList({ companies, isInitialState }: RadarCompanyListProps) {
-
     if (!companies || companies.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center py-16 sm:py-24 px-6 text-center border border-zi-divider bg-white rounded-zi-card shadow-sm">
-                <div className="flex items-center justify-center mb-6">
-                    <LottieIcon name="search" size={80} loop autoplay />
-                </div>
-                <h3 className="text-zi-body-lg font-bold text-zi-on-surface mb-2">조직을 찾을 수 없습니다</h3>
-                <p className="text-zi-body-md text-zi-on-surface-variant">해당 조건에 맞는 조직 또는 기업 데이터가 없습니다.</p>
-                {/* 검색 결과가 없을 때 다음 행동을 바로 제공 */}
+            <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-16 text-center shadow-sm">
+                <SearchX className="mb-4 h-10 w-10 text-slate-300" aria-hidden="true" />
+                <h2 className="mb-2 text-base font-bold text-zi-on-surface">조직을 찾을 수 없습니다</h2>
+                <p className="text-sm text-zi-on-surface-variant">해당 조건에 맞는 조직 또는 기업 데이터가 없습니다.</p>
                 {!isInitialState && (
                     <Link
                         href="/insight-radar"
-                        className="mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-zi-btn border border-zi-divider px-5 text-sm font-semibold text-zi-primary hover:bg-zi-surface-container transition-colors"
+                        className="mt-6 inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-slate-200 px-5 text-sm font-semibold text-zi-primary transition-colors hover:bg-zi-surface-container"
                     >
                         전체 조직 보기 <ArrowRight className="h-4 w-4" />
                     </Link>
@@ -82,130 +52,128 @@ export function RadarCompanyList({ companies, isInitialState }: RadarCompanyList
         );
     }
 
+    const rows = companies.map((company) => {
+        const keywords = flattenRadarKeywords(parseRadarKeywords(company.core_keywords));
+        return {
+            company,
+            href: `/insight-radar/${company.slug || company.id}`,
+            meta: [company.entity_type, company.region?.name ?? company.hq_location].filter(Boolean).join(' · '),
+            tagline: extractRadarTagline(company.business_summary),
+            keywords,
+            age: formatCompanyAge(company.founded_year),
+            latest: formatRadarDate(company.latestArticleDate),
+        };
+    });
+
     return (
-        <div className="mt-8">
-            {isInitialState && companies.length > 0 && (
-                <div className="mb-4 flex items-center gap-2">
-                    <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                    <h2 className="text-lg font-bold text-zi-on-surface">등록된 기관 및 기업 목록</h2>
-                </div>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {companies.map((company) => {
-                const kw = parseKeywords(company.core_keywords);
-                const allKwsRaw = kw 
-                    ? [...(kw.products || []), ...(kw.technology || []), ...(kw.target_market || [])]
-                    : [];
-                // 데스크톱에서는 최대 4개, 모바일에서는 2개 노출 + (+N 축약)
-                const displayKws = allKwsRaw.slice(0, 4);
-                const remainingMobileCount = allKwsRaw.length - 2;
-
-                // 조직 타입(entity_type)을 기반으로 테마와 아이콘을 결정
-                const config = getEntityConfig(company.entity_type);
-                const theme = config.theme;
-                const iconName = config.icon;
-
-                return (
-                    <Link
-                        key={company.id}
-                        href={`/insight-radar/${company.slug || company.id}`}
-                        className={`group flex flex-col border border-zi-divider bg-white rounded-zi-card shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-zi-primary/40 border-t-[4px] ${theme.border}`}
-                    >
-                        {/* Header Section */}
-                        <div className="p-4 sm:p-6 pb-3.5 sm:pb-5 border-b border-zi-divider/50 flex-grow-0">
-                            <div className="flex items-start justify-between gap-3 sm:gap-4 mb-2 sm:mb-3">
-                                <div className="flex items-center gap-3 min-w-0">
-                                    <div className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-xl sm:rounded-2xl ${company.logo_url ? 'bg-white p-1.5 border-slate-200' : theme.iconBg + ' border-white'} transition-transform duration-300 group-hover:scale-110 shadow-sm border overflow-hidden`}>
-                                        {company.logo_url ? (
-                                            /* eslint-disable-next-line @next/next/no-img-element */
-                                            <img src={company.logo_url} alt={company.company_name} className="max-w-full max-h-full object-contain" />
-                                        ) : (
-                                            <LottieIcon name={iconName} size={36} hover={true} loop={false} autoplay={false} />
-                                        )}
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <h3 className="font-bold text-[16px] sm:text-[17px] text-zi-on-surface group-hover:text-zi-primary transition-colors line-clamp-1 leading-snug">
-                                            {company.company_name}
-                                        </h3>
-                                        {/* 조직 타입 & 지역 뱃지 (가로 인라인 배치로 세로 공간 절약) */}
-                                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                            <span className="inline-flex bg-zi-surface-container px-2 py-0.5 rounded text-[11px] font-bold text-zi-secondary uppercase tracking-tighter shadow-sm">
-                                                {company.entity_type || '기업'}
-                                            </span>
-                                            {company.region ? (
-                                                <span className="text-[11px] font-medium text-zi-on-surface-variant bg-zi-surface px-2 py-0.5 rounded border border-zi-divider">
-                                                    {company.region.name}
-                                                </span>
-                                            ) : company.hq_location ? (
-                                                <span className="text-[11px] font-medium text-zi-on-surface-variant bg-zi-surface px-2 py-0.5 rounded border border-zi-divider">
-                                                    {company.hq_location}
-                                                </span>
-                                            ) : null}
+        <>
+            {/* ── 데스크톱: 표형 목록 ── */}
+            <div className="hidden lg:block rounded-xl border border-slate-200 bg-white shadow-sm">
+                <table className="w-full table-fixed border-collapse text-left">
+                    <caption className="sr-only">등록된 기관 및 기업 목록</caption>
+                    <thead className="sticky top-20 z-10 bg-slate-50">
+                        <tr className="border-b border-slate-200 text-[13px] font-semibold text-slate-600">
+                            <th scope="col" className="w-[22%] rounded-tl-xl px-4 py-3">조직</th>
+                            <th scope="col" className="px-4 py-3">한 줄 소개</th>
+                            <th scope="col" className="w-[26%] px-4 py-3">핵심 키워드</th>
+                            <th scope="col" className="w-[7%] px-3 py-3 text-right">업력</th>
+                            <th scope="col" className="w-[8%] px-3 py-3 text-right">연관 기사</th>
+                            <th scope="col" className="w-[10%] rounded-tr-xl px-4 py-3 text-right">최근 활동</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {rows.map(({ company, href, meta, tagline, keywords, age, latest }) => (
+                            // 조직명 링크를 행 전체로 늘려 행 클릭을 보조 동작으로 제공 (JS 불필요)
+                            <tr key={company.id} className="relative h-[60px] transition-colors hover:bg-blue-50/50 focus-within:bg-blue-50/50">
+                                <th scope="row" className="px-4 py-2.5 font-normal">
+                                    <div className="flex min-w-0 items-center gap-3">
+                                        <OrgMark name={company.company_name} logoUrl={company.logo_url} size="sm" />
+                                        <div className="min-w-0">
+                                            <Link
+                                                href={href}
+                                                className="block truncate text-[15px] font-bold text-zi-primary after:absolute after:inset-0 after:content-[''] hover:text-zi-blue focus-visible:outline-none"
+                                            >
+                                                {company.company_name}
+                                            </Link>
+                                            {meta && <span className="block truncate text-xs text-slate-500">{meta}</span>}
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Body Section */}
-                        <div className="p-4 sm:p-6 flex-grow flex flex-col justify-start gap-3 sm:gap-4 bg-zi-surface/20">
-                            {/* Keywords */}
-                            <div>
-                                <div className="flex items-center gap-1.5 mb-2.5 text-zi-on-surface-variant">
-                                    <Tag className="h-3.5 w-3.5 text-zi-outline shrink-0" />
-                                    <span className="text-xs font-bold uppercase tracking-widest text-zi-outline hidden sm:inline">핵심 키워드</span>
-                                    <span className="text-xs font-bold text-zi-outline sm:hidden">키워드</span>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-1.5">
-                                    {displayKws.length > 0 ? (
-                                        <>
-                                            {displayKws.map((k, i) => (
-                                                <span 
-                                                    key={i} 
-                                                    className={`px-2.5 py-1 rounded-md border text-[11px] sm:text-[12px] font-semibold transition-colors shadow-sm ${theme.badgeBg} ${theme.badgeText} ${theme.badgeBorder} ${
-                                                        i >= 2 ? 'hidden sm:inline-flex' : 'inline-flex'
-                                                    }`}
-                                                >
+                                </th>
+                                <td className="px-4 py-2.5 text-sm text-slate-700">
+                                    {tagline && <p className="line-clamp-2 leading-snug">{tagline}</p>}
+                                </td>
+                                <td className="px-4 py-2.5">
+                                    {keywords.length > 0 && (
+                                        <div className="flex flex-wrap items-center gap-1">
+                                            {keywords.slice(0, 3).map((k) => (
+                                                <span key={k} title={k} className="max-w-[7.5rem] truncate rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
                                                     {k}
                                                 </span>
                                             ))}
-                                            {/* 모바일 2개 초과 시 +N 뱃지 */}
-                                            {remainingMobileCount > 0 && (
-                                                <span 
-                                                    className="sm:hidden px-2 py-0.5 rounded-md border text-[11px] font-bold text-zi-outline bg-white border-zi-divider"
-                                                    title={`외 ${remainingMobileCount}개 키워드`}
-                                                >
-                                                    +{remainingMobileCount}
+                                            {keywords.length > 3 && (
+                                                <span className="text-xs font-semibold text-slate-500" aria-label={`외 ${keywords.length - 3}개`}>
+                                                    +{keywords.length - 3}
                                                 </span>
                                             )}
-                                        </>
-                                    ) : (
-                                        <span className="text-[12px] sm:text-[13px] text-zi-outline italic bg-white/50 px-2.5 py-1 rounded-md border border-dashed border-zi-divider">키워드 없음</span>
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="px-3 py-2.5 text-right text-sm text-slate-700 tabular-nums">{age}</td>
+                                <td className="px-3 py-2.5 text-right text-sm font-semibold text-slate-900 tabular-nums">
+                                    {company.articleCount > 0 ? `${company.articleCount}건` : null}
+                                </td>
+                                <td className="px-4 py-2.5 text-right text-sm text-slate-700 tabular-nums">{latest}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* ── 모바일: 컴팩트 카드 ── */}
+            <ul className="flex flex-col gap-2 lg:hidden" aria-label="등록된 기관 및 기업 목록">
+                {rows.map(({ company, href, tagline, keywords, latest }) => {
+                    const extra = keywords.length - 2;
+                    const keywordText = keywords.slice(0, 2).join(' · ');
+                    // 기사 수·날짜는 잘리지 않게 고정, 길어지는 키워드 쪽만 말줄임
+                    const statParts = [
+                        company.articleCount > 0 ? `기사 ${company.articleCount}건` : null,
+                        latest,
+                    ].filter(Boolean);
+                    return (
+                        <li key={company.id}>
+                            <Link
+                                href={href}
+                                className="block rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-colors active:bg-slate-50"
+                            >
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="flex min-w-0 items-center gap-2.5">
+                                        <OrgMark name={company.company_name} logoUrl={company.logo_url} size="sm" />
+                                        <span className="truncate text-[15px] font-bold text-zi-primary">{company.company_name}</span>
+                                    </span>
+                                    {company.entity_type && (
+                                        <span className="shrink-0 rounded-md bg-teal-50 px-2 py-0.5 text-xs font-bold text-zi-secondary">
+                                            {company.entity_type}
+                                        </span>
                                     )}
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Footer Section */}
-                        <div className="px-4 sm:px-6 py-3 sm:py-4 mt-auto border-t border-zi-divider/50 bg-zi-surface-container-low/40 flex items-center justify-between rounded-b-zi-card">
-                            <div className="flex items-center gap-1.5 sm:gap-2 text-zi-on-surface-variant">
-                                <Newspaper className="h-4 w-4 shrink-0 text-zi-outline" />
-                                <span className="text-[12px] sm:text-[13px] font-bold text-zi-outline">
-                                    <span className="hidden sm:inline">연관 기사</span>
-                                    <span className="sm:hidden">기사</span>
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className={`inline-flex items-center justify-center text-white px-2.5 sm:px-3 py-0.5 rounded-full text-xs font-bold transition-transform group-hover:scale-105 shadow-sm ${theme.articleBg}`}>
-                                    {company.articleCount}
-                                </span>
-                                <ArrowRight className={`h-4 w-4 text-zi-outline transition-transform group-hover:translate-x-1 ${theme.arrowHover}`} />
-                            </div>
-                        </div>
-                    </Link>
-                );
-            })}
-            </div>
-        </div>
+                                {tagline && <p className="mt-2 line-clamp-2 text-sm leading-snug text-slate-700">{tagline}</p>}
+                                {(keywordText || statParts.length > 0) && (
+                                    <p className="mt-2 flex min-w-0 items-center gap-1 text-xs text-slate-500 tabular-nums">
+                                        {keywordText && <span className="min-w-0 truncate">{keywordText}</span>}
+                                        {extra > 0 && <span className="shrink-0">+{extra}</span>}
+                                        {statParts.length > 0 && (
+                                            <span className="shrink-0">
+                                                {keywordText && <span aria-hidden="true">· </span>}
+                                                {statParts.join(' · ')}
+                                            </span>
+                                        )}
+                                    </p>
+                                )}
+                            </Link>
+                        </li>
+                    );
+                })}
+            </ul>
+        </>
     );
 }

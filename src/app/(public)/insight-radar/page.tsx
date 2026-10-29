@@ -9,12 +9,16 @@ import {
     getRadarRegions,
     getRadarTotalStats,
     getRadarCompanies,
-    getRadarLatestArticles,
+    getRadarEntityTypes,
 } from '@/actions/insight-radar-actions';
 import { RadarSearchBar } from '@/components/public/insight-radar/RadarSearchBar';
 import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompanyList';
 // import { AeoLeadMagnetBanner } from '@/components/public/aeo/AeoLeadMagnetBanner';
 import { buildSocialMetadata } from '@/lib/site';
+import { parseRadarSort } from '@/lib/radar';
+
+// 등록 조직이 이 수 이하이면 정렬 UI를 숨김 (한 화면에 다 보여 정렬 효용이 낮음)
+const SORT_UI_MIN_COMPANIES = 12;
 
 // 검색/필터 파라미터가 없는 기본 페이지는 1시간 캐시, 파라미터가 있으면 동적 렌더링
 export const revalidate = 3600;
@@ -24,6 +28,7 @@ interface PageParams {
     entityType?: string;
     q?: string;
     page?: string;
+    sort?: string;
 }
 
 export async function generateMetadata({
@@ -84,24 +89,26 @@ export default async function InsightRadarPage({
     const selectedEntityType = params.entityType;
     const searchQuery = params.q;
     const currentPage = params.page ? parseInt(params.page) : 1;
-    const pageSize = 15;
+    const sort = parseRadarSort(params.sort);
+    const pageSize = 30;
 
     const isInitialState = !selectedRegionId && !selectedEntityType && !searchQuery;
 
     // 데이터 페칭
-    const [regions, totalStats, { companies, total, totalPages }, latestArticles] = await Promise.all([
+    const [regions, totalStats, entityTypes, { companies, total, totalPages }] = await Promise.all([
         getRadarRegions(),
         getRadarTotalStats(),
+        getRadarEntityTypes(),
         getRadarCompanies(
             {
                 regionId: selectedRegionId,
                 entityType: selectedEntityType,
                 searchQuery,
+                sort,
             },
             currentPage,
             pageSize
         ),
-        getRadarLatestArticles({}, 5),
     ]);
 
     return (
@@ -109,16 +116,21 @@ export default async function InsightRadarPage({
             {/* ─────────────────────────────── */}
             {/* 페이지 헤더 */}
             {/* ─────────────────────────────── */}
-            <div className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
+            <div className="mx-auto max-w-zi-container px-4 sm:px-6 py-6 sm:py-8">
 
                 {/* ── 무료 AEO 'Answer Index' AI 인용 지수 진단 리드 마그넷 배너 ── */}
                 {/* <AeoLeadMagnetBanner /> (실사이트 임시 숨김 처리) */}
 
                 {/* ── 통합 검색 및 필터 섹션 ── */}
-                <RadarSearchBar 
-                    regions={regions} 
-                    currentRegionId={selectedRegionId} 
-                    currentQuery={searchQuery} 
+                <RadarSearchBar
+                    regions={regions}
+                    entityTypes={entityTypes}
+                    currentRegionId={selectedRegionId}
+                    currentEntityType={selectedEntityType}
+                    currentQuery={searchQuery}
+                    currentSort={sort}
+                    total={total}
+                    showSort={totalStats.totalCompanies > SORT_UI_MIN_COMPANIES}
                 />
 
                 {/* ── 조직 목록 카드 리스트 (클라이언트 컴포넌트) ── */}
@@ -187,6 +199,7 @@ function buildPageHref(params: PageParams, page: number): string {
     if (params.regionId) sp.set('regionId', params.regionId);
     if (params.entityType) sp.set('entityType', params.entityType);
     if (params.q) sp.set('q', params.q);
+    if (params.sort && params.sort !== 'recent') sp.set('sort', params.sort);
     sp.set('page', String(page));
     return `/insight-radar?${sp.toString()}`;
 }
