@@ -12,6 +12,7 @@ Disallow: /admin
 Disallow: /login
 Disallow: /register
 Disallow: /api
+Disallow: /go/
 
 User-agent: *
 Allow: /
@@ -19,6 +20,7 @@ Disallow: /admin
 Disallow: /login
 Disallow: /register
 Disallow: /api
+Disallow: /go/
 
 Sitemap: ${baseUrl}/sitemap.xml
 `;
