@@ -1,6 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/db';
+import { parseRadarKeywords, type RadarSort } from '@/lib/radar';
 
 // ─────────────────────────────────────────────
 // 타입 정의
@@ -24,6 +25,7 @@ export interface RadarCompanyCard {
     hq_location: string | null;
     logo_url?: string | null;
     logo_source_url?: string | null;
+    founded_year?: string | null;
     articleCount: number;
     latestArticleDate: Date | null;
 }
@@ -60,12 +62,26 @@ export interface RadarArticleItem {
     summary: string | null;
     keywords: { id: number; keyword_text: string }[];
     isMagazine?: boolean;
+    /** 매거진 대표 이미지 (외부 기사는 없음) */
+    thumbnailUrl?: string | null;
 }
 
 export interface RadarFilterOptions {
     regionId?: number;
     entityType?: string;
     searchQuery?: string;
+    sort?: RadarSort;
+}
+
+export interface RadarSimilarCompany {
+    id: number;
+    company_name: string;
+    slug: string | null;
+    entity_type: string | null;
+    logo_url: string | null;
+    regionName: string | null;
+    /** 겹치는 키워드 (최대 2개, 표시용) */
+    sharedKeywords: string[];
 }
 
 // ─────────────────────────────────────────────
@@ -144,58 +160,77 @@ export async function getRadarCompanies(
             : {}),
     };
 
-    const [rawCompanies, total] = await Promise.all([
-        prisma.organization.findMany({
-            where,
-            include: {
-                region: {
-                    select: { id: true, name: true, slug: true },
-                },
-                company_articles: {
-                    include: {
-                        article: { select: { id: true, pub_date: true } },
-                    },
-                    orderBy: { article: { pub_date: 'desc' } },
-                    take: 1,
-                },
-                _count: {
-                    select: {
-                        company_articles: true,
-                        magazinePosts: {
-                            where: {
-                                magazinePost: {
-                                    status: 'PUBLISHED' as const,
-                                    deletedAt: null,
-                                },
-                            },
-                        },
-                    },
-                },
+    // 정렬 기준(최근 활동·기사 수)이 관계 집계라 DB 정렬이 어려움 → 조건에 맞는 조직을 모두 받아 정렬 후 페이지 분할
+    // (등록 조직 수가 수백 곳 이내인 동안 유효. 그 이상이 되면 집계 컬럼 도입 검토)
+    const publishedPost = { magazinePost: { status: 'PUBLISHED' as const, deletedAt: null } };
+    const rawCompanies = await prisma.organization.findMany({
+        where,
+        select: {
+            id: true,
+            company_name: true,
+            slug: true,
+            entity_type: true,
+            business_summary: true,
+            core_keywords: true,
+            hq_location: true,
+            logo_url: true,
+            logo_source_url: true,
+            founded_year: true,
+            is_featured: true,
+            created_at: true,
+            region: { select: { id: true, name: true, slug: true } },
+            company_articles: {
+                select: { article: { select: { pub_date: true } } },
+                orderBy: { article: { pub_date: 'desc' } },
+                take: 1,
             },
-            orderBy: [
-                { is_featured: 'desc' },
-                { created_at: 'desc' },
-            ],
-            skip: (page - 1) * pageSize,
-            take: pageSize,
-        }),
-        prisma.organization.count({ where }),
-    ]);
+            magazinePosts: {
+                where: publishedPost,
+                select: { magazinePost: { select: { publishedAt: true, createdAt: true } } },
+                orderBy: { magazinePost: { publishedAt: 'desc' } },
+                take: 1,
+            },
+            _count: { select: { company_articles: true, magazinePosts: { where: publishedPost } } },
+        },
+        orderBy: [{ is_featured: 'desc' }, { created_at: 'desc' }],
+        take: 500,
+    });
 
-    const companies: RadarCompanyCard[] = rawCompanies.map((c: any) => ({
-        id: c.id,
-        company_name: c.company_name,
-        slug: c.slug ?? null,
-        entity_type: c.entity_type,
-        business_summary: c.business_summary,
-        core_keywords: c.core_keywords,
-        region: c.region ?? null,
-        hq_location: c.hq_location ?? null,
-        logo_url: c.logo_url ?? null,
-        logo_source_url: c.logo_source_url ?? null,
-        articleCount: c._count.company_articles + c._count.magazinePosts,
-        latestArticleDate: c.company_articles[0]?.article?.pub_date ?? null,
-    }));
+    const all: RadarCompanyCard[] = rawCompanies.map((c) => {
+        const externalDate = c.company_articles[0]?.article?.pub_date ?? null;
+        const post = c.magazinePosts[0]?.magazinePost;
+        const magazineDate = post ? post.publishedAt ?? post.createdAt : null;
+        const latest = [externalDate, magazineDate]
+            .filter((d): d is Date => !!d)
+            .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+        return {
+            id: c.id,
+            company_name: c.company_name,
+            slug: c.slug ?? null,
+            entity_type: c.entity_type,
+            business_summary: c.business_summary,
+            core_keywords: c.core_keywords,
+            region: c.region ?? null,
+            hq_location: c.hq_location ?? null,
+            logo_url: c.logo_url ?? null,
+            logo_source_url: c.logo_source_url ?? null,
+            founded_year: c.founded_year ?? null,
+            articleCount: c._count.company_articles + c._count.magazinePosts,
+            latestArticleDate: latest,
+        };
+    });
+
+    const sort = filter.sort ?? 'recent';
+    if (sort === 'name') {
+        all.sort((a, b) => a.company_name.localeCompare(b.company_name, 'ko'));
+    } else if (sort === 'articles') {
+        all.sort((a, b) => b.articleCount - a.articleCount);
+    } else {
+        all.sort((a, b) => (b.latestArticleDate?.getTime() ?? 0) - (a.latestArticleDate?.getTime() ?? 0));
+    }
+
+    const total = all.length;
+    const companies = all.slice((page - 1) * pageSize, page * pageSize);
 
     return {
         companies,
@@ -381,6 +416,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         summary: ca.article.description,
         keywords: [],
         isMagazine: false,
+        thumbnailUrl: null,
     }));
 
     // 2. 자체 매거진 포스트 기사 (MagazinePostOrganization)
@@ -412,6 +448,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
             summary: post.summary || parsedLead,
             keywords: [],
             isMagazine: true,
+            thumbnailUrl: post.thumbnailUrl ?? null,
         };
     });
 
@@ -449,6 +486,79 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         ceo_name: company.ceo_name,
         key_references: company.key_references,
         backlinks: company.backlinks,
+        video_url: company.video_url ?? null,
+        video_poster_url: company.video_poster_url ?? null,
+        brochure_url: company.brochure_url ?? null,
+        inquiry_url: company.inquiry_url ?? null,
         latestArticleDate: combinedArticles[0]?.pub_date ?? null,
     };
+}
+
+// ─────────────────────────────────────────────
+// 유사 조직 (같은 지역 또는 핵심 키워드 겹침, 최대 3곳)
+// ─────────────────────────────────────────────
+
+export async function getRadarSimilarCompanies(
+    companyId: number,
+    limit = 3
+): Promise<RadarSimilarCompany[]> {
+    limit = clampInt(limit, 1, 6, 3);
+    const candidates = await prisma.organization.findMany({
+        select: {
+            id: true,
+            company_name: true,
+            slug: true,
+            entity_type: true,
+            logo_url: true,
+            core_keywords: true,
+            region_id: true,
+            region: { select: { name: true } },
+        },
+        take: 500,
+    });
+    const self = candidates.find((c) => c.id === Number(companyId));
+    if (!self) return [];
+
+    const normalize = (k: string) => k.toLowerCase().replace(/\s+/g, '');
+    const selfKw = parseRadarKeywords(self.core_keywords);
+    const selfSet = new Set([...selfKw.products, ...selfKw.technology, ...selfKw.target_market].map(normalize));
+
+    return candidates
+        .filter((c) => c.id !== self.id)
+        .map((c) => {
+            const kw = parseRadarKeywords(c.core_keywords);
+            const shared = [...new Set([...kw.products, ...kw.technology, ...kw.target_market])].filter((k) =>
+                selfSet.has(normalize(k))
+            );
+            const sameRegion = c.region_id === self.region_id;
+            // 키워드 겹침을 지역 일치보다 우선 (키워드 1개 = 2점, 같은 지역 = 1점)
+            return { c, shared, score: shared.length * 2 + (sameRegion ? 1 : 0) };
+        })
+        .filter((x) => x.score > 0)
+        .sort((a, b) => b.score - a.score || a.c.company_name.localeCompare(b.c.company_name, 'ko'))
+        .slice(0, limit)
+        .map(({ c, shared }) => ({
+            id: c.id,
+            company_name: c.company_name,
+            slug: c.slug ?? null,
+            entity_type: c.entity_type ?? null,
+            logo_url: c.logo_url ?? null,
+            regionName: c.region?.name ?? null,
+            sharedKeywords: shared.slice(0, 2),
+        }));
+}
+
+// ─────────────────────────────────────────────
+// 목록 필터용 조직 유형 목록 (등록 수 많은 순)
+// ─────────────────────────────────────────────
+
+export async function getRadarEntityTypes(): Promise<string[]> {
+    const groups = await prisma.organization.groupBy({
+        by: ['entity_type'],
+        _count: { _all: true },
+    });
+    return groups
+        .filter((g) => g.entity_type && g.entity_type.trim())
+        .sort((a, b) => b._count._all - a._count._all || a.entity_type.localeCompare(b.entity_type, 'ko'))
+        .map((g) => g.entity_type);
 }
