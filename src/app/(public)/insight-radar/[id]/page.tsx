@@ -1,16 +1,37 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Download, ExternalLink, MessageSquare, Target, Tag } from 'lucide-react';
+import {
+    ArrowLeft,
+    AtSign,
+    BookOpen,
+    Download,
+    ExternalLink,
+    Facebook,
+    Globe,
+    Instagram,
+    Linkedin,
+    MessageSquare,
+    Twitter,
+    Youtube,
+    type LucideIcon,
+} from 'lucide-react';
 import { getRadarCompanyDetail, getRadarSimilarCompanies } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
-import { CollapsibleReferences } from '@/components/public/insight-radar/CollapsibleReferences';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
 import { ProfileOverview } from '@/components/public/insight-radar/profile/ProfileOverview';
 import { ProfileSectionNav } from '@/components/public/insight-radar/profile/ProfileSectionNav';
+import { ProfileTimelineList } from '@/components/public/insight-radar/profile/ProfileTimelineList';
 import { ProfileVideo } from '@/components/public/insight-radar/profile/ProfileVideo';
 import { sanitizeHref, safeHttpUrl } from '@/lib/utils';
-import { formatCompanyAge, formatFoundedDate, formatRadarDate, getOrgInitial } from '@/lib/radar';
+import {
+    buildRadarTimeline,
+    formatCompanyAge,
+    formatFoundedDate,
+    formatRadarDate,
+    getOrgInitial,
+    type RadarTimelineArticle,
+} from '@/lib/radar';
 import {
     SITE_BASE_URL,
     buildWebPageId,
@@ -282,14 +303,26 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     const foundedLabel = formatFoundedDate(company.founded_year);
     const companyAge = formatCompanyAge(company.founded_year);
     const latestActivity = formatRadarDate(company.latestArticleDate);
+    // 모바일 정보 표 (유형은 헤더 뱃지와 중복이라 제외). 데스크톱은 우측 레일 "핵심 정보"로 통합
     const infoRows = [
         { label: '대표자', value: company.ceo_name },
         { label: '설립', value: foundedLabel },
         { label: '소재지', value: company.hq_location },
-        { label: '유형', value: company.entity_type },
+    ].filter((row): row is { label: string; value: string } => !!row.value && !!String(row.value).trim());
+    const railRows = [
+        { label: '유형 · 지역', value: [company.entity_type, company.region?.name].filter(Boolean).join(' · ') },
+        { label: '대표자', value: company.ceo_name },
+        { label: '설립 · 업력', value: [foundedLabel, companyAge].filter(Boolean).join(' · ') },
+        { label: '소재지', value: company.hq_location },
+        { label: '연관 기사', value: `${company.articleCount.toLocaleString()}건` },
+        { label: '최근 활동', value: latestActivity },
     ].filter((row): row is { label: string; value: string } => !!row.value && !!String(row.value).trim());
 
-    const inquiryHref = company.inquiry_url ? sanitizeHref(company.inquiry_url) : null;
+    // 문의 연결처: 문의 URL → 이메일 → 전화 중 조직이 공개한 첫 번째 (모두 없으면 버튼 숨김)
+    const inquiryHref =
+        (company.inquiry_url ? sanitizeHref(company.inquiry_url) : null) ||
+        (company.contact_email ? `mailto:${company.contact_email}` : null) ||
+        (company.contact_phone ? `tel:${company.contact_phone.replace(/[^0-9+]/g, '')}` : null);
     const inquiryIsWeb = !!inquiryHref && /^https?:/i.test(inquiryHref);
     const brochureHref = safeHttpUrl(company.brochure_url);
     const homepageHref = safeHttpUrl(company.company_url) ??
@@ -300,6 +333,9 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
             url: safeHttpUrl(link.url.startsWith('http') ? link.url : `https://${link.url}`),
         }))
         .filter((link): link is { title: string; url: string } => !!link.url);
+    // 모바일 아이콘 줄: 홈페이지는 CTA 버튼과 중복이라 제외
+    const normalizeUrl = (u: string) => u.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/+$/, '').toLowerCase();
+    const iconLinks = externalLinks.filter((link) => !homepageHref || normalizeUrl(link.url) !== normalizeUrl(homepageHref));
 
     const references = Array.isArray(company.key_references)
         ? (company.key_references as unknown[]).map(String).filter((r) => r.trim())
@@ -307,11 +343,24 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     const hasProducts = !!(coreKw?.products?.length || coreKw?.technology?.length || coreKw?.target_market?.length);
     const hasVideo = !!safeHttpUrl(company.video_url);
 
+    const timelineArticles: RadarTimelineArticle[] = company.recentArticles.map(
+        (article: (typeof company.recentArticles)[number]) => ({
+            key: `${article.isMagazine ? 'm' : 'a'}-${article.id}`,
+            title: article.title,
+            summary: article.summary ?? '',
+            url: article.url ?? undefined,
+            isMagazine: !!article.isMagazine,
+            category: article.isMagazine ? '진사이트 매거진' : formatSourceLabel(article.source),
+            thumbnailUrl: article.thumbnailUrl ?? null,
+            pubDate: article.pub_date,
+        })
+    );
+    const { items: timeline } = buildRadarTimeline(references, timelineArticles, [company.company_name, ...aliases]);
+
     const navSections = [
         { id: 'overview', label: '개요' },
         ...(hasProducts ? [{ id: 'products', label: '제품·서비스' }] : []),
-        ...(references.length > 0 ? [{ id: 'references', label: '주요 활동' }] : []),
-        { id: 'articles', label: '관련 기사' },
+        { id: 'activity', label: '주요 활동' },
     ];
 
     const inquiryButton = (placement: string, className: string) =>
@@ -328,20 +377,28 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
             </a>
         ) : null;
 
-    const brochureButton = (placement: string, className: string) =>
-        brochureHref ? (
+    const homepageButton = (label: string, className: string) =>
+        homepageHref ? (
             <a
-                href={brochureHref}
+                href={homepageHref}
                 target="_blank"
                 rel="noopener noreferrer"
-                data-ga-event="cta_download_click"
-                data-ga-placement={placement}
                 className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-zi-primary transition-colors hover:border-zi-blue hover:text-zi-blue ${className}`}
             >
-                <Download className="h-4 w-4" aria-hidden="true" />
-                소개자료
+                {label}
+                <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
             </a>
         ) : null;
+
+    const brochureLinkProps = (placement: string) => ({
+        href: brochureHref,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        'data-ga-event': 'cta_download_click',
+        'data-ga-placement': placement,
+    });
+
+    const sectionHeading = 'mb-3 text-lg sm:text-xl font-bold text-zi-primary font-serif tracking-tight break-keep';
 
     return (
         <div className="min-h-screen bg-zi-surface text-zi-on-surface">
@@ -366,8 +423,8 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     인사이트 레이더로 돌아가기
                 </Link>
 
-                {/* ── 헤더: 로고/이니셜 + 조직명 + 유형·지역 / 데스크톱 CTA ── */}
-                <header className="mb-6 lg:mb-8 flex flex-col gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-center lg:justify-between">
+                {/* ── 헤더: 로고/이니셜 + 조직명 + 유형·지역 / 데스크톱 CTA (문의 primary, 홈페이지 secondary) ── */}
+                <header className="mb-4 lg:mb-8 flex flex-col gap-4 border-b border-slate-200 pb-5 lg:pb-6 lg:flex-row lg:items-center lg:justify-between">
                     <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                         <div className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                             {company.logo_url ? (
@@ -396,20 +453,55 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     {(inquiryHref || homepageHref) && (
                         <div className="hidden lg:flex shrink-0 items-center gap-2">
                             {inquiryButton('header', '')}
-                            {homepageHref && (
-                                <a
-                                    href={homepageHref}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-zi-primary transition-colors hover:border-zi-blue hover:text-zi-blue"
-                                >
-                                    홈페이지 바로가기
-                                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                                </a>
-                            )}
+                            {homepageButton('홈페이지 바로가기', '')}
                         </div>
                     )}
                 </header>
+
+                {/* ── 모바일 CTA: [문의하기][홈페이지] 2분할 + 외부 링크·소개자료 아이콘 줄 ── */}
+                {(inquiryHref || homepageHref || iconLinks.length > 0 || brochureHref) && (
+                    <div className="mb-6 flex flex-col gap-2 lg:hidden">
+                        {(inquiryHref || homepageHref) && (
+                            <div className="flex gap-2">
+                                {inquiryButton('mobile_bar', 'flex-1 min-h-12')}
+                                {homepageButton('홈페이지', 'flex-1 min-h-12')}
+                            </div>
+                        )}
+                        {(iconLinks.length > 0 || brochureHref) && (
+                            <ul className="flex flex-wrap gap-2" aria-label="외부 링크">
+                                {iconLinks.map((link) => {
+                                    const Icon = externalLinkIcon(link.url);
+                                    return (
+                                        <li key={link.url}>
+                                            <a
+                                                href={link.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                aria-label={`${link.title} (새 창)`}
+                                                title={link.title}
+                                                className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-zi-blue hover:text-zi-blue"
+                                            >
+                                                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                                            </a>
+                                        </li>
+                                    );
+                                })}
+                                {brochureHref && (
+                                    <li>
+                                        <a
+                                            {...brochureLinkProps('mobile_bar')}
+                                            aria-label="소개자료 다운로드 (새 창)"
+                                            className="flex h-11 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:border-zi-blue hover:text-zi-blue"
+                                        >
+                                            <Download className="h-4 w-4" aria-hidden="true" />
+                                            소개자료
+                                        </a>
+                                    </li>
+                                )}
+                            </ul>
+                        )}
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
                     {/* ─── main: DOM 순서 = 모바일 순서, 데스크톱은 lg:order로만 재배치 (CLS 방지) ─── */}
@@ -432,13 +524,13 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             />
                         )}
 
-                        {/* 주요 정보 라벨-값 그리드 */}
+                        {/* 주요 정보 라벨-값 표 (모바일 전용, 데스크톱은 우측 레일 "핵심 정보"에 통합) */}
                         {infoRows.length > 0 && (
-                            <section aria-labelledby="info-heading" className="lg:order-2">
+                            <section aria-labelledby="info-heading" className="lg:hidden">
                                 <h2 id="info-heading" className="sr-only">주요 정보</h2>
-                                <dl className="grid grid-cols-1 sm:grid-cols-2 divide-y divide-slate-100 sm:divide-y-0 rounded-xl border border-slate-200 bg-white px-4 sm:px-6 sm:py-2 shadow-sm">
+                                <dl className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white px-4 shadow-sm">
                                     {infoRows.map((row) => (
-                                        <div key={row.label} className="flex items-baseline gap-4 py-3 sm:py-3.5">
+                                        <div key={row.label} className="flex items-baseline gap-4 py-3">
                                             <dt className="w-14 shrink-0 text-[13px] font-medium text-slate-500">{row.label}</dt>
                                             <dd className="min-w-0 text-[14px] font-semibold text-slate-900 tabular-nums break-keep">{row.value}</dd>
                                         </div>
@@ -447,18 +539,10 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             </section>
                         )}
 
-                        {/* 모바일 CTA 가로 2분할 (데스크톱은 헤더·레일에 배치) */}
-                        {(inquiryHref || brochureHref) && (
-                            <div className="flex gap-2 lg:hidden">
-                                {inquiryButton('mobile_bar', 'flex-1 min-h-12')}
-                                {brochureButton('mobile_bar', 'flex-1 min-h-12')}
-                            </div>
-                        )}
-
-                        {/* 1) 기업 개요 */}
+                        {/* 1) 개요 */}
                         <section id="overview" aria-labelledby="overview-heading" className="scroll-mt-36 lg:order-1">
-                            <h2 id="overview-heading" className="mb-3 text-lg sm:text-xl font-bold text-zi-primary font-serif tracking-tight">
-                                기업 개요
+                            <h2 id="overview-heading" className={sectionHeading}>
+                                {company.company_name} 개요
                             </h2>
                             <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
                                 {company.business_summary?.trim() ? (
@@ -469,12 +553,11 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             </div>
                         </section>
 
-                        {/* 4) 제품·서비스 카드 */}
+                        {/* 2) 제품·서비스 */}
                         {hasProducts && (
                             <section id="products" aria-labelledby="products-heading" className="scroll-mt-36 lg:order-4">
-                                <h2 id="products-heading" className="mb-3 flex items-center gap-2 text-lg sm:text-xl font-bold text-zi-primary font-serif tracking-tight">
-                                    <Target className="h-5 w-5 text-zi-blue" aria-hidden="true" />
-                                    {company.company_name} 전략적 포지셔닝 및 핵심 역량
+                                <h2 id="products-heading" className={sectionHeading}>
+                                    {company.company_name} 제품·서비스
                                 </h2>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 items-start">
                                     <CollapsibleTagGroup
@@ -496,97 +579,79 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                             </section>
                         )}
 
-                        {/* 5) 주요 레퍼런스 */}
-                        {references.length > 0 && (
-                            <section id="references" aria-label="주요 레퍼런스" className="scroll-mt-36 lg:order-5">
-                                <CollapsibleReferences references={references} />
-                            </section>
-                        )}
-
-                        {/* 6) 활동·관련 기사 타임라인 */}
-                        <section id="articles" aria-labelledby="articles-heading" className="scroll-mt-36 lg:order-6">
-                            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-                                <h2 id="articles-heading" className="flex items-center gap-2 text-lg sm:text-xl font-bold text-zi-primary font-serif tracking-tight">
-                                    <Tag className="h-5 w-5 text-slate-400" aria-hidden="true" />
-                                    {company.company_name} 주요 활동 및 관련 기사 타임라인
+                        {/* 3) 주요 활동: 레퍼런스 + 관련 기사 통합 타임라인 */}
+                        <section id="activity" aria-labelledby="activity-heading" className="scroll-mt-36 lg:order-5">
+                            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                <h2 id="activity-heading" className={sectionHeading.replace('mb-3 ', '')}>
+                                    {company.company_name} 주요 활동
                                 </h2>
-                                <span className="text-sm font-semibold text-slate-600 tabular-nums">
-                                    총 {company.articleCount.toLocaleString()}건 중 주요 {company.recentArticles.length}건
-                                </span>
+                                {company.articleCount > 0 && (
+                                    <span className="text-sm font-semibold text-slate-600 tabular-nums">
+                                        관련 기사 {company.articleCount.toLocaleString()}건
+                                    </span>
+                                )}
                             </div>
-                            {company.recentArticles.length > 0 ? (
-                                <ol className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white shadow-sm">
-                                    {company.recentArticles.map((article: typeof company.recentArticles[number]) => (
-                                        <TimelineRow
-                                            key={`${article.isMagazine ? 'm' : 'a'}-${article.id}`}
-                                            date={formatRadarDate(article.pub_date)}
-                                            category={article.isMagazine ? '진사이트 매거진' : formatSourceLabel(article.source)}
-                                            isMagazine={!!article.isMagazine}
-                                            title={article.title}
-                                            summary={article.summary ?? ''}
-                                            url={article.url ?? undefined}
-                                            thumbnailUrl={article.thumbnailUrl ?? null}
-                                        />
-                                    ))}
-                                </ol>
+                            {timeline.length > 0 ? (
+                                <ProfileTimelineList total={timeline.length}>
+                                    {timeline.map((item) =>
+                                        item.kind === 'article' ? (
+                                            <ArticleTimelineRow key={item.key} dateLabel={item.dateLabel} article={item.article} />
+                                        ) : (
+                                            <li key={item.key} className="flex gap-3 sm:gap-4 px-4 py-3 sm:px-5">
+                                                <TimelineDate label={item.dateLabel} />
+                                                <p className="min-w-0 flex-1 text-sm sm:text-[15px] leading-relaxed text-slate-800 break-keep">{item.text}</p>
+                                            </li>
+                                        )
+                                    )}
+                                </ProfileTimelineList>
                             ) : (
                                 <div className="py-8 text-center text-sm text-slate-500 bg-white rounded-xl border border-dashed border-slate-200">
-                                    수집된 기사가 없습니다. 뉴스 수집 후 다시 확인해 주세요.
+                                    등록된 활동과 수집된 기사가 없습니다.
                                 </div>
                             )}
                         </section>
                     </div>
 
-                    {/* ─── 우측 레일 (데스크톱 sticky). 모바일에서는 본문 뒤에 외부 링크·유사 조직만 표시 ─── */}
+                    {/* ─── 우측 레일 (데스크톱 sticky). 모바일에서는 본문 뒤에 유사 조직만 표시 ─── */}
                     <aside aria-label={`${company.company_name} 요약`} className="min-w-0">
                         <div className="flex flex-col gap-5 lg:sticky lg:top-24">
                             <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                                <h2 className="mb-3 text-sm font-bold text-zi-primary">핵심 정보</h2>
-                                <dl className="space-y-2.5 text-sm">
-                                    {(company.entity_type || company.region) && (
-                                        <div className="flex justify-between gap-3">
-                                            <dt className="text-[13px] text-slate-500">유형 · 지역</dt>
-                                            <dd className="text-right font-semibold text-slate-900">
-                                                {[company.entity_type, company.region?.name].filter(Boolean).join(' · ')}
-                                            </dd>
-                                        </div>
-                                    )}
-                                    {companyAge && (
-                                        <div className="flex justify-between gap-3">
-                                            <dt className="text-[13px] text-slate-500">업력</dt>
-                                            <dd className="font-semibold text-slate-900 tabular-nums">{companyAge}</dd>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between gap-3">
-                                        <dt className="text-[13px] text-slate-500">연관 기사</dt>
-                                        <dd className="font-semibold text-slate-900 tabular-nums">{company.articleCount.toLocaleString()}건</dd>
-                                    </div>
-                                    {latestActivity && (
-                                        <div className="flex justify-between gap-3">
-                                            <dt className="text-[13px] text-slate-500">최근 활동</dt>
-                                            <dd className="font-semibold text-slate-900 tabular-nums">{latestActivity}</dd>
-                                        </div>
-                                    )}
-                                </dl>
                                 {(inquiryHref || brochureHref) && (
-                                    <div className="mt-4 flex flex-col gap-2">
+                                    <div className="mb-5 flex flex-col gap-2">
                                         {inquiryButton('rail', 'w-full')}
-                                        {brochureButton('rail', 'w-full')}
+                                        {brochureHref && (
+                                            <a
+                                                {...brochureLinkProps('rail')}
+                                                className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-zi-primary transition-colors hover:border-zi-blue hover:text-zi-blue"
+                                            >
+                                                <Download className="h-4 w-4" aria-hidden="true" />
+                                                소개자료
+                                            </a>
+                                        )}
                                     </div>
                                 )}
+                                <h2 className="mb-3 text-sm font-bold text-zi-primary">핵심 정보</h2>
+                                <dl className="space-y-2.5 text-sm">
+                                    {railRows.map((row) => (
+                                        <div key={row.label} className="flex justify-between gap-3">
+                                            <dt className="shrink-0 text-[13px] text-slate-500">{row.label}</dt>
+                                            <dd className="min-w-0 text-right font-semibold text-slate-900 tabular-nums break-keep">{row.value}</dd>
+                                        </div>
+                                    ))}
+                                </dl>
                             </div>
 
                             {externalLinks.length > 0 && (
-                                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                                <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                                     <h2 className="mb-2 text-sm font-bold text-zi-primary">외부 링크</h2>
-                                    <ul className="flex flex-wrap gap-2 lg:flex-col lg:gap-0">
+                                    <ul>
                                         {externalLinks.map((link) => (
                                             <li key={link.url}>
                                                 <a
                                                     href={link.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-semibold text-blue-700 hover:bg-blue-100 lg:w-full lg:justify-between lg:border-0 lg:bg-transparent lg:px-0 lg:hover:bg-transparent lg:hover:text-zi-blue"
+                                                    className="flex min-h-11 w-full items-center justify-between gap-1.5 text-sm font-semibold text-blue-700 hover:text-zi-blue"
                                                 >
                                                     <span>{link.title}</span>
                                                     <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -651,55 +716,60 @@ function formatSourceLabel(source: string | null | undefined): string {
     return SOURCE_LABEL[source] ?? source;
 }
 
-function TimelineRow({
-    date,
-    category,
-    isMagazine,
-    title,
-    summary,
-    url,
-    thumbnailUrl,
-}: {
-    date: string | null;
-    category: string;
-    isMagazine: boolean;
-    title: string;
-    summary: string;
-    url?: string;
-    thumbnailUrl: string | null;
-}) {
+/** 외부 링크 주소로 아이콘 선택 (모르는 곳은 지구본) */
+function externalLinkIcon(url: string): LucideIcon {
+    let host = '';
+    try {
+        host = new URL(url).hostname.replace(/^www\./, '');
+    } catch {}
+    if (host.includes('instagram.com')) return Instagram;
+    if (host.includes('threads.net') || host.includes('threads.com')) return AtSign;
+    if (host.includes('youtube.com') || host.includes('youtu.be')) return Youtube;
+    if (host.includes('facebook.com')) return Facebook;
+    if (host.includes('linkedin.com')) return Linkedin;
+    if (host === 'x.com' || host.includes('twitter.com')) return Twitter;
+    if (host.includes('blog.') || host.includes('brunch.co.kr') || host.includes('tistory.com')) return BookOpen;
+    return Globe;
+}
+
+function TimelineDate({ label }: { label: string | null }) {
+    return label ? (
+        <time className="w-[3.75rem] sm:w-16 shrink-0 pt-px text-xs sm:text-sm font-bold text-slate-500 tabular-nums">{label}</time>
+    ) : (
+        <span className="w-[3.75rem] sm:w-16 shrink-0 text-sm text-slate-300" aria-label="시기 미기재">—</span>
+    );
+}
+
+function ArticleTimelineRow({ dateLabel, article }: { dateLabel: string | null; article: RadarTimelineArticle }) {
     const titleClass = 'text-[15px] sm:text-base font-bold leading-snug text-zi-primary hover:text-zi-blue';
     return (
-        <li className="flex gap-4 p-4 sm:px-5">
+        <li className="flex gap-3 sm:gap-4 p-4 sm:px-5">
+            <TimelineDate label={dateLabel} />
             <div className="min-w-0 flex-1">
-                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500 tabular-nums">
-                    {date && <time>{date}</time>}
-                    {date && <span aria-hidden="true">·</span>}
-                    <span className={isMagazine ? 'text-amber-800' : 'text-zi-blue'}>{category}</span>
-                </p>
+                <p className={`mb-0.5 text-xs font-semibold ${article.isMagazine ? 'text-amber-800' : 'text-zi-blue'}`}>{article.category}</p>
                 <h3>
-                    {url ? (
-                        isMagazine ? (
-                            <Link href={url} className={titleClass}>{title}</Link>
+                    {article.url ? (
+                        article.isMagazine ? (
+                            <Link href={article.url} className={titleClass}>{article.title}</Link>
                         ) : (
-                            <a href={url} target="_blank" rel="noopener noreferrer" className={titleClass}>
-                                {title}
+                            <a href={article.url} target="_blank" rel="noopener noreferrer" className={titleClass}>
+                                {article.title}
                                 <ExternalLink className="ml-1 inline h-3 w-3 align-baseline text-slate-400" aria-label="(새 창)" />
                             </a>
                         )
                     ) : (
-                        <span className={titleClass}>{title}</span>
+                        <span className={titleClass}>{article.title}</span>
                     )}
                 </h3>
-                {summary && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-slate-600">{summary}</p>}
+                {article.summary && <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-slate-600">{article.summary}</p>}
             </div>
-            {thumbnailUrl && (
+            {article.thumbnailUrl && (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
-                    src={thumbnailUrl}
+                    src={article.thumbnailUrl}
                     alt=""
                     loading="lazy"
-                    className="h-16 w-20 sm:h-[72px] sm:w-28 shrink-0 rounded-lg border border-slate-100 object-cover"
+                    className="h-14 w-16 sm:h-[72px] sm:w-28 shrink-0 rounded-lg border border-slate-100 object-cover"
                 />
             )}
         </li>
