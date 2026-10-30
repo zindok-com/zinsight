@@ -83,8 +83,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
 
     const categoryLabel = getCategoryLabel(post.category);
-    // 제목이 너무 길면 카테고리명 생략, 아니면 병기
-    const title = post.title.length > 50 ? post.title : `${post.title} - ${categoryLabel}`;
+    // 기사 제목만 사용 (분류명을 ' - '로 붙이면 제목 속 하이픈과 겹쳐 구분자가 반복됨).
+    // <title>은 루트 template이 '| 진사이트'를 붙이고, template이 적용되지 않는 OG/트위터에는 직접 붙임
+    const title = post.title;
+    const socialTitle = `${post.title} | 진사이트`;
 
     let description = post.summary || '';
     if (!description) {
@@ -125,7 +127,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             follow: post.status === 'PUBLISHED',
         },
         openGraph: {
-            title,
+            title: socialTitle,
             description,
             type: 'article',
             url: `${baseUrl}/magazine/tech-marketing/${post.slug}`,
@@ -140,7 +142,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         },
         twitter: {
             card: 'summary_large_image',
-            title,
+            title: socialTitle,
             description,
             images: [ogImage],
         },

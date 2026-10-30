@@ -13,13 +13,13 @@ const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
 export const metadata: Metadata = {
-    title: '매거진 - 테크·마케팅 저널 & 로컬 비즈니스 허브',
+    title: '매거진: 테크·마케팅 저널 & 로컬 비즈니스 허브',
     description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
     alternates: {
         canonical: `${baseUrl}/magazine`,
     },
     ...buildSocialMetadata({
-        title: '매거진 - 테크·마케팅 저널 & 로컬 비즈니스 허브',
+        title: '매거진: 테크·마케팅 저널 & 로컬 비즈니스 허브',
         description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
         path: '/magazine',
     }),

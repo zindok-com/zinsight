@@ -60,14 +60,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const url = `${SITE_BASE_URL}/insight-radar/${company.slug || company.id}`;
     
     const aliases = parseAliases(company.aliases);
-    const aliasesText = aliases.length > 0 ? ` (${aliases.slice(0, 2).join(', ')})` : '';
     const coreKw = parseKeywords(company.core_keywords);
-    
+
     const keyFeature = coreKw?.technology?.[0] || coreKw?.products?.[0] || '';
     const regionName = company.region?.name ? `${company.region.name} ` : '';
 
-    // 검색 최적화(SEO) 맞춤 타이틀 생성 (회사명 + 별칭 + 지역 + 핵심키워드)
-    const title = `${company.company_name}${aliasesText} - ${regionName}${keyFeature ? keyFeature + ' ' : ''}기업 분석 프로필`;
+    // 검색 최적화(SEO) 맞춤 타이틀 (회사명 + 대표 별칭 1개: 지역 + 핵심키워드 기업 분석 프로필)
+    // 구분자는 ':' 하나만 쓴다 (루트 template의 '| 진사이트'와 ' - '가 겹치지 않도록)
+    const head = `${company.company_name}${pickTitleAlias(company.company_name, aliases)}`;
+    const tail = `${regionName}${keyFeature ? keyFeature + ' ' : ''}기업 분석 프로필`;
+    const title = `${head}: ${tail}`;
     // <title>에는 루트 template이 '| 진사이트'를 붙이므로, template이 적용되지 않는 OG/트위터에만 직접 붙임
     const socialTitle = `${title} | 진사이트`;
 
@@ -127,6 +129,21 @@ function parseKeywords(keywordsStr: any) {
     } catch {
         return null;
     }
+}
+
+/**
+ * 메타 타이틀에 붙일 대표 별칭 1개: 조직명과 법인 표기만 다른 별칭("(주)예스넷", "예스넷 주식회사")은 제외.
+ * 조직명이 이미 길면(20자 초과) 붙이지 않는다.
+ */
+function pickTitleAlias(companyName: string, aliases: string[]): string {
+    const normalize = (s: string) => s.replace(/주식회사|\(주\)|㈜|\s+/g, '').toLowerCase();
+    if (companyName.length > 20) return '';
+    const base = normalize(companyName);
+    const alias = aliases.find((a) => {
+        const n = normalize(a);
+        return n && n !== base && !base.includes(n) && !n.includes(base);
+    });
+    return alias ? `(${alias.trim()})` : '';
 }
 
 /**
