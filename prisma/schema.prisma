@@ -94,6 +94,9 @@ model Organization {
   video_poster_url String?  @db.VarChar(512) // 영상 포스터 이미지
   brochure_url     String?  @db.VarChar(512) // 소개자료 다운로드 URL
   inquiry_url      String?  @db.VarChar(512) // 문의 연결처 (mailto:, tel:, 폼 URL)
+  contact_email    String?  @db.VarChar(255) // 공개 문의 이메일
+  contact_phone    String?  @db.VarChar(50)  // 공개 문의 전화
+  tagline          String?  @db.VarChar(60)  // 목록용 한 줄 소개 (40자 이내 권장)
   is_featured      Boolean  @default(false)
   region_id        Int      @map("region_id")
   created_at       DateTime @default(now())

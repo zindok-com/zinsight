@@ -19,6 +19,9 @@ export async function updateCompany(
     video_poster_url?: string | null;
     brochure_url?: string | null;
     inquiry_url?: string | null;
+    contact_email?: string | null;
+    contact_phone?: string | null;
+    tagline?: string | null;
     business_summary?: string;
     core_keywords?: any;
     founded_year?: string;
@@ -32,7 +35,7 @@ export async function updateCompany(
 ) {
   await requireAdmin();
   try {
-    const { is_featured, slug, video_url, video_poster_url, brochure_url, inquiry_url, ...companyData } = data;
+    const { is_featured, slug, video_url, video_poster_url, brochure_url, inquiry_url, contact_email, contact_phone, tagline, ...companyData } = data;
 
     const formattedSlug = slug && slug.trim() !== ''
       ? slugifyOrganization(slug)
@@ -50,6 +53,9 @@ export async function updateCompany(
         ...(video_poster_url !== undefined ? { video_poster_url: safeHttpUrl(video_poster_url) ?? null } : {}),
         ...(brochure_url !== undefined ? { brochure_url: safeHttpUrl(brochure_url) ?? null } : {}),
         ...(inquiry_url !== undefined ? { inquiry_url: safeInquiryUrl(inquiry_url) } : {}),
+        ...(contact_email !== undefined ? { contact_email: safeContactEmail(contact_email) } : {}),
+        ...(contact_phone !== undefined ? { contact_phone: safeContactPhone(contact_phone) } : {}),
+        ...(tagline !== undefined ? { tagline: tagline?.trim().slice(0, 60) || null } : {}),
       },
       include: {
         region: true,
@@ -77,6 +83,18 @@ function safeInquiryUrl(url: string | null): string | null {
   const trimmed = (url ?? '').trim();
   if (/^mailto:\S+$/i.test(trimmed) || /^tel:[0-9+\-() ]+$/i.test(trimmed)) return trimmed;
   return safeHttpUrl(trimmed) ?? null;
+}
+
+/** 공개 문의 이메일: 형식이 맞을 때만 저장 (mailto: 접두어는 떼고 저장) */
+function safeContactEmail(email: string | null): string | null {
+  const trimmed = (email ?? '').trim().replace(/^mailto:/i, '');
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed) ? trimmed.slice(0, 255) : null;
+}
+
+/** 공개 문의 전화: 숫자·+·-·괄호·공백만 허용 */
+function safeContactPhone(phone: string | null): string | null {
+  const trimmed = (phone ?? '').trim().replace(/^tel:/i, '');
+  return /^[0-9+\-() ]{4,50}$/.test(trimmed) ? trimmed : null;
 }
 
 export async function toggleCompanyFeatured(id: number, is_featured: boolean) {

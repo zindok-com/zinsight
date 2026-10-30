@@ -26,6 +26,7 @@ export interface RadarCompanyCard {
     logo_url?: string | null;
     logo_source_url?: string | null;
     founded_year?: string | null;
+    tagline?: string | null;
     articleCount: number;
     latestArticleDate: Date | null;
 }
@@ -176,6 +177,7 @@ export async function getRadarCompanies(
             logo_url: true,
             logo_source_url: true,
             founded_year: true,
+            tagline: true,
             is_featured: true,
             created_at: true,
             region: { select: { id: true, name: true, slug: true } },
@@ -215,6 +217,7 @@ export async function getRadarCompanies(
             logo_url: c.logo_url ?? null,
             logo_source_url: c.logo_source_url ?? null,
             founded_year: c.founded_year ?? null,
+            tagline: c.tagline ?? null,
             articleCount: c._count.company_articles + c._count.magazinePosts,
             latestArticleDate: latest,
         };
@@ -490,6 +493,8 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         video_poster_url: company.video_poster_url ?? null,
         brochure_url: company.brochure_url ?? null,
         inquiry_url: company.inquiry_url ?? null,
+        contact_email: company.contact_email ?? null,
+        contact_phone: company.contact_phone ?? null,
         latestArticleDate: combinedArticles[0]?.pub_date ?? null,
     };
 }

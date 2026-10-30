@@ -116,6 +116,9 @@ interface CompanyData {
     video_poster_url?: string | null;
     brochure_url?: string | null;
     inquiry_url?: string | null;
+    contact_email?: string | null;
+    contact_phone?: string | null;
+    tagline?: string | null;
     business_summary: string | null;
     core_keywords: any;
     founded_year: string | null;
@@ -240,6 +243,9 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     // 보관함 선택 모달: 어느 칸에 넣을지
     const [libraryTarget, setLibraryTarget] = useState<'video' | 'poster' | 'brochure' | null>(null);
     const [inquiryUrl, setInquiryUrl] = useState(initialCompany.inquiry_url || '');
+    const [contactEmail, setContactEmail] = useState(initialCompany.contact_email || '');
+    const [contactPhone, setContactPhone] = useState(initialCompany.contact_phone || '');
+    const [tagline, setTagline] = useState(initialCompany.tagline || '');
 
     // 탭 상태
     const [activeTab, setActiveTab] = useState<'linked' | 'ingested'>('linked');
@@ -469,6 +475,9 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 video_poster_url: videoPosterUrl.trim() || null,
                 brochure_url: brochureUrl.trim() || null,
                 inquiry_url: inquiryUrl.trim() || null,
+                contact_email: contactEmail.trim() || null,
+                contact_phone: contactPhone.trim() || null,
+                tagline: tagline.trim() || null,
             });
 
             if (res.success && res.company) {
@@ -921,10 +930,37 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                         id="org-inquiry"
                                         value={inquiryUrl}
                                         onChange={e => setInquiryUrl(e.target.value)}
-                                        placeholder="mailto:contact@... / tel:031... / https://폼 주소"
+                                        placeholder="https://문의 폼 주소 (mailto:·tel:도 가능)"
                                         className="h-9"
                                     />
                                 </div>
+                                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="org-contact-email" className="text-xs font-semibold">문의 이메일</Label>
+                                        <Input
+                                            id="org-contact-email"
+                                            type="email"
+                                            value={contactEmail}
+                                            onChange={e => setContactEmail(e.target.value)}
+                                            placeholder="contact@example.com"
+                                            className="h-9"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="org-contact-phone" className="text-xs font-semibold">문의 전화</Label>
+                                        <Input
+                                            id="org-contact-phone"
+                                            type="tel"
+                                            value={contactPhone}
+                                            onChange={e => setContactPhone(e.target.value)}
+                                            placeholder="031-000-0000"
+                                            className="h-9"
+                                        />
+                                    </div>
+                                </div>
+                                <p className="text-[11px] text-muted-foreground">
+                                    공개 프로필의 [문의하기]는 연결처 → 이메일 → 전화 순으로 먼저 입력된 하나로 연결됩니다. 모두 비우면 버튼이 숨겨집니다.
+                                </p>
                             </div>
                         </CardContent>
                     </Card>
@@ -1011,6 +1047,22 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between gap-2">
+                                    <Label htmlFor="org-tagline" className="text-xs font-semibold">한 줄 소개 (목록 표시용)</Label>
+                                    <span className={`text-[11px] tabular-nums ${tagline.length > 40 ? 'text-amber-600 font-semibold' : 'text-muted-foreground'}`}>
+                                        {tagline.length}/40
+                                    </span>
+                                </div>
+                                <Input
+                                    id="org-tagline"
+                                    value={tagline}
+                                    maxLength={60}
+                                    onChange={e => setTagline(e.target.value)}
+                                    placeholder="비우면 회사소개 첫 문장에서 조직명을 뺀 문구를 사용합니다"
+                                    className="h-9"
+                                />
+                            </div>
                             <div className="space-y-1.5">
                                 <div className="flex items-center justify-between flex-wrap gap-2">
                                     <Label className="text-xs font-semibold">회사소개 및 최근현황 (Business Summary & Status)</Label>
