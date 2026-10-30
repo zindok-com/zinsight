@@ -5,6 +5,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3Client, NCP_STORAGE_BUCKET, NCP_STORAGE_ENDPOINT } from '@/lib/storage';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { getInviteByToken } from '@/actions/company-actions';
+import { UPLOAD_SIZE_LIMIT, formatBytes } from '@/lib/storage-media';
 
 export type UploadFolder = 'thumbnails' | 'videos' | 'images' | 'logos' | 'attachments';
 
@@ -87,7 +88,8 @@ export async function getMediaUploadUrl(
     filename: string,
     contentType: string,
     folder: UploadFolder = 'thumbnails',
-    inviteToken?: string
+    inviteToken?: string,
+    fileSize?: number
 ): Promise<MediaUploadTicket> {
     // 발급 권한: 관리자, 또는 유효한 초대 토큰을 가진 신청자(로고 폴더 한정)
     if (!(await isAdminRequest())) {
@@ -105,6 +107,10 @@ export async function getMediaUploadUrl(
     const type = String(contentType || '').toLowerCase();
     if (!rule.exts.includes(ext) || !rule.types.includes(type)) {
         throw new Error(`허용되지 않은 파일 형식입니다. (허용: ${rule.exts.join(', ')})`);
+    }
+    // 브라우저가 알려준 파일 크기로 폴더별 상한 확인
+    if (fileSize !== undefined && (!Number.isFinite(fileSize) || fileSize <= 0 || fileSize > UPLOAD_SIZE_LIMIT[folder])) {
+        throw new Error(`파일이 너무 큽니다. (최대 ${formatBytes(UPLOAD_SIZE_LIMIT[folder])})`);
     }
     if (!process.env.NCP_STORAGE_ACCESS_KEY || !process.env.NCP_STORAGE_SECRET_KEY) {
         throw new Error('NCP 스토리지 인증 환경변수(NCP_STORAGE_ACCESS_KEY, NCP_STORAGE_SECRET_KEY)가 설정되지 않았습니다.');

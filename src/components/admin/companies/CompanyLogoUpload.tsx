@@ -72,7 +72,7 @@ export function CompanyLogoUpload({
                     ? 'image/webp'
                     : 'image/jpeg');
 
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'logos', inviteToken);
+            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'logos', inviteToken, file.size);
             const res = await fetch(uploadUrl, {
                 method: 'PUT',
                 headers: {
@@ -123,7 +123,7 @@ export function CompanyLogoUpload({
                     ? 'application/pdf'
                     : 'application/postscript');
 
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'attachments', inviteToken);
+            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'attachments', inviteToken, file.size);
             const res = await fetch(uploadUrl, {
                 method: 'PUT',
                 headers: {

@@ -78,7 +78,7 @@ export function Sidebar({ pendingSubmissionsCount = 0 }: { pendingSubmissionsCou
         { name: '지역(지자체) 관리', href: '/admin/magazine/regions', icon: Building2 },
         { name: '키워드 관리', href: '/admin/keywords', icon: Tags },
         { name: '기사 관리', href: '/admin/articles', icon: Newspaper },
-        { name: '이미지 보관함', href: '/admin/storage', icon: Image },
+        { name: '미디어 보관함', href: '/admin/storage', icon: Image },
         { name: '데이터 내보내기', href: '/admin/export', icon: Download },
     ];
 

@@ -67,7 +67,7 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
 
         try {
             // 1단계: Server Action을 통해 Presigned PUT URL 및 최종 공개 URL 발급
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, file.type, 'thumbnails');
+            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, file.type, 'thumbnails', undefined, file.size);
 
             // 2단계: 브라우저에서 NCP Object Storage로 직접 PUT 업로드
             const uploadRes = await fetch(uploadUrl, {
