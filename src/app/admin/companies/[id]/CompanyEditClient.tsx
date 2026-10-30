@@ -25,7 +25,9 @@ import {
     List,
     MoveVertical,
     ChevronDown,
+    FolderOpen,
 } from 'lucide-react';
+import { StorageImageSelectorModal, type SelectableMedia } from '@/components/admin/storage/StorageImageSelectorModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -235,6 +237,8 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [videoUrl, setVideoUrl] = useState(initialCompany.video_url || '');
     const [videoPosterUrl, setVideoPosterUrl] = useState(initialCompany.video_poster_url || '');
     const [brochureUrl, setBrochureUrl] = useState(initialCompany.brochure_url || '');
+    // 보관함 선택 모달: 어느 칸에 넣을지
+    const [libraryTarget, setLibraryTarget] = useState<'video' | 'poster' | 'brochure' | null>(null);
     const [inquiryUrl, setInquiryUrl] = useState(initialCompany.inquiry_url || '');
 
     // 탭 상태
@@ -844,33 +848,72 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="space-y-1.5">
                                     <Label htmlFor="org-video-url" className="text-xs font-semibold">소개 영상 URL</Label>
-                                    <Input
-                                        id="org-video-url"
-                                        value={videoUrl}
-                                        onChange={e => setVideoUrl(e.target.value)}
-                                        placeholder="https://...mp4 또는 유튜브 주소"
-                                        className="h-9"
-                                    />
+                                    <div className="flex gap-1.5">
+                                        <Input
+                                            id="org-video-url"
+                                            value={videoUrl}
+                                            onChange={e => setVideoUrl(e.target.value)}
+                                            placeholder="https://...mp4 또는 유튜브 주소"
+                                            className="h-9"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setLibraryTarget('video')}
+                                            className="h-9 shrink-0 gap-1 px-2.5 text-xs"
+                                            aria-label="소개 영상 보관함에서 선택"
+                                        >
+                                            <FolderOpen className="h-3.5 w-3.5" />
+                                            보관함
+                                        </Button>
+                                    </div>
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="org-video-poster" className="text-xs font-semibold">영상 포스터 이미지 URL</Label>
-                                    <Input
-                                        id="org-video-poster"
-                                        value={videoPosterUrl}
-                                        onChange={e => setVideoPosterUrl(e.target.value)}
-                                        placeholder="https://... (유튜브는 비워 두면 자동 썸네일)"
-                                        className="h-9"
-                                    />
+                                    <div className="flex gap-1.5">
+                                        <Input
+                                            id="org-video-poster"
+                                            value={videoPosterUrl}
+                                            onChange={e => setVideoPosterUrl(e.target.value)}
+                                            placeholder="https://... (유튜브는 비워 두면 자동 썸네일)"
+                                            className="h-9"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setLibraryTarget('poster')}
+                                            className="h-9 shrink-0 gap-1 px-2.5 text-xs"
+                                            aria-label="영상 포스터 보관함에서 선택"
+                                        >
+                                            <FolderOpen className="h-3.5 w-3.5" />
+                                            보관함
+                                        </Button>
+                                    </div>
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="org-brochure" className="text-xs font-semibold">소개자료 다운로드 URL</Label>
-                                    <Input
-                                        id="org-brochure"
-                                        value={brochureUrl}
-                                        onChange={e => setBrochureUrl(e.target.value)}
-                                        placeholder="https://...pdf"
-                                        className="h-9"
-                                    />
+                                    <div className="flex gap-1.5">
+                                        <Input
+                                            id="org-brochure"
+                                            value={brochureUrl}
+                                            onChange={e => setBrochureUrl(e.target.value)}
+                                            placeholder="https://...pdf"
+                                            className="h-9"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setLibraryTarget('brochure')}
+                                            className="h-9 shrink-0 gap-1 px-2.5 text-xs"
+                                            aria-label="소개자료 보관함에서 선택"
+                                        >
+                                            <FolderOpen className="h-3.5 w-3.5" />
+                                            보관함
+                                        </Button>
+                                    </div>
                                 </div>
                                 <div className="space-y-1.5">
                                     <Label htmlFor="org-inquiry" className="text-xs font-semibold">문의하기 연결처</Label>
@@ -885,6 +928,17 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                             </div>
                         </CardContent>
                     </Card>
+
+                    <StorageImageSelectorModal
+                        isOpen={libraryTarget !== null}
+                        accept={({ video: 'video', poster: 'image', brochure: 'document' } as const satisfies Record<string, SelectableMedia>)[libraryTarget ?? 'video']}
+                        onClose={() => setLibraryTarget(null)}
+                        onSelect={(url) => {
+                            if (libraryTarget === 'video') setVideoUrl(url);
+                            else if (libraryTarget === 'poster') setVideoPosterUrl(url);
+                            else if (libraryTarget === 'brochure') setBrochureUrl(url);
+                        }}
+                    />
 
                     {/* 백링크 설정 카드 */}
                     <Card>

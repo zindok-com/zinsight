@@ -13,9 +13,11 @@ import {
     CheckCircle2,
     AlertCircle,
     Film,
+    FolderOpen,
 } from 'lucide-react';
 import { getMediaUploadUrl } from '@/actions/upload';
 import { extractYouTubeId, isDirectVideoUrl } from '@/lib/video';
+import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 
 export { extractYouTubeId, isDirectVideoUrl };
 
@@ -37,6 +39,7 @@ export function VideoInsertModal({ isOpen, onClose, onInsert }: VideoInsertModal
     const [uploading, setUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [libraryOpen, setLibraryOpen] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +92,7 @@ export function VideoInsertModal({ isOpen, onClose, onInsert }: VideoInsertModal
                     ? 'video/ogg'
                     : 'video/mp4');
 
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'videos');
+            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'videos', undefined, file.size);
 
             await new Promise<void>((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
@@ -327,6 +330,16 @@ export function VideoInsertModal({ isOpen, onClose, onInsert }: VideoInsertModal
                                         />
                                     </div>
                                 )}
+                                {!uploading && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setLibraryOpen(true)}
+                                        className="inline-flex min-h-9 items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:underline"
+                                    >
+                                        <FolderOpen className="w-3.5 h-3.5" />
+                                        보관함에 올려 둔 영상에서 고르기
+                                    </button>
+                                )}
                                 <input
                                     ref={fileInputRef}
                                     type="file"
@@ -380,6 +393,17 @@ export function VideoInsertModal({ isOpen, onClose, onInsert }: VideoInsertModal
                     </div>
                 </form>
             </div>
+
+            <StorageImageSelectorModal
+                isOpen={libraryOpen}
+                accept="video"
+                onClose={() => setLibraryOpen(false)}
+                onSelect={(url) => {
+                    setUploadedVideoUrl(url);
+                    setUploadedFileName(url.split('/').pop() || '');
+                    setErrorMsg(null);
+                }}
+            />
         </div>
     );
 }
