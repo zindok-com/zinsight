@@ -117,6 +117,20 @@ export function PlatformTrafficBreakdownCard({
             {/* 전체 유입처 상세 랭킹 */}
             {safeRows.length > 0 ? (
                 <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                    {/* 열 제목: 우측 수치가 무엇인지 표시 */}
+                    <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-400">
+                        <span className="w-48 sm:w-56 shrink-0 pl-7">플랫폼</span>
+                        <span className="flex-1" />
+                        <span className="w-28 sm:w-32 text-right shrink-0">유입 세션 (점유율)</span>
+                        {!compact && (
+                            <span
+                                className="hidden sm:inline-block w-16 text-right shrink-0"
+                                title="해당 플랫폼에서 들어온 세션의 평균 체류 시간 (GA4 평균 세션 시간)"
+                            >
+                                평균 체류
+                            </span>
+                        )}
+                    </div>
                     {(compact ? safeRows.slice(0, 8) : safeRows).map((row, idx) => {
                         const barWidth = maxSessions > 0 ? (row.sessions / maxSessions) * 100 : 0;
                         const badge = CATEGORY_BADGE[row.category] ?? CATEGORY_BADGE.other;
@@ -164,7 +178,10 @@ export function PlatformTrafficBreakdownCard({
                                     </span>
                                 </div>
                                 {!compact && (
-                                    <span className="hidden sm:inline-block w-16 text-right text-xs text-slate-400 shrink-0 tabular-nums">
+                                    <span
+                                        className="hidden sm:inline-block w-16 text-right text-xs text-slate-400 shrink-0 tabular-nums"
+                                        title="평균 체류 시간"
+                                    >
                                         {formatDuration(row.avgDuration)}
                                     </span>
                                 )}
