@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { parseRadarKeywords, type RadarSort } from '@/lib/radar';
+import { type RadarSort } from '@/lib/radar';
 
 // ─────────────────────────────────────────────
 // 타입 정의
@@ -74,15 +74,13 @@ export interface RadarFilterOptions {
     sort?: RadarSort;
 }
 
-export interface RadarSimilarCompany {
+export interface RadarRegionPeer {
     id: number;
     company_name: string;
     slug: string | null;
     entity_type: string | null;
     logo_url: string | null;
-    regionName: string | null;
-    /** 겹치는 키워드 (최대 2개, 표시용) */
-    sharedKeywords: string[];
+    latestArticleDate: Date | null;
 }
 
 // ─────────────────────────────────────────────
@@ -500,57 +498,60 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
 }
 
 // ─────────────────────────────────────────────
-// 유사 조직 (같은 지역 또는 핵심 키워드 겹침, 최대 3곳)
+// 같은 지역의 다른 조직 (현재 조직 제외, 최근 활동순, 최대 3곳)
+// 정렬은 목록(/insight-radar?regionId=) 기본 정렬(최근 활동순)과 동일하게 맞춤
 // ─────────────────────────────────────────────
 
-export async function getRadarSimilarCompanies(
+export async function getRadarRegionPeers(
     companyId: number,
+    regionId: number,
     limit = 3
-): Promise<RadarSimilarCompany[]> {
+): Promise<RadarRegionPeer[]> {
     limit = clampInt(limit, 1, 6, 3);
-    const candidates = await prisma.organization.findMany({
+    const publishedPost = { magazinePost: { status: 'PUBLISHED' as const, deletedAt: null } };
+    const peers = await prisma.organization.findMany({
+        where: { region_id: regionId, id: { not: Number(companyId) } },
         select: {
             id: true,
             company_name: true,
             slug: true,
             entity_type: true,
             logo_url: true,
-            core_keywords: true,
-            region_id: true,
-            region: { select: { name: true } },
+            company_articles: {
+                select: { article: { select: { pub_date: true } } },
+                orderBy: { article: { pub_date: 'desc' } },
+                take: 1,
+            },
+            magazinePosts: {
+                where: publishedPost,
+                select: { magazinePost: { select: { publishedAt: true, createdAt: true } } },
+                orderBy: { magazinePost: { publishedAt: 'desc' } },
+                take: 1,
+            },
         },
+        orderBy: [{ is_featured: 'desc' }, { created_at: 'desc' }],
         take: 500,
     });
-    const self = candidates.find((c) => c.id === Number(companyId));
-    if (!self) return [];
 
-    const normalize = (k: string) => k.toLowerCase().replace(/\s+/g, '');
-    const selfKw = parseRadarKeywords(self.core_keywords);
-    const selfSet = new Set([...selfKw.products, ...selfKw.technology, ...selfKw.target_market].map(normalize));
-
-    return candidates
-        .filter((c) => c.id !== self.id)
+    return peers
         .map((c) => {
-            const kw = parseRadarKeywords(c.core_keywords);
-            const shared = [...new Set([...kw.products, ...kw.technology, ...kw.target_market])].filter((k) =>
-                selfSet.has(normalize(k))
-            );
-            const sameRegion = c.region_id === self.region_id;
-            // 키워드 겹침을 지역 일치보다 우선 (키워드 1개 = 2점, 같은 지역 = 1점)
-            return { c, shared, score: shared.length * 2 + (sameRegion ? 1 : 0) };
+            const externalDate = c.company_articles[0]?.article?.pub_date ?? null;
+            const post = c.magazinePosts[0]?.magazinePost;
+            const magazineDate = post ? post.publishedAt ?? post.createdAt : null;
+            const latest = [externalDate, magazineDate]
+                .filter((d): d is Date => !!d)
+                .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+            return {
+                id: c.id,
+                company_name: c.company_name,
+                slug: c.slug ?? null,
+                entity_type: c.entity_type ?? null,
+                logo_url: c.logo_url ?? null,
+                latestArticleDate: latest,
+            };
         })
-        .filter((x) => x.score > 0)
-        .sort((a, b) => b.score - a.score || a.c.company_name.localeCompare(b.c.company_name, 'ko'))
-        .slice(0, limit)
-        .map(({ c, shared }) => ({
-            id: c.id,
-            company_name: c.company_name,
-            slug: c.slug ?? null,
-            entity_type: c.entity_type ?? null,
-            logo_url: c.logo_url ?? null,
-            regionName: c.region?.name ?? null,
-            sharedKeywords: shared.slice(0, 2),
-        }));
+        .sort((a, b) => (b.latestArticleDate?.getTime() ?? 0) - (a.latestArticleDate?.getTime() ?? 0))
+        .slice(0, limit);
 }
 
 // ─────────────────────────────────────────────

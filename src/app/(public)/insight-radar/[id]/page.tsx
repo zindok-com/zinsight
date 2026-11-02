@@ -3,6 +3,7 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import {
     ArrowLeft,
+    ArrowRight,
     AtSign,
     BookOpen,
     Download,
@@ -16,7 +17,7 @@ import {
     Youtube,
     type LucideIcon,
 } from 'lucide-react';
-import { getRadarCompanyDetail, getRadarSimilarCompanies } from '@/actions/insight-radar-actions';
+import { getRadarCompanyDetail, getRadarRegionPeers } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
 import { ProfileOverview } from '@/components/public/insight-radar/profile/ProfileOverview';
@@ -175,7 +176,8 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         permanentRedirect(`/insight-radar/${company.slug}`);
     }
 
-    const similarCompanies = await getRadarSimilarCompanies(company.id, 3);
+    // 같은 지역의 다른 조직 (최근 활동순 3곳)
+    const regionPeers = company.region ? await getRadarRegionPeers(company.id, company.region.id, 3) : [];
     const aliases = parseAliases(company.aliases);
     const coreKw = parseKeywords(company.core_keywords);
     const pageSlug = company.slug || String(company.id);
@@ -629,7 +631,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                         </section>
                     </div>
 
-                    {/* ─── 우측 레일 (데스크톱 sticky). 모바일에서는 본문 뒤에 유사 조직만 표시 ─── */}
+                    {/* ─── 우측 레일 (데스크톱 sticky). 모바일에서는 본문 뒤에 같은 지역 조직만 표시 ─── */}
                     <aside aria-label={`${company.company_name} 요약`} className="min-w-0">
                         <div className="flex flex-col gap-5 lg:sticky lg:top-24">
                             <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -679,36 +681,46 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                 </div>
                             )}
 
-                            {similarCompanies.length > 0 && (
+                            {company.region && regionPeers.length > 0 && (
                                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                                    <h2 className="mb-2 text-sm font-bold text-zi-primary">유사 조직</h2>
+                                    <h2 className="mb-2 text-sm font-bold text-zi-primary">{company.region.name}의 다른 기업·기관</h2>
                                     <ul className="divide-y divide-slate-100">
-                                        {similarCompanies.map((org) => (
-                                            <li key={org.id}>
-                                                <Link
-                                                    href={`/insight-radar/${org.slug || org.id}`}
-                                                    className="flex min-h-14 items-center gap-3 py-2.5 group"
-                                                >
-                                                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white text-sm font-bold text-zi-primary">
-                                                        {org.logo_url ? (
-                                                            /* eslint-disable-next-line @next/next/no-img-element */
-                                                            <img src={org.logo_url} alt="" loading="lazy" className="max-h-full max-w-full object-contain p-1" />
-                                                        ) : (
-                                                            <span aria-hidden="true">{getOrgInitial(org.company_name)}</span>
-                                                        )}
-                                                    </span>
-                                                    <span className="min-w-0">
-                                                        <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-zi-blue">
-                                                            {org.company_name}
+                                        {regionPeers.map((org) => {
+                                            const latest = formatRadarDate(org.latestArticleDate);
+                                            return (
+                                                <li key={org.id}>
+                                                    <Link
+                                                        href={`/insight-radar/${org.slug || org.id}`}
+                                                        className="flex min-h-14 items-center gap-3 py-2.5 group"
+                                                    >
+                                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white text-sm font-bold text-zi-primary">
+                                                            {org.logo_url ? (
+                                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                                <img src={org.logo_url} alt="" loading="lazy" className="max-h-full max-w-full object-contain p-1" />
+                                                            ) : (
+                                                                <span aria-hidden="true">{getOrgInitial(org.company_name)}</span>
+                                                            )}
                                                         </span>
-                                                        <span className="block truncate text-xs text-slate-500">
-                                                            {[org.entity_type, org.regionName, ...org.sharedKeywords].filter(Boolean).join(' · ')}
+                                                        <span className="min-w-0">
+                                                            <span className="block truncate text-sm font-semibold text-slate-900 group-hover:text-zi-blue">
+                                                                {org.company_name}
+                                                            </span>
+                                                            <span className="block truncate text-xs text-slate-500">
+                                                                {[org.entity_type, latest ? `최근 활동 ${latest}` : null].filter(Boolean).join(' · ')}
+                                                            </span>
                                                         </span>
-                                                    </span>
-                                                </Link>
-                                            </li>
-                                        ))}
+                                                    </Link>
+                                                </li>
+                                            );
+                                        })}
                                     </ul>
+                                    <Link
+                                        href={`/insight-radar?regionId=${company.region.id}`}
+                                        className="mt-2 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-zi-blue hover:underline underline-offset-2"
+                                    >
+                                        {company.region.name} 전체 보기
+                                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                                    </Link>
                                 </div>
                             )}
                         </div>
