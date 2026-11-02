@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import { prisma } from '@/lib/db';
 import { getMagazinePostPath } from '@/lib/site';
-import { sanitizeHref } from '@/lib/utils';
+import { sanitizeHref, safeHttpUrl } from '@/lib/utils';
 import { buildListTagline } from '@/lib/radar';
 import { deriveDefaultOrgLinks, detectSocialPlatform, type OrgLinkDisplay, type OrgLinkKind, type SocialPlatform } from '@/lib/org-links';
 
@@ -32,6 +32,9 @@ export interface LinkPageData {
     logoUrl: string | null;
     tagline: string | null;
     inquiryHref: string | null;
+    /** 소개 영상 (자체 파일 또는 유튜브). 없으면 영상 섹션을 렌더링하지 않음 */
+    videoUrl: string | null;
+    videoPosterUrl: string | null;
     articles: LinkPageArticle[];
     links: LinkPageLink[];
 }
@@ -54,6 +57,8 @@ export const getOrgLinkPage = cache(async (slugOrId: string): Promise<LinkPageDa
             inquiry_url: true,
             contact_email: true,
             contact_phone: true,
+            video_url: true,
+            video_poster_url: true,
             links: { where: { is_visible: true }, orderBy: [{ sort_order: 'asc' }, { id: 'asc' }] },
             magazinePosts: {
                 where: { magazinePost: { status: 'PUBLISHED', deletedAt: null } },
@@ -115,6 +120,8 @@ export const getOrgLinkPage = cache(async (slugOrId: string): Promise<LinkPageDa
         logoUrl: org.logo_url,
         tagline: buildListTagline(org.company_name, org.tagline, org.business_summary),
         inquiryHref,
+        videoUrl: safeHttpUrl(org.video_url) ?? null,
+        videoPosterUrl: safeHttpUrl(org.video_poster_url) ?? null,
         articles: org.magazinePosts.map(({ magazinePost: p }) => ({
             id: p.id,
             title: p.title,

@@ -6,6 +6,7 @@ import { SOCIAL_PLATFORM_LABEL } from '@/lib/org-links';
 import { formatRadarDate, getOrgInitial } from '@/lib/radar';
 import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
 import { LinkPageTracker } from '@/components/public/insight-radar/links/LinkPageTracker';
+import { LinkPageVideo } from '@/components/public/insight-radar/links/LinkPageVideo';
 
 // 링크 페이지는 사이트 공통 헤더·푸터 없이 단독 화면으로 렌더링 (명함 QR·SNS 프로필 링크용)
 export const revalidate = 300;
@@ -107,6 +108,11 @@ export default async function OrgLinksPage({ params }: PageProps) {
                 </header>
 
                 <div className={`flex-1 px-4 ${data.inquiryHref ? 'pb-28' : 'pb-8'}`}>
+                    {/* 소개 영상: 불러오기 전에는 접혀 있다가 준비되면 펼쳐짐 (모바일 무음 자동재생) */}
+                    {data.videoUrl && (
+                        <LinkPageVideo videoUrl={data.videoUrl} posterUrl={data.videoPosterUrl} orgName={data.name} slug={data.slug} />
+                    )}
+
                     {/* ③ 카드형 링크: 프로필(항상 첫 번째) → 최근 매거진 기사 → 관리자 카드 */}
                     <ul className="flex flex-col gap-3" aria-label="주요 링크">
                         <li>
