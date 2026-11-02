@@ -28,6 +28,7 @@ import {
     FolderOpen,
 } from 'lucide-react';
 import { StorageImageSelectorModal, type SelectableMedia } from '@/components/admin/storage/StorageImageSelectorModal';
+import { OrgLinksManager } from './OrgLinksManager';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -975,6 +976,8 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                             else if (libraryTarget === 'brochure') setBrochureUrl(url);
                         }}
                     />
+
+                    <OrgLinksManager organizationId={company.id} slug={company.slug || ''} />
 
                     {/* 백링크 설정 카드 */}
                     <Card>

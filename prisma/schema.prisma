@@ -107,6 +107,8 @@ model Organization {
   magazinePosts    MagazinePostOrganization[]
   ingestions       ArticleIngestion[]
   qrLinks          QrLink[]
+  links            OrganizationLink[]
+  linkClicks       OrganizationLinkClickDaily[]
 
   @@unique([company_name])
   @@index([region_id])
@@ -400,7 +402,7 @@ model QrLink {
   id              Int      @id @default(autoincrement())
   code            String   @unique @db.VarChar(50)
   organization_id Int
-  mode            String   @default("profile") @db.VarChar(20) // profile | video-first
+  mode            String   @default("profile") @db.VarChar(20) // profile | video-first | links
   is_active       Boolean  @default(true)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
@@ -424,4 +426,42 @@ model QrScanDaily {
 
   @@unique([qr_link_id, date, device])
   @@map("qr_scan_daily")
+}
+
+// 조직 링크 페이지(/insight-radar/[slug]/links)에 노출할 관리자 등록 링크
+model OrganizationLink {
+  id              Int      @id @default(autoincrement())
+  organization_id Int
+  label           String   @db.VarChar(100)
+  url             String   @db.VarChar(512)
+  kind            String   @default("custom") @db.VarChar(20) // homepage | sns | brochure | shop | event | custom
+  display         String   @default("button") @db.VarChar(10) // card | button | icon
+  subtitle        String?  @db.VarChar(100) // 카드형 보조 문구
+  thumbnail_url   String?  @db.VarChar(512) // 카드형 썸네일
+  sort_order      Int      @default(0)
+  is_visible      Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id, sort_order])
+  @@map("organization_links")
+}
+
+// 링크 페이지 링크별 클릭 일자별 집계 (IP·UA 원문 미저장, 건수만 누적)
+model OrganizationLinkClickDaily {
+  id              Int      @id @default(autoincrement())
+  organization_id Int
+  link_key        String   @db.VarChar(64) // profile | article:{id} | link:{id} | auto:{n} | sns:{platform} | inquiry
+  link_kind       String   @db.VarChar(20)
+  label           String   @db.VarChar(100) // 마지막 클릭 시점의 표시 라벨
+  date            DateTime @db.Date // KST 기준 일자
+  entry           String   @db.VarChar(10) // qr | direct
+  count           Int      @default(0)
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@unique([organization_id, link_key, date, entry])
+  @@map("organization_link_click_daily")
 }

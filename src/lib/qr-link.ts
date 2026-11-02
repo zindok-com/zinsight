@@ -1,12 +1,13 @@
 import { SITE_BASE_URL } from '@/lib/site';
 
-// 명함 QR 연결 모드: 프로필 그대로 / 소개 영상 위치(#play)로 도착
-export const QR_MODES = ['profile', 'video-first'] as const;
+// 명함 QR 연결 모드: 프로필 그대로 / 소개 영상 위치(#play)로 도착 / 링크 페이지
+export const QR_MODES = ['profile', 'video-first', 'links'] as const;
 export type QrMode = (typeof QR_MODES)[number];
 
 export const QR_MODE_LABEL: Record<QrMode, string> = {
     profile: '프로필',
     'video-first': '영상 우선',
+    links: '링크 페이지',
 };
 
 export function isQrMode(value: string): value is QrMode {
@@ -20,7 +21,8 @@ export const QR_CODE_PATTERN = /^[a-z0-9][a-z0-9-]{1,48}[a-z0-9]$/;
  * QR 도착 주소. 리다이렉트 체인을 1회로 유지하기 위해 www 절대 URL로 직접 지정
  */
 export function buildQrDestination(code: string, slugOrId: string, mode: string): string {
-    const url = new URL(`/insight-radar/${encodeURIComponent(slugOrId)}`, SITE_BASE_URL);
+    const path = `/insight-radar/${encodeURIComponent(slugOrId)}${mode === 'links' ? '/links' : ''}`;
+    const url = new URL(path, SITE_BASE_URL);
     url.searchParams.set('utm_source', 'businesscard');
     url.searchParams.set('utm_medium', 'qr');
     url.searchParams.set('utm_campaign', code);
