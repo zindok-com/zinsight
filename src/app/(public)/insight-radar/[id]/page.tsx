@@ -1,22 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
-import {
-    ArrowLeft,
-    ArrowRight,
-    AtSign,
-    BookOpen,
-    Download,
-    ExternalLink,
-    Facebook,
-    Globe,
-    Instagram,
-    Linkedin,
-    MessageSquare,
-    Twitter,
-    Youtube,
-    type LucideIcon,
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Download, ExternalLink, Globe, MessageSquare } from 'lucide-react';
 import { getRadarCompanyDetail, getRadarRegionPeers } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
@@ -24,6 +9,8 @@ import { ProfileOverview } from '@/components/public/insight-radar/profile/Profi
 import { ProfileSectionNav } from '@/components/public/insight-radar/profile/ProfileSectionNav';
 import { ProfileTimelineList } from '@/components/public/insight-radar/profile/ProfileTimelineList';
 import { ProfileVideo } from '@/components/public/insight-radar/profile/ProfileVideo';
+import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
+import { detectSocialPlatform } from '@/lib/org-links';
 import { sanitizeHref, safeHttpUrl } from '@/lib/utils';
 import {
     buildRadarTimeline,
@@ -488,9 +475,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                         )}
                         {(iconLinks.length > 0 || brochureHref) && (
                             <ul className="flex flex-wrap gap-2" aria-label="외부 링크">
-                                {iconLinks.map((link) => {
-                                    const Icon = externalLinkIcon(link.url);
-                                    return (
+                                {iconLinks.map((link) => (
                                         <li key={link.url}>
                                             <a
                                                 href={link.url}
@@ -500,11 +485,10 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                                 title={link.title}
                                                 className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-zi-blue hover:text-zi-blue"
                                             >
-                                                <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+                                                <ExternalLinkIcon url={link.url} className="h-[18px] w-[18px]" />
                                             </a>
                                         </li>
-                                    );
-                                })}
+                                ))}
                                 {brochureHref && (
                                     <li>
                                         <a
@@ -670,9 +654,10 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                                     href={link.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex min-h-11 w-full items-center justify-between gap-1.5 text-sm font-semibold text-blue-700 hover:text-zi-blue"
+                                                    className="flex min-h-11 w-full items-center gap-2.5 text-sm font-semibold text-blue-700 hover:text-zi-blue"
                                                 >
-                                                    <span>{link.title}</span>
+                                                    <ExternalLinkIcon url={link.url} className="h-4 w-4 shrink-0" />
+                                                    <span className="min-w-0 flex-1">{link.title}</span>
                                                     <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                                                 </a>
                                             </li>
@@ -745,20 +730,16 @@ function formatSourceLabel(source: string | null | undefined): string {
     return SOURCE_LABEL[source] ?? source;
 }
 
-/** 외부 링크 주소로 아이콘 선택 (모르는 곳은 지구본) */
-function externalLinkIcon(url: string): LucideIcon {
+/** 외부 링크 아이콘: SNS는 공식 로고, 블로그류는 책, 그 밖은 지구본 */
+function ExternalLinkIcon({ url, className }: { url: string; className: string }) {
+    const platform = detectSocialPlatform(url);
+    if (platform) return <BrandIcon platform={platform} className={className} />;
     let host = '';
     try {
         host = new URL(url).hostname.replace(/^www\./, '');
     } catch {}
-    if (host.includes('instagram.com')) return Instagram;
-    if (host.includes('threads.net') || host.includes('threads.com')) return AtSign;
-    if (host.includes('youtube.com') || host.includes('youtu.be')) return Youtube;
-    if (host.includes('facebook.com')) return Facebook;
-    if (host.includes('linkedin.com')) return Linkedin;
-    if (host === 'x.com' || host.includes('twitter.com')) return Twitter;
-    if (host.includes('blog.') || host.includes('brunch.co.kr') || host.includes('tistory.com')) return BookOpen;
-    return Globe;
+    const Icon = host.includes('blog.') || host.includes('brunch.co.kr') ? BookOpen : Globe;
+    return <Icon className={`${className} text-slate-500`} aria-hidden="true" />;
 }
 
 function TimelineDate({ label }: { label: string | null }) {
