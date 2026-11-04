@@ -167,9 +167,25 @@ export function normalizeOrgLinks(input: unknown): OrgLinkInput[] {
     return result;
 }
 
-// ── 클릭 집계 ──
-export const LINK_ENTRIES = ['qr', 'direct'] as const;
-export type LinkEntry = (typeof LINK_ENTRIES)[number];
+// ── 링크 페이지 통계 ──
+// 통계용 링크 종류: 외부 사이트 / 진사이트 프로필·기사 / 문의하기 / SNS 아이콘
+export const LINK_PAGE_LINK_KINDS = ['external', 'internal', 'cta', 'social'] as const;
+export type LinkPageLinkKind = (typeof LINK_PAGE_LINK_KINDS)[number];
+
+export const LINK_PAGE_LINK_KIND_LABEL: Record<LinkPageLinkKind, string> = {
+    external: '외부 사이트',
+    internal: '진사이트 프로필·기사',
+    cta: '문의하기',
+    social: 'SNS 아이콘',
+};
+
+/** 관리자 등록·기본 링크의 통계용 종류. 아이콘형은 SNS, 진사이트 주소는 내부 링크 */
+export function linkPageKindOf(link: { url: string; display: OrgLinkDisplay }): LinkPageLinkKind {
+    if (link.display === 'icon') return 'social';
+    if (!/^https?:\/\//i.test(link.url)) return 'internal';
+    const host = hostOf(link.url);
+    return host === 'zinsight.co.kr' || host.endsWith('.zinsight.co.kr') ? 'internal' : 'external';
+}
 
 // 클릭 집계 키: profile | inquiry | article:{id} | link:{id} | auto:{n} | sns:{platform}
 export const LINK_KEY_PATTERN = /^(profile|inquiry|home|(article|link|auto):\d{1,10}|sns:[a-z-]{1,20})$/;

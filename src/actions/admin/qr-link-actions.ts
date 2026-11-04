@@ -3,7 +3,7 @@
 import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
-import { QR_CODE_PATTERN, isQrMode } from '@/lib/qr-link';
+import { QR_CODE_PATTERN, isQrChannel, isQrMode } from '@/lib/qr-link';
 
 const SCAN_DAYS = 30;
 
@@ -43,6 +43,8 @@ export async function getQrLinks() {
                     id: link.id,
                     code: link.code,
                     mode: link.mode,
+                    label: link.label,
+                    channel: link.channel,
                     is_active: link.is_active,
                     updated_at: link.updated_at.toISOString(),
                     organization: link.organization,
@@ -62,13 +64,21 @@ export async function getQrLinks() {
     }
 }
 
-export async function createQrLink(code: string, organizationId: number, mode: string) {
+export async function createQrLink(
+    code: string,
+    organizationId: number,
+    mode: string,
+    options: { label?: string | null; channel?: string } = {}
+) {
     await requireAdmin();
     const cleanCode = String(code || '').trim().toLowerCase();
     if (!QR_CODE_PATTERN.test(cleanCode)) {
         return { success: false, error: '코드는 영문 소문자·숫자·하이픈 3~50자로 입력하세요. (예: zindok)' };
     }
     if (!isQrMode(mode)) return { success: false, error: '알 수 없는 연결 모드입니다.' };
+    const channel = options.channel ?? 'businesscard';
+    if (!isQrChannel(channel)) return { success: false, error: '알 수 없는 배포 채널입니다.' };
+    const label = String(options.label ?? '').trim().slice(0, 50) || null;
     try {
         const org = await prisma.organization.findUnique({ where: { id: Number(organizationId) }, select: { id: true } });
         if (!org) return { success: false, error: '연결할 조직을 찾을 수 없습니다.' };
@@ -76,7 +86,7 @@ export async function createQrLink(code: string, organizationId: number, mode: s
         const existing = await prisma.qrLink.findUnique({ where: { code: cleanCode } });
         if (existing) return { success: false, error: '이미 등록된 코드입니다.' };
 
-        await prisma.qrLink.create({ data: { code: cleanCode, organization_id: org.id, mode } });
+        await prisma.qrLink.create({ data: { code: cleanCode, organization_id: org.id, mode, channel, label } });
         revalidatePath('/admin/settings/qr-links');
         return { success: true };
     } catch (error: any) {
@@ -85,14 +95,17 @@ export async function createQrLink(code: string, organizationId: number, mode: s
     }
 }
 
-// 인쇄된 code는 바꿀 수 없으므로 수정 대상은 모드·조직·활성 여부만
+// 인쇄된 code는 바꿀 수 없으므로 수정 대상은 모드·조직·용도·채널·활성 여부만
 export async function updateQrLink(
     id: number,
-    patch: { mode?: string; organizationId?: number; isActive?: boolean }
+    patch: { mode?: string; organizationId?: number; isActive?: boolean; label?: string | null; channel?: string }
 ) {
     await requireAdmin();
     if (patch.mode !== undefined && !isQrMode(patch.mode)) {
         return { success: false, error: '알 수 없는 연결 모드입니다.' };
+    }
+    if (patch.channel !== undefined && !isQrChannel(patch.channel)) {
+        return { success: false, error: '알 수 없는 배포 채널입니다.' };
     }
     try {
         await prisma.qrLink.update({
@@ -101,6 +114,8 @@ export async function updateQrLink(
                 ...(patch.mode !== undefined ? { mode: patch.mode } : {}),
                 ...(patch.organizationId !== undefined ? { organization_id: Number(patch.organizationId) } : {}),
                 ...(patch.isActive !== undefined ? { is_active: Boolean(patch.isActive) } : {}),
+                ...(patch.channel !== undefined ? { channel: patch.channel } : {}),
+                ...(patch.label !== undefined ? { label: String(patch.label ?? '').trim().slice(0, 50) || null } : {}),
             },
         });
         revalidatePath('/admin/settings/qr-links');

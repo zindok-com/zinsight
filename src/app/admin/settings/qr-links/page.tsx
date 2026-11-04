@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getQrLinks, createQrLink, updateQrLink, deleteQrLink } from '@/actions/admin/qr-link-actions';
-import { QR_MODES, QR_MODE_LABEL, buildQrShortUrl } from '@/lib/qr-link';
+import { QR_CHANNELS, QR_CHANNEL_LABEL, QR_MODES, QR_MODE_LABEL, buildQrShortUrl, isQrChannel } from '@/lib/qr-link';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Trash2, Plus, RefreshCw, Copy, ExternalLink, QrCode } from 'lucide-react';
@@ -24,6 +24,8 @@ export default function QrLinksPage() {
     const [code, setCode] = useState('');
     const [organizationId, setOrganizationId] = useState('');
     const [mode, setMode] = useState<string>('profile');
+    const [label, setLabel] = useState('');
+    const [channel, setChannel] = useState<string>('businesscard');
     const [submitting, setSubmitting] = useState(false);
 
     const load = useCallback(async () => {
@@ -45,10 +47,11 @@ export default function QrLinksPage() {
             return;
         }
         setSubmitting(true);
-        const res = await createQrLink(code, Number(organizationId), mode);
+        const res = await createQrLink(code, Number(organizationId), mode, { label, channel });
         if (res.success) {
             toast.success('QR 연결 주소가 등록되었습니다.');
             setCode('');
+            setLabel('');
             load();
         } else {
             toast.error(res.error || '등록 중 오류가 발생했습니다.');
@@ -153,6 +156,34 @@ export default function QrLinksPage() {
                                         ))}
                                     </select>
                                 </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="qr-label" className="text-sm font-medium">용도</label>
+                                    <Input
+                                        id="qr-label"
+                                        placeholder="예: 명함용, 인스타그램 프로필용"
+                                        maxLength={50}
+                                        value={label}
+                                        onChange={(e) => setLabel(e.target.value)}
+                                        disabled={submitting}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label htmlFor="qr-channel" className="text-sm font-medium">배포 채널</label>
+                                    <select
+                                        id="qr-channel"
+                                        className={SELECT_CLASS}
+                                        value={channel}
+                                        onChange={(e) => setChannel(e.target.value)}
+                                        disabled={submitting}
+                                    >
+                                        {QR_CHANNELS.map((c) => (
+                                            <option key={c} value={c}>
+                                                {QR_CHANNEL_LABEL[c]}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[11px] text-muted-foreground">GA4 유입 경로(UTM)가 채널에 맞게 기록됩니다. 한 조직에 코드를 여러 개 발급할 수 있습니다.</p>
+                                </div>
                                 <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white" disabled={submitting}>
                                     <Plus className="w-4 h-4 mr-2" /> 연결 추가
                                 </Button>
@@ -220,7 +251,13 @@ function QrLinkCard({
             <CardHeader className="pb-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <CardTitle className="text-lg font-mono">/go/{row.code}</CardTitle>
+                        <CardTitle className="text-lg font-mono">
+                            /go/{row.code}
+                            <span className="ml-2 align-middle font-sans text-xs font-medium text-muted-foreground">
+                                {row.organization.company_name}
+                                {row.label ? ` · ${row.label}` : ''} · {isQrChannel(row.channel) ? QR_CHANNEL_LABEL[row.channel] : row.channel}
+                            </span>
+                        </CardTitle>
                         <CardDescription className="mt-1 break-all">{shortUrl}</CardDescription>
                     </div>
                     <div className="flex items-center gap-1">
@@ -245,7 +282,7 @@ function QrLinkCard({
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <div className="space-y-1">
                         <label htmlFor={`qr-org-${row.id}`} className="text-xs font-medium text-muted-foreground">연결 조직</label>
                         <select
@@ -278,6 +315,35 @@ function QrLinkCard({
                         {row.mode === 'video-first' && !row.organization.video_url && (
                             <p className="text-[11px] text-amber-600">영상이 등록되지 않아 일반 프로필로 표시됩니다.</p>
                         )}
+                    </div>
+                    <div className="space-y-1">
+                        <label htmlFor={`qr-label-${row.id}`} className="text-xs font-medium text-muted-foreground">용도</label>
+                        <Input
+                            id={`qr-label-${row.id}`}
+                            key={`${row.id}-${row.label ?? ''}`}
+                            defaultValue={row.label ?? ''}
+                            placeholder="예: 명함용"
+                            maxLength={50}
+                            className="h-9"
+                            onBlur={(e) => {
+                                if (e.target.value.trim() !== (row.label ?? '')) onUpdate(row, { label: e.target.value });
+                            }}
+                        />
+                    </div>
+                    <div className="space-y-1">
+                        <label htmlFor={`qr-channel-${row.id}`} className="text-xs font-medium text-muted-foreground">배포 채널</label>
+                        <select
+                            id={`qr-channel-${row.id}`}
+                            className={SELECT_CLASS}
+                            value={row.channel}
+                            onChange={(e) => onUpdate(row, { channel: e.target.value })}
+                        >
+                            {QR_CHANNELS.map((c) => (
+                                <option key={c} value={c}>
+                                    {QR_CHANNEL_LABEL[c]}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                     <div className="space-y-1">
                         <span className="text-xs font-medium text-muted-foreground">상태</span>

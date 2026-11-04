@@ -17,7 +17,8 @@ export interface AdminLinkClickSummary {
     label: string;
     kind: string;
     total: number;
-    qr: number;
+    /** /go 코드로 들어온 방문의 클릭 */
+    viaGo: number;
 }
 
 // 조직 링크 목록 + 최근 30일 클릭 집계. 등록된 링크가 없으면 기존 외부 링크로 만든 기본 목록(저장 전)을 돌려줌
@@ -37,9 +38,9 @@ export async function getOrganizationLinks(organizationId: number) {
                 where: { organization_id: organizationId },
                 orderBy: [{ sort_order: 'asc' }, { id: 'asc' }],
             }),
-            prisma.organizationLinkClickDaily.groupBy({
-                by: ['link_key', 'entry'],
-                where: { organization_id: organizationId, date: { gte: since } },
+            prisma.linkPageDaily.groupBy({
+                by: ['link_key', 'source_code'],
+                where: { organization_id: organizationId, event: 'click', date: { gte: since } },
                 _sum: { count: true },
                 _max: { label: true, link_kind: true },
             }),
@@ -54,10 +55,10 @@ export async function getOrganizationLinks(organizationId: number) {
                 label: c._max.label ?? c.link_key,
                 kind: c._max.link_kind ?? '',
                 total: 0,
-                qr: 0,
+                viaGo: 0,
             };
             item.total += count;
-            if (c.entry === 'qr') item.qr += count;
+            if (c.source_code !== 'direct') item.viaGo += count;
             summaryMap.set(c.link_key, item);
         }
 

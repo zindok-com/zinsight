@@ -11,7 +11,7 @@ declare global {
 
 export type OutboundLinkType = 'homepage' | 'sns' | 'naver_blog' | 'other';
 
-function detectLinkType(url: string): OutboundLinkType {
+export function detectLinkType(url: string): OutboundLinkType {
     const lower = url.toLowerCase();
     if (lower.includes('blog.naver.com') || lower.includes('m.blog.naver.com')) {
         return 'naver_blog';

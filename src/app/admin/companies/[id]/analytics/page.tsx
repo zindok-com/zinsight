@@ -4,7 +4,7 @@ import { getOrgAnalyticsSummary } from '@/actions/admin/analytics-actions';
 import { OrgAnalyticsClient } from './OrgAnalyticsClient';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ExternalLink, BarChart3, Edit } from 'lucide-react';
+import { ArrowLeft, ExternalLink, BarChart3, Edit, Link2 } from 'lucide-react';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -84,6 +84,13 @@ export default async function OrgAnalyticsPage({ params, searchParams }: PagePro
                     <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
                     애널리틱스
                 </span>
+                <Link
+                    href={`/admin/companies/${id}/link-analytics`}
+                    className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5"
+                >
+                    <Link2 className="w-3.5 h-3.5 text-indigo-600" />
+                    링크 페이지 통계
+                </Link>
             </div>
 
             <OrgAnalyticsClient data={data} orgId={Number(id)} currentPeriod={String(period ?? '30')} />

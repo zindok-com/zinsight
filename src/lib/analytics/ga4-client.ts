@@ -133,6 +133,25 @@ function pathMatchesSlug(path: string, slug: string): boolean {
 
 export interface DateRange { startDate: string; endDate: string }
 
+// 링크 페이지(/insight-radar/[slug]/links)는 자체 서버 집계로 따로 보므로 GA4 프로필·기사 리포트에서 제외
+const EXCLUDE_LINK_PAGE = {
+    notExpression: {
+        filter: { fieldName: 'pagePath', stringFilter: { matchType: 'ENDS_WITH', value: '/links' } },
+    },
+};
+
+/** 주소에 slug가 포함된 페이지(링크 페이지 제외) */
+function slugPathFilter(slug: string) {
+    return {
+        andGroup: {
+            expressions: [
+                { filter: { fieldName: 'pagePath', stringFilter: { matchType: 'CONTAINS', value: slug } } },
+                EXCLUDE_LINK_PAGE,
+            ],
+        },
+    };
+}
+
 export interface ArticlePageviewRow {
     date: string;
     views: number;
@@ -172,12 +191,7 @@ export async function getArticlePageviews(slug: string, dateRange: DateRange): P
             dateRanges: [dateRange],
             dimensions: [{ name: 'date' }, { name: 'pagePath' }],
             metrics: [{ name: 'screenPageViews' }],
-            dimensionFilter: {
-                filter: {
-                    fieldName: 'pagePath',
-                    stringFilter: { matchType: 'CONTAINS', value: slug },
-                },
-            },
+            dimensionFilter: slugPathFilter(slug),
             orderBys: [{ dimension: { dimensionName: 'date' } }],
         });
         return (res.rows ?? []).map((row: any): ArticlePageviewRow => ({
@@ -208,12 +222,15 @@ export async function getArticleEventCounts(
 
         const slugStr = String(slugOrId).trim();
         if (slugStr) {
-            expressions.push({
-                filter: {
-                    fieldName: 'pagePath',
-                    stringFilter: { matchType: 'CONTAINS', value: slugStr },
+            expressions.push(
+                {
+                    filter: {
+                        fieldName: 'pagePath',
+                        stringFilter: { matchType: 'CONTAINS', value: slugStr },
+                    },
                 },
-            });
+                EXCLUDE_LINK_PAGE,
+            );
         }
 
         const [res] = await safeRunReport({
@@ -240,12 +257,7 @@ export async function getTrafficSource(slug: string, dateRange: DateRange): Prom
             dateRanges: [dateRange],
             dimensions: [{ name: 'sessionDefaultChannelGroup' }],
             metrics: [{ name: 'sessions' }],
-            dimensionFilter: {
-                filter: {
-                    fieldName: 'pagePath',
-                    stringFilter: { matchType: 'CONTAINS', value: slug },
-                },
-            },
+            dimensionFilter: slugPathFilter(slug),
             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
         });
         return (res.rows ?? []).map((row: any): TrafficSourceRow => ({
@@ -266,12 +278,7 @@ export async function getVisitorGeography(slug: string, dateRange: DateRange): P
             dateRanges: [dateRange],
             dimensions: [{ name: 'city' }],
             metrics: [{ name: 'sessions' }],
-            dimensionFilter: {
-                filter: {
-                    fieldName: 'pagePath',
-                    stringFilter: { matchType: 'CONTAINS', value: slug },
-                },
-            },
+            dimensionFilter: slugPathFilter(slug),
             orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
             limit: 10,
         });
@@ -460,12 +467,7 @@ async function fetchRawTrafficRows(slug: string | null, dateRange: DateRange): P
     };
 
     if (slug && slug.trim()) {
-        params.dimensionFilter = {
-            filter: {
-                fieldName: 'pagePath',
-                stringFilter: { matchType: 'CONTAINS', value: slug.trim() },
-            },
-        };
+        params.dimensionFilter = slugPathFilter(slug.trim());
     }
 
     const [res] = await safeRunReport(params);
@@ -643,12 +645,7 @@ export async function getRealtimeOverview(): Promise<RealtimeOverview | null> {
 export async function getVisitorAttributes(slug: string, dateRange: DateRange): Promise<VisitorAttributes> {
     const empty: VisitorAttributes = { devices: [], hours: [], newVsReturning: [], browsers: [] };
     try {
-        const filter = {
-            filter: {
-                fieldName: 'pagePath',
-                stringFilter: { matchType: 'CONTAINS' as const, value: slug },
-            },
-        };
+        const filter = slugPathFilter(slug);
 
         const [devRes, hourRes, nvrRes, browserRes] = await Promise.all([
             // ① 기기 카테고리
@@ -747,6 +744,7 @@ export async function getOutboundLinkClicksByUrl(
                                 stringFilter: { matchType: 'CONTAINS', value: slug },
                             },
                         },
+                        EXCLUDE_LINK_PAGE,
                     ],
                 },
             },

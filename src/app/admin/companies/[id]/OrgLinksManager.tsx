@@ -132,14 +132,22 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
                             명함 QR(링크 페이지 모드)·SNS 프로필 링크용 화면입니다. 프로필 카드와 최근 매거진 기사 2개는 자동으로 들어갑니다.
                         </CardDescription>
                     </div>
-                    <a
-                        href={previewHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium hover:bg-muted"
-                    >
-                        미리보기 <ExternalLink className="h-3 w-3" />
-                    </a>
+                    <div className="flex items-center gap-1.5">
+                        <a
+                            href={`/admin/companies/${organizationId}/link-analytics`}
+                            className="inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium hover:bg-muted"
+                        >
+                            통계 보기
+                        </a>
+                        <a
+                            href={previewHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex h-8 items-center gap-1 rounded-md border px-2.5 text-xs font-medium hover:bg-muted"
+                        >
+                            미리보기 <ExternalLink className="h-3 w-3" />
+                        </a>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -298,9 +306,9 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
                                             <span className="truncate text-slate-700">{autoKeyLabel(c)}</span>
                                             <span className="shrink-0 tabular-nums text-slate-500">
                                                 {c.total.toLocaleString()}회
-                                                {c.qr > 0 && (
+                                                {c.viaGo > 0 && (
                                                     <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-[10px]">
-                                                        QR {c.qr}
+                                                        /go {c.viaGo}
                                                     </Badge>
                                                 )}
                                             </span>

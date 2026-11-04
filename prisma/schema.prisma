@@ -8,18 +8,18 @@ datasource db {
 
 // ─── 검색 키워드 (지역 기반으로 전환) ───────────────────────────────
 model SearchKeyword {
-  id              Int                @id @default(autoincrement())
+  id              Int       @id @default(autoincrement())
   region_id       Int
-  keyword_text    String             @db.VarChar(255)
-  keyword_type    String?            @db.VarChar(50)
-  is_active       Boolean            @default(true)
+  keyword_text    String    @db.VarChar(255)
+  keyword_type    String?   @db.VarChar(50)
+  is_active       Boolean   @default(true)
   last_fetched_at DateTime?
   deleted_at      DateTime?
-  created_at      DateTime           @default(now())
-  updated_at      DateTime           @updatedAt
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
 
-  region      Region             @relation(fields: [region_id], references: [id])
-  ingestions  ArticleIngestion[]
+  region     Region             @relation(fields: [region_id], references: [id])
+  ingestions ArticleIngestion[]
 
   @@index([region_id, is_active, deleted_at])
   @@map("search_keywords")
@@ -27,17 +27,17 @@ model SearchKeyword {
 
 // ─── 기사 원본 ───────────────────────────────────────────────────────
 model Article {
-  id             Int                @id @default(autoincrement())
-  canonical_link String             @unique @db.VarChar(2048)
-  link           String?            @db.VarChar(2048)
-  originallink   String?            @db.VarChar(2048)
-  title          String             @db.VarChar(500)
-  description    String?            @db.Text
+  id             Int       @id @default(autoincrement())
+  canonical_link String    @unique @db.VarChar(2048)
+  link           String?   @db.VarChar(2048)
+  originallink   String?   @db.VarChar(2048)
+  title          String    @db.VarChar(500)
+  description    String?   @db.Text
   pub_date       DateTime?
-  source         String             @default("NAVER_NEWS") @db.VarChar(50)
+  source         String    @default("NAVER_NEWS") @db.VarChar(50)
   raw_json       Json
-  created_at     DateTime           @default(now())
-  updated_at     DateTime           @updatedAt
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
 
   ingestions       ArticleIngestion[]
   company_articles CompanyArticle[]
@@ -50,14 +50,14 @@ model Article {
 // ─── 기사 수집 로그 (지역 + 조직 기반으로 재설계) ───────────────────
 // source 값: 'REGION_CRAWL' (지역 키워드 기반), 'MANUAL_ORG' (조직 우선 수집)
 model ArticleIngestion {
-  id              Int           @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   article_id      Int
   region_id       Int
-  keyword_id      Int?          // REGION_CRAWL은 채움, MANUAL_ORG는 null
-  organization_id Int?          // MANUAL_ORG는 채움, REGION_CRAWL 초기값은 null
-  source          String        @default("REGION_CRAWL") @db.VarChar(50)
-  fetched_at      DateTime      @default(now())
-  is_duplicate    Boolean       @default(false)
+  keyword_id      Int? // REGION_CRAWL은 채움, MANUAL_ORG는 null
+  organization_id Int? // MANUAL_ORG는 채움, REGION_CRAWL 초기값은 null
+  source          String   @default("REGION_CRAWL") @db.VarChar(50)
+  fetched_at      DateTime @default(now())
+  is_duplicate    Boolean  @default(false)
 
   article      Article        @relation(fields: [article_id], references: [id])
   region       Region         @relation(fields: [region_id], references: [id])
@@ -78,7 +78,7 @@ model Organization {
   id               Int      @id @default(autoincrement())
   company_name     String   @db.VarChar(255)
   slug             String?  @unique @db.VarChar(255)
-  aliases          Json?    // 별칭 리스트 (문자열 배열)
+  aliases          Json? // 별칭 리스트 (문자열 배열)
   entity_type      String   @default("기업") @db.VarChar(50)
   company_url      String?  @db.VarChar(255)
   logo_url         String?  @db.VarChar(512) // 웹 표시용 로고 (PNG, JPG, SVG, WebP)
@@ -89,26 +89,28 @@ model Organization {
   hq_location      String?  @db.VarChar(255)
   ceo_name         String?  @db.VarChar(100)
   key_references   Json?
-  backlinks        Json?    // 외부 백링크 리스트 (최대 3개: [{ title, url }])
+  backlinks        Json? // 외부 백링크 리스트 (최대 3개: [{ title, url }])
   video_url        String?  @db.VarChar(512) // 소개 영상 (자체 mp4 또는 유튜브 URL)
   video_poster_url String?  @db.VarChar(512) // 영상 포스터 이미지
   brochure_url     String?  @db.VarChar(512) // 소개자료 다운로드 URL
   inquiry_url      String?  @db.VarChar(512) // 문의 연결처 (mailto:, tel:, 폼 URL)
   contact_email    String?  @db.VarChar(255) // 공개 문의 이메일
-  contact_phone    String?  @db.VarChar(50)  // 공개 문의 전화
-  tagline          String?  @db.VarChar(60)  // 목록용 한 줄 소개 (40자 이내 권장)
+  contact_phone    String?  @db.VarChar(50) // 공개 문의 전화
+  tagline          String?  @db.VarChar(60) // 목록용 한 줄 소개 (40자 이내 권장)
   is_featured      Boolean  @default(false)
   region_id        Int      @map("region_id")
   created_at       DateTime @default(now())
   updated_at       DateTime @updatedAt
 
-  region           Region                    @relation(fields: [region_id], references: [id])
+  region           Region                       @relation(fields: [region_id], references: [id])
   company_articles CompanyArticle[]
   magazinePosts    MagazinePostOrganization[]
   ingestions       ArticleIngestion[]
   qrLinks          QrLink[]
   links            OrganizationLink[]
   linkClicks       OrganizationLinkClickDaily[]
+  linkPageEvents   LinkPageEvent[]
+  linkPageDaily    LinkPageDaily[]
 
   @@unique([company_name])
   @@index([region_id])
@@ -120,12 +122,12 @@ model OrganizationInvite {
   id         Int       @id @default(autoincrement())
   token      String    @unique @db.VarChar(64)
   region_id  Int
-  label      String?   @db.VarChar(255)     // 어드민 식별용 메모
-  used_at    DateTime?                       // 제출 완료 시각 (null=미사용)
+  label      String?   @db.VarChar(255) // 어드민 식별용 메모
+  used_at    DateTime? // 제출 완료 시각 (null=미사용)
   expires_at DateTime
   created_at DateTime  @default(now())
 
-  region      Region                  @relation(fields: [region_id], references: [id])
+  region      Region                   @relation(fields: [region_id], references: [id])
   submissions OrganizationSubmission[]
 
   @@map("organization_invites")
@@ -164,8 +166,8 @@ model CompanyArticle {
   article_id Int
   created_at DateTime @default(now())
 
-  company    Organization @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  article    Article      @relation(fields: [article_id], references: [id], onDelete: Cascade)
+  company Organization @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  article Article      @relation(fields: [article_id], references: [id], onDelete: Cascade)
 
   @@unique([company_id, article_id])
   @@index([article_id])
@@ -175,52 +177,52 @@ model CompanyArticle {
 
 // ─── 매거진 포스트 ────────────────────────────────────────────────────
 model MagazinePost {
-  id              Int              @id @default(autoincrement())
-  categoryId      Int              @map("category_id")
-  category        MagazineCategory @relation(fields: [categoryId], references: [id])
+  id         Int              @id @default(autoincrement())
+  categoryId Int              @map("category_id")
+  category   MagazineCategory @relation(fields: [categoryId], references: [id])
 
   // 콘텐츠 기본 정보
-  title           String    @db.VarChar(255)
-  slug            String    @unique @db.VarChar(255) // SEO 최적화 URL
-  content         String    @db.LongText            // 기사 본문
-  summary         String?   @db.Text                // AI 요약 및 메타 설명 (SEO/AEO용)
-  thumbnailUrl    String?   @db.VarChar(512)
+  title        String  @db.VarChar(255)
+  slug         String  @unique @db.VarChar(255) // SEO 최적화 URL
+  content      String  @db.LongText // 기사 본문
+  summary      String? @db.Text // AI 요약 및 메타 설명 (SEO/AEO용)
+  thumbnailUrl String? @db.VarChar(512)
 
   // AEO/GEO 최적화 핵심 필드
-  structuredData  Json?     // Schema.org(JSON-LD) 등 AI가 읽기 좋은 구조화 데이터
-  faqData         Json?     // AI 에이전트 답변 생성을 위한 Q&A 데이터 세트
-  targetKeywords  String?   // AEO/GEO를 위해 집중 타겟팅한 핵심 키워드 목록
+  structuredData Json? // Schema.org(JSON-LD) 등 AI가 읽기 좋은 구조화 데이터
+  faqData        Json? // AI 에이전트 답변 생성을 위한 Q&A 데이터 세트
+  targetKeywords String? // AEO/GEO를 위해 집중 타겟팅한 핵심 키워드 목록
 
   // 작성 및 상태 관리
-  authorName      String?   // 대학 기자단 실명 혹은 AI 작성 여부
-  authorId        Int?      // 발행자 관계 ID
-  author          Author?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  status          String    @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
-  viewCount       Int       @default(0)       // 조회수
-  isInHomeSection       Boolean   @default(false)   // 홈 화면 매거진 섹션 노출 여부
-  isPortalFeatured      Boolean   @default(false)   // 포털 홈 메인 피처드 (Hero) 여부
-  portalSidePriority    Int       @default(0)       // 포털 홈 사이드 헤드라인 우선순위 (1~4)
-  isTechFeatured        Boolean   @default(false)   // 테크/마케팅 지면 피처드 (대표) 여부
-  isLocalFeatured       Boolean   @default(false)   // 로컬 지면 피처드 (대표) 여부
+  authorName         String? // 대학 기자단 실명 혹은 AI 작성 여부
+  authorId           Int? // 발행자 관계 ID
+  author             Author? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  status             String  @default("DRAFT") // DRAFT, PUBLISHED, ARCHIVED
+  viewCount          Int     @default(0) // 조회수
+  isInHomeSection    Boolean @default(false) // 홈 화면 매거진 섹션 노출 여부
+  isPortalFeatured   Boolean @default(false) // 포털 홈 메인 피처드 (Hero) 여부
+  portalSidePriority Int     @default(0) // 포털 홈 사이드 헤드라인 우선순위 (1~4)
+  isTechFeatured     Boolean @default(false) // 테크/마케팅 지면 피처드 (대표) 여부
+  isLocalFeatured    Boolean @default(false) // 로컬 지면 피처드 (대표) 여부
 
   // 비즈니스 모델(BM) 관련 필드
-  isPaid          Boolean   @default(false)   // 유료 기사 여부 (8만원 모델)
-  price           Int       @default(0)       // 실제 결제 금액 (할인 적용 등 기록용)
+  isPaid Boolean @default(false) // 유료 기사 여부 (8만원 모델)
+  price  Int     @default(0) // 실제 결제 금액 (할인 적용 등 기록용)
 
   // 외부 배포 추적 (업셀링 고정수입 관리용)
-  isCrossPosted   Boolean   @default(false)   // 고객사 워드프레스/블로그 배포 여부
-  externalLinks   Json?     // 배포된 외부 채널(WP, Blog, Post) URL 리스트
+  isCrossPosted Boolean @default(false) // 고객사 워드프레스/블로그 배포 여부
+  externalLinks Json? // 배포된 외부 채널(WP, Blog, Post) URL 리스트
 
-  deletedAt       DateTime? // 소프트 삭제 일시 기록용 (null 이면 활성 상태)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  publishedAt     DateTime? // 최초 발행 일시
+  deletedAt   DateTime? // 소프트 삭제 일시 기록용 (null 이면 활성 상태)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  publishedAt DateTime? // 최초 발행 일시
 
-  regionId        Int?      @map("region_id")
-  region          Region?   @relation(fields: [regionId], references: [id], onDelete: SetNull)
+  regionId Int?    @map("region_id")
+  region   Region? @relation(fields: [regionId], references: [id], onDelete: SetNull)
 
   // Relationships (Many-to-Many via join tables)
-  organizations   MagazinePostOrganization[]
+  organizations MagazinePostOrganization[]
 
   @@map("magazine_posts")
 }
@@ -230,8 +232,8 @@ model MagazinePostOrganization {
   magazinePostId Int
   organizationId Int
 
-  magazinePost   MagazinePost @relation(fields: [magazinePostId], references: [id], onDelete: Cascade)
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  magazinePost MagazinePost @relation(fields: [magazinePostId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@id([magazinePostId, organizationId])
   @@map("magazine_post_organizations")
@@ -251,26 +253,26 @@ model MagazineCategory {
 
 // ─── 컨설팅 요청 (industry 필드는 단순 문자열이므로 유지) ──────────
 model ConsultingRequest {
-  id              Int      @id @default(autoincrement())
-  email           String   @db.VarChar(255)
-  company_name    String   @db.VarChar(255)
-  industry        String?  @db.VarChar(255)
-  status          String   @default("PENDING") // PENDING, COMPLETED
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  email        String   @db.VarChar(255)
+  company_name String   @db.VarChar(255)
+  industry     String?  @db.VarChar(255)
+  status       String   @default("PENDING") // PENDING, COMPLETED
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   @@map("consulting_requests")
 }
 
 // ─── 스냅샷 (지역 기반으로 slug 활용) ───────────────────────────────
 model Snapshot {
-  id           Int      @id @default(autoincrement())
-  filename     String   @unique @db.VarChar(255)
-  slug         String   @db.VarChar(100) // 'consolidated' or region slug
-  month        String   @db.VarChar(7)   // YYYY-MM
-  content      Json                      // the snapshot data
-  size_bytes   Int
-  created_at   DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  filename   String   @unique @db.VarChar(255)
+  slug       String   @db.VarChar(100) // 'consolidated' or region slug
+  month      String   @db.VarChar(7) // YYYY-MM
+  content    Json // the snapshot data
+  size_bytes Int
+  created_at DateTime @default(now())
 
   @@index([slug, month])
   @@map("snapshots")
@@ -278,14 +280,14 @@ model Snapshot {
 
 // ─── 저자 ────────────────────────────────────────────────────────────
 model Author {
-  id          Int            @id @default(autoincrement())
-  name        String         @unique @db.VarChar(100)
-  slug        String         @unique @db.VarChar(100)
-  avatarUrl   String?        @db.VarChar(512)
-  bio         String?        @db.Text
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-  posts       MagazinePost[]
+  id        Int            @id @default(autoincrement())
+  name      String         @unique @db.VarChar(100)
+  slug      String         @unique @db.VarChar(100)
+  avatarUrl String?        @db.VarChar(512)
+  bio       String?        @db.Text
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  posts     MagazinePost[]
 
   @@map("authors")
 }
@@ -306,12 +308,12 @@ model Admin {
 
 // ─── 지역 (분류 축 핵심 테이블) ─────────────────────────────────────
 model Region {
-  id        Int            @id @default(autoincrement())
-  name      String         @unique @db.VarChar(100)
-  slug      String         @unique @db.VarChar(100)
-  isActive  Boolean        @default(true) @map("is_active")
-  createdAt DateTime       @default(now()) @map("created_at")
-  updatedAt DateTime       @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(100)
+  slug      String   @unique @db.VarChar(100)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   posts         MagazinePost[]
   organizations Organization[]
@@ -338,12 +340,12 @@ model Redirect {
 // 리포트 생성 시점의 데이터를 보관하여 이후 수치 변동 후에도 당시 버전 조회 가능
 model AnalyticsReport {
   id           Int      @id @default(autoincrement())
-  entityType   String   @db.VarChar(20)   // 'article' | 'organization'
-  entityId     Int                         // MagazinePost.id 또는 Organization.id
-  entityName   String   @db.VarChar(255)  // 빠른 조회용 비정규화 이름
-  reportType   String   @db.VarChar(20)   // 'simple' | 'detailed'
-  periodDays   Int                         // 집계 기간 (7 / 30 / 90 / 0=전체)
-  dataSnapshot Json                        // 생성 시점 analytics 데이터 전체
+  entityType   String   @db.VarChar(20) // 'article' | 'organization'
+  entityId     Int // MagazinePost.id 또는 Organization.id
+  entityName   String   @db.VarChar(255) // 빠른 조회용 비정규화 이름
+  reportType   String   @db.VarChar(20) // 'simple' | 'detailed'
+  periodDays   Int // 집계 기간 (7 / 30 / 90 / 0=전체)
+  dataSnapshot Json // 생성 시점 analytics 데이터 전체
   createdAt    DateTime @default(now())
 
   @@index([entityType, entityId])
@@ -353,18 +355,18 @@ model AnalyticsReport {
 // ─── B2B 기관/기업 네트워크 IP 역추적 방문 로그 ─────────────────────
 model VisitorOrgLog {
   id          Int      @id @default(autoincrement())
-  ip_hash     String   @db.VarChar(64)   // 개인정보 보호를 위한 SHA-256 해시 IP
-  org_name    String   @db.VarChar(255)  // 식별된 기업/기관/대학교/지자체 네트워크명
-  asn         String?  @db.VarChar(64)   // AS 번호 (예: AS4766)
-  isp_name    String?  @db.VarChar(255)  // ISP 또는 네트워크 소유 기관 원문
-  city        String?  @db.VarChar(100)  // 접속 도시 (예: Anyang-si, Seoul)
-  country     String?  @db.VarChar(10)   // 국가 코드 (예: KR)
-  page_path   String   @db.VarChar(512)  // 방문 경로
+  ip_hash     String   @db.VarChar(64) // 개인정보 보호를 위한 SHA-256 해시 IP
+  org_name    String   @db.VarChar(255) // 식별된 기업/기관/대학교/지자체 네트워크명
+  asn         String?  @db.VarChar(64) // AS 번호 (예: AS4766)
+  isp_name    String?  @db.VarChar(255) // ISP 또는 네트워크 소유 기관 원문
+  city        String?  @db.VarChar(100) // 접속 도시 (예: Anyang-si, Seoul)
+  country     String?  @db.VarChar(10) // 국가 코드 (예: KR)
+  page_path   String   @db.VarChar(512) // 방문 경로
   page_type   String   @default("other") @db.VarChar(30) // 'magazine' | 'radar' | 'home' | 'other'
-  target_id   Int?                       // 포스트 ID 또는 조직 ID
-  target_name String?  @db.VarChar(255)  // 열람한 포스트/조직명
-  referrer    String?  @db.VarChar(512)  // 유입 레퍼러
-  is_b2b      Boolean  @default(false)   // 일반 통신사(KT/SKB/LGU+)가 아닌 기업/기관 전용망 여부
+  target_id   Int? // 포스트 ID 또는 조직 ID
+  target_name String?  @db.VarChar(255) // 열람한 포스트/조직명
+  referrer    String?  @db.VarChar(512) // 유입 레퍼러
+  is_b2b      Boolean  @default(false) // 일반 통신사(KT/SKB/LGU+)가 아닌 기업/기관 전용망 여부
   visited_at  DateTime @default(now())
 
   @@index([visited_at])
@@ -376,18 +378,18 @@ model VisitorOrgLog {
 // ─── AEO 'Answer Index' (AI 답변 인용 지표) 감사 이력 ────────────────
 model AeoAuditLog {
   id                Int      @id @default(autoincrement())
-  entity_type       String   @db.VarChar(30)   // 'organization' | 'article' | 'lead_magnet'
-  organization_id   Int?                       // Organization.id (해당 시)
-  post_id           Int?                       // MagazinePost.id (해당 시)
-  target_name       String   @db.VarChar(255)  // 진단 대상 기업/기관/기사명
-  region_name       String?  @db.VarChar(100)  // 타겟 지역명
-  industry_keywords String?  @db.VarChar(512)  // 진단 타겟 키워드
-  answer_index      Int      @default(0)       // 0 ~ 100 종합 점수
-  mention_rate      Int      @default(0)       // AI 답변 내 브랜드 언급률 (0~100%)
-  citation_rate     Int      @default(0)       // 진사이트 출처/구조화 인용 기여율 (0~100%)
-  prompt_count      Int      @default(0)       // 시뮬레이션 프롬프트 수 (5~10개)
-  engine_summary    Json?                      // 엔진별 점수 요약 (ChatGPT, Gemini, Perplexity, Google AI)
-  prompt_results    Json?                      // 개별 프롬프트 시뮬레이션 감사 상세 결과
+  entity_type       String   @db.VarChar(30) // 'organization' | 'article' | 'lead_magnet'
+  organization_id   Int? // Organization.id (해당 시)
+  post_id           Int? // MagazinePost.id (해당 시)
+  target_name       String   @db.VarChar(255) // 진단 대상 기업/기관/기사명
+  region_name       String?  @db.VarChar(100) // 타겟 지역명
+  industry_keywords String?  @db.VarChar(512) // 진단 타겟 키워드
+  answer_index      Int      @default(0) // 0 ~ 100 종합 점수
+  mention_rate      Int      @default(0) // AI 답변 내 브랜드 언급률 (0~100%)
+  citation_rate     Int      @default(0) // 진사이트 출처/구조화 인용 기여율 (0~100%)
+  prompt_count      Int      @default(0) // 시뮬레이션 프롬프트 수 (5~10개)
+  engine_summary    Json? // 엔진별 점수 요약 (ChatGPT, Gemini, Perplexity, Google AI)
+  prompt_results    Json? // 개별 프롬프트 시뮬레이션 감사 상세 결과
   audited_at        DateTime @default(now())
 
   @@index([entity_type, organization_id, audited_at])
@@ -403,6 +405,8 @@ model QrLink {
   code            String   @unique @db.VarChar(50)
   organization_id Int
   mode            String   @default("profile") @db.VarChar(20) // profile | video-first | links
+  label           String?  @db.VarChar(50) // 어드민 표시용 용도 (예: 명함용, 인스타그램 프로필용)
+  channel         String   @default("businesscard") @db.VarChar(20) // businesscard | instagram | email | other (UTM 결정)
   is_active       Boolean  @default(true)
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
@@ -449,7 +453,47 @@ model OrganizationLink {
   @@map("organization_links")
 }
 
-// 링크 페이지 링크별 클릭 일자별 집계 (IP·UA 원문 미저장, 건수만 누적)
+// 링크 페이지 원본 이벤트 (90일 보관). IP·UA 원문은 저장하지 않고 날짜별 비밀값으로 해시한 순방문 식별값만 저장
+model LinkPageEvent {
+  id              BigInt   @id @default(autoincrement())
+  organization_id Int
+  event           String   @db.VarChar(10) // view | click
+  link_key        String?  @db.VarChar(64) // click만: profile | article:{id} | link:{id} | auto:{n} | inquiry | home
+  link_kind       String?  @db.VarChar(10) // click만: external | internal | cta | social
+  source_code     String   @default("direct") @db.VarChar(50) // /go 코드 또는 direct
+  device          String   @db.VarChar(10) // mobile | desktop
+  visitor_hash    String?  @db.Char(32)
+  created_at      DateTime @default(now())
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id, created_at])
+  @@index([organization_id, visitor_hash, created_at])
+  @@index([created_at])
+  @@map("link_page_events")
+}
+
+// 링크 페이지 일별 집계 (어드민 통계 기준). 방문은 link_key가 빈 문자열
+model LinkPageDaily {
+  id              Int      @id @default(autoincrement())
+  organization_id Int
+  date            DateTime @db.Date // KST 기준 일자
+  source_code     String   @db.VarChar(50)
+  event           String   @db.VarChar(10) // view | click
+  link_key        String   @default("") @db.VarChar(64)
+  link_kind       String   @default("") @db.VarChar(10)
+  label           String   @default("") @db.VarChar(100) // 마지막 클릭 시점의 표시 라벨
+  count           Int      @default(0)
+  unique_count    Int      @default(0) // 그날 해당 경로·이벤트·링크의 순방문자 수
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@unique([organization_id, date, source_code, event, link_key])
+  @@index([organization_id, date])
+  @@map("link_page_daily")
+}
+
+// (사용 중지) 링크 페이지 링크별 클릭 일자별 집계. link_page_daily로 대체, 기존 데이터 보존용
 model OrganizationLinkClickDaily {
   id              Int      @id @default(autoincrement())
   organization_id Int

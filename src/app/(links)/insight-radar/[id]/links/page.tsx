@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ChevronRight, Mail, Phone } from 'lucide-react';
 import { getOrgLinkPage, type LinkPageLink } from '@/lib/org-link-page';
-import { SOCIAL_PLATFORM_LABEL } from '@/lib/org-links';
+import { SOCIAL_PLATFORM_LABEL, linkPageKindOf, type LinkPageLinkKind } from '@/lib/org-links';
 import { formatRadarDate, getOrgInitial } from '@/lib/radar';
 import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
 import { LinkPageTracker } from '@/components/public/insight-radar/links/LinkPageTracker';
@@ -51,8 +51,13 @@ function Thumb({ src, fallback }: { src: string | null; fallback?: React.ReactNo
     );
 }
 
-function trackAttrs(link: { key: string; label: string; kind: string }) {
+// 통계 수집 속성 (kind는 통계용 종류: external | internal | cta | social)
+function trackAttrs(link: { key: string; label: string; kind: LinkPageLinkKind }) {
     return { 'data-link-key': link.key, 'data-link-label': link.label, 'data-link-kind': link.kind };
+}
+
+function linkTrackAttrs(link: LinkPageLink) {
+    return trackAttrs({ key: link.key, label: link.label, kind: linkPageKindOf(link) });
 }
 
 export default async function OrgLinksPage({ params }: PageProps) {
@@ -96,7 +101,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                                         rel="noopener noreferrer"
                                         aria-label={iconLabel(link)}
                                         title={iconLabel(link)}
-                                        {...trackAttrs(link)}
+                                        {...linkTrackAttrs(link)}
                                         className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zi-blue"
                                     >
                                         <BrandIcon platform={link.platform} />
@@ -116,7 +121,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                     {/* ③ 카드형 링크: 프로필(항상 첫 번째) → 최근 매거진 기사 → 관리자 카드 */}
                     <ul className="flex flex-col gap-3" aria-label="주요 링크">
                         <li>
-                            <a href={profilePath} {...trackAttrs({ key: 'profile', label: '진사이트 프로필 전체 보기', kind: 'profile' })} className={cardClass}>
+                            <a href={profilePath} {...trackAttrs({ key: 'profile', label: '진사이트 프로필 전체 보기', kind: 'internal' })} className={cardClass}>
                                 <Thumb
                                     src={null}
                                     fallback={
@@ -138,7 +143,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                                 <li key={article.id}>
                                     <a
                                         href={article.path}
-                                        {...trackAttrs({ key: `article:${article.id}`, label: article.title, kind: 'article' })}
+                                        {...trackAttrs({ key: `article:${article.id}`, label: article.title, kind: 'internal' })}
                                         className={cardClass}
                                     >
                                         <Thumb src={article.thumbnailUrl} />
@@ -157,7 +162,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                                 <a
                                     href={link.url}
                                     {...(isExternal(link.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                                    {...trackAttrs(link)}
+                                    {...linkTrackAttrs(link)}
                                     className={cardClass}
                                 >
                                     <Thumb src={link.thumbnailUrl} fallback={<BrandIcon platform={link.platform} className="h-6 w-6" />} />
@@ -178,7 +183,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                                     <a
                                         href={link.url}
                                         {...(isExternal(link.url) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                                        {...trackAttrs(link)}
+                                        {...linkTrackAttrs(link)}
                                         className="flex min-h-[52px] items-center justify-center rounded-xl bg-white px-4 text-center text-[15px] font-bold text-slate-900 shadow-sm ring-1 ring-slate-200/70 transition-colors hover:bg-slate-50 active:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zi-blue break-keep"
                                     >
                                         {link.label}
@@ -192,7 +197,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                     <p className="mt-10 text-center text-xs text-slate-400">
                         <a
                             href="/insight-radar"
-                            {...trackAttrs({ key: 'home', label: '진사이트 인사이트 레이더', kind: 'home' })}
+                            {...trackAttrs({ key: 'home', label: '진사이트 인사이트 레이더', kind: 'internal' })}
                             className="inline-flex min-h-11 items-center px-2 underline-offset-2 hover:text-slate-600 hover:underline"
                         >
                             진사이트 인사이트 레이더
@@ -206,7 +211,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                         <a
                             href={data.inquiryHref}
                             {...(isExternal(data.inquiryHref) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                            {...trackAttrs({ key: 'inquiry', label: '문의하기', kind: 'inquiry' })}
+                            {...trackAttrs({ key: 'inquiry', label: '문의하기', kind: 'cta' })}
                             className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-zi-blue text-[15px] font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue"
                         >
                             {inquiryIsPhone ? <Phone className="h-4 w-4" aria-hidden="true" /> : <Mail className="h-4 w-4" aria-hidden="true" />}
@@ -215,7 +220,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                     </div>
                 )}
             </main>
-            <LinkPageTracker slug={data.slug} />
+            <LinkPageTracker slug={data.slug} orgId={data.id} />
         </div>
     );
 }

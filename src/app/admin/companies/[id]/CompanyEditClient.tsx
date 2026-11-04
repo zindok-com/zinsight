@@ -26,6 +26,7 @@ import {
     MoveVertical,
     ChevronDown,
     FolderOpen,
+    Link2,
 } from 'lucide-react';
 import { StorageImageSelectorModal, type SelectableMedia } from '@/components/admin/storage/StorageImageSelectorModal';
 import { OrgLinksManager } from './OrgLinksManager';
@@ -713,6 +714,13 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 >
                     <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
                     애널리틱스
+                </Link>
+                <Link
+                    href={`/admin/companies/${company.id}/link-analytics`}
+                    className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5"
+                >
+                    <Link2 className="w-3.5 h-3.5 text-indigo-600" />
+                    링크 페이지 통계
                 </Link>
             </div>
 
