@@ -3,3 +3,15 @@ allowBuilds:
   prisma: false
   protobufjs: true
   sharp: false
+# 보안 패치: 간접 의존성 중 취약 버전을 같은 메이저의 패치 버전으로 고정
+overrides:
+  undici@>=7 <7.30.1: ^7.30.1
+  '@grpc/grpc-js@>=1.14.0 <1.14.5': ^1.14.5
+  picomatch@<2.3.2: ^2.3.2
+  picomatch@>=4 <4.0.4: ^4.0.4
+  postcss@<8.5.32: ^8.5.32
+  nanoid@<3.3.18: ^3.3.18
+  browserslist@<4.28.7: ^4.28.7
+  brace-expansion@>=2 <2.1.6: ^2.1.6
+  source-map-js@<1.2.2: ^1.2.2
+  lodash@<4.17.24: ^4.17.24
