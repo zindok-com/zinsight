@@ -35,6 +35,8 @@ interface ResolvedIpOrg {
 const ipOrgCache = new Map<string, { data: ResolvedIpOrg; expiresAt: number }>();
 // 동일 방문자(ip_hash + page_path) 15분 내 중복 로깅 방지
 const recentVisitDedup = new Map<string, number>();
+// 방문 기관 기록 보유 기간 (개인정보처리방침 제3조)
+const VISITOR_LOG_RETENTION_MS = 365 * 24 * 60 * 60 * 1000;
 
 // 일반 가정용/모바일 통신사 ISP 패턴 (전용회선 기관명이 없을 경우 일반 통신망으로 분류)
 const RESIDENTIAL_ISP_PATTERNS = [
@@ -328,6 +330,13 @@ export async function recordVisitorNetworkPing(payload: {
                 is_b2b: resolved.isB2b,
             },
         });
+
+        // 개인정보처리방침의 보유 기간(1년)이 지난 기록 정리. 요청 100건 중 1건꼴로만 실행
+        if (Math.random() < 0.01) {
+            await prisma.visitorOrgLog.deleteMany({
+                where: { visited_at: { lt: new Date(Date.now() - VISITOR_LOG_RETENTION_MS) } },
+            });
+        }
 
         return { ok: true };
     } catch {
