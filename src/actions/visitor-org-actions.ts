@@ -219,6 +219,8 @@ function isPrivateOrLocalIp(ip: string): boolean {
     if (clean === '127.0.0.1' || clean === '::1' || clean === 'localhost') return true;
     if (clean.startsWith('10.') || clean.startsWith('192.168.')) return true;
     if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(clean)) return true;
+    // IPv6 사설·링크 로컬 대역
+    if (/^(fc|fd|fe80)/i.test(clean)) return true;
     return false;
 }
 
@@ -234,44 +236,18 @@ async function resolveIpOrganization(ip: string): Promise<ResolvedIpOrg | null> 
     }
 
     try {
-        // 1차: ip-api.com (org, isp, asname을 분리 제공하여 기업 전용회선 식별에 유리)
-        const res = await fetch(
-            `http://ip-api.com/json/${encodeURIComponent(cleanIp)}?fields=status,countryCode,regionName,city,isp,org,as,asname`,
-            { signal: AbortSignal.timeout(2200), cache: 'no-store' }
-        );
-        if (res.ok) {
-            const json = await res.json();
-            if (json && json.status === 'success') {
-                const rawOrg = String(json.org || json.asname || '').trim();
-                const rawIsp = String(json.isp || '').trim();
-                const rawAs = String(json.as || '').trim();
-                const classified = classifyNetworkOrg(rawOrg, rawIsp, rawAs);
-
-                const result: ResolvedIpOrg = {
-                    orgName: classified.displayOrgName,
-                    asn: classified.asn,
-                    ispName: rawIsp || rawOrg || null,
-                    city: json.city ? `${json.regionName ? json.regionName + ' ' : ''}${json.city}` : null,
-                    country: json.countryCode || null,
-                    isB2b: classified.isB2b,
-                };
-                ipOrgCache.set(cleanIp, { data: result, expiresAt: Date.now() + 6 * 3600 * 1000 });
-                return result;
-            }
-        }
-    } catch {
-        // fallback below
-    }
-
-    try {
-        // 2차 폴백: ipinfo.io
-        const tokenParam = process.env.IPINFO_TOKEN ? `?token=${process.env.IPINFO_TOKEN}` : '';
-        const res2 = await fetch(`https://ipinfo.io/${encodeURIComponent(cleanIp)}/json${tokenParam}`, {
+        // ipinfo.io (HTTPS). ip-api.com 무료판은 상업적 이용이 금지되고 HTTP 평문 전송이라 사용하지 않음.
+        // 토큰은 주소에 넣지 않고 헤더로 전달 (접속 로그에 남지 않도록)
+        const token = process.env.IPINFO_TOKEN;
+        const res2 = await fetch(`https://ipinfo.io/${encodeURIComponent(cleanIp)}/json`, {
+            headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
             signal: AbortSignal.timeout(2200),
             cache: 'no-store',
         });
         if (res2.ok) {
             const json2 = await res2.json();
+            if (json2?.bogon) return null;
+            // org 예: "AS55624 Korean Education Network"
             const rawOrg = String(json2.org || '').trim();
             const classified = classifyNetworkOrg(rawOrg, rawOrg, rawOrg);
             const result: ResolvedIpOrg = {
@@ -294,7 +270,7 @@ async function resolveIpOrganization(ip: string): Promise<ResolvedIpOrg | null> 
 
 /**
  * 공개 페이지 진입 시 접속 네트워크(ASN/Whois 기관명) 역추적 로깅
- * 개인정보보호법 준수를 위해 원문 IP는 절대 DB에 저장하지 않고 SHA-256 단방향 해시만 저장합니다.
+ * 개인정보보호법 준수를 위해 원문 IP는 절대 DB에 저장하지 않고 비밀 키 기반 HMAC-SHA256 해시만 저장합니다.
  */
 export async function recordVisitorNetworkPing(payload: {
     pagePath: string;
@@ -318,12 +294,10 @@ export async function recordVisitorNetworkPing(payload: {
             return { ok: false };
         }
 
-        const salt = process.env.NEXTAUTH_SECRET || 'zinsight-b2b-privacy-salt';
-        const ipHash = crypto
-            .createHash('sha256')
-            .update(`${rawIp}:${salt}`)
-            .digest('hex')
-            .slice(0, 24);
+        // 비밀 키로 HMAC 처리해야 해시만 보고 IP를 대입해 되찾을 수 없음. 키가 없으면 기록하지 않음
+        const secret = process.env.LINK_STATS_SECRET || process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET;
+        if (!secret) return { ok: false };
+        const ipHash = crypto.createHmac('sha256', `${secret}:visitor-org`).update(rawIp).digest('hex').slice(0, 24);
 
         const pagePath = (payload.pagePath || '/').slice(0, 512);
         const dedupKey = `${ipHash}:${pagePath}`;
