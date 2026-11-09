@@ -3,6 +3,7 @@
 import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { rateLimitByIp, HOUR } from '@/lib/rate-limit';
 
 export async function submitConsultingRequest(data: {
     email: string;
@@ -15,6 +16,10 @@ export async function submitConsultingRequest(data: {
     const industry = data?.industry ? String(data.industry).trim().slice(0, 100) : undefined;
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 || !companyName || companyName.length > 200) {
         return { success: false, error: '입력값이 올바르지 않습니다.' };
+    }
+    // 스팸 신청 방지: IP당 1시간 5회
+    if (!(await rateLimitByIp('consulting', 5, HOUR))) {
+        return { success: false, error: '신청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' };
     }
     try {
         // 1. 데이터 수집 (Lead Generation)

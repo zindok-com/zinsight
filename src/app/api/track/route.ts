@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { deviceFromUserAgent, isBotUserAgent } from '@/lib/bot-ua';
 import { LINK_KEY_PATTERN, LINK_PAGE_LINK_KINDS } from '@/lib/org-links';
 import { QR_CODE_PATTERN } from '@/lib/qr-link';
+import { rateLimit, MINUTE } from '@/lib/rate-limit';
 
 // 링크 페이지 방문·클릭 수집 (고객사 제공 통계의 기준 데이터).
 // IP·UA 원문은 저장하지 않고, 날짜별 비밀값으로 해시한 순방문 식별값만 원본 이벤트에 90일 보관
@@ -34,6 +35,8 @@ function clientIp(request: NextRequest): string {
 export async function POST(request: NextRequest) {
     const ua = request.headers.get('user-agent') ?? '';
     if (isBotUserAgent(ua)) return NO_CONTENT();
+    // 통계 부풀리기·DB 부하 방지: IP당 분당 60회
+    if (!rateLimit(`track:${clientIp(request)}`, 60, MINUTE)) return NO_CONTENT();
 
     // 다른 사이트에서 보낸 요청은 집계하지 않음
     const origin = request.headers.get('origin');

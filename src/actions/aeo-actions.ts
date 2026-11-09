@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-auth';
+import { rateLimitByIp, HOUR, MINUTE } from '@/lib/rate-limit';
 
 export interface AeoEngineScore {
     engine: 'ChatGPT' | 'Gemini' | 'Perplexity' | 'Google AI Overviews';
@@ -550,6 +551,10 @@ export async function diagnoseCompanyForLeadMagnet(
     audit: AeoAuditResult;
     potentialIndexAfterOptimization: number;
 }> {
+    // 외부 AI API 비용 유발 방지: IP당 10분 10회 (초과 시 화면에서 일시 오류로 안내)
+    if (!(await rateLimitByIp('aeo-diagnose', 10, 10 * MINUTE))) {
+        throw new Error('RATE_LIMITED');
+    }
     const cleanName = (companyName || '').trim().slice(0, 100);
     const cleanIndustry = (industryOrRegion || '').trim().slice(0, 100);
 
@@ -648,6 +653,10 @@ export async function submitAeoLeadMagnetRequest(input: {
 
     if (!companyName || !email) {
         return { success: false, message: '기업(기관)명과 연락 받으실 이메일/연락처를 입력해 주세요.' };
+    }
+    // 스팸 신청 방지: IP당 1시간 5회
+    if (!(await rateLimitByIp('aeo-lead', 5, HOUR))) {
+        return { success: false, message: '신청이 너무 많습니다. 잠시 후 다시 시도해 주세요.' };
     }
 
     const tag = input.answerIndex != null ? `[AEO진단:${input.answerIndex}점] ` : '[AEO진단] ';

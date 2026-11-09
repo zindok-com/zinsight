@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/admin-auth';
 import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { slugifyOrganization, safeHttpUrl } from '@/lib/utils';
+import { rateLimitByIp, HOUR } from '@/lib/rate-limit';
 
 export async function updateCompany(
   id: number,
@@ -293,6 +294,10 @@ export async function submitOrganizationForm(
     core_keywords?: string[];
   }
 ) {
+  // 공개 폼 반복 제출 방지: IP당 1시간 10회
+  if (!(await rateLimitByIp('org-form', 10, HOUR))) {
+    return { success: false, reason: 'RATE_LIMITED' as const };
+  }
   const check = await getInviteByToken(token);
   if (!check.valid) {
     return { success: false, reason: check.reason };

@@ -3,6 +3,11 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { verifyTOTP } from '@/lib/totp';
 import { verifyTempToken, signTempToken } from '@/lib/temp-token';
+import { clientIpFromHeaders, rateLimit, MINUTE } from '@/lib/rate-limit';
+
+// OTP 6자리 무차별 대입 방지: 5분에 IP별·아이디별 각 5회
+const OTP_LIMIT = 5;
+const OTP_WINDOW_MS = 5 * MINUTE;
 
 export async function POST(request: Request) {
     try {
@@ -20,6 +25,12 @@ export async function POST(request: Request) {
         const decoded = verifyTempToken(mfaPendingCookie.value);
         if (!decoded || decoded.step !== 'mfa_pending' || !decoded.username) {
             return NextResponse.json({ success: false, error: 'Session expired or invalid. Please login again.' }, { status: 401 });
+        }
+
+        const ipAllowed = rateLimit(`otp-ip:${clientIpFromHeaders(request.headers)}`, OTP_LIMIT, OTP_WINDOW_MS);
+        const userAllowed = rateLimit(`otp-user:${decoded.username}`, OTP_LIMIT, OTP_WINDOW_MS);
+        if (!ipAllowed || !userAllowed) {
+            return NextResponse.json({ success: false, error: '인증 시도가 너무 많습니다. 5분 후 다시 시도해 주세요.' }, { status: 429 });
         }
 
         // DB에서 해당 어드민 조회

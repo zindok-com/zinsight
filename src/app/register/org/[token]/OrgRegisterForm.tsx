@@ -87,6 +87,7 @@ export function OrgRegisterForm({ token }: Props) {
                     USED: '이미 제출된 링크입니다.',
                     EXPIRED: '링크가 만료되었습니다.',
                     INVALID: '기업명과 조직 유형을 확인해 주세요.',
+                    RATE_LIMITED: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.',
                 };
                 toast.error(reasonMap[res.reason ?? ''] ?? '제출에 실패했습니다.');
             }

@@ -3,6 +3,11 @@ import { cookies } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { signTempToken } from '@/lib/temp-token';
 import { verifyPassword, needsRehash, hashPassword } from '@/lib/password';
+import { clientIpFromHeaders, rateLimit, MINUTE } from '@/lib/rate-limit';
+
+// 비밀번호 무차별 대입 방지: 15분에 IP별·아이디별 각 10회
+const LOGIN_LIMIT = 10;
+const LOGIN_WINDOW_MS = 15 * MINUTE;
 
 export async function POST(request: Request) {
     try {
@@ -11,6 +16,12 @@ export async function POST(request: Request) {
 
         if (!username || !password) {
             return NextResponse.json({ success: false, error: 'Username and password are required' }, { status: 400 });
+        }
+
+        const ipAllowed = rateLimit(`login-ip:${clientIpFromHeaders(request.headers)}`, LOGIN_LIMIT, LOGIN_WINDOW_MS);
+        const userAllowed = rateLimit(`login-user:${String(username).slice(0, 100)}`, LOGIN_LIMIT, LOGIN_WINDOW_MS);
+        if (!ipAllowed || !userAllowed) {
+            return NextResponse.json({ success: false, error: '로그인 시도가 너무 많습니다. 15분 후 다시 시도해 주세요.' }, { status: 429 });
         }
 
         const admin = await prisma.admin.findUnique({

@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/db';
 import { requireAdmin } from '@/lib/admin-auth';
+import { rateLimit, MINUTE } from '@/lib/rate-limit';
 
 export interface VisitorOrgLogItem {
     id: number;
@@ -288,6 +289,11 @@ export async function recordVisitorNetworkPing(payload: {
         const rawIp = forwardedFor ? forwardedFor.split(',')[0].trim() : realIp?.trim() || '';
 
         if (!rawIp || isPrivateOrLocalIp(rawIp)) {
+            return { ok: false };
+        }
+
+        // 외부 IP 조회 API 호출량 보호: IP당 분당 30회
+        if (!rateLimit(`visitor-ping:${rawIp}`, 30, MINUTE)) {
             return { ok: false };
         }
 

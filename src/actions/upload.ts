@@ -6,6 +6,7 @@ import { s3Client, NCP_STORAGE_BUCKET, NCP_STORAGE_ENDPOINT } from '@/lib/storag
 import { isAdminRequest } from '@/lib/admin-auth';
 import { getInviteByToken } from '@/actions/company-actions';
 import { UPLOAD_SIZE_LIMIT, formatBytes } from '@/lib/storage-media';
+import { rateLimitByIp, HOUR } from '@/lib/rate-limit';
 
 export type UploadFolder = 'thumbnails' | 'videos' | 'images' | 'logos' | 'attachments';
 
@@ -93,6 +94,10 @@ export async function getMediaUploadUrl(
 ): Promise<MediaUploadTicket> {
     // 발급 권한: 관리자, 또는 유효한 초대 토큰을 가진 신청자(로고 폴더 한정)
     if (!(await isAdminRequest())) {
+        // 초대 신청자 업로드 남용 방지: IP당 1시간 30회
+        if (!(await rateLimitByIp('invite-upload', 30, HOUR))) {
+            throw new Error('업로드 요청이 너무 많습니다. 잠시 후 다시 시도해 주세요.');
+        }
         const invite = inviteToken && INVITE_FOLDERS.includes(folder) ? await getInviteByToken(inviteToken) : null;
         if (!invite?.valid) {
             throw new Error('업로드 권한이 없습니다.');
