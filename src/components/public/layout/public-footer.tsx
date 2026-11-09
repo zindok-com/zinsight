@@ -1,5 +1,15 @@
 import Link from 'next/link';
 
+// 사업자 정보 표시 (전자상거래법·정보통신망법)
+const BUSINESS_INFO: Array<{ label: string; value: string; href?: string }> = [
+    { label: '상호', value: '진독(Zindok)' },
+    { label: '대표', value: '이태경' },
+    { label: '사업자등록번호', value: '346-15-02742' },
+    { label: '주소', value: '경기도 안양시 동안구 관양1744, 9층 안양창업지원센터' },
+    { label: '전화', value: '010-9756-3400', href: 'tel:010-9756-3400' },
+    { label: '이메일', value: 'ceo@zindok.com', href: 'mailto:ceo@zindok.com' },
+];
+
 export function PublicFooter() {
     const currentYear = new Date().getFullYear();
 
@@ -36,14 +46,32 @@ export function PublicFooter() {
                 </div>
             </div>
 
+            {/* 사업자 정보 */}
+            <div className="border-t border-zi-divider">
+                <address className="mx-auto max-w-zi-container px-4 sm:px-6 py-5 not-italic text-xs leading-relaxed text-slate-500">
+                    <p className="flex flex-wrap gap-x-3 gap-y-1">
+                        {BUSINESS_INFO.map(({ label, value, href }) => (
+                            <span key={label}>
+                                <span className="text-slate-400">{label}</span>{' '}
+                                {href ? <a href={href} className="hover:underline">{value}</a> : value}
+                            </span>
+                        ))}
+                    </p>
+                </address>
+            </div>
+
             {/* 하단 저작권 바 */}
             <div className="border-t border-zi-divider">
                 <div className="mx-auto flex max-w-zi-container flex-col items-center justify-between gap-2 px-4 sm:px-6 py-5 md:flex-row">
                     <p className="text-xs font-medium tracking-wide text-slate-400">
                         © {currentYear} 진독. All rights reserved.
                     </p>
+                    {/* Lordicon 무료 라이선스 출처 표기 (애니메이션 아이콘) */}
                     <p className="text-xs font-medium tracking-wide text-slate-400">
-                        Designed for Intelligent Decision Making.
+                        Animated icons by{' '}
+                        <a href="https://lordicon.com/" target="_blank" rel="noopener noreferrer" className="hover:underline">
+                            Lordicon.com
+                        </a>
                     </p>
                 </div>
             </div>
