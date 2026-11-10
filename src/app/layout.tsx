@@ -83,7 +83,10 @@ export default function RootLayout({
 }: Readonly<{
     children: React.ReactNode;
 }>) {
-    const gaId = process.env.NEXT_PUBLIC_GA_ID ? process.env.NEXT_PUBLIC_GA_ID : 'G-JV3R82PMH4';
+    // GA는 Vercel 운영 배포에서만 수집 (로컬 dev·프리뷰 트래픽이 운영 통계에 섞이지 않도록)
+    const gaId = process.env.VERCEL_ENV === 'production'
+        ? (process.env.NEXT_PUBLIC_GA_ID || 'G-JV3R82PMH4')
+        : null;
     return (
         <html lang="ko" suppressHydrationWarning>
             <body

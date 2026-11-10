@@ -69,8 +69,27 @@ class ConcurrencyQueue {
 // 표준 속성 한도(10건)보다 여유 있게 최대 3건 동시 요청으로 제어
 const ga4Queue = new ConcurrencyQueue(3);
 
+// 운영 도메인 트래픽만 집계 (로컬 dev·프리뷰에서 수집된 기록 제외)
+const PRODUCTION_HOST_FILTER = {
+    filter: {
+        fieldName: 'hostName',
+        stringFilter: { matchType: 'FULL_REGEXP', value: '(www\\.)?zinsight\\.co\\.kr' },
+    },
+};
+
+function withProductionHost(params: any): any {
+    const existing = params?.dimensionFilter;
+    return {
+        ...params,
+        dimensionFilter: existing
+            ? { andGroup: { expressions: [PRODUCTION_HOST_FILTER, existing] } }
+            : PRODUCTION_HOST_FILTER,
+    };
+}
+
 // ── RESOURCE_EXHAUSTED / 쿼터 초과 시 재시도 로직 포함 안전 호출기 ───
-async function safeRunReport(params: any, retries = 3): Promise<any> {
+async function safeRunReport(rawParams: any, retries = 3): Promise<any> {
+    const params = withProductionHost(rawParams);
     return ga4Queue.run(async () => {
         const client = getClient();
         if (!client) {
