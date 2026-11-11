@@ -16,9 +16,15 @@ export const VARIANT_FOLDERS = ['images', 'thumbnails'];
 /** 버킷 내부용 경로: 보관함 목록·사용처 판정에서 제외 */
 export const UPLOAD_TEMP_PREFIX = '_incoming/';
 export const IMAGE_VARIANT_PREFIX = '_640/';
+/** 일괄 재압축 전 원본 백업 (보관함 목록·미사용 정리 대상에서 제외되어 자동 삭제되지 않음) */
+export const IMAGE_BACKUP_PREFIX = '_backup/';
 
 export function isInternalStorageKey(key: string): boolean {
-    return key.startsWith(UPLOAD_TEMP_PREFIX) || key.startsWith(IMAGE_VARIANT_PREFIX);
+    return (
+        key.startsWith(UPLOAD_TEMP_PREFIX) ||
+        key.startsWith(IMAGE_VARIANT_PREFIX) ||
+        key.startsWith(IMAGE_BACKUP_PREFIX)
+    );
 }
 
 /** 원본 키의 640px 버전 키. 예) images/a.webp → _640/images/a.webp, images/a.png → _640/images/a.png.webp */
