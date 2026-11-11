@@ -63,6 +63,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
                         company_articles: true,
                         magazinePosts: true,
                         ingestions: true,
+                        linkPageLeads: { where: { read_at: null } },
                     },
                 },
             },

@@ -111,6 +111,7 @@ model Organization {
   linkClicks       OrganizationLinkClickDaily[]
   linkPageEvents   LinkPageEvent[]
   linkPageDaily    LinkPageDaily[]
+  linkPageLeads    LinkPageLead[]
 
   @@unique([company_name])
   @@index([region_id])
@@ -457,7 +458,7 @@ model OrganizationLink {
 model LinkPageEvent {
   id              BigInt   @id @default(autoincrement())
   organization_id Int
-  event           String   @db.VarChar(10) // view | click
+  event           String   @db.VarChar(10) // view | click | video
   link_key        String?  @db.VarChar(64) // click만: profile | article:{id} | link:{id} | auto:{n} | inquiry | home
   link_kind       String?  @db.VarChar(10) // click만: external | internal | cta | social
   source_code     String   @default("direct") @db.VarChar(50) // /go 코드 또는 direct
@@ -479,7 +480,7 @@ model LinkPageDaily {
   organization_id Int
   date            DateTime @db.Date // KST 기준 일자
   source_code     String   @db.VarChar(50)
-  event           String   @db.VarChar(10) // view | click
+  event           String   @db.VarChar(10) // view | click | video
   link_key        String   @default("") @db.VarChar(64)
   link_kind       String   @default("") @db.VarChar(10)
   label           String   @default("") @db.VarChar(100) // 마지막 클릭 시점의 표시 라벨
@@ -491,6 +492,26 @@ model LinkPageDaily {
   @@unique([organization_id, date, source_code, event, link_key])
   @@index([organization_id, date])
   @@map("link_page_daily")
+}
+
+// 링크 페이지 '연락처 남기기' 접수 (개인정보: 접수일로부터 1년 보관 후 자동 삭제)
+model LinkPageLead {
+  id              Int       @id @default(autoincrement())
+  organization_id Int
+  name            String    @db.VarChar(50)
+  phone           String?   @db.VarChar(30)
+  email           String?   @db.VarChar(255)
+  memo            String?   @db.VarChar(500)
+  source_code     String    @default("direct") @db.VarChar(50) // /go 코드 또는 direct
+  device          String    @db.VarChar(10) // mobile | desktop
+  read_at         DateTime? // 관리자가 확인한 시각 (null이면 새 접수)
+  created_at      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id, created_at])
+  @@index([created_at])
+  @@map("link_page_leads")
 }
 
 // (사용 중지) 링크 페이지 링크별 클릭 일자별 집계. link_page_daily로 대체, 기존 데이터 보존용

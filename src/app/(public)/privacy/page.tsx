@@ -23,7 +23,7 @@ const sections = [
     { id: 'sec-1', title: '제1조 (처리 목적)' },
     { id: 'sec-2', title: '제2조 (수집하는 항목)' },
     { id: 'sec-3', title: '제3조 (보유 및 이용기간)' },
-    { id: 'sec-4', title: '제4조 (처리 위탁 및 국외 이전)' },
+    { id: 'sec-4', title: '제4조 (처리 위탁·제3자 제공 및 국외 이전)' },
     { id: 'sec-5', title: '제5조 (GA4 쿠키 거부 가이드)' },
     { id: 'sec-6', title: '제6조 (정보주체의 권리)' },
     { id: 'sec-7', title: '제7조 (안전성 확보 조치)' },
@@ -129,7 +129,7 @@ export default function PrivacyPage() {
                     <div className="lg:col-span-8 flex flex-col gap-12">
                         
                         <div className="text-right text-[12px] text-zi-outline font-ui-label mb-4">
-                            시행일자: 2026년 11월 9일
+                            시행일자: 2026년 11월 11일
                         </div>
 
                         {/* 제1조 */}
@@ -142,7 +142,8 @@ export default function PrivacyPage() {
                                 <p>진독(이하 &quot;회사&quot;)는 다음의 목적을 위해 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 개인정보보호법 제18조에 따라 사전 동의를 받는 등 필요한 조치를 이행할 예정입니다.</p>
                                 <p>1. <strong>상담 및 진단 신청 응대</strong>: AEO 진단·상담 신청자에게 결과 안내, 상담 연락 및 서비스 소개를 목적으로 처리합니다.</p>
                                 <p>2. <strong>기업·기관 정보 등록</strong>: 초대 링크로 제출된 기업·기관 정보를 검토하여 인사이트 레이더 프로필로 게시하기 위해 처리합니다.</p>
-                                <p>3. <strong>서비스 운영 및 통계</strong>: 방문 통계 분석, 방문 기업·기관 단위의 관심 콘텐츠 파악, 링크 페이지 유입·클릭 집계, 부정 이용 방지 및 보안을 목적으로 처리합니다.</p>
+                                <p>3. <strong>링크 페이지 연락처 남기기</strong>: 기업·기관 링크 페이지에서 방문자가 남긴 연락처와 메모를 접수하여 해당 기업·기관에 전달하고, 문의에 응대하기 위해 처리합니다.</p>
+                                <p>4. <strong>서비스 운영 및 통계</strong>: 방문 통계 분석, 방문 기업·기관 단위의 관심 콘텐츠 파악, 링크 페이지 유입·클릭 집계, 부정 이용 방지 및 보안을 목적으로 처리합니다.</p>
                             </div>
                         </section>
 
@@ -156,6 +157,7 @@ export default function PrivacyPage() {
                                 <p>회사는 서비스 제공을 위해 최소한의 항목을 다음과 같이 수집하고 있습니다.</p>
                                 <div className="bg-zi-surface-container-low rounded-zi-card p-5 border border-zi-divider flex flex-col gap-3 text-[13.5px]">
                                     <p>• <strong>AEO 진단·상담 신청 시</strong>: 기업(기관)명, 이메일 주소 또는 연락처, 업종·지역</p>
+                                    <p>• <strong>링크 페이지 연락처 남기기</strong>: 이름, 전화번호 또는 이메일, 메모(선택), 접수 일시, 유입 경로 코드, 기기 유형(모바일·PC)</p>
                                     <p>• <strong>기업·기관 정보 등록 시</strong>: 기업(기관)명, 대표자명, 설립연도, 소재지, 홈페이지 주소, 로고, 사업 소개 (공개 게시를 전제로 제출받는 정보)</p>
                                     <p>• <strong>서비스 이용 과정에서 자동 수집되는 항목</strong>: 접속 IP 주소, 쿠키(Cookie), 방문 일시, 방문 페이지, 유입 경로(리퍼러), 브라우저·기기 유형</p>
                                 </div>
@@ -178,6 +180,7 @@ export default function PrivacyPage() {
                                 <p>2. <strong>항목별 보유 기간</strong></p>
                                 <ul className="list-disc pl-5 flex flex-col gap-1.5 text-[14px]">
                                     <li>AEO 진단·상담 신청 정보: 신청일로부터 1년 (정보주체가 삭제를 요청하면 즉시 파기)</li>
+                                    <li>링크 페이지 연락처 남기기 접수 내용: 접수일로부터 1년 (정보주체가 삭제를 요청하면 즉시 파기)</li>
                                     <li>기업·기관 등록 정보: 프로필 게시 기간 동안 (게시 중단 요청 시 지체 없이 파기)</li>
                                     <li>방문 기업·기관 식별 기록(IP 해시값 포함): 수집일로부터 1년</li>
                                     <li>링크 페이지 방문·클릭 원본 기록: 수집일로부터 90일 (이후 개인을 식별할 수 없는 일별 합계만 보관)</li>
@@ -195,10 +198,18 @@ export default function PrivacyPage() {
                         <section id="sec-4" className="scroll-mt-24 border-b border-zi-divider pb-8">
                             <h2 className="font-h3 text-h3 text-zi-primary mb-4 flex items-center gap-2.5">
                                 <span className="bg-zi-surface-container-highest px-3 py-1 rounded-full text-[12px] font-bold text-zi-blue font-ui-label">04</span>
-                                제4조 (개인정보 처리의 위탁 및 국외 이전)
+                                제4조 (개인정보 처리의 위탁·제3자 제공 및 국외 이전)
                             </h2>
                             <div className="text-body-md text-zi-on-surface-variant leading-[1.8] flex flex-col gap-4">
-                                <p>회사는 원활한 서비스 제공을 위해 아래와 같이 개인정보 처리 업무를 위탁하고 있으며, 이 중 국외 업체에는 서비스 이용 시 네트워크를 통해 개인정보가 전송됩니다(국외 이전). 회사는 개인정보를 제3자에게 판매하거나 제공하지 않습니다.</p>
+                                <p>회사는 원활한 서비스 제공을 위해 아래와 같이 개인정보 처리 업무를 위탁하고 있으며, 이 중 국외 업체에는 서비스 이용 시 네트워크를 통해 개인정보가 전송됩니다(국외 이전). 회사는 개인정보를 제3자에게 판매하지 않으며, 아래 &lsquo;제3자 제공&rsquo;의 경우를 제외하고 제공하지 않습니다.</p>
+                                <div className="bg-zi-surface-container-low rounded-zi-card p-5 border border-zi-divider text-[13.5px] leading-relaxed">
+                                    <p className="font-bold text-zi-primary mb-1.5">제3자 제공 · 링크 페이지 연락처 남기기</p>
+                                    <p>• <strong>제공받는 자</strong>: 방문자가 연락처를 남긴 링크 페이지의 해당 기업·기관</p>
+                                    <p>• <strong>제공 목적</strong>: 문의 응대 및 연락</p>
+                                    <p>• <strong>제공 항목</strong>: 이름, 전화번호 또는 이메일, 메모</p>
+                                    <p>• <strong>보유 기간</strong>: 제공받는 자의 문의 응대 목적 달성 시까지 (회사 보관분은 접수일로부터 1년)</p>
+                                    <p>• 연락처를 남길 때 별도 동의를 받으며, 동의하지 않으면 연락처 남기기를 이용할 수 없습니다.</p>
+                                </div>
                                 <div className="flex flex-col gap-3">
                                     {processors.map((p) => (
                                         <div key={p.name} className="bg-zi-surface-container-low rounded-zi-card p-5 border border-zi-divider text-[13.5px] leading-relaxed">

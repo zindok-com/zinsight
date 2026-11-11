@@ -13,6 +13,7 @@ export const dynamic = 'force-dynamic';
 const RAW_RETENTION_DAYS = 90;
 const NO_CONTENT = () => new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
 const KINDS = new Set<string>(LINK_PAGE_LINK_KINDS);
+const EVENTS = new Set<unknown>(['view', 'click', 'video']);
 
 // KST 기준 오늘 (DATE 컬럼 저장용 UTC 자정 값, 그날 시작 시각, 해시용 문자열)
 function kstDay() {
@@ -56,7 +57,8 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = typeof payload?.slug === 'string' ? payload.slug.slice(0, 255) : '';
-    const event = payload?.event === 'view' || payload?.event === 'click' ? (payload.event as 'view' | 'click') : null;
+    // view: 페이지 방문, click: 링크·버튼 클릭, video: 소개 영상 첫 재생
+    const event = EVENTS.has(payload?.event) ? (payload.event as 'view' | 'click' | 'video') : null;
     const src = typeof payload?.src === 'string' ? payload.src.trim().toLowerCase() : '';
     if (!slug || !event) return NO_CONTENT();
 

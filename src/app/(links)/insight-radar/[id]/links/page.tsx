@@ -7,6 +7,7 @@ import { formatRadarDate, getOrgInitial } from '@/lib/radar';
 import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
 import { LinkPageTracker } from '@/components/public/insight-radar/links/LinkPageTracker';
 import { LinkPageVideo } from '@/components/public/insight-radar/links/LinkPageVideo';
+import { LinkPageLeadForm } from '@/components/public/insight-radar/links/LinkPageLeadForm';
 
 // 링크 페이지는 사이트 공통 헤더·푸터 없이 단독 화면으로 렌더링 (명함 QR·SNS 프로필 링크용)
 export const revalidate = 300;
@@ -112,7 +113,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                     )}
                 </header>
 
-                <div className={`flex-1 px-4 ${data.inquiryHref ? 'pb-28' : 'pb-8'}`}>
+                <div className="flex-1 px-4 pb-28">
                     {/* 소개 영상: 불러오기 전에는 접혀 있다가 준비되면 펼쳐짐 (모바일 무음 자동재생) */}
                     {data.videoUrl && (
                         <LinkPageVideo videoUrl={data.videoUrl} posterUrl={data.videoPosterUrl} orgName={data.name} slug={data.slug} />
@@ -205,20 +206,23 @@ export default async function OrgLinksPage({ params }: PageProps) {
                     </p>
                 </div>
 
-                {/* ⑤ 하단 고정 문의 버튼 (연락 수단이 있을 때만) */}
-                {data.inquiryHref && (
-                    <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-                        <a
-                            href={data.inquiryHref}
-                            {...(isExternal(data.inquiryHref) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                            {...trackAttrs({ key: 'inquiry', label: '문의하기', kind: 'cta' })}
-                            className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-zi-blue text-[15px] font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue"
-                        >
-                            {inquiryIsPhone ? <Phone className="h-4 w-4" aria-hidden="true" /> : <Mail className="h-4 w-4" aria-hidden="true" />}
-                            문의하기
-                        </a>
+                {/* ⑤ 하단 고정 바: 문의하기(연락 수단이 있을 때) + 연락처 남기기 */}
+                <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
+                    <div className={data.inquiryHref ? 'grid grid-cols-2 gap-2' : ''}>
+                        {data.inquiryHref && (
+                            <a
+                                href={data.inquiryHref}
+                                {...(isExternal(data.inquiryHref) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                {...trackAttrs({ key: 'inquiry', label: '문의하기', kind: 'cta' })}
+                                className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-zi-blue text-[15px] font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue"
+                            >
+                                {inquiryIsPhone ? <Phone className="h-4 w-4" aria-hidden="true" /> : <Mail className="h-4 w-4" aria-hidden="true" />}
+                                문의하기
+                            </a>
+                        )}
+                        <LinkPageLeadForm slug={data.slug} orgName={data.name} primary={!data.inquiryHref} />
                     </div>
-                )}
+                </div>
             </main>
             <LinkPageTracker slug={data.slug} orgId={data.id} />
         </div>

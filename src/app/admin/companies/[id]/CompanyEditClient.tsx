@@ -26,7 +26,6 @@ import {
     MoveVertical,
     ChevronDown,
     FolderOpen,
-    Link2,
 } from 'lucide-react';
 import { StorageImageSelectorModal, type SelectableMedia } from '@/components/admin/storage/StorageImageSelectorModal';
 import { OrgLinksManager } from './OrgLinksManager';
@@ -53,6 +52,7 @@ import { CompanyLogoUpload } from '@/components/admin/companies/CompanyLogoUploa
 import { CompanyArticlesPanel } from './CompanyArticlesPanel';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 
+import { OrgAdminTabs } from './OrgAdminTabs';
 interface Region {
     id: number;
     name: string;
@@ -139,6 +139,7 @@ interface CompanyData {
         company_articles: number;
         magazinePosts?: number;
         ingestions: number;
+        linkPageLeads?: number;
     };
 }
 
@@ -703,26 +704,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
             </div>
 
             {/* 탭 네비게이션 */}
-            <div className="flex gap-2 border-b">
-                <span className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground flex items-center gap-1.5">
-                    <Edit className="w-3.5 h-3.5" />
-                    편집
-                </span>
-                <Link
-                    href={`/admin/companies/${company.id}/analytics`}
-                    className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5"
-                >
-                    <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
-                    애널리틱스
-                </Link>
-                <Link
-                    href={`/admin/companies/${company.id}/link-analytics`}
-                    className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5"
-                >
-                    <Link2 className="w-3.5 h-3.5 text-indigo-600" />
-                    링크 페이지 통계
-                </Link>
-            </div>
+            <OrgAdminTabs orgId={company.id} active="edit" unreadLeads={company._count?.linkPageLeads} />
 
             {/* 메인 2단 레이아웃 */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

@@ -42,6 +42,19 @@ function resolveSource(slug: string): string {
     return storageGet(storageKey) ?? 'direct';
 }
 
+/** 이 탭에서 확인된 유입 경로 (연락처 접수 등 다른 수집에서 함께 기록) */
+export function getLinkPageSource(slug: string): string {
+    return storageGet(`zi_links_src_${slug}`) ?? 'direct';
+}
+
+/** 소개 영상 재생: 탭당 1회만 자체 통계에 기록 */
+export function trackLinkPageVideoPlay(slug: string) {
+    const key = `zi_links_video_${slug}`;
+    if (storageGet(key)) return;
+    storageSet(key, '1');
+    send({ event: 'video', slug, src: getLinkPageSource(slug) });
+}
+
 function send(body: Record<string, string>) {
     const json = JSON.stringify(body);
     try {
@@ -55,7 +68,8 @@ function send(body: Record<string, string>) {
 /**
  * 링크 페이지 통계 수집. 자체 서버 집계(/api/track)가 기준이고 GA4는 보조.
  * - 방문: 페이지가 열린 뒤 탭당 1회 (새로고침 중복 제외)
- * - 클릭: data-link-key가 붙은 링크. 이동은 막지 않음
+ * - 클릭: data-link-key가 붙은 링크·버튼. 이동은 막지 않음
+ * - 영상: 소개 영상 첫 재생 (탭당 1회, LinkPageVideo에서 호출)
  */
 export function LinkPageTracker({ slug, orgId }: { slug: string; orgId: number }) {
     useEffect(() => {
@@ -72,7 +86,8 @@ export function LinkPageTracker({ slug, orgId }: { slug: string; orgId: number }
         const lastClick = new Map<string, number>();
 
         const handleClick = (e: MouseEvent) => {
-            const anchor = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>('a[data-link-key]');
+            // 링크(a)와 '연락처 남기기' 같은 버튼 모두 data-link-key로 집계
+            const anchor = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-link-key]');
             if (!anchor) return;
             const key = anchor.dataset.linkKey ?? '';
             const label = anchor.dataset.linkLabel ?? '';
@@ -107,7 +122,7 @@ function sendGaEvent({
     orgId,
     source,
 }: {
-    anchor: HTMLAnchorElement;
+    anchor: HTMLElement;
     key: string;
     kind: string;
     slug: string;
@@ -117,20 +132,22 @@ function sendGaEvent({
     if (!window.gtag) return;
     const common = { page_type: 'link_page', org_slug: slug, link_kind: kind, source_code: source, transport_type: 'beacon' };
 
+    const href = anchor instanceof HTMLAnchorElement ? anchor.href : '';
+    if (key === 'lead') return; // 연락처 남기기는 폼에서 lead_form_open·generate_lead로 보냄
     if (kind === 'external' || kind === 'social') {
         window.gtag('event', 'outbound_link_click', {
             ...common,
             source_id: orgId,
             source_type: 'link_page',
-            link_type: detectLinkType(anchor.href),
-            target_url: anchor.href,
+            link_type: detectLinkType(href),
+            target_url: href,
         });
     } else if (kind === 'cta') {
         window.gtag('event', 'cta_inquiry_click', { ...common, organization_id: orgId, organization_slug: slug, cta_placement: 'link_page' });
     } else if (key === 'profile') {
         window.gtag('event', 'radar_profile_click', { ...common, organization_identifier: slug });
     } else if (key.startsWith('article:')) {
-        const articleSlug = anchor.pathname.split('/').filter(Boolean).pop() ?? '';
+        const articleSlug = new URL(href || location.href).pathname.split('/').filter(Boolean).pop() ?? '';
         window.gtag('event', 'magazine_article_click', { ...common, organization_id: orgId, organization_slug: slug, target_article: articleSlug });
     }
 }

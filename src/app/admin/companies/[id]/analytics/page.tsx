@@ -4,8 +4,10 @@ import { getOrgAnalyticsSummary } from '@/actions/admin/analytics-actions';
 import { OrgAnalyticsClient } from './OrgAnalyticsClient';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ExternalLink, BarChart3, Edit, Link2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Edit } from 'lucide-react';
+import { countUnreadLinkPageLeads } from '@/actions/link-page-lead-actions';
 
+import { OrgAdminTabs } from '../OrgAdminTabs';
 interface PageProps {
     params: Promise<{ id: string }>;
     searchParams: Promise<{ period?: string }>;
@@ -16,7 +18,10 @@ export default async function OrgAnalyticsPage({ params, searchParams }: PagePro
     const { period } = await searchParams;
 
     const periodDays = period === 'all' ? 'all' : period === '7' ? 7 : period === '90' ? 90 : 30;
-    const data = await getOrgAnalyticsSummary(Number(id), periodDays);
+    const [data, unreadLeads] = await Promise.all([
+        getOrgAnalyticsSummary(Number(id), periodDays),
+        countUnreadLinkPageLeads(Number(id)),
+    ]);
     if (!data) notFound();
 
     const publicUrl = `/insight-radar/${data.org.slug || data.org.id}`;
@@ -72,26 +77,7 @@ export default async function OrgAnalyticsPage({ params, searchParams }: PagePro
             </div>
 
             {/* 탭 네비게이션 */}
-            <div className="flex gap-2 border-b">
-                <Link
-                    href={`/admin/companies/${id}`}
-                    className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5"
-                >
-                    <Edit className="w-3.5 h-3.5" />
-                    편집
-                </Link>
-                <span className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground flex items-center gap-1.5">
-                    <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
-                    애널리틱스
-                </span>
-                <Link
-                    href={`/admin/companies/${id}/link-analytics`}
-                    className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5"
-                >
-                    <Link2 className="w-3.5 h-3.5 text-indigo-600" />
-                    링크 페이지 통계
-                </Link>
-            </div>
+            <OrgAdminTabs orgId={id} active="analytics" unreadLeads={unreadLeads} />
 
             <OrgAnalyticsClient data={data} orgId={Number(id)} currentPeriod={String(period ?? '30')} />
         </div>

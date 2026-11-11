@@ -1,11 +1,13 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, BarChart3, Edit, ExternalLink, Link2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ExternalLink, MessageSquare, NotebookPen } from 'lucide-react';
 import { getLinkPageStats, type LinkPageStatsRange } from '@/actions/admin/link-page-stats-actions';
 import { LINK_PAGE_LINK_KIND_LABEL, type LinkPageLinkKind } from '@/lib/org-links';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { OrgAdminTabs } from '../OrgAdminTabs';
+import { LinkDailyChart, LinkStatsCsvButton } from './LinkStatsClient';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -33,6 +35,20 @@ function resolveRange(period?: string, from?: string, to?: string): LinkPageStat
 
 function formatPercent(value: number | null): string {
     return value === null ? '—' : `${(value * 100).toFixed(1)}%`;
+}
+
+/** 직전 기간 대비 증감 (직전 0이면 증감률 대신 '신규') */
+function Delta({ current, previous }: { current: number; previous: number }) {
+    if (current === previous) return <span className="text-xs text-muted-foreground">변동 없음</span>;
+    if (previous === 0) return <span className="text-xs font-semibold text-emerald-600">신규 +{current.toLocaleString()}</span>;
+    const rate = (current - previous) / previous;
+    const up = rate > 0;
+    return (
+        <span className={`text-xs font-semibold tabular-nums ${up ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {up ? '▲' : '▼'} {Math.abs(rate * 100).toFixed(rate > -1 && rate < 1 ? 1 : 0)}%
+            <span className="ml-1 font-normal text-muted-foreground">({previous.toLocaleString()})</span>
+        </span>
+    );
 }
 
 export default async function LinkAnalyticsPage({ params, searchParams }: PageProps) {
@@ -63,29 +79,19 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                         <p className="text-xs text-muted-foreground mt-0.5">링크 페이지 통계 · 자체 서버 집계 기준 (봇·미리보기 제외)</p>
                     </div>
                 </div>
-                <a href={linkPageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center">
-                    <Button variant="outline" size="sm" className="gap-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        링크 페이지 보기
-                    </Button>
-                </a>
+                <div className="flex flex-wrap items-center gap-2">
+                    <LinkStatsCsvButton stats={stats} />
+                    <a href={linkPageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center">
+                        <Button variant="outline" size="sm" className="gap-1.5 text-xs text-blue-600 border-blue-200 hover:bg-blue-50 dark:hover:bg-blue-950">
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            링크 페이지 보기
+                        </Button>
+                    </a>
+                </div>
             </div>
 
             {/* 탭 네비게이션 */}
-            <div className="flex gap-2 border-b">
-                <Link href={`/admin/companies/${id}`} className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5">
-                    <Edit className="w-3.5 h-3.5" />
-                    편집
-                </Link>
-                <Link href={`/admin/companies/${id}/analytics`} className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5">
-                    <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
-                    애널리틱스
-                </Link>
-                <span className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground flex items-center gap-1.5">
-                    <Link2 className="w-3.5 h-3.5 text-indigo-600" />
-                    링크 페이지 통계
-                </span>
-            </div>
+            <OrgAdminTabs orgId={id} active="link-analytics" unreadLeads={stats.unreadLeads} />
 
             {/* 기간 선택 */}
             <div className="flex flex-wrap items-center gap-2">
@@ -99,27 +105,52 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                     <button type="submit" className={periodClass(range.period === 'custom')}>직접 지정</button>
                 </form>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                    {range.from} ~ {range.to} (KST)
+                    {range.from} ~ {range.to} (KST) · 비교: 직전 {stats.previousRange.from} ~ {stats.previousRange.to}
                 </span>
             </div>
 
-            {/* 상단 요약: 문의하기 클릭을 별도 강조 */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                <Card className="col-span-2 lg:col-span-1 border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30">
+            {/* 상단 요약: 문의 전환(문의하기 클릭·연락처 접수)을 별도 강조, 괄호는 직전 기간 값 */}
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+                <Card className="border-indigo-200 bg-indigo-50/60 dark:bg-indigo-950/30">
                     <CardContent className="p-4">
                         <p className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
                             <MessageSquare className="h-3.5 w-3.5" /> 문의하기 클릭
                         </p>
                         <p className={`mt-1 font-bold tabular-nums ${stats.hasData ? 'text-3xl' : 'text-base text-muted-foreground'}`}>{stats.hasData ? stats.inquiryClicks.toLocaleString() : NO_DATA}</p>
+                        {stats.hasData && <Delta current={stats.inquiryClicks} previous={stats.previous.inquiryClicks} />}
                     </CardContent>
                 </Card>
-                <SummaryCard label="방문" value={stats.hasData ? stats.views : null} sub={stats.hasData ? `순방문 ${stats.uniqueViews.toLocaleString()}명` : undefined} />
-                <SummaryCard label="링크 클릭" value={stats.hasData ? stats.clicks : null} />
+                <Card className="border-emerald-200 bg-emerald-50/60 dark:bg-emerald-950/30">
+                    <CardContent className="p-4">
+                        <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                            <NotebookPen className="h-3.5 w-3.5" /> 연락처 접수
+                        </p>
+                        <p className={`mt-1 font-bold tabular-nums ${stats.hasData ? 'text-3xl' : 'text-base text-muted-foreground'}`}>{stats.hasData ? stats.leads.toLocaleString() : NO_DATA}</p>
+                        {stats.hasData && (
+                            <p className="text-xs text-muted-foreground tabular-nums">
+                                폼 열기 {stats.leadFormOpens.toLocaleString()}회 · <Link href={`/admin/companies/${id}/leads`} className="underline underline-offset-2 hover:text-foreground">목록</Link>
+                            </p>
+                        )}
+                    </CardContent>
+                </Card>
+                <SummaryCard label="방문" value={stats.hasData ? stats.views : null} sub={stats.hasData ? `순방문 ${stats.uniqueViews.toLocaleString()}명` : undefined} delta={stats.hasData ? [stats.views, stats.previous.views] : undefined} />
+                <SummaryCard label="링크 클릭" value={stats.hasData ? stats.clicks : null} delta={stats.hasData ? [stats.clicks, stats.previous.clicks] : undefined} />
                 <SummaryCard
                     label="클릭률 (클릭 ÷ 방문)"
                     text={stats.hasData ? formatPercent(stats.views > 0 ? stats.clicks / stats.views : null) : NO_DATA}
+                    sub={stats.hasData ? `직전 ${formatPercent(stats.previous.views > 0 ? stats.previous.clicks / stats.previous.views : null)}` : undefined}
                 />
+                <SummaryCard label="영상 재생" value={stats.hasData ? stats.videoPlays : null} sub={stats.hasData ? `방문 대비 ${formatPercent(stats.views > 0 ? stats.videoPlays / stats.views : null)}` : undefined} delta={stats.hasData ? [stats.videoPlays, stats.previous.videoPlays] : undefined} />
             </div>
+
+            {/* 일별 추이 */}
+            <Card>
+                <CardHeader className="pb-3">
+                    <CardTitle className="text-base">일별 추이</CardTitle>
+                    <CardDescription>항목을 눌러 그래프에서 켜고 끌 수 있습니다.</CardDescription>
+                </CardHeader>
+                <CardContent>{stats.hasData ? <LinkDailyChart daily={stats.daily} /> : <EmptyState />}</CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
                 {/* 유입 경로 */}
@@ -139,6 +170,7 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                                         <TableHead className="text-right">방문</TableHead>
                                         <TableHead className="text-right" title="날짜별 순방문자 수의 합">순방문</TableHead>
                                         <TableHead className="text-right">클릭</TableHead>
+                                        <TableHead className="text-right">연락처</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -153,6 +185,7 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                                             <TableCell className="text-right tabular-nums">{s.views.toLocaleString()}</TableCell>
                                             <TableCell className="text-right tabular-nums">{s.uniqueViews.toLocaleString()}</TableCell>
                                             <TableCell className="text-right tabular-nums">{s.clicks.toLocaleString()}</TableCell>
+                                            <TableCell className="text-right tabular-nums">{s.leads.toLocaleString()}</TableCell>
                                         </TableRow>
                                     ))}
                                 </TableBody>
@@ -161,6 +194,7 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                     </CardContent>
                 </Card>
 
+                <div className="space-y-6">
                 {/* 링크 종류별 합계 */}
                 <Card>
                     <CardHeader className="pb-3">
@@ -186,6 +220,19 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                         )}
                     </CardContent>
                 </Card>
+                {/* 기기 비율 */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-base">방문 기기</CardTitle>
+                        <CardDescription>
+                            원본 기록(90일 보관) 기준{stats.devices.countedFrom > range.from ? ` · ${stats.devices.countedFrom}부터 집계` : ''}
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <DeviceRatio mobile={stats.devices.mobile} desktop={stats.devices.desktop} />
+                    </CardContent>
+                </Card>
+                </div>
             </div>
 
             {/* 링크별 클릭 */}
@@ -229,7 +276,19 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
     );
 }
 
-function SummaryCard({ label, value, text, sub }: { label: string; value?: number | null; text?: string; sub?: string }) {
+function SummaryCard({
+    label,
+    value,
+    text,
+    sub,
+    delta,
+}: {
+    label: string;
+    value?: number | null;
+    text?: string;
+    sub?: string;
+    delta?: [number, number];
+}) {
     return (
         <Card>
             <CardContent className="p-4">
@@ -237,6 +296,7 @@ function SummaryCard({ label, value, text, sub }: { label: string; value?: numbe
                 <p className={`mt-1 font-bold tabular-nums ${text === NO_DATA || value === null ? 'text-base text-muted-foreground' : 'text-2xl'}`}>
                     {text ?? (value === null || value === undefined ? NO_DATA : value.toLocaleString())}
                 </p>
+                {delta && <Delta current={delta[0]} previous={delta[1]} />}
                 {sub && <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">{sub}</p>}
             </CardContent>
         </Card>
@@ -245,4 +305,30 @@ function SummaryCard({ label, value, text, sub }: { label: string; value?: numbe
 
 function EmptyState() {
     return <p className="py-8 text-center text-sm text-muted-foreground">{NO_DATA}</p>;
+}
+
+function DeviceRatio({ mobile, desktop }: { mobile: number; desktop: number }) {
+    const total = mobile + desktop;
+    if (total === 0) return <EmptyState />;
+    const mobileRate = mobile / total;
+    return (
+        <div className="space-y-2">
+            <div className="flex h-3 overflow-hidden rounded-full bg-muted" role="img" aria-label={`모바일 ${formatPercent(mobileRate)}, PC ${formatPercent(1 - mobileRate)}`}>
+                <div className="bg-indigo-500" style={{ width: `${mobileRate * 100}%` }} />
+                <div className="bg-sky-300" style={{ width: `${(1 - mobileRate) * 100}%` }} />
+            </div>
+            <div className="flex justify-between text-sm tabular-nums">
+                <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-indigo-500" aria-hidden="true" />
+                    모바일 <strong>{mobile.toLocaleString()}</strong>
+                    <span className="text-xs text-muted-foreground">{formatPercent(mobileRate)}</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-sky-300" aria-hidden="true" />
+                    PC <strong>{desktop.toLocaleString()}</strong>
+                    <span className="text-xs text-muted-foreground">{formatPercent(1 - mobileRate)}</span>
+                </span>
+            </div>
+        </div>
+    );
 }

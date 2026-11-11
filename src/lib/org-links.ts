@@ -175,7 +175,7 @@ export type LinkPageLinkKind = (typeof LINK_PAGE_LINK_KINDS)[number];
 export const LINK_PAGE_LINK_KIND_LABEL: Record<LinkPageLinkKind, string> = {
     external: '외부 사이트',
     internal: '진사이트 프로필·기사',
-    cta: '문의하기',
+    cta: '문의하기·연락처 남기기',
     social: 'SNS 아이콘',
 };
 
@@ -187,5 +187,5 @@ export function linkPageKindOf(link: { url: string; display: OrgLinkDisplay }): 
     return host === 'zinsight.co.kr' || host.endsWith('.zinsight.co.kr') ? 'internal' : 'external';
 }
 
-// 클릭 집계 키: profile | inquiry | article:{id} | link:{id} | auto:{n} | sns:{platform}
-export const LINK_KEY_PATTERN = /^(profile|inquiry|home|(article|link|auto):\d{1,10}|sns:[a-z-]{1,20})$/;
+// 클릭 집계 키: profile | inquiry | lead(연락처 남기기 열기) | home | article:{id} | link:{id} | auto:{n} | sns:{platform}
+export const LINK_KEY_PATTERN = /^(profile|inquiry|lead|home|(article|link|auto):\d{1,10}|sns:[a-z-]{1,20})$/;

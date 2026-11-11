@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Play } from 'lucide-react';
 import { getYoutubeId } from '@/lib/radar';
+import { trackLinkPageVideoPlay } from '@/components/public/insight-radar/links/LinkPageTracker';
 
 interface LinkPageVideoProps {
     videoUrl: string;
@@ -15,6 +16,7 @@ interface LinkPageVideoProps {
 const MOBILE_QUERY = '(max-width: 1023px)';
 
 function sendPlayEvent(slug: string, provider: string, autoplay: boolean) {
+    trackLinkPageVideoPlay(slug);
     window.gtag?.('event', 'video_play', { organization_slug: slug, video_provider: provider, page_type: 'links', autoplay });
 }
 
