@@ -17,6 +17,7 @@ import {
     extractKeyFromUrl,
 } from '@/lib/storage';
 import { CLEANUP_GRACE_MS, type MediaUsage } from '@/lib/storage-media';
+import { UPLOAD_TEMP_PREFIX, hasImageVariant, isInternalStorageKey, variantKeyOf } from '@/lib/image-variants';
 
 export interface StorageBlobItem {
     url: string;
@@ -40,7 +41,16 @@ function validateImageFile(file: unknown): string | null {
     return null;
 }
 
-async function listObjectsByPrefix(prefix?: string): Promise<StorageBlobItem[]> {
+/** 원본과 함께 지워야 하는 640px 버전 키 */
+function companionKeys(key: string): string[] {
+    return hasImageVariant(key) ? [variantKeyOf(key)] : [];
+}
+
+/**
+ * 버킷 파일 목록. 내부 경로(_640/ 변환본, _incoming/ 임시 업로드)는 기본적으로 제외해
+ * 보관함 목록·중복 파일명 검사·미사용 판정에 섞이지 않게 한다.
+ */
+async function listObjectsByPrefix(prefix?: string, includeInternal = false): Promise<StorageBlobItem[]> {
     const bucket = process.env.NCP_STORAGE_BUCKET || NCP_STORAGE_BUCKET;
     const items: StorageBlobItem[] = [];
     let continuationToken: string | undefined = undefined;
@@ -54,6 +64,7 @@ async function listObjectsByPrefix(prefix?: string): Promise<StorageBlobItem[]> 
         const response = await s3Client.send(command);
         for (const obj of response.Contents ?? []) {
             if (!obj.Key || obj.Key.endsWith('/')) continue;
+            if (!includeInternal && isInternalStorageKey(obj.Key)) continue;
             items.push({
                 url: getPublicFileUrl(obj.Key),
                 pathname: obj.Key,
@@ -296,6 +307,10 @@ export async function deleteBlob(url: string, options: { force?: boolean } = {})
                 Key: key,
             })
         );
+        // 640px 버전도 함께 삭제 (없으면 무시)
+        for (const extra of companionKeys(key)) {
+            await s3Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: extra })).catch(() => {});
+        }
         revalidatePath('/admin/storage');
         return { success: true };
     } catch (error: any) {
@@ -317,9 +332,14 @@ export async function deleteUnusedBlobs() {
         const bucket = process.env.NCP_STORAGE_BUCKET || NCP_STORAGE_BUCKET;
         const [blobs, usage] = await Promise.all([listObjectsByPrefix(), collectStorageUsage()]);
         const cutoff = Date.now() - CLEANUP_GRACE_MS;
-        const keys = blobs
+        const unused = blobs
             .filter((b) => !usage[b.pathname] && new Date(b.uploadedAt).getTime() < cutoff)
             .map((b) => b.pathname);
+        // 변환이 끝나지 않고 남은 임시 업로드도 함께 정리
+        const staleTemps = (await listObjectsByPrefix(UPLOAD_TEMP_PREFIX, true))
+            .filter((b) => new Date(b.uploadedAt).getTime() < cutoff)
+            .map((b) => b.pathname);
+        const keys = [...unused, ...unused.flatMap(companionKeys), ...staleTemps];
 
         // DeleteObjects는 요청당 최대 1000개
         for (let i = 0; i < keys.length; i += 1000) {
@@ -334,7 +354,7 @@ export async function deleteUnusedBlobs() {
             );
         }
         revalidatePath('/admin/storage');
-        return { success: true, deleted: keys.length };
+        return { success: true, deleted: unused.length };
     } catch (error: any) {
         console.error('Failed to delete unused blobs:', error);
         return { success: false, error: error.message || 'Failed to delete files' };
@@ -390,6 +410,20 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
                 ACL: 'public-read',
             })
         );
+        // 640px 버전도 새 이름으로 복사 (재압축 전 기존 파일처럼 버전이 없으면 건너뜀)
+        const movedVariant = hasImageVariant(oldPathname)
+            ? await s3Client
+                  .send(
+                      new CopyObjectCommand({
+                          Bucket: bucket,
+                          CopySource: `${bucket}/${encodeURI(variantKeyOf(oldPathname))}`,
+                          Key: variantKeyOf(newPathname),
+                          ACL: 'public-read',
+                      })
+                  )
+                  .then(() => true)
+                  .catch(() => false)
+            : false;
         const newUrl = getPublicFileUrl(newPathname);
 
         // 3. DB의 모든 참조(포스트·조직·등록 신청·발행자)를 새 주소로 치환
@@ -470,6 +504,11 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
                 Key: oldPathname,
             })
         );
+        if (movedVariant) {
+            await s3Client
+                .send(new DeleteObjectCommand({ Bucket: bucket, Key: variantKeyOf(oldPathname) }))
+                .catch(() => {});
+        }
 
         revalidatePath('/admin/storage');
         revalidatePath('/admin/magazine');

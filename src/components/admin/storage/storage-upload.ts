@@ -1,6 +1,6 @@
 'use client';
 
-import { getMediaUploadUrl, type UploadFolder } from '@/actions/upload';
+import { getMediaUploadUrl, finalizeMediaUpload, type UploadFolder } from '@/actions/upload';
 import { UPLOAD_SIZE_LIMIT, formatBytes, getFileExtension } from '@/lib/storage-media';
 
 const EXT_CONTENT_TYPE: Record<string, string> = {
@@ -43,7 +43,7 @@ export async function uploadToStorage(
         throw new Error(`${file.name}: 최대 ${formatBytes(UPLOAD_SIZE_LIMIT[folder])}까지 올릴 수 있습니다.`);
     }
     const contentType = file.type || EXT_CONTENT_TYPE[getFileExtension(file.name)] || 'application/octet-stream';
-    const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, folder, undefined, file.size);
+    const { uploadUrl, fileUrl, processKey } = await getMediaUploadUrl(file.name, contentType, folder, undefined, file.size);
 
     await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -61,5 +61,10 @@ export async function uploadToStorage(
         xhr.send(file);
     });
 
+    // 래스터 이미지는 서버에서 WebP(가로 최대 1600px)로 변환한 주소를 사용
+    if (processKey) {
+        onProgress?.(100);
+        return (await finalizeMediaUpload(processKey, file.name, folder)).fileUrl;
+    }
     return fileUrl;
 }

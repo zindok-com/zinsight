@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { Upload, Image as ImageIcon, FileCode2, X, Loader2, Download, CheckCircle2, Info } from 'lucide-react';
-import { getMediaUploadUrl } from '@/actions/upload';
+import { getMediaUploadUrl, finalizeMediaUpload } from '@/actions/upload';
 
 import { safeHttpUrl } from '@/lib/utils';
 
@@ -72,7 +72,7 @@ export function CompanyLogoUpload({
                     ? 'image/webp'
                     : 'image/jpeg');
 
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, contentType, 'logos', inviteToken, file.size);
+            const { uploadUrl, fileUrl, processKey } = await getMediaUploadUrl(file.name, contentType, 'logos', inviteToken, file.size);
             const res = await fetch(uploadUrl, {
                 method: 'PUT',
                 headers: {
@@ -86,7 +86,10 @@ export function CompanyLogoUpload({
                 throw new Error(`스토리지 업로드 실패 (HTTP ${res.status})`);
             }
 
-            onLogoUrlChange(fileUrl);
+            // PNG·JPG·WebP 로고는 서버에서 WebP로 변환한 주소 사용 (SVG는 원본 그대로)
+            onLogoUrlChange(
+                processKey ? (await finalizeMediaUpload(processKey, file.name, 'logos', inviteToken)).fileUrl : fileUrl
+            );
         } catch (err) {
             setErrorMsg(err instanceof Error ? err.message : '로고 업로드 중 오류가 발생했습니다.');
         } finally {

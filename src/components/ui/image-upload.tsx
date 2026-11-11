@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, X, ImageIcon, Loader2 } from 'lucide-react';
-import { getMediaUploadUrl } from '@/actions/upload';
+import { getMediaUploadUrl, finalizeMediaUpload } from '@/actions/upload';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
@@ -67,7 +67,7 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
 
         try {
             // 1단계: Server Action을 통해 Presigned PUT URL 및 최종 공개 URL 발급
-            const { uploadUrl, fileUrl } = await getMediaUploadUrl(file.name, file.type, 'thumbnails', undefined, file.size);
+            const { uploadUrl, fileUrl, processKey } = await getMediaUploadUrl(file.name, file.type, 'thumbnails', undefined, file.size);
 
             // 2단계: 브라우저에서 NCP Object Storage로 직접 PUT 업로드
             const uploadRes = await fetch(uploadUrl, {
@@ -83,7 +83,12 @@ export function ImageUpload({ value, onChange, onRemove, validateWidth = true }:
                 throw new Error(`스토리지 업로드 실패 (HTTP ${uploadRes.status})`);
             }
 
-            onChange(fileUrl);
+            // 3단계: 서버에서 WebP(가로 최대 1600px)로 변환한 최종 주소 사용
+            const finalUrl = processKey
+                ? (await finalizeMediaUpload(processKey, file.name, 'thumbnails')).fileUrl
+                : fileUrl;
+
+            onChange(finalUrl);
             toast.success('이미지가 업로드되었습니다.');
         } catch (error: any) {
             console.error('Direct upload error:', error);
