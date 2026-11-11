@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { cardImageSrc } from '@/lib/image-variants';
 import { ArrowLeft, BookOpen, Calendar, ChevronRight } from 'lucide-react';
 import { getPublicAuthorBySlug } from '@/actions/admin/author-actions';
 import { Metadata } from 'next';
@@ -61,7 +62,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                         {author.avatarUrl ? (
                             <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0">
                                 <Image
-                                    src={author.avatarUrl}
+                                    src={cardImageSrc(author.avatarUrl)}
                                     alt={author.name}
                                     fill
                                     sizes="128px"
@@ -116,7 +117,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                                     <div className="mb-5 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative shadow-sm">
                                         {post.thumbnailUrl ? (
                                             <Image 
-                                                src={post.thumbnailUrl} 
+                                                src={cardImageSrc(post.thumbnailUrl)} 
                                                 alt={post.title}
                                                 fill
                                                 sizes="(max-width: 768px) 100vw, 500px"

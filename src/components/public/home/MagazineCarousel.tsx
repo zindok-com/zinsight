@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import { cardImageSrc } from '@/lib/image-variants';
 
 interface MagazinePost {
     id: number;
@@ -217,7 +218,7 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                         <>
                                             {/* Blurred ambient background */}
                                             <Image
-                                                src={post.thumbnailUrl}
+                                                src={cardImageSrc(post.thumbnailUrl)}
                                                 alt=""
                                                 fill
                                                 sizes="10px"
@@ -225,7 +226,7 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                             />
                                             {/* Sharp foreground image using object-contain */}
                                             <Image
-                                                src={post.thumbnailUrl}
+                                                src={cardImageSrc(post.thumbnailUrl)}
                                                 alt={post.title}
                                                 fill
                                                 sizes="(max-width: 640px) 80vw, (max-width: 1024px) 50vw, 33vw"

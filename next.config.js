@@ -32,6 +32,9 @@ const nextConfig = {
         },
     },
     images: {
+        // Vercel 이미지 변환 끔: 업로드 시 sharp로 WebP·1600px 변환하고 목록은 640px 버전을 직접 사용.
+        // 자체 서버(NCP) 이전 후 NEXT_PUBLIC_IMAGE_OPTIMIZATION=on으로 Next 내장 최적화를 다시 켠다.
+        unoptimized: process.env.NEXT_PUBLIC_IMAGE_OPTIMIZATION !== 'on',
         remotePatterns: [
             {
                 protocol: 'https',

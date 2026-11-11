@@ -38,3 +38,29 @@ export function hasImageVariant(key: string): boolean {
     const ext = key.split('.').pop()?.toLowerCase() ?? '';
     return VARIANT_FOLDERS.includes(folder) && PROCESSABLE_IMAGE_EXTS.includes(ext);
 }
+
+/**
+ * Next 내장 이미지 최적화 사용 여부. 기본은 꺼짐(images.unoptimized) — Vercel 이미지 변환 한도 절약.
+ * 자체 서버(NCP) 이전 후 NEXT_PUBLIC_IMAGE_OPTIMIZATION=on으로 다시 켠다.
+ */
+export const IMAGE_OPTIMIZATION_ON = process.env.NEXT_PUBLIC_IMAGE_OPTIMIZATION === 'on';
+
+/**
+ * 목록 카드처럼 작게 보이는 이미지는 640px 버전 주소로 바꿔 쓴다.
+ * 최적화가 켜져 있거나, 우리 버킷 이미지가 아니거나, 640px 버전이 없는 형식이면 원래 주소 그대로.
+ */
+export function cardImageSrc(url: string): string;
+export function cardImageSrc(url: string | null | undefined): string | null | undefined;
+export function cardImageSrc(url: string | null | undefined) {
+    if (!url || IMAGE_OPTIMIZATION_ON) return url;
+    try {
+        const parsed = new URL(url);
+        if (!parsed.hostname.endsWith('ncloudstorage.com')) return url;
+        const [, bucket, ...rest] = parsed.pathname.split('/');
+        const key = rest.join('/');
+        if (!bucket || !hasImageVariant(key)) return url;
+        return `${parsed.origin}/${bucket}/${variantKeyOf(key)}`;
+    } catch {
+        return url;
+    }
+}

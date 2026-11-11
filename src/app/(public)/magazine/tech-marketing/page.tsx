@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import { cardImageSrc } from '@/lib/image-variants';
 import { ArrowRight, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import { getTechMarketingPosts } from '@/actions/public/magazine-actions';
@@ -148,7 +149,7 @@ export default async function TechMarketingPage() {
                                         <div className="mb-4 sm:mb-6 aspect-[16/10] bg-zi-surface-container-low rounded-zi-card overflow-hidden relative">
                                             {article.thumbnailUrl ? (
                                                 <Image 
-                                                    src={article.thumbnailUrl} 
+                                                    src={cardImageSrc(article.thumbnailUrl)} 
                                                     alt={article.title}
                                                     fill
                                                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 400px"
