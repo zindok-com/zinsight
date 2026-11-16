@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "db:tunnel": "ssh -o BatchMode=yes -o ExitOnForwardFailure=yes -N zinsight-db",
     "postinstall": "prisma generate"
   },
   "repository": {
