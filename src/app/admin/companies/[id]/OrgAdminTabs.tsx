@@ -14,7 +14,9 @@ const TABS: Array<{ tab: OrgAdminTab; label: string; path: string; icon: React.R
 export function OrgAdminTabs({ orgId, active, unreadLeads }: { orgId: number | string; active: OrgAdminTab; unreadLeads?: number }) {
     return (
         <div className="flex gap-2 border-b overflow-x-auto">
-            {TABS.map(({ tab, label, path, icon }) => {
+            {TABS.map(({ tab, label, path, icon: rawIcon }) => {
+                // 휴대폰(375px)에서 탭 4개가 한 줄에 다 보이도록 아이콘은 sm 이상에서만 표시
+                const icon = <span className="hidden sm:inline-flex">{rawIcon}</span>;
                 const badge =
                     tab === 'leads' && unreadLeads ? (
                         <span className="ml-0.5 rounded-full bg-amber-500 px-1.5 text-[10px] font-bold leading-4 text-white tabular-nums" aria-label={`새 접수 ${unreadLeads}건`}>
