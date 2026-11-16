@@ -25,13 +25,21 @@ export interface LinkPageArticle {
     date: Date | null;
 }
 
+export interface LinkPageInquiry {
+    href: string;
+    type: 'tel' | 'mail' | 'url';
+}
+
 export interface LinkPageData {
     id: number;
     slug: string;
     name: string;
     logoUrl: string | null;
     tagline: string | null;
-    inquiryHref: string | null;
+    /** 하단 '문의하기' 주 동작: 전화번호가 있으면 tel:, 없으면 문의 URL·메일 */
+    inquiry: LinkPageInquiry | null;
+    /** 보조 문의 수단 (주 동작이 전화일 때의 문의 URL·메일). 없으면 null */
+    inquirySecondary: LinkPageInquiry | null;
     /** 소개 영상 (자체 파일 또는 유튜브). 없으면 영상 섹션을 렌더링하지 않음 */
     videoUrl: string | null;
     videoPosterUrl: string | null;
@@ -107,11 +115,20 @@ export const getOrgLinkPage = cache(async (slugOrId: string): Promise<LinkPageDa
               platform: detectSocialPlatform(l.url),
           }));
 
-    // 문의 연결처: 프로필과 같은 우선순위 (문의 URL → 이메일 → 전화)
-    const inquiryHref =
-        (org.inquiry_url ? sanitizeHref(org.inquiry_url) : null) ||
-        (org.contact_email ? `mailto:${org.contact_email}` : null) ||
-        (org.contact_phone ? `tel:${org.contact_phone.replace(/[^0-9+]/g, '')}` : null);
+    // 문의 연결처: 링크 페이지는 현장(휴대폰) 사용이 많아 전화를 주 동작으로, 문의 URL·메일은 보조
+    const toInquiry = (href: string | null | undefined): LinkPageInquiry | null => {
+        if (!href) return null;
+        const type = href.startsWith('tel:') ? 'tel' : href.startsWith('mailto:') ? 'mail' : 'url';
+        return { href, type };
+    };
+    const phoneDigits = org.contact_phone?.replace(/[^0-9+]/g, '') ?? '';
+    const phone = toInquiry(phoneDigits.length >= 8 ? `tel:${phoneDigits}` : null);
+    const urlOrMail =
+        toInquiry(org.inquiry_url ? sanitizeHref(org.inquiry_url) : null) ||
+        toInquiry(org.contact_email ? `mailto:${org.contact_email}` : null);
+    const inquiry = phone ?? urlOrMail;
+    // 문의 URL이 전화번호와 같은 tel:이면 보조로 중복 표시하지 않음
+    const inquirySecondary = phone && urlOrMail && urlOrMail.href !== phone.href ? urlOrMail : null;
 
     return {
         id: org.id,
@@ -119,7 +136,8 @@ export const getOrgLinkPage = cache(async (slugOrId: string): Promise<LinkPageDa
         name: org.company_name,
         logoUrl: org.logo_url,
         tagline: buildListTagline(org.company_name, org.tagline, org.business_summary),
-        inquiryHref,
+        inquiry,
+        inquirySecondary,
         videoUrl: safeHttpUrl(org.video_url) ?? null,
         videoPosterUrl: safeHttpUrl(org.video_poster_url) ?? null,
         articles: org.magazinePosts.map(({ magazinePost: p }) => ({

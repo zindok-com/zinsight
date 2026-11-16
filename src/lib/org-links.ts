@@ -187,5 +187,5 @@ export function linkPageKindOf(link: { url: string; display: OrgLinkDisplay }): 
     return host === 'zinsight.co.kr' || host.endsWith('.zinsight.co.kr') ? 'internal' : 'external';
 }
 
-// 클릭 집계 키: profile | inquiry | lead(연락처 남기기 열기) | home | article:{id} | link:{id} | auto:{n} | sns:{platform}
-export const LINK_KEY_PATTERN = /^(profile|inquiry|lead|home|(article|link|auto):\d{1,10}|sns:[a-z-]{1,20})$/;
+// 클릭 집계 키: profile | inquiry(문의 주 동작) | inquiry_alt(보조 메일·문의 페이지) | lead(연락처 남기기 열기) | home | article:{id} | link:{id} | auto:{n} | sns:{platform}
+export const LINK_KEY_PATTERN = /^(profile|inquiry|inquiry_alt|lead|home|(article|link|auto):\d{1,10}|sns:[a-z-]{1,20})$/;

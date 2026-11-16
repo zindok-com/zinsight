@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { ChevronRight, Mail, Phone } from 'lucide-react';
-import { getOrgLinkPage, type LinkPageLink } from '@/lib/org-link-page';
+import { ChevronRight, ExternalLink, Mail, Phone } from 'lucide-react';
+import { getOrgLinkPage, type LinkPageInquiry, type LinkPageLink } from '@/lib/org-link-page';
 import { SOCIAL_PLATFORM_LABEL, linkPageKindOf, type LinkPageLinkKind } from '@/lib/org-links';
 import { formatRadarDate, getOrgInitial } from '@/lib/radar';
 import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
@@ -70,7 +70,8 @@ export default async function OrgLinksPage({ params }: PageProps) {
     const iconLinks = data.links.filter((l) => l.display === 'icon');
     const cardLinks = data.links.filter((l) => l.display === 'card');
     const buttonLinks = data.links.filter((l) => l.display === 'button');
-    const inquiryIsPhone = data.inquiryHref?.startsWith('tel:');
+    const inquiry = data.inquiry;
+    const secondary = data.inquirySecondary;
 
     return (
         <div className="min-h-screen bg-slate-100">
@@ -208,25 +209,49 @@ export default async function OrgLinksPage({ params }: PageProps) {
 
                 {/* ⑤ 하단 고정 바: 문의하기(연락 수단이 있을 때) + 연락처 남기기 */}
                 <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-                    <div className={data.inquiryHref ? 'grid grid-cols-2 gap-2' : ''}>
-                        {data.inquiryHref && (
+                    {/* 전화가 있으면 [전화 문의 | 메일(아이콘) | 연락처 남기기], 없으면 [메일 문의 | 연락처 남기기] */}
+                    <div className={!inquiry ? '' : secondary ? 'grid grid-cols-[1fr_3rem_1fr] gap-2' : 'grid grid-cols-2 gap-2'}>
+                        {inquiry && (
                             <a
-                                href={data.inquiryHref}
-                                {...(isExternal(data.inquiryHref) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                                {...trackAttrs({ key: 'inquiry', label: '문의하기', kind: 'cta' })}
+                                href={inquiry.href}
+                                {...(isExternal(inquiry.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                {...trackAttrs({ key: 'inquiry', label: inquiryLabel(inquiry), kind: 'cta' })}
                                 className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-zi-blue text-[15px] font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue"
                             >
-                                {inquiryIsPhone ? <Phone className="h-4 w-4" aria-hidden="true" /> : <Mail className="h-4 w-4" aria-hidden="true" />}
+                                <InquiryIcon type={inquiry.type} />
                                 문의하기
                             </a>
                         )}
-                        <LinkPageLeadForm slug={data.slug} orgName={data.name} primary={!data.inquiryHref} />
+                        {secondary && (
+                            <a
+                                href={secondary.href}
+                                {...(isExternal(secondary.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                {...trackAttrs({ key: 'inquiry_alt', label: inquiryLabel(secondary), kind: 'cta' })}
+                                aria-label={secondary.type === 'mail' ? '메일로 문의하기' : '문의 페이지 열기'}
+                                title={secondary.type === 'mail' ? '메일로 문의하기' : '문의 페이지 열기'}
+                                className="flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue"
+                            >
+                                <InquiryIcon type={secondary.type} className="h-5 w-5" />
+                            </a>
+                        )}
+                        <LinkPageLeadForm slug={data.slug} orgName={data.name} primary={!inquiry} />
                     </div>
                 </div>
             </main>
             <LinkPageTracker slug={data.slug} orgId={data.id} />
         </div>
     );
+}
+
+// 통계에 남는 문의 라벨 (수단별로 구분)
+function inquiryLabel(inquiry: LinkPageInquiry): string {
+    return inquiry.type === 'tel' ? '문의하기 (전화)' : inquiry.type === 'mail' ? '문의하기 (메일)' : '문의하기 (문의 페이지)';
+}
+
+function InquiryIcon({ type, className = 'h-4 w-4' }: { type: LinkPageInquiry['type']; className?: string }) {
+    if (type === 'tel') return <Phone className={className} aria-hidden="true" />;
+    if (type === 'mail') return <Mail className={className} aria-hidden="true" />;
+    return <ExternalLink className={className} aria-hidden="true" />;
 }
 
 function iconLabel(link: LinkPageLink): string {

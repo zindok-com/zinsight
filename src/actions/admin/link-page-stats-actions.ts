@@ -91,7 +91,8 @@ function addDailyRow(t: LinkPageTotals, r: { event: string; link_key: string; co
         t.uniqueViews += r.unique_count;
     } else if (r.event === 'click') {
         t.clicks += r.count;
-        if (r.link_key === 'inquiry') t.inquiryClicks += r.count;
+        // 문의하기: 주 동작(전화 등)과 보조(메일·문의 페이지) 클릭 합계
+        if (r.link_key === 'inquiry' || r.link_key === 'inquiry_alt') t.inquiryClicks += r.count;
         if (r.link_key === 'lead') t.leadFormOpens += r.count;
     } else if (r.event === 'video') {
         t.videoPlays += r.count;
