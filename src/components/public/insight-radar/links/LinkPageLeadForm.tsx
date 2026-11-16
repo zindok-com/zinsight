@@ -4,7 +4,7 @@ import { useId, useRef, useState, useTransition } from 'react';
 import { CheckCircle2, NotebookPen, X } from 'lucide-react';
 import { submitLinkPageLead } from '@/actions/link-page-lead-actions';
 import { LEAD_MEMO_MAX, LEAD_NAME_MAX, LEAD_PHONE_MAX, LEAD_EMAIL_MAX, normalizeLeadInput, validateLeadInput, type LeadField } from '@/lib/link-page-lead';
-import { getLinkPageSource } from '@/components/public/insight-radar/links/LinkPageTracker';
+import { getLinkPageSource, isInternalTraffic } from '@/components/public/insight-radar/links/LinkPageTracker';
 
 interface LinkPageLeadFormProps {
     slug: string;
@@ -34,7 +34,7 @@ export function LinkPageLeadForm({ slug, orgName, primary }: LinkPageLeadFormPro
         setDone(false);
         setFormError(null);
         dialogRef.current?.showModal();
-        window.gtag?.('event', 'lead_form_open', { page_type: 'link_page', org_slug: slug });
+        if (!isInternalTraffic()) window.gtag?.('event', 'lead_form_open', { page_type: 'link_page', org_slug: slug });
     };
     const close = () => dialogRef.current?.close();
 
@@ -74,7 +74,7 @@ export function LinkPageLeadForm({ slug, orgName, primary }: LinkPageLeadFormPro
                 setMemoLength(0);
                 setErrors({});
                 setDone(true);
-                window.gtag?.('event', 'generate_lead', { page_type: 'link_page', org_slug: slug, source_code: getLinkPageSource(slug) });
+                if (!isInternalTraffic()) window.gtag?.('event', 'generate_lead', { page_type: 'link_page', org_slug: slug, source_code: getLinkPageSource(slug) });
             } else {
                 setErrors(('fieldErrors' in result && result.fieldErrors) || {});
                 setFormError(result.error);

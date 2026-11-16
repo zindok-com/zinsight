@@ -55,7 +55,31 @@ export function trackLinkPageVideoPlay(slug: string) {
     send({ event: 'video', slug, src: getLinkPageSource(slug) });
 }
 
+// 서버가 관리자 세션으로 판정하면(X-Zi-Internal) 이 탭에서는 더 보내지 않음 (판정은 서버가 기준, 이건 보조)
+const INTERNAL_KEY = 'zi_links_internal';
+
+/** 이 탭이 내부(관리자) 트래픽으로 판정됐는지. GA 이벤트도 이 값으로 건너뜀 */
+export function isInternalTraffic(): boolean {
+    return storageGet(INTERNAL_KEY) === '1';
+}
+
+/** 첫 방문 전송: 응답 헤더를 읽어야 하므로 fetch 사용 */
+function sendView(body: Record<string, string>) {
+    void fetch(TRACK_ENDPOINT, {
+        method: 'POST',
+        body: JSON.stringify(body),
+        keepalive: true,
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+    })
+        .then((res) => {
+            if (res.headers.get('X-Zi-Internal') === '1') storageSet(INTERNAL_KEY, '1');
+        })
+        .catch(() => {});
+}
+
 function send(body: Record<string, string>) {
+    if (isInternalTraffic()) return;
     const json = JSON.stringify(body);
     try {
         const sent = navigator.sendBeacon?.(TRACK_ENDPOINT, new Blob([json], { type: 'application/json' }));
@@ -78,7 +102,7 @@ export function LinkPageTracker({ slug, orgId }: { slug: string; orgId: number }
         const viewKey = `zi_links_viewed_${slug}`;
         if (!storageGet(viewKey)) {
             storageSet(viewKey, '1');
-            send({ event: 'view', slug, src: source });
+            sendView({ event: 'view', slug, src: source });
         }
 
         const root = document.getElementById('org-links');
@@ -129,7 +153,7 @@ function sendGaEvent({
     orgId: number;
     source: string;
 }) {
-    if (!window.gtag) return;
+    if (!window.gtag || isInternalTraffic()) return;
     const common = { page_type: 'link_page', org_slug: slug, link_kind: kind, source_code: source, transport_type: 'beacon' };
 
     const href = anchor instanceof HTMLAnchorElement ? anchor.href : '';

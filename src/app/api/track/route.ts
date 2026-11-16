@@ -5,6 +5,7 @@ import { deviceFromUserAgent, isBotUserAgent } from '@/lib/bot-ua';
 import { LINK_KEY_PATTERN, LINK_PAGE_LINK_KINDS } from '@/lib/org-links';
 import { QR_CODE_PATTERN } from '@/lib/qr-link';
 import { rateLimit, MINUTE } from '@/lib/rate-limit';
+import { verifySessionToken } from '@/lib/temp-token';
 
 // 링크 페이지 방문·클릭 수집 (고객사 제공 통계의 기준 데이터).
 // IP·UA 원문은 저장하지 않고, 날짜별 비밀값으로 해시한 순방문 식별값만 원본 이벤트에 90일 보관
@@ -12,6 +13,20 @@ export const dynamic = 'force-dynamic';
 
 const RAW_RETENTION_DAYS = 90;
 const NO_CONTENT = () => new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+// 관리자 세션 요청: 집계하지 않고, 브라우저가 이 탭의 이후 전송·GA 이벤트를 멈추도록 표시
+const INTERNAL = () =>
+    new NextResponse(null, { status: 204, headers: { 'Cache-Control': 'no-store', 'X-Zi-Internal': '1' } });
+
+/** 관리자 로그인 세션(auth_token 쿠키)이 있는 브라우저인지. 내부 확인 트래픽은 통계에서 제외 */
+function isAdminSession(request: NextRequest): boolean {
+    const token = request.cookies.get('auth_token')?.value;
+    if (!token) return false;
+    try {
+        return !!verifySessionToken(token);
+    } catch {
+        return false;
+    }
+}
 const KINDS = new Set<string>(LINK_PAGE_LINK_KINDS);
 const EVENTS = new Set<unknown>(['view', 'click', 'video']);
 
@@ -36,6 +51,7 @@ function clientIp(request: NextRequest): string {
 export async function POST(request: NextRequest) {
     const ua = request.headers.get('user-agent') ?? '';
     if (isBotUserAgent(ua)) return NO_CONTENT();
+    if (isAdminSession(request)) return INTERNAL();
     // 통계 부풀리기·DB 부하 방지: IP당 분당 60회
     if (!rateLimit(`track:${clientIp(request)}`, 60, MINUTE)) return NO_CONTENT();
 
