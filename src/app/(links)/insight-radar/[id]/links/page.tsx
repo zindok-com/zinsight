@@ -71,7 +71,6 @@ export default async function OrgLinksPage({ params }: PageProps) {
     const cardLinks = data.links.filter((l) => l.display === 'card');
     const buttonLinks = data.links.filter((l) => l.display === 'button');
     const inquiry = data.inquiry;
-    const secondary = data.inquirySecondary;
 
     return (
         <div className="min-h-screen bg-slate-100">
@@ -209,8 +208,8 @@ export default async function OrgLinksPage({ params }: PageProps) {
 
                 {/* ⑤ 하단 고정 바: 문의하기(연락 수단이 있을 때) + 연락처 남기기 */}
                 <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-                    {/* 전화가 있으면 [전화 문의 | 메일(아이콘) | 연락처 남기기], 없으면 [메일 문의 | 연락처 남기기] */}
-                    <div className={!inquiry ? '' : secondary ? 'grid grid-cols-[1fr_3rem_1fr] gap-2' : 'grid grid-cols-2 gap-2'}>
+                    {/* [문의하기(전화 우선, 없으면 문의 URL·메일) | 연락처 남기기] */}
+                    <div className={inquiry ? 'grid grid-cols-2 gap-2' : ''}>
                         {inquiry && (
                             <a
                                 href={inquiry.href}
@@ -220,18 +219,6 @@ export default async function OrgLinksPage({ params }: PageProps) {
                             >
                                 <InquiryIcon type={inquiry.type} />
                                 문의하기
-                            </a>
-                        )}
-                        {secondary && (
-                            <a
-                                href={secondary.href}
-                                {...(isExternal(secondary.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                                {...trackAttrs({ key: 'inquiry_alt', label: inquiryLabel(secondary), kind: 'cta' })}
-                                aria-label={secondary.type === 'mail' ? '메일로 문의하기' : '문의 페이지 열기'}
-                                title={secondary.type === 'mail' ? '메일로 문의하기' : '문의 페이지 열기'}
-                                className="flex min-h-12 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue"
-                            >
-                                <InquiryIcon type={secondary.type} className="h-5 w-5" />
                             </a>
                         )}
                         <LinkPageLeadForm slug={data.slug} orgName={data.name} primary={!inquiry} />
