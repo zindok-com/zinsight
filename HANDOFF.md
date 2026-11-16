@@ -58,7 +58,8 @@ AEO 프로필·기사는 덤. 11/17~19 KOREA MICE EXPO(코엑스 마곡)에서 �
 - next dev가 가끔 '.next/dev/logs' 기록 → 재컴파일 → 브라우저 새로고침 루프에 빠짐 (Compiled in 2ms 반복). dev 서버 재시작으로 해소
 - 공개 프로필(src/app/(public)/insight-radar/[id]/page.tsx)의 문의 버튼은 아직 예전 순서(문의 URL → 메일 → 전화). 링크 페이지만 전화 우선으로 바뀜 — 맞출지 결정 필요
 - 운영 DB 읽기 전용 조회도 에이전트 권한 확인에서 막힘 (11/16). 운영 데이터 확인이 필요하면 사람이 조회하거나 권한 규칙을 추가해야 함
-- 개발 DB는 ssh 터널(`ssh -N zinsight-db`, ~/.ssh/config 별칭)이 떠 있어야 접속됨. 로컬·프리뷰·운영이 같은 NCP 버킷을 쓰므로 테스트 업로드는 끝나면 지움
+- 개발 DB는 ssh 터널이 떠 있어야 접속됨: `pnpm db:tunnel` (백그라운드, ~/.ssh/config의 zinsight-db 별칭 사용). 'Address already in use'면 이미 떠 있는 것. 자세한 건 .agents/AGENTS.md 0-1
+- 로컬·프리뷰·운영이 같은 NCP 버킷을 쓰므로 테스트 업로드는 끝나면 지움
 - 영상: 포스터가 없으면 src에 #t=0.001을 붙이고 preload=auto로 첫 장면을 불러옴 (모바일 데이터 사용량 약간 증가)
 - 연락처는 개인정보: 알림·리포트·공유 화면에서 노출 범위 주의
 - 운영 DB 데이터 삭제는 사전 승인 (ead3f55 규칙). 마이그레이션은 schema.prisma 변경 때만
@@ -75,6 +76,7 @@ AEO 프로필·기사는 덤. 11/17~19 KOREA MICE EXPO(코엑스 마곡)에서 �
 - src/app/go/[code]/route.ts — QR 단축 경로(/go/코드)
 
 ## 확인 방법
+- 개발 DB 접속: `npx prisma migrate status` → 실패하면 `pnpm db:tunnel` 백그라운드 실행 후 다시 확인
 - pnpm dev 후 /insight-radar/zindok/links 를 모바일 뷰(375px)로 확인
 - 통계: /admin/companies/233/link-analytics, 연락처: /admin/companies/233/leads
 - 비관리자 집계 확인: 쿠키 없이 curl로 POST /api/track (관리자 쿠키면 응답에 x-zi-internal: 1)
