@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useProgressRouter } from '@/components/admin/NavProgress';
 import Link from 'next/link';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -66,7 +67,7 @@ interface Props {
 type VisitorTab = 'geography' | 'device' | 'hour' | 'returning' | 'keyword';
 
 export function ArticleAnalyticsClient({ data, postId, currentPeriod }: Props) {
-    const router = useRouter();
+    const router = useProgressRouter();
     const pathname = usePathname();
     const [visitorTab, setVisitorTab] = useState<VisitorTab>('geography');
     const [showReportModal, setShowReportModal] = useState(false);

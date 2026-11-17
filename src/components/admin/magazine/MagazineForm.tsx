@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useProgressRouter } from '@/components/admin/NavProgress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -39,7 +39,7 @@ export function MagazineForm({
     categories?: any[],
     post?: any 
 }) {
-    const router = useRouter();
+    const router = useProgressRouter();
     const confirm = useConfirm();
     const [isPending, startTransition] = useTransition();
     const [activeTab, setActiveTab] = useState<'edit' | 'preview'>('edit');

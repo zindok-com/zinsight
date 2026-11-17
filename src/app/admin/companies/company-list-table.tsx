@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useProgressRouter } from '@/components/admin/NavProgress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ function safeGetHostname(url: string | null) {
 }
 
 export function CompanyListTable({ companies }: { companies: any[] }) {
-  const router = useRouter();
+  const router = useProgressRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('all');
   const [sortConfig, setSortConfig] = useState<{ key: 'name' | 'articleCount'; direction: 'asc' | 'desc' } | null>(null);

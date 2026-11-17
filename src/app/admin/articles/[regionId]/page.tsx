@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import { useProgressRouter } from '@/components/admin/NavProgress';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { getRegionById } from '@/actions/admin/region-actions';
@@ -333,7 +334,7 @@ function ArticleDrawer({ article, onClose, onRefresh }: { article: ArticleItem; 
 // ─── 메인 페이지 ──────────────────────────────────────────────────────────────
 export default function ArticlesByRegionPage() {
     const params = useParams();
-    const router = useRouter();
+    const router = useProgressRouter();
     const confirm = useConfirm();
     const regionId = Number(params.regionId);
 

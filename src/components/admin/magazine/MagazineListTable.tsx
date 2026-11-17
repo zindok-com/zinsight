@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, Trash2, Edit, Save, X, Loader2, FileText, Globe, Image as ImageIcon, Info, Plus, HelpCircle, BarChart3, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { deleteMagazinePost, updateMagazinePost, updateMultipleMagazinePostsStatus } from '@/actions/admin/magazine-actions';
 import { getMagazinePostDetailById } from '@/actions/admin/analytics-actions';
-import { useRouter } from 'next/navigation';
+import { useProgressRouter } from '@/components/admin/NavProgress';
 import { toast } from 'sonner';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import {
@@ -47,7 +47,7 @@ export function MagazineListTable({
     const [statusFilter, setStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'DRAFT' | 'HIDDEN'>('ALL');
     const [currentPage, setCurrentPage] = useState(1);
     const PAGE_SIZE = 15;
-    const router = useRouter();
+    const router = useProgressRouter();
     const confirm = useConfirm();
 
     const filteredPosts = posts.filter((post) => {

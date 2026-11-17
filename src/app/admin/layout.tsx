@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { Sidebar } from '@/components/layout/sidebar';
 import { ConfirmDialogProvider } from '@/components/ui/confirm-dialog';
+import { NavProgress } from '@/components/admin/NavProgress';
 import { prisma } from '@/lib/db';
 
 export const metadata = {
@@ -22,6 +23,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
     return (
         <ConfirmDialogProvider>
+            {/* 메뉴 이동 중 상단 진행 막대 (useSearchParams 사용 → Suspense) */}
+            <Suspense fallback={null}>
+                <NavProgress />
+            </Suspense>
             <div className="flex min-h-screen flex-col md:flex-row">
                 {/* Sidebar는 useSearchParams를 쓰므로 Suspense 경계 필요 */}
                 <Suspense fallback={<div className="hidden md:block w-64 shrink-0 bg-slate-900" />}>

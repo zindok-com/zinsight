@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useProgressRouter } from '@/components/admin/NavProgress';
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
     BarChart, Bar, PieChart, Pie, Cell, Legend,
@@ -61,7 +62,7 @@ const DEVICE_LABELS: Record<string, string> = {
 };
 
 export function OrgAnalyticsClient({ data, orgId, currentPeriod }: Props) {
-    const router = useRouter();
+    const router = useProgressRouter();
     const pathname = usePathname();
     const [visitorTab, setVisitorTab] = useState<VisitorTab>('geography');
     const [showReportModal, setShowReportModal] = useState(false);

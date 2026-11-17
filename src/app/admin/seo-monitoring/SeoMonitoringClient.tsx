@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
+import { useProgressRouter } from '@/components/admin/NavProgress';
 import {
     Activity,
     CheckCircle2,
@@ -37,7 +38,7 @@ const TAB_KEYS: TabType[] = ['overview', 'traffic', 'indexing', 'apis'];
 const PERIOD_LABEL: Record<string, string> = { '7': '최근 7일', '30': '최근 30일', '90': '최근 90일', all: '전체 기간' };
 
 export function SeoMonitoringClient({ overview, indexingReport, currentPeriod, initialTab, traffic, visitors }: Props) {
-    const router = useRouter();
+    const router = useProgressRouter();
     const pathname = usePathname();
     // 탭은 URL(?tab=)을 기준으로 결정: 사이드바 링크로 이동해도 화면이 함께 바뀌도록 로컬 상태로 고정하지 않음
     const currentTab: TabType = TAB_KEYS.includes(initialTab as TabType) ? (initialTab as TabType) : 'overview';
