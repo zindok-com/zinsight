@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { ShieldCheck, ShieldAlert, Key, Copy, Check, RefreshCw } from 'lucide-react';
+import { PasskeySettings } from './PasskeySettings';
 
 export function SecuritySettings() {
     const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -380,6 +381,9 @@ export function SecuritySettings() {
                     </CardContent>
                 </Card>
             )}
+
+            {/* 지정 기기 로그인 (패스키) */}
+            <PasskeySettings />
 
             {/* 4. 관리자 계정 추가 카드 */}
             <Card className="shadow-md border-slate-200">

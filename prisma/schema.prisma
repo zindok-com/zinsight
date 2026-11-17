@@ -303,8 +303,26 @@ model Admin {
   two_factor_temp    String?  @db.VarChar(100)
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
+  passkeys           AdminPasskey[]
 
   @@map("admins")
+}
+
+// 관리자 패스키 (지정 기기 생체인증 로그인). 관리자 보안 설정에서 등록·삭제
+model AdminPasskey {
+  id            Int       @id @default(autoincrement())
+  admin_id      Int
+  credential_id String    @unique @db.VarChar(512) // base64url
+  public_key    Bytes     @db.Blob
+  counter       BigInt    @default(0)
+  transports    String?   @db.VarChar(100) // 쉼표 구분
+  device_name   String    @db.VarChar(100)
+  created_at    DateTime  @default(now())
+  last_used_at  DateTime?
+  admin         Admin     @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@index([admin_id])
+  @@map("admin_passkeys")
 }
 
 // ─── 지역 (분류 축 핵심 테이블) ─────────────────────────────────────

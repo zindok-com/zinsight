@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { startAuthentication, browserSupportsWebAuthn } from '@simplewebauthn/browser';
+import { Fingerprint } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +18,47 @@ export function LoginForm() {
     
     const router = useRouter();
     const searchParams = useSearchParams();
-    const callbackUrl = searchParams.get('callbackUrl') || '/admin';
+    // 외부 주소로 보내지 않도록 내부 경로만 허용
+    const rawCallback = searchParams.get('callbackUrl') || '/admin';
+    const callbackUrl = rawCallback.startsWith('/') && !rawCallback.startsWith('//') ? rawCallback : '/admin';
+    const [passkeySupported, setPasskeySupported] = useState(false);
+
+    useEffect(() => {
+        setPasskeySupported(browserSupportsWebAuthn());
+    }, []);
+
+    // 등록된 기기(패스키)로 로그인: 아이디·비밀번호·OTP 없이 생체인증만
+    const handlePasskeyLogin = async () => {
+        setLoading(true);
+        try {
+            const optRes = await fetch('/api/auth/passkey/login/options', { method: 'POST' });
+            const optData = await optRes.json();
+            if (!optRes.ok) throw new Error(optData.error || '패스키 로그인을 시작하지 못했습니다.');
+
+            let response;
+            try {
+                response = await startAuthentication({ optionsJSON: optData.options });
+            } catch {
+                throw new Error('기기 인증이 취소되었습니다.');
+            }
+
+            const verRes = await fetch('/api/auth/passkey/login/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ response }),
+            });
+            const verData = await verRes.json();
+            if (!verRes.ok) throw new Error(verData.error || '패스키 로그인에 실패했습니다.');
+
+            toast.success('로그인 성공');
+            router.push(callbackUrl);
+            router.refresh();
+        } catch (error) {
+            toast.error((error as Error).message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleCredentialsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -135,10 +177,16 @@ export function LoginForm() {
                                 />
                             </div>
                         </CardContent>
-                        <CardFooter>
+                        <CardFooter className="flex flex-col gap-2">
                             <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
                                 {loading ? '확인 중...' : '로그인'}
                             </Button>
+                            {passkeySupported && (
+                                <Button type="button" variant="outline" className="w-full h-11 gap-2 text-base font-semibold" onClick={handlePasskeyLogin} disabled={loading}>
+                                    <Fingerprint className="h-5 w-5" />
+                                    등록된 기기로 로그인
+                                </Button>
+                            )}
                         </CardFooter>
                     </form>
                 ) : (
