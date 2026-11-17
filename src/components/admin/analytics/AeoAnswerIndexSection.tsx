@@ -262,7 +262,41 @@ export function AeoAnswerIndexSection({
                     )}
                 </div>
 
-                <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                {/* 휴대폰: 질문별 카드 목록 */}
+                <ul className="sm:hidden divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white">
+                    {audit.prompts.map((item, idx) => (
+                        <li key={idx} className="p-3.5 space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                                <p className="text-sm font-semibold text-slate-900 break-keep">&ldquo;{item.prompt}&rdquo;</p>
+                                <span className="shrink-0 text-sm font-bold text-slate-800 tabular-nums">{item.confidence}점</span>
+                            </div>
+                            <p className="text-xs text-slate-500 leading-relaxed">{item.simulatedSnippet}</p>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                                <span className="text-[11px] font-medium text-slate-600 mr-0.5">{item.intent}</span>
+                                {item.mentioned ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <CheckCircle2 className="w-3 h-3" /> 기본 정보 충족
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500">
+                                        기본 정보 부족
+                                    </span>
+                                )}
+                                {item.citedSource ? (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        <CheckCircle2 className="w-3 h-3" /> 구조화 완료
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                        구조화 보강 권장
+                                    </span>
+                                )}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
+
+                <div className="hidden sm:block border border-slate-200 rounded-xl overflow-hidden bg-white">
                     <div className="overflow-x-auto">
                         <table className="w-full text-xs text-left">
                             <thead className="bg-slate-50 border-b border-slate-200 text-slate-600">

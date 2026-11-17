@@ -118,10 +118,10 @@ export function PlatformTrafficBreakdownCard({
             {safeRows.length > 0 ? (
                 <div className="space-y-2.5 pt-2 border-t border-slate-100">
                     {/* 열 제목: 우측 수치가 무엇인지 표시 */}
-                    <div className="flex items-center gap-3 text-[11px] font-semibold text-slate-400">
-                        <span className="w-48 sm:w-56 shrink-0 pl-7">플랫폼</span>
+                    <div className="flex items-center gap-2 sm:gap-3 text-[11px] font-semibold text-slate-400">
+                        <span className="w-36 sm:w-56 shrink-0 pl-7">플랫폼</span>
                         <span className="flex-1" />
-                        <span className="w-28 sm:w-32 text-right shrink-0">유입 세션 (점유율)</span>
+                        <span className="w-24 sm:w-32 text-right shrink-0">유입 세션 (점유율)</span>
                         {!compact && (
                             <span
                                 className="hidden sm:inline-block w-16 text-right shrink-0"
@@ -137,15 +137,15 @@ export function PlatformTrafficBreakdownCard({
                         return (
                             <div
                                 key={row.key}
-                                className="flex items-center gap-3 text-xs sm:text-sm py-1"
+                                className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm py-1"
                             >
                                 {/* 좌측 고정 너비 라벨 영역 (순위 + 카테고리 배지 + 플랫폼명) */}
-                                <div className="w-48 sm:w-56 shrink-0 flex items-center gap-2 min-w-0">
+                                <div className="w-36 sm:w-56 shrink-0 flex items-center gap-2 min-w-0">
                                     <span className="w-5 text-xs font-bold text-slate-400 text-right shrink-0 tabular-nums">
                                         {idx + 1}
                                     </span>
                                     <span
-                                        className={`w-[64px] inline-flex items-center justify-center py-0.5 rounded text-[10px] font-semibold border shrink-0 ${badge.className}`}
+                                        className={`hidden sm:inline-flex w-[64px] items-center justify-center py-0.5 rounded text-[10px] font-semibold border shrink-0 ${badge.className}`}
                                     >
                                         {badge.label}
                                     </span>
@@ -158,7 +158,7 @@ export function PlatformTrafficBreakdownCard({
                                 </div>
 
                                 {/* 중앙 막대 그래프 영역 (모든 행 동일 시작점 정렬) */}
-                                <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden min-w-[60px]">
+                                <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden min-w-[32px] sm:min-w-[60px]">
                                     <div
                                         className="h-2 rounded-full transition-all"
                                         style={{
@@ -169,11 +169,11 @@ export function PlatformTrafficBreakdownCard({
                                 </div>
 
                                 {/* 우측 수치 영역 */}
-                                <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1.5 tabular-nums">
+                                <div className="w-24 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1 sm:gap-1.5 tabular-nums">
                                     <span className="font-bold text-slate-900">
                                         {row.sessions.toLocaleString()}회
                                     </span>
-                                    <span className="text-xs font-semibold text-indigo-600 w-12 text-right">
+                                    <span className="text-[11px] sm:text-xs font-semibold text-indigo-600 w-11 sm:w-12 text-right">
                                         ({row.sharePct}%)
                                     </span>
                                 </div>
