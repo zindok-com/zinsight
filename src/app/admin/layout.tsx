@@ -27,7 +27,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <Suspense fallback={<div className="hidden md:block w-64 shrink-0 bg-slate-900" />}>
                     <Sidebar pendingSubmissionsCount={pendingSubmissionsCount} />
                 </Suspense>
-                <main className="flex-1 p-6 min-w-0">
+                {/* 휴대폰에서는 바깥 여백을 줄여 카드·표가 쓸 폭을 확보 */}
+                <main className="flex-1 p-3 sm:p-6 min-w-0">
                     {children}
                 </main>
             </div>

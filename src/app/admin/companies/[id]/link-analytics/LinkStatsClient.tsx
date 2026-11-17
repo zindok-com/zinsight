@@ -41,7 +41,7 @@ export function LinkDailyChart({ daily }: { daily: LinkPageStats['daily'] }) {
                             type="button"
                             onClick={() => toggle(s.key)}
                             aria-pressed={on}
-                            className={`inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium ${
+                            className={`inline-flex h-9 sm:h-7 items-center gap-1.5 rounded-full border px-2.5 text-xs font-medium ${
                                 on ? 'bg-card text-foreground' : 'bg-muted/50 text-muted-foreground line-through'
                             }`}
                         >

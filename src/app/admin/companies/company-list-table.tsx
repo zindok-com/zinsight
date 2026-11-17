@@ -148,11 +148,11 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   )}
                 </div>
               </TableHead>
-              <TableHead className="w-[100px]">구분</TableHead>
-              <TableHead className="w-[120px]">지역</TableHead>
-              <TableHead>홈페이지 URL</TableHead>
+              <TableHead className="hidden md:table-cell w-[100px]">구분</TableHead>
+              <TableHead className="hidden md:table-cell w-[120px]">지역</TableHead>
+              <TableHead className="hidden md:table-cell">홈페이지 URL</TableHead>
               <TableHead
-                className="cursor-pointer hover:bg-muted/80 transition-colors group w-[120px]"
+                className="hidden md:table-cell cursor-pointer hover:bg-muted/80 transition-colors group w-[120px]"
                 onClick={() => handleSort('articleCount')}
               >
                 <div className="flex items-center font-bold text-slate-800 dark:text-slate-200">
@@ -195,7 +195,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                     </button>
                   </TableCell>
                   <TableCell>
-                    <div className="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 flex items-center gap-1.5">
+                    <div className="font-semibold text-slate-900 dark:text-slate-100 hover:text-blue-600 flex flex-wrap items-center gap-x-1.5">
                       <span>{company.company_name}</span>
                       {company.slug && (
                         <span className="text-[11px] text-muted-foreground font-mono font-normal">
@@ -203,18 +203,22 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                         </span>
                       )}
                     </div>
+                    {/* 휴대폰: 숨긴 칸(구분·지역·기사수)을 이름 아래 한 줄로 */}
+                    <p className="mt-0.5 text-xs text-muted-foreground md:hidden">
+                      {company.entity_type || '기업'} · {company.region?.name || '지역 미지정'} · 기사 {((company.company_articles?.length || 0) + (company.magazinePosts?.length || 0))}건
+                    </p>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge variant="outline" className="text-xs font-normal">
                       {company.entity_type || '기업'}
                     </Badge>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge className="bg-muted text-muted-foreground border-0 text-xs font-medium">
                       {company.region?.name || '지역 미지정'}
                     </Badge>
                   </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="hidden md:table-cell" onClick={(e) => e.stopPropagation()}>
                     {company.company_url ? (
                       <a
                         href={company.company_url.startsWith('http') ? company.company_url : `https://${company.company_url}`}
@@ -229,7 +233,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                       <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <Badge variant="secondary" className="text-xs">
                       {((company.company_articles?.length || 0) + (company.magazinePosts?.length || 0))}건
                     </Badge>

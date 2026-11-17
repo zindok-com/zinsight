@@ -61,7 +61,7 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
     const linkPageUrl = `/insight-radar/${encodeURIComponent(stats.org.slug)}/links`;
     const periodHref = (p: string) => `/admin/companies/${id}/link-analytics?period=${p}`;
     const periodClass = (active: boolean) =>
-        `inline-flex h-8 items-center rounded-md border px-3 text-xs font-semibold ${
+        `inline-flex h-10 sm:h-8 items-center rounded-md border px-3 text-xs font-semibold ${
             active ? 'border-foreground bg-foreground text-background' : 'bg-card text-muted-foreground hover:text-foreground'
         }`;
 
@@ -99,9 +99,9 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                 <Link href={periodHref('30')} className={periodClass(range.period === '30')}>최근 30일</Link>
                 <form method="get" className="flex flex-wrap items-center gap-1.5">
                     <input type="hidden" name="period" value="custom" />
-                    <input type="date" name="from" defaultValue={range.from} aria-label="시작일" className="h-8 rounded-md border bg-card px-2 text-xs" />
+                    <input type="date" name="from" defaultValue={range.from} aria-label="시작일" className="h-10 sm:h-8 rounded-md border bg-card px-2 text-xs" />
                     <span className="text-xs text-muted-foreground">~</span>
-                    <input type="date" name="to" defaultValue={range.to} aria-label="종료일" className="h-8 rounded-md border bg-card px-2 text-xs" />
+                    <input type="date" name="to" defaultValue={range.to} aria-label="종료일" className="h-10 sm:h-8 rounded-md border bg-card px-2 text-xs" />
                     <button type="submit" className={periodClass(range.period === 'custom')}>직접 지정</button>
                 </form>
                 <span className="text-xs text-muted-foreground tabular-nums">
@@ -128,7 +128,7 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                         <p className={`mt-1 font-bold tabular-nums ${stats.hasData ? 'text-3xl' : 'text-base text-muted-foreground'}`}>{stats.hasData ? stats.leads.toLocaleString() : NO_DATA}</p>
                         {stats.hasData && (
                             <p className="text-xs text-muted-foreground tabular-nums">
-                                폼 열기 {stats.leadFormOpens.toLocaleString()}회 · <Link href={`/admin/companies/${id}/leads`} className="underline underline-offset-2 hover:text-foreground">목록</Link>
+                                폼 열기 {stats.leadFormOpens.toLocaleString()}회 · <Link href={`/admin/companies/${id}/leads`} className="-my-2 inline-block py-2 pr-2 underline underline-offset-2 hover:text-foreground">목록</Link>
                             </p>
                         )}
                     </CardContent>
@@ -163,7 +163,27 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                         {stats.sources.length === 0 ? (
                             <EmptyState />
                         ) : (
-                            <Table>
+                            <>
+                            {/* 휴대폰: 표 대신 목록 (표는 가로 스크롤로 숫자 칸이 가려짐) */}
+                            <ul className="divide-y sm:hidden">
+                                {stats.sources.map((s) => (
+                                    <li key={s.source} className="py-3">
+                                        <p className="text-sm">
+                                            <span className="font-mono text-xs">{s.source === 'direct' ? 'direct' : `/go/${s.source}`}</span>
+                                            <span className="ml-1.5 text-xs text-muted-foreground">{s.source === 'direct' ? '직접 방문' : s.label ?? ''}</span>
+                                        </p>
+                                        <MetricRow
+                                            items={[
+                                                ['방문', s.views],
+                                                ['순방문', s.uniqueViews],
+                                                ['클릭', s.clicks],
+                                                ['연락처', s.leads],
+                                            ]}
+                                        />
+                                    </li>
+                                ))}
+                            </ul>
+                            <Table className="hidden sm:table">
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>경로</TableHead>
@@ -190,6 +210,7 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                                     ))}
                                 </TableBody>
                             </Table>
+                            </>
                         )}
                     </CardContent>
                 </Card>
@@ -245,7 +266,23 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                     {stats.links.length === 0 ? (
                         <EmptyState />
                     ) : (
-                        <Table>
+                        <>
+                        <ul className="divide-y sm:hidden">
+                            {stats.links.map((l) => (
+                                <li key={l.key} className="py-3">
+                                    <p className="text-sm font-medium break-all line-clamp-2" title={l.label}>{l.label}</p>
+                                    <p className="text-xs text-muted-foreground">{LINK_PAGE_LINK_KIND_LABEL[l.kind as LinkPageLinkKind] ?? l.kind}</p>
+                                    <MetricRow
+                                        items={[
+                                            ['클릭', l.clicks],
+                                            ['순클릭', l.uniqueClicks],
+                                            ['클릭률', formatPercent(l.ctr)],
+                                        ]}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                        <Table className="hidden sm:table">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>링크</TableHead>
@@ -269,10 +306,25 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                                 ))}
                             </TableBody>
                         </Table>
+                        </>
                     )}
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+/** 휴대폰 목록용 지표 한 줄: 라벨 위·숫자 아래, 칸 너비 균등 */
+function MetricRow({ items }: { items: Array<[string, number | string]> }) {
+    return (
+        <dl className="mt-2 grid gap-2" style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}>
+            {items.map(([label, value]) => (
+                <div key={label}>
+                    <dt className="text-[11px] text-muted-foreground">{label}</dt>
+                    <dd className="text-sm font-semibold tabular-nums">{typeof value === 'number' ? value.toLocaleString() : value}</dd>
+                </div>
+            ))}
+        </dl>
     );
 }
 

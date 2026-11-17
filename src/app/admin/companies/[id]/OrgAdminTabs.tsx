@@ -24,7 +24,7 @@ export function OrgAdminTabs({ orgId, active, unreadLeads }: { orgId: number | s
                         </span>
                     ) : null;
                 return tab === active ? (
-                    <span key={tab} className="pb-2 px-1 text-sm font-semibold border-b-2 border-foreground flex items-center gap-1.5 whitespace-nowrap" aria-current="page">
+                    <span key={tab} className="h-10 px-1 text-sm font-semibold border-b-2 border-foreground flex items-center gap-1.5 whitespace-nowrap" aria-current="page">
                         {icon}
                         {label}
                         {badge}
@@ -33,7 +33,7 @@ export function OrgAdminTabs({ orgId, active, unreadLeads }: { orgId: number | s
                     <Link
                         key={tab}
                         href={`/admin/companies/${orgId}${path}`}
-                        className="pb-2 px-1 text-sm text-muted-foreground hover:text-foreground flex items-center gap-1.5 whitespace-nowrap"
+                        className="h-10 px-1 text-sm border-b-2 border-transparent text-muted-foreground hover:text-foreground flex items-center gap-1.5 whitespace-nowrap"
                     >
                         {icon}
                         {label}
