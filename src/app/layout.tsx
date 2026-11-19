@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SITE_DESCRIPTION } from '@/lib/site';
+import { siteConfig } from '@/config/site';
 import { Inter, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
@@ -16,20 +17,20 @@ const notoSerifKR = Noto_Serif_KR({
     variable: "--font-serif",
 });
 
-const domain = "www.zinsight.co.kr";
-const baseUrl = `https://${domain}`;
+const { brand, identity } = siteConfig;
+const baseUrl = brand.baseUrl;
 
 export const metadata: Metadata = {
     metadataBase: new URL(baseUrl),
     title: {
-        template: "%s | 진사이트",
-        default: "진사이트 - AEO·SEO·GEO 통합 검색최적화 플랫폼",
+        template: `%s | ${brand.name}`,
+        default: identity.defaultTitle,
     },
     description: SITE_DESCRIPTION,
-    keywords: ["진사이트", "zinsight", "진독", "zindok", "인사이트 레이더", "기업 분석", "산업 동향", "시장 리서치", "뉴스레터", "비즈니스 인텔리전스", "GEO", "SEO", "AEO", "테크니컬 마케팅"],
-    authors: [{ name: "진사이트 편집부" }],
-    creator: "진사이트",
-    publisher: "진사이트",
+    keywords: identity.keywords,
+    authors: [{ name: `${brand.name} 편집부` }],
+    creator: brand.name,
+    publisher: brand.name,
     formatDetection: {
         email: false,
         address: false,
@@ -51,23 +52,23 @@ export const metadata: Metadata = {
         type: "website",
         locale: "ko_KR",
         url: baseUrl,
-        siteName: "진사이트",
-        title: "진사이트 - AEO·SEO·GEO 통합 검색최적화 플랫폼",
-        description: SITE_DESCRIPTION,
+        siteName: brand.name,
+        title: identity.ogTitle,
+        description: identity.ogDescription,
         images: [
             {
-                url: "/img/zinsight_icon.png",
+                url: brand.logoPath,
                 width: 1200,
                 height: 630,
-                alt: "진사이트",
+                alt: brand.name,
             },
         ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "진사이트 - AEO·SEO·GEO 통합 검색최적화 플랫폼",
-        description: SITE_DESCRIPTION,
-        images: ["/img/zinsight_icon.png"],
+        title: identity.ogTitle,
+        description: identity.ogDescription,
+        images: [brand.logoPath],
     },
     verification: {
         other: {

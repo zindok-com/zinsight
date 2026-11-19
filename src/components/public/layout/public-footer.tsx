@@ -1,14 +1,32 @@
 import Link from 'next/link';
+import { isPagePublished, siteConfig } from '@/config/site';
+import { getAboutLink, getContactLink, type NavLink } from '@/config/navigation';
 
-// 사업자 정보 표시 (전자상거래법·정보통신망법)
+const { brand, company, identity } = siteConfig;
+
+// 사업자 정보 표시 (전자상거래법·정보통신망법). 값은 src/config/site.ts company
 const BUSINESS_INFO: Array<{ label: string; value: string; href?: string }> = [
-    { label: '상호', value: '진독(Zindok)' },
-    { label: '대표', value: '이태경' },
-    { label: '사업자등록번호', value: '346-15-02742' },
-    { label: '주소', value: '경기도 안양시 동안구 관양1744, 9층 안양창업지원센터' },
-    { label: '전화', value: '010-9756-3400', href: 'tel:010-9756-3400' },
-    { label: '이메일', value: 'ceo@zindok.com', href: 'mailto:ceo@zindok.com' },
+    { label: '상호', value: `${company.name}(${company.englishName})` },
+    { label: '대표', value: company.ceo },
+    { label: '사업자등록번호', value: company.businessNumber },
+    { label: '주소', value: company.address },
+    { label: '전화', value: company.phone, href: `tel:${company.phone.replace(/[^0-9+]/g, '')}` },
+    { label: '이메일', value: company.email, href: `mailto:${company.email}` },
 ];
+
+const footerLinkClass = 'py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug';
+
+function FooterLink({ link }: { link: NavLink }) {
+    return (
+        <Link
+            href={link.href}
+            {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+            className={footerLinkClass}
+        >
+            {link.label}
+        </Link>
+    );
+}
 
 export function PublicFooter() {
     const currentYear = new Date().getFullYear();
@@ -19,9 +37,9 @@ export function PublicFooter() {
                 <div className="flex flex-col items-start justify-between gap-8 sm:gap-12 md:flex-row">
                     {/* 브랜드 블록 */}
                     <div className="max-w-xs">
-                        <span className="mb-3 block text-lg font-bold text-zi-primary">진사이트</span>
-                        <p className="mb-0 text-[13px] text-slate-500 leading-relaxed">
-                            복잡한 데이터를 명료한 인사이트로 전환하여<br className="hidden sm:inline" /> 비즈니스의 미래를 제시합니다.
+                        <span className="mb-3 block text-lg font-bold text-zi-primary">{brand.name}</span>
+                        <p className="mb-0 text-[13px] text-slate-500 leading-relaxed break-keep">
+                            {identity.footerIntro}
                         </p>
                     </div>
 
@@ -31,11 +49,12 @@ export function PublicFooter() {
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">탐색</span>
                             <Link href="/insight-radar" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">인사이트 레이더</Link>
                             <Link href="/magazine" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">매거진 아카이브</Link>
+                            {isPagePublished('services') && <FooterLink link={{ label: '서비스', href: '/services', external: false }} />}
                         </div>
                         <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">정보</span>
-                            <Link href="https://www.zindok.com" target="_blank" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">진사이트 소개</Link>
-                            <Link href="https://www.zindok.com" target="_blank" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">문의하기</Link>
+                            <FooterLink link={getAboutLink()} />
+                            <FooterLink link={{ ...getContactLink(), label: '문의하기' }} />
                         </div>
                         <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">법령</span>
@@ -64,7 +83,7 @@ export function PublicFooter() {
             <div className="border-t border-zi-divider">
                 <div className="mx-auto flex max-w-zi-container flex-col items-center justify-between gap-2 px-4 sm:px-6 py-5 md:flex-row">
                     <p className="text-xs font-medium tracking-wide text-slate-400">
-                        © {currentYear} 진독. All rights reserved.
+                        © {currentYear} {company.name}. All rights reserved.
                     </p>
                     {/* Lordicon 무료 라이선스 출처 표기 (애니메이션 아이콘) */}
                     <p className="text-xs font-medium tracking-wide text-slate-400">

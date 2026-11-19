@@ -10,13 +10,15 @@ import {
 } from '@/actions/insight-radar-actions';
 import { getHeadlineMagazinePosts } from '@/actions/public/magazine-actions';
 import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
-import { serializeJsonLd, SITE_DESCRIPTION } from '@/lib/site';
+import { AiCitationCases } from '@/components/public/home/AiCitationCases';
+import { buildSiteOrganizationJsonLd, serializeJsonLd, SITE_BASE_URL, SITE_DESCRIPTION, SITE_NAME, SITE_ORGANIZATION_ID, SITE_WEBSITE_ID } from '@/lib/site';
+import { siteConfig } from '@/config/site';
 
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
 
 export const metadata: Metadata = {
     alternates: {
-        canonical: 'https://www.zinsight.co.kr',
+        canonical: SITE_BASE_URL,
     },
     robots: {
         index: true,
@@ -32,6 +34,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PublicHomePage() {
+    const { identity, home } = siteConfig;
     // 홈 페이지에 필요한 데이터를 병렬로 조회
     const [totalStats, { companies: featuredCompanies }, latestArticles, trendingKeywords, headlinePosts] =
         await Promise.all([
@@ -46,29 +49,17 @@ export default async function PublicHomePage() {
     const jsonLd = {
         '@context': 'https://schema.org',
         '@graph': [
-            {
-                '@type': 'Organization',
-                '@id': 'https://www.zinsight.co.kr/#organization',
-                'name': '진사이트',
-                'legalName': '진독',
-                'alternateName': ['Zinsight', '진독', 'Zindok'],
-                'url': 'https://www.zinsight.co.kr',
-                'logo': {
-                    '@type': 'ImageObject',
-                    'url': 'https://www.zinsight.co.kr/img/zinsight_icon.png',
-                },
-                'sameAs': ['https://www.zindok.com'],
-            },
+            buildSiteOrganizationJsonLd(),
             {
                 '@type': 'WebSite',
-                '@id': 'https://www.zinsight.co.kr/#website',
-                'url': 'https://www.zinsight.co.kr',
-                'name': '진사이트',
-                'alternateName': ['Zinsight'],
+                '@id': SITE_WEBSITE_ID,
+                'url': SITE_BASE_URL,
+                'name': SITE_NAME,
+                'alternateName': [siteConfig.brand.alternateName],
                 'description': SITE_DESCRIPTION,
                 'inLanguage': 'ko-KR',
                 'publisher': {
-                    '@id': 'https://www.zinsight.co.kr/#organization',
+                    '@id': SITE_ORGANIZATION_ID,
                 },
                 'potentialAction': {
                     '@type': 'SearchAction',
@@ -104,27 +95,12 @@ export default async function PublicHomePage() {
             {/* ─────────────────────────────── */}
             <section className="relative overflow-hidden pb-16 pt-10 sm:pb-32 sm:pt-20">
                 <div className="relative z-10 mx-auto max-w-zi-container px-4 sm:px-6 text-center">
-                    {/* 수퍼 레이블 */}
-                    <span className="mb-4 block text-zi-label font-semibold tracking-[0.2em] text-zi-blue uppercase">
-                        Market Intelligence Terminal
-                    </span>
-
-                    {/* 핵심 서브타이틀 배지 */}
-                    <div className="mb-5 sm:mb-8 flex flex-wrap justify-center gap-2">
-                        <span className="inline-flex items-center rounded-full bg-zi-secondary/10 px-3.5 py-1 text-[11px] font-bold text-zi-secondary uppercase tracking-wider border border-zi-secondary/20">
-                            [지역 밀착형 마케팅 리서치]
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-zi-blue/10 px-3.5 py-1 text-[11px] font-bold text-zi-blue uppercase tracking-wider border border-zi-blue/20">
-                            [AI 검색 최적화 (AEO·SEO·GEO)]
-                        </span>
-                    </div>
-
-                    {/* 헤드라인 */}
+                    {/* 헤드라인: 슬로건·설명은 src/config/site.ts identity */}
                     <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 leading-tight text-zi-primary mb-5 sm:mb-8 break-keep">
-                        미래를 여는 데이터, <br className="hidden sm:inline" /> AI 시대를 선도하는 마케팅 분석.
+                        {identity.slogan}
                     </h1>
                     <p className="font-body-md text-body-md sm:font-body-lg sm:text-body-lg text-zi-on-surface-variant max-w-3xl mx-auto mb-8 sm:mb-12 break-keep">
-                        진사이트는 관내 기업 리서치와 차세대 검색 최적화(AEO·SEO·GEO) 트렌드를 <br className="hidden sm:inline" /> 결합하여, 지역 기업을 위한 프리미엄 마케팅 통찰력을 제공합니다.
+                        {identity.heroDescription}
                     </p>
 
                     {/* 통합 검색바 (인사이트 레이더 이동 버튼으로 사용되던 부분 주석 처리) */}
@@ -159,7 +135,7 @@ export default async function PublicHomePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3" />
                             </svg>
-                            Insight Radar 탐색
+                            인사이트 레이더 둘러보기
                         </Link>
                         <Link
                             href="/magazine"
@@ -170,6 +146,15 @@ export default async function PublicHomePage() {
                             </svg>
                             진사이트 매거진 읽기
                         </Link>
+                        {/* AI 노출 진단 버튼 슬롯: 상품 확정 후 설정에서 켬 */}
+                        {home.aiDiagnosis.enabled && home.aiDiagnosis.href && (
+                            <Link
+                                href={home.aiDiagnosis.href}
+                                className="inline-flex items-center justify-center rounded-zi-btn border border-zi-blue bg-transparent px-8 py-3.5 text-ui-label font-ui-label text-zi-blue transition-all active:scale-95 hover:bg-zi-blue/5"
+                            >
+                                {home.aiDiagnosis.label}
+                            </Link>
+                        )}
                     </div>
                 </div>
 
@@ -178,21 +163,17 @@ export default async function PublicHomePage() {
             </section>
 
             {/* ─────────────────────────────── */}
-            {/* 진사이트 현황 섹션: 인사이트 레이더 + 매거진 통계 */}
+            {/* AI 답변에 인용된 사례 (src/config/site.ts aiCitations, 비어 있으면 숨김) */}
             {/* ─────────────────────────────── */}
+            <AiCitationCases cases={siteConfig.aiCitations} />
+
+            {/* ─────────────────────────────── */}
+            {/* 진사이트 현황 섹션: 인사이트 레이더 + 매거진 통계 (설정 home.showStats) */}
+            {/* ─────────────────────────────── */}
+            {home.showStats && (
             <section className="bg-[#0B0F19] border-y border-[#30363D] py-10 sm:py-16 relative overflow-hidden">
                 <div className="mx-auto max-w-zi-container px-4 sm:px-6">
                     <div className="mb-8 sm:mb-12 text-center flex flex-col items-center">
-                        {/* 실시간 라이브 엔진 표시 */}
-                        <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 border border-emerald-500/20">
-                            <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            <span className="text-[11px] font-bold tracking-wider text-emerald-400 uppercase">
-                                Real-Time Engine Active
-                            </span>
-                        </div>
                         <h2 className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-white">
                             진사이트 현황
                         </h2>
@@ -206,6 +187,7 @@ export default async function PublicHomePage() {
                     <HomeStats totalStats={totalStats} />
                 </div>
             </section>
+            )}
 
             {/* ─────────────────────────────── */}
             {/* 실시간 인사이트 레이더 섹션 (추후 기능 추가 시 사용을 위해 주석 처리) */}
@@ -333,7 +315,7 @@ export default async function PublicHomePage() {
                             진사이트 매거진
                         </h2>
                         <p className="text-zi-body-md text-slate-500">
-                            최신 마켓 인사이트와 심층 리서치를 저널리즘 형식으로 전달합니다.
+                            {identity.magazineIntro}
                         </p>
                     </div>
 

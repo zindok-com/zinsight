@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
@@ -27,15 +27,28 @@ interface MagazineCarouselProps {
     posts: MagazinePost[];
 }
 
+// 서버 렌더링·하이드레이션 시점에는 false, 브라우저에 붙은 뒤에는 true
+const noopSubscribe = () => () => {};
+function useIsClient(): boolean {
+    return useSyncExternalStore(noopSubscribe, () => true, () => false);
+}
+
+type SlideSet = 'before' | 'main' | 'after';
+
 export function MagazineCarousel({ posts }: MagazineCarouselProps) {
+    const isClient = useIsClient();
     const scrollRef = useRef<HTMLDivElement>(null);
     const [activeIndex, setActiveIndex] = useState(0);
     const isScrolling = useRef(false);
 
-    const hasMultiple = posts && posts.length > 1;
+    // 무한 순환(앞뒤 복제)은 기사가 2개 이상이고 브라우저에 붙은 뒤에만 켬.
+    // 서버 HTML에는 원본 1벌만 내보내 검색엔진·텍스트 추출에서 기사 목록이 3번 읽히지 않게 함
+    const showControls = Boolean(posts && posts.length > 1);
+    const hasMultiple = showControls && isClient;
 
-    // 만약 기사가 2개 이상일 때만 전후로 복제하여 seamless 무한 순환 구조 제공
-    const clonedPosts = hasMultiple ? [...posts, ...posts, ...posts] : posts;
+    const slides: Array<{ post: MagazinePost; set: SlideSet }> = hasMultiple
+        ? (['before', 'main', 'after'] as const).flatMap((set) => posts.map((post) => ({ post, set })))
+        : posts.map((post) => ({ post, set: 'main' as const }));
 
     // 각 카드 간의 실제 스크롤 스텝(카드 너비 + gap)을 정확히 계산하는 헬퍼
     const getStep = () => {
@@ -172,8 +185,8 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
 
     return (
         <div className="group relative">
-            {/* 데스크탑 내비게이션 버튼 (기사가 2개 이상일 때만 표시) */}
-            {hasMultiple && (
+            {/* 데스크탑 내비게이션 버튼 (기사가 2개 이상일 때만 표시, 서버 HTML에도 포함해 레이아웃 이동 방지) */}
+            {showControls && (
                 <>
                     <button 
                         onClick={() => scroll('left')}
@@ -198,14 +211,15 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                 className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 pt-4 px-4 sm:px-0 scroll-pl-4 sm:scroll-pl-0 sm:gap-8 lg:gap-12"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
             >
-                {clonedPosts.map((post, index) => {
-                    // 무한 순환용 복제본(앞·뒤 세트)은 보조기술·키보드 탐색에서 제외해 기사가 3번 읽히지 않도록 함
-                    const isClone = hasMultiple && (index < posts.length || index >= posts.length * 2);
+                {slides.map(({ post, set }, index) => {
+                    // 무한 순환용 복제본(앞·뒤 세트)은 inert로 보조기술·키보드·찾기에서 모두 제외 (화면 동작은 그대로)
+                    const isClone = set !== 'main';
                     return (
                     <div 
-                        key={`${post.id}-${index}`} 
+                        key={`${set}-${post.id}`} 
                         className="w-[82vw] flex-shrink-0 snap-start sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-32px)] lg:flex-shrink-0"
                         aria-hidden={isClone || undefined}
+                        inert={isClone || undefined}
                     >
                         <Link href={post.href} className="group/card block h-full" tabIndex={isClone ? -1 : undefined}>
                             <article className="flex h-full flex-col">
@@ -275,7 +289,7 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
             </div>
 
             {/* 모바일 전용 dot indicator (기사가 2개 이상일 때만 표시) */}
-            {hasMultiple && (
+            {showControls && (
                 <div className="flex justify-center mt-1 lg:hidden">
                     {posts.map((_, i) => (
                         <button

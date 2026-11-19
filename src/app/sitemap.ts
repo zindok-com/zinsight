@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/db';
 import { getMagazinePostPath } from '@/lib/site';
+import { isPagePublished } from '@/config/site';
 
 // sitemap 자체도 1시간마다 재생성
 export const revalidate = 3600;
@@ -42,6 +43,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.8,
         },
     ];
+
+    // 새 페이지(/about, /services)는 공개(src/config/site.ts pages.*.published) 후에만 포함
+    for (const page of ['about', 'services'] as const) {
+        if (isPagePublished(page)) {
+            staticRoutes.push({
+                url: `${baseUrl}/${page}`,
+                lastModified: new Date(),
+                changeFrequency: 'monthly',
+                priority: 0.6,
+            });
+        }
+    }
 
     let magazineRoutes: MetadataRoute.Sitemap = [];
     let regionRoutes: MetadataRoute.Sitemap = [];

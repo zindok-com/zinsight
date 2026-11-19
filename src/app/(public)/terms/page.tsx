@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Shield, FileText, Ban, AlertTriangle, Scale } from 'lucide-react';
 import { buildSocialMetadata } from '@/lib/site';
+import { siteConfig } from '@/config/site';
 
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
@@ -106,7 +107,7 @@ export default function TermsPage() {
                                 제1조 (목적)
                             </h2>
                             <p className="text-body-md text-zi-on-surface-variant leading-[1.8]">
-                                본 약관은 진독(이하 &quot;회사&quot;)가 운영하는 온라인 B2B 비즈니스 인텔리전스 플랫폼 및 매거진 서비스(이하 &quot;서비스&quot;)를 이용함에 있어, 회사와 회원의 권리, 의무, 책임 사항 및 서비스 이용과 관련된 필수 요건을 규정함을 목적으로 합니다.
+                                본 약관은 {siteConfig.company.name}(이하 &quot;회사&quot;)가 운영하는 온라인 B2B 비즈니스 인텔리전스 플랫폼 및 매거진 서비스(이하 &quot;서비스&quot;)를 이용함에 있어, 회사와 회원의 권리, 의무, 책임 사항 및 서비스 이용과 관련된 필수 요건을 규정함을 목적으로 합니다.
                             </p>
                         </section>
 

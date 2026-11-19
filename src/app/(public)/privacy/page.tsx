@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Shield, Settings, Info, Lock, Mail, Scale } from 'lucide-react';
 import { buildSocialMetadata } from '@/lib/site';
+import { siteConfig } from '@/config/site';
+
+const { company } = siteConfig;
 
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
@@ -75,7 +78,7 @@ export default function PrivacyPage() {
                         Privacy Policy
                     </h1>
                     <p className="text-body-md text-zi-on-surface-variant max-w-lg mx-auto">
-                        진독은 회원님의 개인정보를 매우 소중하게 다루며, 개인정보보호법에 의거하여 권리와 보안을 철저하게 준수하고 보호합니다.
+                        {company.name}은 회원님의 개인정보를 매우 소중하게 다루며, 개인정보보호법에 의거하여 권리와 보안을 철저하게 준수하고 보호합니다.
                     </p>
                 </div>
 
@@ -139,7 +142,7 @@ export default function PrivacyPage() {
                                 제1조 (개인정보의 처리 목적)
                             </h2>
                             <div className="text-body-md text-zi-on-surface-variant leading-[1.8] flex flex-col gap-3">
-                                <p>진독(이하 &quot;회사&quot;)는 다음의 목적을 위해 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 개인정보보호법 제18조에 따라 사전 동의를 받는 등 필요한 조치를 이행할 예정입니다.</p>
+                                <p>{company.name}(이하 &quot;회사&quot;)는 다음의 목적을 위해 개인정보를 처리합니다. 처리하고 있는 개인정보는 다음의 목적 이외의 용도로는 이용되지 않으며, 이용 목적이 변경되는 경우에는 개인정보보호법 제18조에 따라 사전 동의를 받는 등 필요한 조치를 이행할 예정입니다.</p>
                                 <p>1. <strong>상담 및 진단 신청 응대</strong>: AEO 진단·상담 신청자에게 결과 안내, 상담 연락 및 서비스 소개를 목적으로 처리합니다.</p>
                                 <p>2. <strong>기업·기관 정보 등록</strong>: 초대 링크로 제출된 기업·기관 정보를 검토하여 인사이트 레이더 프로필로 게시하기 위해 처리합니다.</p>
                                 <p>3. <strong>링크 페이지 연락처 남기기</strong>: 기업·기관 링크 페이지에서 방문자가 남긴 연락처와 메모를 접수하여 해당 기업·기관에 전달하고, 문의에 응대하기 위해 처리합니다.</p>
@@ -320,9 +323,9 @@ export default function PrivacyPage() {
                                 <div className="bg-zi-surface-container-low border border-zi-divider rounded-zi-card p-5 flex items-start gap-4">
                                     <Mail className="w-5 h-5 text-zi-primary shrink-0 mt-0.5" />
                                     <div className="text-[13.5px] leading-relaxed">
-                                        <p>• <strong>담당 부서</strong>: 진독 개인정보보호 및 기술지원 운영실</p>
+                                        <p>• <strong>담당 부서</strong>: {company.name} 개인정보보호 및 기술지원 운영실</p>
                                         <p>• <strong>보호책임자 직책</strong>: 최고보안책임자 (CISO)</p>
-                                        <p>• <strong>문의 이메일</strong>: <a href="mailto:cto@zindok.com" className="text-zi-primary font-semibold hover:underline">cto@zindok.com</a></p>
+                                        <p>• <strong>문의 이메일</strong>: <a href={`mailto:${company.email}`} className="text-zi-primary font-semibold hover:underline">{company.email}</a></p>
                                     </div>
                                 </div>
                                 <p className="text-[13.5px]">회원님께서는 회사의 서비스(또는 화면)를 이용하시면서 발생한 모든 개인정보 보호 관련 문의, 불만처리, 피해구제 등에 관한 사항을 개인정보 보호책임자 및 담당부서로 문의하실 수 있으며, 회사는 신속하고 성실하게 답변해 드릴 예정입니다.</p>

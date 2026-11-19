@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import MagazinePostDetail from '@/components/public/magazine/MagazinePostDetail';
-import { SITE_BASE_URL } from '@/lib/site';
+import { buildArticlePublisherJsonLd, SITE_BASE_URL } from '@/lib/site';
 
 // MagazinePostDetail과 동일한 카테고리 레이블 매핑 (메타데이터 일치)
 function getCategoryLabel(category: { name?: string; slug: string } | null | undefined): string {
@@ -276,14 +276,8 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
                     'name': post.author?.name || post.authorName || '진사이트 편집부',
                     ...(post.author?.slug ? { 'url': `${baseUrl}/author/${post.author.slug}` } : {}),
                 },
-                'publisher': {
-                    '@type': 'Organization',
-                    'name': '진사이트',
-                    'logo': {
-                        '@type': 'ImageObject',
-                        'url': `${baseUrl}/img/zinsight_icon.png`,
-                    },
-                },
+                // 메인 Organization(@id)과 같은 대상으로 연결, name·logo는 구글 기사 요건용으로 유지
+                'publisher': buildArticlePublisherJsonLd(),
                 'mainEntityOfPage': {
                     '@type': 'WebPage',
                     '@id': `${baseUrl}/magazine/tech-marketing/${post.slug}`,

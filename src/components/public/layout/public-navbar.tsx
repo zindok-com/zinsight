@@ -3,11 +3,22 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, ChevronUp, MapPin, Newspaper, Building2 } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronUp, MapPin, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { siteConfig } from '@/config/site';
+import { getContactLink, getHeaderLinks, getMagazineSubLinks, type NavLink } from '@/config/navigation';
 
 interface PublicNavbarProps {
-    regions?: any[];
+    regions?: Array<{ id: number | string; name: string; slug: string }>;
+}
+
+// 메뉴 정의는 src/config/navigation.ts (노출 여부는 src/config/site.ts)
+const magazineLinks = getMagazineSubLinks();
+const headerLinks = getHeaderLinks();
+const contactLink = getContactLink();
+
+function externalProps(link: NavLink) {
+    return link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 }
 
 export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
@@ -46,6 +57,8 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
         setMobileMagazineOpen(false);
     }, [pathname]);
 
+    const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
     return (
         <>
             <header className="sticky top-0 z-50 w-full border-b border-zi-divider bg-white">
@@ -55,24 +68,11 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         href="/"
                         className="text-xl sm:text-2xl font-bold tracking-tighter text-zi-primary font-h2"
                     >
-                        진사이트
+                        {siteConfig.brand.name}
                     </Link>
 
-                    {/* 데스크탑 네비게이션 */}
-                    <nav className="hidden items-center gap-10 md:flex">
-                        {/* 인사이트 레이더 단일 링크 */}
-                        <Link
-                            href="/insight-radar"
-                            className={cn(
-                                'text-ui-label font-ui-label tracking-[0.05em] pb-1 transition-all duration-150 active:scale-95',
-                                pathname.startsWith('/insight-radar')
-                                    ? 'border-b-2 border-zi-primary text-zi-primary font-semibold'
-                                    : 'text-slate-500 hover:text-zi-primary'
-                            )}
-                        >
-                            인사이트 레이더
-                        </Link>
-
+                    {/* 데스크탑 네비게이션: 매거진 / 인사이트 레이더 / 서비스 / 진사이트 소개 / 문의 */}
+                    <nav className="hidden items-center gap-6 lg:gap-10 md:flex">
                         {/* 매거진 드롭다운 메뉴 (Hover Trigger) */}
                         <div className="relative group py-2">
                             <button
@@ -91,31 +91,27 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             {/* 드롭다운 서브메뉴 판넬 */}
                             <div className="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block group-focus-within:block w-[360px] bg-white border border-zi-divider rounded-zi-card shadow-xl p-5 mt-1 z-50 animate-fade-in before:content-[''] before:absolute before:h-4 before:-top-4 before:left-0 before:right-0">
                                 <div className="grid grid-cols-2 gap-6">
-                                    {/* 저널 카테고리 */}
+                                    {/* 매거진 구분 */}
                                     <div className="space-y-3.5">
-                                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
-                                            <Newspaper className="w-3 h-3 text-indigo-500" /> Journals
+                                        <span className="text-[11px] font-bold tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
+                                            <Newspaper className="w-3 h-3 text-indigo-500" /> 매거진
                                         </span>
                                         <div className="flex flex-col gap-2.5">
-                                            <Link href="/magazine" className="text-xs sm:text-sm font-semibold text-slate-800 hover:text-indigo-600 transition-colors">
-                                                매거진 포털 홈
-                                            </Link>
-                                            <Link href="/magazine/tech-marketing" className="text-xs sm:text-sm font-semibold text-slate-800 hover:text-indigo-600 transition-colors">
-                                                테크 · 마케팅 저널
-                                            </Link>
-                                            <Link href="/magazine/local" className="text-xs sm:text-sm font-semibold text-slate-800 hover:text-indigo-600 transition-colors">
-                                                로컬 비즈니스 허브
-                                            </Link>
+                                            {magazineLinks.map((link) => (
+                                                <Link key={link.href} href={link.href} className="text-xs sm:text-sm font-semibold text-slate-800 hover:text-indigo-600 transition-colors">
+                                                    {link.label}
+                                                </Link>
+                                            ))}
                                         </div>
                                     </div>
 
                                     {/* 지자체별 지면 */}
                                     <div className="space-y-3.5 border-l border-zi-divider pl-6">
-                                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
-                                            <MapPin className="w-3 h-3 text-rose-500" /> B2G Regions
+                                        <span className="text-[11px] font-bold tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
+                                            <MapPin className="w-3 h-3 text-rose-500" /> 지역 지면
                                         </span>
                                         <div className="flex flex-col gap-2">
-                                            {regions && regions.length > 0 ? (
+                                            {regions.length > 0 ? (
                                                 regions.map((reg) => (
                                                     <Link
                                                         key={reg.id}
@@ -134,14 +130,29 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             </div>
                         </div>
 
-                        {/* 회사 홈페이지 CTA */}
+                        {headerLinks.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                {...externalProps(link)}
+                                className={cn(
+                                    'text-ui-label font-ui-label tracking-[0.05em] pb-1 transition-all duration-150 active:scale-95',
+                                    isActive(link.href)
+                                        ? 'border-b-2 border-zi-primary text-zi-primary font-semibold'
+                                        : 'text-slate-500 hover:text-zi-primary'
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
+
+                        {/* 문의 CTA (연결 대상은 설정 contact) */}
                         <Link
-                            href="https://www.zindok.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href={contactLink.href}
+                            {...externalProps(contactLink)}
                             className="rounded-zi-btn border border-zi-primary bg-transparent px-5 py-2 text-ui-label font-ui-label text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
                         >
-                            진독 바로가기
+                            {contactLink.label}
                         </Link>
                     </nav>
 
@@ -180,7 +191,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                     {/* 드로어 헤더 */}
                     <div className="flex items-center justify-between border-b border-zi-divider px-6 py-5">
                         <span className="text-lg font-bold tracking-tighter text-zi-primary">
-                            진사이트
+                            {siteConfig.brand.name}
                         </span>
                         <button
                             ref={closeButtonRef}
@@ -194,19 +205,6 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
 
                     {/* 드로어 네비게이션 */}
                     <nav className="flex flex-col gap-1.5 px-4 py-6 overflow-y-auto">
-                        {/* 레이더 단일 링크 */}
-                        <Link
-                            href="/insight-radar"
-                            className={cn(
-                                'flex items-center rounded-lg px-4 py-3.5 text-[15px] font-medium tracking-wide transition-all active:scale-95',
-                                pathname.startsWith('/insight-radar')
-                                    ? 'bg-zi-primary text-white font-semibold'
-                                    : 'text-zi-on-surface hover:bg-zi-surface-container'
-                            )}
-                        >
-                            인사이트 레이더
-                        </Link>
-
                         {/* 매거진 대메뉴 + 아코디언 토글 */}
                         <div>
                             <button
@@ -230,32 +228,21 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             {/* 모바일 매거진 서브 아코디언 링크 */}
                             {mobileMagazineOpen && (
                                 <div className="mt-1 ml-4 pl-4 border-l-2 border-indigo-100 flex flex-col gap-1">
-                                    <Link
-                                        href="/magazine"
-                                        aria-current={pathname === '/magazine' ? 'page' : undefined}
-                                        className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === '/magazine' ? 'text-indigo-600' : 'text-slate-700')}
-                                    >
-                                        • 매거진 홈
-                                    </Link>
-                                    <Link
-                                        href="/magazine/tech-marketing"
-                                        aria-current={pathname === '/magazine/tech-marketing' ? 'page' : undefined}
-                                        className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === '/magazine/tech-marketing' ? 'text-indigo-600' : 'text-slate-700')}
-                                    >
-                                        • 테크 · 마케팅 저널
-                                    </Link>
-                                    <Link
-                                        href="/magazine/local"
-                                        aria-current={pathname === '/magazine/local' ? 'page' : undefined}
-                                        className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === '/magazine/local' ? 'text-indigo-600' : 'text-slate-700')}
-                                    >
-                                        • 로컬 비즈니스 허브
-                                    </Link>
+                                    {magazineLinks.map((link) => (
+                                        <Link
+                                            key={link.href}
+                                            href={link.href}
+                                            aria-current={pathname === link.href ? 'page' : undefined}
+                                            className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === link.href ? 'text-indigo-600' : 'text-slate-700')}
+                                        >
+                                            • {link.label}
+                                        </Link>
+                                    ))}
 
                                     {/* 지자체 목록 */}
-                                    {regions && regions.length > 0 && (
+                                    {regions.length > 0 && (
                                         <div className="mt-2 pt-2 border-t border-slate-100">
-                                            <span className="text-[11px] text-slate-400 font-bold block mb-1">지자체 지면</span>
+                                            <span className="text-[11px] text-slate-400 font-bold block mb-1">지역 지면</span>
                                             {regions.map((reg) => (
                                                 <Link
                                                     key={reg.id}
@@ -271,17 +258,32 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                                 </div>
                             )}
                         </div>
+
+                        {headerLinks.map((link) => (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                {...externalProps(link)}
+                                className={cn(
+                                    'flex items-center rounded-lg px-4 py-3.5 text-[15px] font-medium tracking-wide transition-all active:scale-95',
+                                    isActive(link.href)
+                                        ? 'bg-zi-primary text-white font-semibold'
+                                        : 'text-zi-on-surface hover:bg-zi-surface-container'
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        ))}
                     </nav>
 
-                    {/* 드로어 하단 CTA */}
+                    {/* 드로어 하단 CTA: 문의 */}
                     <div className="mt-auto border-t border-zi-divider px-4 py-6">
                         <Link
-                            href="https://www.zindok.com"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href={contactLink.href}
+                            {...externalProps(contactLink)}
                             className="flex w-full items-center justify-center rounded-zi-btn border border-zi-primary bg-transparent px-5 py-3 text-sm font-semibold text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
                         >
-                            진독 바로가기 →
+                            {contactLink.label}
                         </Link>
                     </div>
                 </div>

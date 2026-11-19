@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import { LINK_PAGE_LINK_KIND_LABEL, type LinkPageLinkKind } from '@/lib/org-links';
 import type { SharedLinkStats } from '@/lib/stats-share';
+import { siteConfig } from '@/config/site';
 
 export const formatPercent = (value: number | null) => (value === null ? '—' : `${(value * 100).toFixed(1)}%`);
 const n = (value: number) => value.toLocaleString('ko-KR');
@@ -183,8 +184,8 @@ export function ShareFooter() {
             <ShareBrand compact />
             <span>
                 통계 문의{' '}
-                <a href="mailto:ceo@zindok.com" className="underline underline-offset-2 hover:text-slate-700">
-                    ceo@zindok.com
+                <a href={`mailto:${siteConfig.company.email}`} className="underline underline-offset-2 hover:text-slate-700">
+                    {siteConfig.company.email}
                 </a>
             </span>
         </footer>

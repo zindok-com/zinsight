@@ -8,6 +8,7 @@ import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
 import { LinkPageTracker } from '@/components/public/insight-radar/links/LinkPageTracker';
 import { LinkPageVideo } from '@/components/public/insight-radar/links/LinkPageVideo';
 import { LinkPageLeadForm } from '@/components/public/insight-radar/links/LinkPageLeadForm';
+import { siteConfig } from '@/config/site';
 
 // 링크 페이지는 사이트 공통 헤더·푸터 없이 단독 화면으로 렌더링 (명함 QR·SNS 프로필 링크용)
 export const revalidate = 300;
@@ -20,15 +21,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const { id } = await params;
     const data = await getOrgLinkPage(decodeURIComponent(id));
     if (!data) return { title: '링크를 찾을 수 없습니다', robots: { index: false, follow: false } };
-    const title = `${data.name} 링크`;
+    // 브라우저 제목: '{조직명} {카드 표시 이름} | 진사이트' (카드 이름은 src/config/site.ts card)
+    const title = `${data.name} ${siteConfig.card.displayName}`;
     const description = data.tagline ?? `${data.name}의 홈페이지·SNS·소식을 한 곳에서 확인하세요.`;
     return {
         title,
         description,
         // 검색 색인 제외 (프로필 페이지가 대표 문서), 링크는 따라가도록 follow
         robots: { index: false, follow: true },
-        openGraph: { title: `${title} | 진사이트`, description, type: 'website', siteName: '진사이트', locale: 'ko_KR' },
-        twitter: { card: 'summary', title: `${title} | 진사이트`, description },
+        openGraph: { title: `${title} | ${siteConfig.brand.name}`, description, type: 'website', siteName: siteConfig.brand.name, locale: 'ko_KR' },
+        twitter: { card: 'summary', title: `${title} | ${siteConfig.brand.name}`, description },
     };
 }
 
@@ -194,14 +196,16 @@ export default async function OrgLinksPage({ params }: PageProps) {
                         </ul>
                     )}
 
-                    {/* ⑥ 하단 표기 */}
+                    {/* ⑥ 하단 표기: '진사이트 인사이트 레이더'는 위 프로필 카드 라벨 하나만 두고 여기는 브랜드 표기 (통계 key 'home' 유지) */}
                     <p className="mt-10 text-center text-xs text-slate-400">
                         <a
-                            href="/insight-radar"
-                            {...trackAttrs({ key: 'home', label: '진사이트 인사이트 레이더', kind: 'internal' })}
-                            className="inline-flex min-h-11 items-center px-2 underline-offset-2 hover:text-slate-600 hover:underline"
+                            href="/"
+                            {...trackAttrs({ key: 'home', label: siteConfig.brand.name, kind: 'internal' })}
+                            className="inline-flex min-h-11 items-center gap-1.5 px-2 underline-offset-2 hover:text-slate-600 hover:underline"
                         >
-                            진사이트 인사이트 레이더
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={siteConfig.brand.logoPath} alt="" width={16} height={16} className="rounded" />
+                            {siteConfig.brand.name}
                         </a>
                     </p>
                 </div>

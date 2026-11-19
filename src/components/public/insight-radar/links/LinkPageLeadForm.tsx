@@ -3,6 +3,7 @@
 import { useId, useRef, useState, useTransition } from 'react';
 import { CheckCircle2, NotebookPen, X } from 'lucide-react';
 import { submitLinkPageLead } from '@/actions/link-page-lead-actions';
+import { siteConfig } from '@/config/site';
 import { LEAD_MEMO_MAX, LEAD_NAME_MAX, LEAD_PHONE_MAX, LEAD_EMAIL_MAX, normalizeLeadInput, validateLeadInput, type LeadField } from '@/lib/link-page-lead';
 import { getLinkPageSource, isInternalTraffic } from '@/components/public/insight-radar/links/LinkPageTracker';
 
@@ -260,7 +261,7 @@ export function LinkPageLeadForm({ slug, orgName, primary }: LinkPageLeadFormPro
                             <ul id={fieldId('consent-detail')} className="mt-2 space-y-0.5 pl-7">
                                 <li>수집 항목: 이름, 전화번호 또는 이메일, 메모</li>
                                 <li>이용 목적: 문의 응대 및 연락</li>
-                                <li>제공받는 곳: {orgName} (진사이트 운영사 진독이 접수해 전달)</li>
+                                <li>제공받는 곳: {orgName} ({siteConfig.brand.name} 운영사 {siteConfig.company.name}이 접수해 전달)</li>
                                 <li>보유 기간: 접수일로부터 1년, 삭제 요청 시 즉시 파기</li>
                                 <li>동의하지 않을 수 있으며, 이 경우 연락처 남기기를 이용할 수 없습니다.</li>
                             </ul>

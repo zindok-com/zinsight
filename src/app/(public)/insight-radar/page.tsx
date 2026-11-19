@@ -15,6 +15,7 @@ import { RadarSearchBar } from '@/components/public/insight-radar/RadarSearchBar
 import { RadarCompanyList } from '@/components/public/insight-radar/RadarCompanyList';
 // import { AeoLeadMagnetBanner } from '@/components/public/aeo/AeoLeadMagnetBanner';
 import { buildSocialMetadata } from '@/lib/site';
+import { siteConfig } from '@/config/site';
 import { parseRadarSort } from '@/lib/radar';
 
 // 등록 조직이 이 수 이하이면 정렬 UI를 숨김 (한 화면에 다 보여 정렬 효용이 낮음)
@@ -56,8 +57,8 @@ export async function generateMetadata({
         };
     }
 
-    const title = '인사이트 레이더: 기업 동향 및 기술 분석 데이터 센터';
-    const description = '산업별 핵심 트렌드, 관내 기업 기술 동향 및 비즈니스 포지셔닝을 실시간으로 조망하는 진사이트의 데이터 센터입니다.';
+    // 목록 제목·설명은 src/config/site.ts radarList (사실 그대로의 표현)
+    const { title, description } = siteConfig.radarList;
     return {
         title,
         description,

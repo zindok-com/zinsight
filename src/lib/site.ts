@@ -1,14 +1,20 @@
 import type { Metadata } from 'next';
+import { siteConfig } from '@/config/site';
 
 /**
  * 진사이트 (zinsight.co.kr) 전역 사이트 상수 및 메타데이터 / Schema.org JSON-LD 헬퍼
  */
 
-export const SITE_DOMAIN = 'www.zinsight.co.kr';
-export const SITE_BASE_URL = `https://${SITE_DOMAIN}`;
+export const SITE_DOMAIN = siteConfig.brand.domain;
+export const SITE_BASE_URL = siteConfig.brand.baseUrl;
+export const SITE_NAME = siteConfig.brand.name;
 
-// 사이트 대표 설명: 메타 description·OG·트위터·WebSite 스키마 공통 (네이버 권장 80자 이내 유지)
-export const SITE_DESCRIPTION = '진사이트는 지역 기업의 이야기를 저널리즘으로 전하고 AI 검색에 최적화하는 B2B 비즈니스 미디어입니다.';
+// 사이트 대표 설명: 메타 description·OG·트위터·WebSite 스키마 공통 (값은 src/config/site.ts)
+export const SITE_DESCRIPTION = siteConfig.identity.metaDescription;
+
+/** 진사이트 Organization 노드 @id (메인 JSON-LD에 정의, 기사 publisher 등에서 참조) */
+export const SITE_ORGANIZATION_ID = `${SITE_BASE_URL}/#organization`;
+export const SITE_WEBSITE_ID = `${SITE_BASE_URL}/#website`;
 
 /**
  * Schema.org @id 생성 헬퍼
@@ -75,13 +81,13 @@ export function buildSocialMetadata({
     type?: 'website' | 'profile';
     image?: { url: string; width?: number; height?: number; alt?: string };
 }): Pick<Metadata, 'openGraph' | 'twitter'> {
-    const socialTitle = `${title} | 진사이트`;
-    const ogImage = image ?? { url: '/img/zinsight_icon.png', alt: '진사이트' };
+    const socialTitle = `${title} | ${SITE_NAME}`;
+    const ogImage = image ?? { url: siteConfig.brand.logoPath, alt: SITE_NAME };
     return {
         openGraph: {
             type,
             locale: 'ko_KR',
-            siteName: '진사이트',
+            siteName: SITE_NAME,
             url: toAbsoluteUrl(path),
             title: socialTitle,
             description,
@@ -92,6 +98,54 @@ export function buildSocialMetadata({
             title: socialTitle,
             description,
             images: [ogImage.url],
+        },
+    };
+}
+
+/**
+ * 진사이트 Organization JSON-LD 노드. 운영사 진독은 parentOrganization으로 연결하고,
+ * @id는 인사이트 레이더의 진독 프로필 Organization과 같게 맞춰 두 그래프가 이어지게 합니다.
+ */
+export function buildSiteOrganizationJsonLd() {
+    const { brand, company, identity } = siteConfig;
+    return {
+        '@type': 'Organization',
+        '@id': SITE_ORGANIZATION_ID,
+        'name': brand.name,
+        'alternateName': [brand.alternateName],
+        'url': SITE_BASE_URL,
+        'description': identity.metaDescription,
+        'logo': {
+            '@type': 'ImageObject',
+            'url': toAbsoluteUrl(brand.logoPath),
+        },
+        'parentOrganization': {
+            '@type': 'Organization',
+            '@id': `${SITE_BASE_URL}/insight-radar/${company.radarSlug}#organization`,
+            'name': company.name,
+            'alternateName': company.englishName,
+            'url': company.homepage,
+            'address': {
+                '@type': 'PostalAddress',
+                'addressCountry': 'KR',
+                'streetAddress': company.address,
+            },
+            'telephone': company.phone,
+            'email': company.email,
+            'taxID': company.businessNumber,
+        },
+    };
+}
+
+/** 기사 JSON-LD publisher: 메인 Organization @id 참조 + 구글 기사 요건용 name·logo */
+export function buildArticlePublisherJsonLd() {
+    return {
+        '@type': 'Organization',
+        '@id': SITE_ORGANIZATION_ID,
+        'name': SITE_NAME,
+        'logo': {
+            '@type': 'ImageObject',
+            'url': toAbsoluteUrl(siteConfig.brand.logoPath),
         },
     };
 }
