@@ -664,7 +664,7 @@ export default function StoragePage() {
                         <DialogHeader>
                             <DialogTitle>파일명 변경</DialogTitle>
                             <DialogDescription>
-                                영문 슬러그를 권장합니다. 특수문자는 하이픈(-)으로 바뀌고, 확장자({renamingRow?.fileName.split('.').pop()})는 그대로 유지됩니다.
+                                한글·영문·숫자는 그대로 쓰고, 공백과 기호는 하이픈(-)으로 바뀝니다. 확장자({renamingRow?.fileName.split('.').pop()})는 그대로 유지됩니다.
                             </DialogDescription>
                         </DialogHeader>
 

@@ -16,7 +16,7 @@ import {
     getPublicFileUrl,
     extractKeyFromUrl,
 } from '@/lib/storage';
-import { CLEANUP_GRACE_MS, type MediaUsage } from '@/lib/storage-media';
+import { CLEANUP_GRACE_MS, storageFileStem, type MediaUsage } from '@/lib/storage-media';
 import { UPLOAD_TEMP_PREFIX, hasImageVariant, isInternalStorageKey, variantKeyOf } from '@/lib/image-variants';
 
 export interface StorageBlobItem {
@@ -86,9 +86,7 @@ async function getSlugifiedPathname(file: File, folder: string): Promise<string>
     const extension = lastDotIdx === -1 ? '' : originalName.slice(lastDotIdx).toLowerCase();
 
     // Convert to English slug
-    let slug = baseName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-    slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
-    if (!slug) slug = 'image';
+    const slug = storageFileStem(baseName);
 
     let pathname = `${folder}/${slug}${extension}`;
 
@@ -381,9 +379,7 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
             ? oldPathname.substring(oldPathname.lastIndexOf('.')).toLowerCase()
             : '.png';
 
-        let slug = baseName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-        slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
-        if (!slug) slug = 'image';
+        const slug = storageFileStem(baseName);
 
         let newPathname = `${folder}/${slug}${extension}`;
 

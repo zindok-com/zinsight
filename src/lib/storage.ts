@@ -83,7 +83,12 @@ if (process.env.NODE_ENV !== 'production') {
  */
 export function getPublicFileUrl(key: string): string {
     const cleanKey = key.replace(/^\/+/, '');
-    return `${NCP_STORAGE_ENDPOINT}/${NCP_STORAGE_BUCKET}/${cleanKey}`;
+    return `${NCP_STORAGE_ENDPOINT}/${NCP_STORAGE_BUCKET}/${encodeStorageKey(cleanKey)}`;
+}
+
+/** 키를 주소에 넣을 수 있게 경로 조각별로 인코딩 (한글 파일명 대응, 영문 키는 그대로) */
+export function encodeStorageKey(key: string): string {
+    return key.split('/').map(encodeURIComponent).join('/');
 }
 
 /**

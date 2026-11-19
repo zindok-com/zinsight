@@ -80,3 +80,19 @@ export const MEDIA_USAGE_TYPE_LABEL: Record<MediaUsageType, string> = {
     submission: '등록 신청',
     author: '발행자',
 };
+
+/**
+ * 업로드 파일명 → 저장 경로에 쓸 이름 (확장자 제외).
+ * 한글 등 모든 언어의 글자·숫자는 그대로 두고, 공백·괄호 같은 기호만 '-'로 바꾼다.
+ * 영문은 소문자로 통일하고, 이름이 비면 'file'.
+ */
+export function storageFileStem(baseName: string): string {
+    const stem = String(baseName || '')
+        .normalize('NFC')
+        .replace(/[^\p{L}\p{N}_-]+/gu, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .toLowerCase();
+    // 너무 긴 이름은 80자까지 (글자 단위로 자름)
+    return Array.from(stem).slice(0, 80).join('').replace(/-$/, '') || 'file';
+}

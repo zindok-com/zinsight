@@ -3,10 +3,10 @@
 import crypto from 'crypto';
 import { PutObjectCommand, ListObjectsV2Command, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { s3Client, NCP_STORAGE_BUCKET, NCP_STORAGE_ENDPOINT } from '@/lib/storage';
+import { s3Client, NCP_STORAGE_BUCKET, NCP_STORAGE_ENDPOINT, encodeStorageKey } from '@/lib/storage';
 import { isAdminRequest } from '@/lib/admin-auth';
 import { getInviteByToken } from '@/actions/company-actions';
-import { UPLOAD_SIZE_LIMIT, formatBytes } from '@/lib/storage-media';
+import { UPLOAD_SIZE_LIMIT, formatBytes, storageFileStem } from '@/lib/storage-media';
 import { rateLimitByIp, HOUR } from '@/lib/rate-limit';
 import { toWebp } from '@/lib/image-processing';
 import {
@@ -50,7 +50,7 @@ const UPLOAD_RULES: Record<UploadFolder, { exts: string[]; types: string[] }> = 
 const INVITE_FOLDERS: UploadFolder[] = ['logos', 'attachments'];
 
 /**
- * 원본 파일명을 기반으로 영문 슬러그 경로를 생성하고,
+ * 원본 파일명(한글 포함)을 기반으로 저장 경로를 생성하고,
  * 버킷 내 동일 파일명이 존재할 경우 -2, -3 접미사를 붙여 중복을 방지합니다.
  */
 async function buildUniqueObjectKey(
@@ -63,9 +63,7 @@ async function buildUniqueObjectKey(
     const rawExt = lastDotIdx === -1 ? '' : filename.slice(lastDotIdx + 1);
     const ext = rawExt.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'bin';
 
-    let slug = baseName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-    slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
-    if (!slug) slug = 'image';
+    const slug = storageFileStem(baseName);
 
     let key = `${folder}/${slug}.${ext}`;
 
@@ -168,7 +166,7 @@ export async function getMediaUploadUrl(
     });
 
     const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
-    const fileUrl = `${endpoint}/${bucket}/${key}`;
+    const fileUrl = `${endpoint}/${bucket}/${encodeStorageKey(key)}`;
 
     return {
         uploadUrl,
@@ -181,7 +179,7 @@ export async function getMediaUploadUrl(
  * 임시 경로에 올라온 이미지를 sharp로 변환해 최종 경로에 저장하고 임시 파일을 지운다.
  * - 가로 최대 1600px WebP(품질 80), EXIF 회전 반영·메타데이터 제거
  * - images/·thumbnails/는 640px 버전을 _640/ 아래에 함께 저장
- * - 파일명 규칙은 기존과 같음(영문 슬러그, 중복 시 -2, -3), 확장자만 .webp
+ * - 파일명 규칙은 기존과 같음(원본 이름 유지, 중복 시 -2, -3), 확장자만 .webp
  */
 export async function finalizeMediaUpload(
     processKey: string,
@@ -230,7 +228,7 @@ export async function finalizeMediaUpload(
             );
         }
 
-        return { fileUrl: `${endpoint}/${bucket}/${key}`, key };
+        return { fileUrl: `${endpoint}/${bucket}/${encodeStorageKey(key)}`, key };
     } finally {
         await s3Client.send(new DeleteObjectCommand({ Bucket: bucket, Key: processKey })).catch(() => {});
     }
