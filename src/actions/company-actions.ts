@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 import { slugifyOrganization, safeHttpUrl } from '@/lib/utils';
 import { rateLimitByIp, HOUR } from '@/lib/rate-limit';
+import { normalizeExtraMaterials } from '@/lib/org-materials';
 
 export async function updateCompany(
   id: number,
@@ -19,6 +20,7 @@ export async function updateCompany(
     video_url?: string | null;
     video_poster_url?: string | null;
     brochure_url?: string | null;
+    extra_materials?: Array<{ label: string; url: string }>;
     inquiry_url?: string | null;
     contact_email?: string | null;
     contact_phone?: string | null;
@@ -36,7 +38,7 @@ export async function updateCompany(
 ) {
   await requireAdmin();
   try {
-    const { is_featured, slug, video_url, video_poster_url, brochure_url, inquiry_url, contact_email, contact_phone, tagline, ...companyData } = data;
+    const { is_featured, slug, video_url, video_poster_url, brochure_url, extra_materials, inquiry_url, contact_email, contact_phone, tagline, ...companyData } = data;
 
     const formattedSlug = slug && slug.trim() !== ''
       ? slugifyOrganization(slug)
@@ -53,6 +55,7 @@ export async function updateCompany(
         ...(video_url !== undefined ? { video_url: safeHttpUrl(video_url) ?? null } : {}),
         ...(video_poster_url !== undefined ? { video_poster_url: safeHttpUrl(video_poster_url) ?? null } : {}),
         ...(brochure_url !== undefined ? { brochure_url: safeHttpUrl(brochure_url) ?? null } : {}),
+        ...(extra_materials !== undefined ? { extra_materials: normalizeExtraMaterials(extra_materials) } : {}),
         ...(inquiry_url !== undefined ? { inquiry_url: safeInquiryUrl(inquiry_url) } : {}),
         ...(contact_email !== undefined ? { contact_email: safeContactEmail(contact_email) } : {}),
         ...(contact_phone !== undefined ? { contact_phone: safeContactPhone(contact_phone) } : {}),

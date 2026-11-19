@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { StorageImageSelectorModal, type SelectableMedia } from '@/components/admin/storage/StorageImageSelectorModal';
 import { OrgLinksManager } from './OrgLinksManager';
+import { EXTRA_MATERIALS_MAX, EXTRA_MATERIAL_LABEL_MAX, normalizeExtraMaterials, type ExtraMaterial } from '@/lib/org-materials';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -117,6 +118,7 @@ interface CompanyData {
     video_url?: string | null;
     video_poster_url?: string | null;
     brochure_url?: string | null;
+    extra_materials?: unknown;
     inquiry_url?: string | null;
     contact_email?: string | null;
     contact_phone?: string | null;
@@ -244,7 +246,11 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [videoPosterUrl, setVideoPosterUrl] = useState(initialCompany.video_poster_url || '');
     const [brochureUrl, setBrochureUrl] = useState(initialCompany.brochure_url || '');
     // 보관함 선택 모달: 어느 칸에 넣을지
-    const [libraryTarget, setLibraryTarget] = useState<'video' | 'poster' | 'brochure' | null>(null);
+    // 추가 자료(제안서 등): 편집 중에는 빈 칸도 두고, 저장할 때 서버에서 정리
+    const [extraMaterials, setExtraMaterials] = useState<ExtraMaterial[]>(() => normalizeExtraMaterials(initialCompany.extra_materials));
+    const [libraryTarget, setLibraryTarget] = useState<'video' | 'poster' | 'brochure' | `extra-${number}` | null>(null);
+    const updateExtraMaterial = (index: number, patch: Partial<ExtraMaterial>) =>
+        setExtraMaterials((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
     const [inquiryUrl, setInquiryUrl] = useState(initialCompany.inquiry_url || '');
     const [contactEmail, setContactEmail] = useState(initialCompany.contact_email || '');
     const [contactPhone, setContactPhone] = useState(initialCompany.contact_phone || '');
@@ -431,6 +437,11 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
             toast.error('조직명은 필수입니다.');
             return;
         }
+        const halfFilled = extraMaterials.findIndex((m) => !!m.label.trim() !== !!m.url.trim());
+        if (halfFilled !== -1) {
+            toast.error(`추가 자료 ${halfFilled + 1}번의 버튼 이름과 주소를 모두 입력하거나 행을 삭제해 주세요.`);
+            return;
+        }
 
         startTransition(async () => {
             const cleanBacklinks = backlinks
@@ -477,6 +488,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 video_url: videoUrl.trim() || null,
                 video_poster_url: videoPosterUrl.trim() || null,
                 brochure_url: brochureUrl.trim() || null,
+                extra_materials: extraMaterials.filter((m) => m.label.trim() && m.url.trim()),
                 inquiry_url: inquiryUrl.trim() || null,
                 contact_email: contactEmail.trim() || null,
                 contact_phone: contactPhone.trim() || null,
@@ -953,17 +965,98 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     공개 프로필의 [문의하기]는 연결처 → 이메일 → 전화 순으로 먼저 입력된 하나로 연결됩니다. 모두 비우면 버튼이 숨겨집니다.
                                 </p>
                             </div>
+
+                            {/* 추가 자료: 제안서·카탈로그 등 버튼 이름을 직접 정하는 다운로드 버튼 */}
+                            <div className="mt-5 space-y-2.5 border-t pt-4">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <p className="text-xs font-semibold">추가 자료</p>
+                                        <p className="text-[11px] text-muted-foreground">
+                                            제안서·카탈로그처럼 소개자료 외에 더 올릴 자료입니다. 입력한 버튼 이름으로 공개 프로필의 소개자료 옆에 표시됩니다. (최대 {EXTRA_MATERIALS_MAX}개)
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9 gap-1 text-xs"
+                                        disabled={extraMaterials.length >= EXTRA_MATERIALS_MAX}
+                                        onClick={() => setExtraMaterials((prev) => [...prev, { label: '', url: '' }])}
+                                    >
+                                        <Plus className="h-3.5 w-3.5" />
+                                        자료 추가
+                                    </Button>
+                                </div>
+                                {extraMaterials.length === 0 ? (
+                                    <p className="rounded-lg border border-dashed px-3 py-3 text-center text-xs text-muted-foreground">
+                                        등록된 추가 자료가 없습니다. [자료 추가]를 눌러 제안서 등을 올려 보세요.
+                                    </p>
+                                ) : (
+                                    <ul className="space-y-2">
+                                        {extraMaterials.map((item, index) => (
+                                            <li key={index} className="grid grid-cols-1 gap-1.5 rounded-lg bg-slate-50 p-2.5 sm:grid-cols-[180px_minmax(0,1fr)_auto_auto] sm:items-center sm:bg-transparent sm:p-0">
+                                                <Input
+                                                    value={item.label}
+                                                    maxLength={EXTRA_MATERIAL_LABEL_MAX}
+                                                    onChange={(e) => updateExtraMaterial(index, { label: e.target.value })}
+                                                    placeholder="버튼 이름 (예: 제안서)"
+                                                    aria-label={`추가 자료 ${index + 1} 버튼 이름`}
+                                                    className="h-9"
+                                                />
+                                                <Input
+                                                    value={item.url}
+                                                    onChange={(e) => updateExtraMaterial(index, { url: e.target.value })}
+                                                    placeholder="https://...pdf"
+                                                    aria-label={`추가 자료 ${index + 1} 주소`}
+                                                    className="h-9"
+                                                />
+                                                <div className="flex gap-1.5 sm:contents">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => setLibraryTarget(`extra-${index}`)}
+                                                        className="h-9 flex-1 gap-1 px-2.5 text-xs sm:flex-none"
+                                                        aria-label={`추가 자료 ${index + 1} 보관함에서 선택`}
+                                                    >
+                                                        <FolderOpen className="h-3.5 w-3.5" />
+                                                        보관함
+                                                    </Button>
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setExtraMaterials((prev) => prev.filter((_, i) => i !== index))}
+                                                        className="h-9 w-9 shrink-0 p-0 text-slate-500 hover:text-rose-600"
+                                                        aria-label={`추가 자료 ${index + 1} 삭제`}
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
 
                     <StorageImageSelectorModal
                         isOpen={libraryTarget !== null}
-                        accept={({ video: 'video', poster: 'image', brochure: 'document' } as const satisfies Record<string, SelectableMedia>)[libraryTarget ?? 'video']}
+                        accept={libraryTarget?.startsWith('extra-') ? 'document' : ({ video: 'video', poster: 'image', brochure: 'document' } as const satisfies Record<string, SelectableMedia>)[(libraryTarget as 'video' | 'poster' | 'brochure' | null) ?? 'video']}
                         onClose={() => setLibraryTarget(null)}
                         onSelect={(url) => {
                             if (libraryTarget === 'video') setVideoUrl(url);
                             else if (libraryTarget === 'poster') setVideoPosterUrl(url);
                             else if (libraryTarget === 'brochure') setBrochureUrl(url);
+                            else if (libraryTarget?.startsWith('extra-')) {
+                                const index = Number(libraryTarget.slice('extra-'.length));
+                                const current = extraMaterials[index];
+                                // 버튼 이름이 비어 있으면 파일명(확장자 제외)으로 채움
+                                const fileName = decodeURIComponent(url.split('/').pop() || '');
+                                const fallbackLabel = fileName.replace(/\.[^.]+$/, '').slice(0, EXTRA_MATERIAL_LABEL_MAX);
+                                updateExtraMaterial(index, { url, ...(current && !current.label.trim() ? { label: fallbackLabel } : {}) });
+                            }
                         }}
                     />
 

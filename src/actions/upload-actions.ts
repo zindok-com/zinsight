@@ -17,6 +17,7 @@ import {
     extractKeyFromUrl,
 } from '@/lib/storage';
 import { CLEANUP_GRACE_MS, storageFileStem, type MediaUsage } from '@/lib/storage-media';
+import { normalizeExtraMaterials } from '@/lib/org-materials';
 import { UPLOAD_TEMP_PREFIX, hasImageVariant, isInternalStorageKey, variantKeyOf } from '@/lib/image-variants';
 
 export interface StorageBlobItem {
@@ -210,6 +211,7 @@ async function collectStorageUsage(): Promise<Record<string, MediaUsage[]>> {
                 video_url: true,
                 video_poster_url: true,
                 brochure_url: true,
+                extra_materials: true,
             },
         }),
         prisma.organizationSubmission.findMany({
@@ -249,6 +251,7 @@ async function collectStorageUsage(): Promise<Record<string, MediaUsage[]>> {
         add(org.video_url, { ...base, field: '소개 영상' });
         add(org.video_poster_url, { ...base, field: '영상 포스터' });
         add(org.brochure_url, { ...base, field: '소개자료' });
+        for (const item of normalizeExtraMaterials(org.extra_materials)) add(item.url, { ...base, field: `추가 자료(${item.label})` });
     }
 
     for (const sub of submissions) {
@@ -431,17 +434,17 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
             prisma.magazinePost.findMany({
                 select: { id: true, thumbnailUrl: true, content: true, structuredData: true },
             }),
+            // 추가 자료(Json)까지 보려고 전체를 읽고 아래에서 걸러낸다 (조직 수가 적음)
             prisma.organization.findMany({
-                where: {
-                    OR: [
-                        { logo_url: { contains: oldUrl } },
-                        { logo_source_url: { contains: oldUrl } },
-                        { video_url: { contains: oldUrl } },
-                        { video_poster_url: { contains: oldUrl } },
-                        { brochure_url: { contains: oldUrl } },
-                    ],
+                select: {
+                    id: true,
+                    logo_url: true,
+                    logo_source_url: true,
+                    video_url: true,
+                    video_poster_url: true,
+                    brochure_url: true,
+                    extra_materials: true,
                 },
-                select: { id: true, logo_url: true, logo_source_url: true, video_url: true, video_poster_url: true, brochure_url: true },
             }),
             prisma.organizationSubmission.findMany({
                 where: { OR: [{ logo_url: { contains: oldUrl } }, { logo_source_url: { contains: oldUrl } }] },
@@ -457,6 +460,17 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
             touches(p.thumbnailUrl, p.content, p.structuredData ? JSON.stringify(p.structuredData) : null)
         );
 
+        const organizationsToUpdate = organizations.filter((o) =>
+            touches(
+                o.logo_url,
+                o.logo_source_url,
+                o.video_url,
+                o.video_poster_url,
+                o.brochure_url,
+                o.extra_materials ? JSON.stringify(o.extra_materials) : null
+            )
+        );
+
         await prisma.$transaction([
             ...postsToUpdate.map((post) =>
                 prisma.magazinePost.update({
@@ -470,7 +484,7 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
                     },
                 })
             ),
-            ...organizations.map((org) =>
+            ...organizationsToUpdate.map((org) =>
                 prisma.organization.update({
                     where: { id: org.id },
                     data: {
@@ -479,6 +493,9 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
                         video_url: swap(org.video_url),
                         video_poster_url: swap(org.video_poster_url),
                         brochure_url: swap(org.brochure_url),
+                        ...(org.extra_materials
+                            ? { extra_materials: JSON.parse(swap(JSON.stringify(org.extra_materials))) }
+                            : {}),
                     },
                 })
             ),

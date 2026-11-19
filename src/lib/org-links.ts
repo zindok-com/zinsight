@@ -1,4 +1,5 @@
 import { safeHttpUrl } from '@/lib/utils';
+import { normalizeExtraMaterials } from '@/lib/org-materials';
 
 // 조직 링크 페이지(/insight-radar/[slug]/links) 공용 정의. 서버·관리자 화면에서 함께 사용
 
@@ -113,6 +114,7 @@ export function deriveDefaultOrgLinks(org: {
     company_url?: string | null;
     backlinks?: unknown;
     brochure_url?: string | null;
+    extra_materials?: unknown;
 }): OrgLinkInput[] {
     const result: OrgLinkInput[] = [];
     const push = (label: string, url: string, kind: OrgLinkKind, display: OrgLinkDisplay) => {
@@ -132,6 +134,7 @@ export function deriveDefaultOrgLinks(org: {
 
     const brochure = safeHttpUrl(org.brochure_url);
     if (brochure) push('소개자료 보기', brochure, 'brochure', 'button');
+    for (const item of normalizeExtraMaterials(org.extra_materials)) push(item.label, item.url, 'brochure', 'button');
 
     return result;
 }

@@ -60,6 +60,7 @@ export const getOrgLinkPage = cache(async (slugOrId: string): Promise<LinkPageDa
             company_url: true,
             backlinks: true,
             brochure_url: true,
+            extra_materials: true,
             inquiry_url: true,
             contact_email: true,
             contact_phone: true,

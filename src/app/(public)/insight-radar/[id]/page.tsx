@@ -331,6 +331,9 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         (company.contact_phone ? `tel:${company.contact_phone.replace(/[^0-9+]/g, '')}` : null);
     const inquiryIsWeb = !!inquiryHref && /^https?:/i.test(inquiryHref);
     const brochureHref = safeHttpUrl(company.brochure_url);
+    // 추가 자료(제안서 등): 관리자가 정한 이름으로 소개자료 옆에 표시
+    const extraMaterials = company.extra_materials ?? [];
+    const hasMaterials = !!brochureHref || extraMaterials.length > 0;
     const homepageHref = safeHttpUrl(company.company_url) ??
         (company.company_url ? safeHttpUrl(`https://${company.company_url}`) : undefined);
     const externalLinks = backlinksList
@@ -403,6 +406,14 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         'data-ga-event': 'cta_download_click',
         'data-ga-placement': placement,
     });
+    const materialLinkProps = (item: { label: string; url: string }, placement: string) => ({
+        href: item.url,
+        target: '_blank',
+        rel: 'noopener noreferrer',
+        'data-ga-event': 'cta_download_click',
+        'data-ga-placement': placement,
+        'data-ga-label': item.label,
+    });
 
     const sectionHeading = 'mb-3 text-lg sm:text-xl font-bold text-zi-primary font-serif tracking-tight break-keep';
 
@@ -465,7 +476,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 </header>
 
                 {/* ── 모바일 CTA: [문의하기][홈페이지] 2분할 + 외부 링크·소개자료 아이콘 줄 ── */}
-                {(inquiryHref || homepageHref || iconLinks.length > 0 || brochureHref) && (
+                {(inquiryHref || homepageHref || iconLinks.length > 0 || hasMaterials) && (
                     <div className="mb-6 flex flex-col gap-2 lg:hidden">
                         {(inquiryHref || homepageHref) && (
                             <div className="flex gap-2">
@@ -473,7 +484,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                 {homepageButton('홈페이지', 'flex-1 min-h-12')}
                             </div>
                         )}
-                        {(iconLinks.length > 0 || brochureHref) && (
+                        {(iconLinks.length > 0 || hasMaterials) && (
                             <ul className="flex flex-wrap gap-2" aria-label="외부 링크">
                                 {iconLinks.map((link) => (
                                         <li key={link.url}>
@@ -501,6 +512,18 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                         </a>
                                     </li>
                                 )}
+                                {extraMaterials.map((item, index) => (
+                                    <li key={`material-${index}`}>
+                                        <a
+                                            {...materialLinkProps(item, 'mobile_bar')}
+                                            aria-label={`${item.label} 다운로드 (새 창)`}
+                                            className="flex h-11 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:border-zi-blue hover:text-zi-blue"
+                                        >
+                                            <Download className="h-4 w-4" aria-hidden="true" />
+                                            {item.label}
+                                        </a>
+                                    </li>
+                                ))}
                             </ul>
                         )}
                     </div>
@@ -619,7 +642,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                     <aside aria-label={`${company.company_name} 요약`} className="min-w-0">
                         <div className="flex flex-col gap-5 lg:sticky lg:top-24">
                             <div className="hidden lg:block rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                                {(inquiryHref || brochureHref) && (
+                                {(inquiryHref || hasMaterials) && (
                                     <div className="mb-5 flex flex-col gap-2">
                                         {inquiryButton('rail', 'w-full')}
                                         {brochureHref && (
@@ -631,6 +654,16 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                                 소개자료
                                             </a>
                                         )}
+                                        {extraMaterials.map((item, index) => (
+                                            <a
+                                                key={`material-${index}`}
+                                                {...materialLinkProps(item, 'rail')}
+                                                className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 text-sm font-bold text-zi-primary transition-colors hover:border-zi-blue hover:text-zi-blue break-keep"
+                                            >
+                                                <Download className="h-4 w-4 shrink-0" aria-hidden="true" />
+                                                {item.label}
+                                            </a>
+                                        ))}
                                     </div>
                                 )}
                                 <h2 className="mb-3 text-sm font-bold text-zi-primary">핵심 정보</h2>

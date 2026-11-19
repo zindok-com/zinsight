@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/db';
 import { type RadarSort } from '@/lib/radar';
+import { normalizeExtraMaterials } from '@/lib/org-materials';
 
 // ─────────────────────────────────────────────
 // 타입 정의
@@ -490,6 +491,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         video_url: company.video_url ?? null,
         video_poster_url: company.video_poster_url ?? null,
         brochure_url: company.brochure_url ?? null,
+        extra_materials: normalizeExtraMaterials(company.extra_materials),
         inquiry_url: company.inquiry_url ?? null,
         contact_email: company.contact_email ?? null,
         contact_phone: company.contact_phone ?? null,

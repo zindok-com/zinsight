@@ -32,7 +32,7 @@ export async function getOrganizationLinks(organizationId: number) {
         const [org, links, clicks] = await Promise.all([
             prisma.organization.findUnique({
                 where: { id: organizationId },
-                select: { company_url: true, backlinks: true, brochure_url: true },
+                select: { company_url: true, backlinks: true, brochure_url: true, extra_materials: true },
             }),
             prisma.organizationLink.findMany({
                 where: { organization_id: organizationId },
