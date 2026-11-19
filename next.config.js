@@ -70,6 +70,15 @@ const nextConfig = {
                     { key: 'Content-Security-Policy', value: contentSecurityPolicy },
                 ],
             },
+            // 외부 공유 통계(토큰 주소): 검색 노출 금지, 리퍼러로 토큰 유출 방지, 캐시 금지 (같은 키는 뒤 항목이 덮어씀)
+            {
+                source: '/share/:path*',
+                headers: [
+                    { key: 'Referrer-Policy', value: 'no-referrer' },
+                    { key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' },
+                    { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+                ],
+            },
         ];
     },
 };

@@ -136,3 +136,9 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* 인쇄할 때도 막대 그래프 배경색 유지 (공유 통계 요약 리포트) */
+.print-exact {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}

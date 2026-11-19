@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { SITE_DESCRIPTION } from '@/lib/site';
-import Script from 'next/script';
 import { Inter, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { RootScripts } from "@/components/RootScripts";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 // 제목용 명조체: 같은 도메인에서 셀프 호스팅(외부 CSS 렌더 차단 제거).
@@ -97,36 +95,9 @@ export default function RootLayout({
                 )}
             >
                 {children}
-                {/* 🚀 Google Analytics (GA4) 태그 삽입 */}
-                {gaId && (
-                <>
-                    {/* 구글 추적 스크립트 비동기 로드 */}
-                    <Script
-                    src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-                    strategy="afterInteractive" // 페이지가 인터랙티브해진 직후에 로드하여 성능 최적화
-                    />
-                    {/* 초기화 및 설정 코드 실행 */}
-                    <Script id="google-analytics" strategy="afterInteractive">
-                    {`
-                        window.dataLayer = window.dataLayer || [];
-                        function gtag(){dataLayer.push(arguments);}
-                        gtag('js', new Date());
-
-                        gtag('config', '${gaId}', {
-                        page_path: window.location.pathname,
-                        });
-                    `}
-                    </Script>
-                </>
-                )}
-                {/* 🗞️ Google 선호하는 출처(Preferred Source) 버튼 초기화 스크립트 */}
-                <Script
-                    src="https://news.google.com/swg/js/v1/publisher.js"
-                    strategy="afterInteractive"
-                />
+                {/* GA·Google 선호 출처·Vercel 분석: 외부 공유 통계(/share)에서는 넣지 않음 (토큰 주소 외부 전송 방지) */}
+                <RootScripts gaId={gaId} />
                 <Toaster />
-                <Analytics />
-                <SpeedInsights />
             </body>
         </html>
     );

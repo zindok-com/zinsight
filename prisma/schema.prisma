@@ -113,6 +113,7 @@ model Organization {
   linkPageEvents   LinkPageEvent[]
   linkPageDaily    LinkPageDaily[]
   linkPageLeads    LinkPageLead[]
+  statsShareLinks  StatsShareLink[]
 
   @@unique([company_name])
   @@index([region_id])
@@ -548,4 +549,25 @@ model OrganizationLinkClickDaily {
 
   @@unique([organization_id, link_key, date, entry])
   @@map("organization_link_click_daily")
+}
+
+// 링크 페이지 방문 통계 외부 공유 링크 (로그인 없는 읽기 전용, /share/stats/[token])
+// 토큰 원문은 저장하지 않음: 조회는 sha256 해시, 관리자 '복사'용 원문은 서버 비밀값으로 암호화해 보관
+model StatsShareLink {
+  id              Int       @id @default(autoincrement())
+  organization_id Int
+  token_hash      String    @unique @db.Char(64)
+  token_enc       String?   @db.VarChar(255)
+  default_from    DateTime? @db.Date // 기본 기간(전시 기간) 시작, KST 일자
+  default_to      DateTime? @db.Date
+  expires_at      DateTime?
+  revoked_at      DateTime?
+  last_viewed_at  DateTime?
+  view_count      Int       @default(0)
+  created_at      DateTime  @default(now())
+
+  organization Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id])
+  @@map("stats_share_links")
 }

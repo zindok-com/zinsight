@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { OrgAdminTabs } from '../OrgAdminTabs';
 import { LinkDailyChart, LinkStatsCsvButton } from './LinkStatsClient';
+import { getShareLink } from '@/actions/admin/stats-share-actions';
+import { StatsSharePanel } from './StatsSharePanel';
 
 interface PageProps {
     params: Promise<{ id: string }>;
@@ -55,7 +57,7 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
     const { id } = await params;
     const sp = await searchParams;
     const range = resolveRange(sp.period, sp.from, sp.to);
-    const stats = await getLinkPageStats(Number(id), range);
+    const [stats, shareLink] = await Promise.all([getLinkPageStats(Number(id), range), getShareLink(Number(id))]);
     if (!stats) notFound();
 
     const linkPageUrl = `/insight-radar/${encodeURIComponent(stats.org.slug)}/links`;
@@ -92,6 +94,9 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
 
             {/* 탭 네비게이션 */}
             <OrgAdminTabs orgId={id} active="link-analytics" unreadLeads={stats.unreadLeads} />
+
+            {/* 참가사용 외부 공유 링크 (로그인 없는 읽기 전용 통계) */}
+            <StatsSharePanel orgId={stats.org.id} initial={shareLink} />
 
             {/* 기간 선택 */}
             <div className="flex flex-wrap items-center gap-2">
