@@ -18,15 +18,18 @@
   - JSON-LD sameAs = sameAs 포함 종류의 정리된 주소. 진독: zindok.com, 블로그, 스레드(?hl=ko 제거)
   - 채널 저장 시 company_url·backlinks·brochure_url·extra_materials에도 같은 값 기록(기존 코드 호환)
   - 채널 없는 조직(이전 전)은 기존 방식 그대로 표시(auto:{n} 키)
+- 완료: 진사이트 카드 하단 바 통합 B안 (커밋 0455995, 푸시). 연락 수단 있으면 [문의하기(전화 우선)] + '연락처 남기기 →' 글자 링크, 없으면 [연락처 남기기] 주 버튼. 통계 키 inquiry·lead 유지. tsc 통과
+  - 화면 확인은 연락처 없는 경우(진독)만 함. 개발 DB에 문의 연락처 있는 조직이 없어 '문의하기+글자 링크' 배치는 미확인
 - 스크린샷(로컬, docs/screenshots/는 .gitignore): docs/screenshots/official-channels-2026-11-20/ (4화면 × 375/390/1440/1920 = 16장 + 붙여넣기 흐름 1장), 가로 넘침 0
 
 ## 다음 할 일 (우선순위 순)
 1. Vercel 배포 성공 확인(마이그레이션 20261120000000 자동 적용)
-2. 배포 후 운영 DB에서 (운영은 터널 DB와 다른 서버, 에이전트 접속 미확인): 검증 쿼리(docs/migrations/org-channels-verify.sql) 실행 → 이전 스크립트 계획 출력 확인 → --apply → 검증 쿼리 재실행 비교
+2. 배포 후 운영 DB에서 (사용자가 Termius로 직접 작업. 운영 DB는 터널 없이 직접 접속하는 별도 서버): 검증 쿼리(docs/migrations/org-channels-verify.sql) 실행 → 이전 스크립트 계획 출력 확인 → --apply → 검증 쿼리 재실행 비교
    - 실행: npx ts-node -T -O '{"module":"commonjs","moduleResolution":"node"}' scripts/migrate-org-channels.ts [--apply] [--org 233]
 3. 공유 통계 화면에 getChannelGroupClicks 연결(별도 작업)
 4. backlinks·organization_links 열/테이블 삭제는 운영 이전 확인 후 다음 작업
-5. (이전) 링크 페이지 '문의하기'/'연락처 남기기' 통합안 결정, 대표 확정 후 site.ts 교체
+5. 운영에서 문의 연락처가 있는 조직의 /links 하단 바(문의하기+글자 링크) 화면 확인
+6. (이전) 대표 확정 후 site.ts 교체
 
 ## 결정 사항
 - 채널 종류는 DB 마스터가 아니라 코드 상수 — 이유: 아이콘·판별 규칙이 코드에 있어야 함, 추가는 항목 하나
