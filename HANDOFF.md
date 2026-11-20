@@ -22,13 +22,18 @@
   - 운영 진독 /links 375px에서 [문의하기] + '연락처 남기기 →' 배치 확인
 - 완료: 운영 DB 데이터 이전 (2026-11-20, 사용자가 직접 --apply). 13개 조직 채널 36개, 진독 auto: 13건 → ch:, 클릭 합계 35 → 35, 매핑 안 한 클릭 없음. 기타 5건은 개발 DB와 동일
   - 운영 사이트 확인: 진독 카드 키 ch:1~4, sameAs = zindok.com·블로그·스레드
+- 완료: 소개 영상 통계 자동재생/시청 분리 (커밋 48c6f57). 자동재생 시작 = video_auto(노출), 시청 = video(직접 재생·소리 켬·전체화면·절반 이상 보인 채 10초, 짧은 영상은 끝까지). 유튜브 자동재생은 iframe 누름 또는 보인 채 10초(근사)
+  - 훅 src/components/public/insight-radar/video-watch.ts → LinkPageVideo·ProfileVideo. GA: video_autoplay / video_play(watch_trigger, autoplay)
+  - 관리자·공유 통계 '영상 시청'으로 문구 변경, 자동재생 횟수 표시. VIDEO_WATCH_SINCE=2026-11-20 이전 video 기록은 자동재생 포함(나눌 수 없음)
+  - 확인: 헤드리스 Chrome 375/1440에서 카드 영상 4가지 경우(자동재생 대기·화면 밖·소리 켬·클릭) 확인. 프로필 #play·유튜브는 브라우저 미확인(개발 DB에 영상 있는 조직 없음)
 - 스크린샷(로컬, docs/screenshots/는 .gitignore): docs/screenshots/official-channels-2026-11-20/ (4화면 × 375/390/1440/1920 = 16장 + 붙여넣기 흐름 1장), 가로 넘침 0
 
 ## 다음 할 일 (우선순위 순)
 1. (사용자) 운영 검증 쿼리 재실행 결과 확인 — 기대: channels = src_links, 진독 clicks_auto 0·clicks_ch 13
-2. 공유 통계 화면에 getChannelGroupClicks 연결(별도 작업)
-3. backlinks·organization_links 열/테이블 삭제는 운영 이전 확인 후 다음 작업
-4. (이전) 대표 확정 후 site.ts 교체
+2. 배포 후 운영 진독 카드에서 영상 자동재생 → video_auto, 10초 후 video 기록되는지 link_page_daily로 확인
+3. 공유 통계 화면에 getChannelGroupClicks 연결(별도 작업)
+4. backlinks·organization_links 열/테이블 삭제는 운영 이전 확인 후 다음 작업
+5. (이전) 대표 확정 후 site.ts 교체
 
 ## 결정 사항
 - 채널 종류는 DB 마스터가 아니라 코드 상수 — 이유: 아이콘·판별 규칙이 코드에 있어야 함, 추가는 항목 하나
@@ -47,6 +52,7 @@
 - 이전 스크립트는 기존 열을 지우거나 바꾸지 않음(되돌리기용). auto:{n}은 당시 문구가 맞을 때만 매핑, 안 맞으면 보고만
 - 등록 폼·조직 추가 버튼은 입력 화면 그대로(제목+URL), 서버에서 채널로 변환
 - 작업 규칙: pnpm build 금지(pnpm dev, pnpm exec tsc --noEmit), DB 스키마·데이터 변경은 사용자 승인 후
+- 브라우저 패널이 숨겨져 있으면 CSS 전환·IntersectionObserver·rAF가 멈춤 → 영상·애니메이션 검증은 헤드리스 Chrome(CDP)으로
 - 모바일 스크린샷은 헤드리스 Chrome + CDP(Emulation.setDeviceMetricsOverride). 관리자 화면은 dev 전용 로컬 테스트 토큰 쿠키
 
 ## 이전 작업 — 남은 확인
