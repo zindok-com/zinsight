@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ChevronRight, ExternalLink, Mail, Phone } from 'lucide-react';
 import { getOrgLinkPage, type LinkPageInquiry, type LinkPageLink } from '@/lib/org-link-page';
-import { SOCIAL_PLATFORM_LABEL, linkPageKindOf, type LinkPageLinkKind } from '@/lib/org-links';
+import { linkPageKindOf, type LinkPageLinkKind } from '@/lib/org-links';
+import { CHANNEL_TYPES } from '@/lib/org-channels';
 import { formatRadarDate, getOrgInitial } from '@/lib/radar';
 import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
 import { LinkPageTracker } from '@/components/public/insight-radar/links/LinkPageTracker';
@@ -107,7 +108,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                                         {...linkTrackAttrs(link)}
                                         className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zi-blue"
                                     >
-                                        <BrandIcon platform={link.platform} />
+                                        <BrandIcon type={link.channelType} />
                                     </a>
                                 </li>
                             ))}
@@ -168,7 +169,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                                     {...linkTrackAttrs(link)}
                                     className={cardClass}
                                 >
-                                    <Thumb src={link.thumbnailUrl} fallback={<BrandIcon platform={link.platform} className="h-6 w-6" />} />
+                                    <Thumb src={link.thumbnailUrl} fallback={<BrandIcon type={link.channelType} className="h-6 w-6" />} />
                                     <span className="min-w-0 flex-1">
                                         {link.subtitle && <span className="block truncate text-[11px] font-semibold text-slate-500">{link.subtitle}</span>}
                                         <span className="block text-[15px] font-bold leading-snug text-slate-900 line-clamp-2 break-keep">{link.label}</span>
@@ -246,6 +247,7 @@ function InquiryIcon({ type, className = 'h-4 w-4' }: { type: LinkPageInquiry['t
 }
 
 function iconLabel(link: LinkPageLink): string {
-    const platformLabel = link.platform ? SOCIAL_PLATFORM_LABEL[link.platform] : null;
-    return platformLabel && link.label !== platformLabel ? `${platformLabel}: ${link.label}` : link.label;
+    // 아이콘만 보이므로 종류 이름을 함께 읽어 줌 (문구가 종류 이름과 같으면 한 번만)
+    const typeLabel = link.channelType === 'other' || link.channelType === 'homepage' ? null : CHANNEL_TYPES[link.channelType].label;
+    return typeLabel && link.label !== typeLabel ? `${typeLabel}: ${link.label}` : link.label;
 }

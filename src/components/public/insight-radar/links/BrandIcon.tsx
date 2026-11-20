@@ -1,24 +1,27 @@
-import { siFacebook, siInstagram, siKakaotalk, siThreads, siTiktok, siTistory, siX, siYoutube } from 'simple-icons';
-import { Globe, Linkedin } from 'lucide-react';
-import type { SocialPlatform } from '@/lib/org-links';
+import { siFacebook, siGooglemaps, siInstagram, siKakaotalk, siNaver, siThreads, siX, siYoutube } from 'simple-icons';
+import { FileText, Globe, Link2, Linkedin } from 'lucide-react';
+import type { ChannelType } from '@/lib/org-channels';
 
-// 각 플랫폼 공식 로고 (simple-icons, CC0). 링크드인은 simple-icons에서 제외되어 lucide 아이콘,
+// 공식 채널 종류별 아이콘. SNS·지도는 공식 로고(simple-icons, CC0). 링크드인은 simple-icons에서 제외되어 lucide 아이콘,
 // 네이버 블로그는 simple-icons에 없어 앱 아이콘 형태(초록 바탕 + 흰 말풍선 + blog)를 직접 그려 사용
-const ICONS: Partial<Record<SocialPlatform, { path: string; hex: string }>> = {
+const ICONS: Partial<Record<ChannelType, { path: string; hex: string }>> = {
     instagram: siInstagram,
     youtube: siYoutube,
     x: siX,
     threads: siThreads,
     facebook: siFacebook,
-    kakao: siKakaotalk,
-    tiktok: siTiktok,
-    tistory: siTistory,
+    kakao_channel: siKakaotalk,
+    smartstore: siNaver,
+    naver_place: siNaver,
+    google_maps: siGooglemaps,
 };
 
-export function BrandIcon({ platform, className = 'h-5 w-5' }: { platform: SocialPlatform | null; className?: string }) {
-    if (platform === 'naver-blog') return <NaverBlogIcon className={className} />;
-    if (platform === 'linkedin') return <Linkedin className={className} style={{ color: '#0A66C2' }} aria-hidden="true" />;
-    const icon = platform ? ICONS[platform] : undefined;
+export function BrandIcon({ type, className = 'h-5 w-5' }: { type: ChannelType | null; className?: string }) {
+    if (type === 'naver_blog') return <NaverBlogIcon className={className} />;
+    if (type === 'linkedin') return <Linkedin className={className} style={{ color: '#0A66C2' }} aria-hidden="true" />;
+    if (type === 'brochure') return <FileText className={`${className} text-slate-600`} aria-hidden="true" />;
+    if (type === 'other') return <Link2 className={`${className} text-slate-600`} aria-hidden="true" />;
+    const icon = type ? ICONS[type] : undefined;
     if (!icon) return <Globe className={`${className} text-slate-600`} aria-hidden="true" />;
     return (
         <svg viewBox="0 0 24 24" className={className} fill={`#${icon.hex}`} aria-hidden="true" focusable="false">

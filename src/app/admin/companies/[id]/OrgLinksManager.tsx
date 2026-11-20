@@ -2,63 +2,54 @@
 
 import { useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
-import { ArrowDown, ArrowUp, ExternalLink, FolderOpen, Link2, Loader2, Plus, Save, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Eye, EyeOff, ExternalLink, FolderOpen, Link2, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
+import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
 import {
     getOrganizationLinks,
-    saveOrganizationLinks,
+    saveOrganizationCardItems,
+    type AdminCardRow,
     type AdminLinkClickSummary,
-    type AdminOrgLinkRow,
 } from '@/actions/admin/org-link-actions';
-import {
-    ORG_LINK_DISPLAYS,
-    ORG_LINK_DISPLAY_LABEL,
-    ORG_LINK_KINDS,
-    ORG_LINK_KIND_LABEL,
-    ORG_LINK_MAX,
-    detectSocialPlatform,
-    type OrgLinkDisplay,
-    type OrgLinkKind,
-} from '@/lib/org-links';
-
-const SELECT_CLASS =
-    'flex h-9 w-full rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50';
+import { ORG_LINK_DISPLAYS, ORG_LINK_DISPLAY_LABEL, type OrgLinkDisplay } from '@/lib/org-links';
+import { CHANNEL_TYPES } from '@/lib/org-channels';
 
 // 자동 노출 항목(프로필·기사·문의 등)의 클릭 집계 키 표시명
 function autoKeyLabel(item: AdminLinkClickSummary): string {
     if (item.key === 'profile') return '프로필 전체 보기 (자동)';
     if (item.key === 'inquiry') return '문의하기 (자동)';
+    if (item.key === 'lead') return '연락처 남기기 (자동)';
     if (item.key === 'home') return '하단 진사이트 표기';
     if (item.key.startsWith('article:')) return `기사: ${item.label}`;
     return item.label;
 }
 
-type Row = AdminOrgLinkRow & { uid: string };
-
-let uidSeq = 0;
-const withUid = (row: AdminOrgLinkRow): Row => ({ ...row, uid: `r${++uidSeq}` });
+function shortUrl(url: string): string {
+    return url.replace(/^https:\/\/(www\.)?/, '');
+}
 
 /**
- * 링크 페이지(/insight-radar/[slug]/links) 링크 관리.
- * 조직 기본 정보 저장과 별개로 이 카드의 [링크 저장]으로 저장한다.
+ * 진사이트 카드(/insight-radar/[slug]/links) 링크 관리.
+ * 링크 주소·문구는 프로필 편집의 '공식 채널'에서만 바꾸고, 여기서는 순서·노출·형태만 정한다.
+ * 새로 추가한 공식 채널은 기본 형태로 카드 맨 뒤에 자동으로 붙는다. reloadKey가 바뀌면(프로필 저장 후) 다시 불러온다
  */
-export function OrgLinksManager({ organizationId, slug }: { organizationId: number; slug: string }) {
-    const [rows, setRows] = useState<Row[]>([]);
-    const [isDefault, setIsDefault] = useState(false);
+export function OrgLinksManager({ organizationId, slug, reloadKey = 0 }: { organizationId: number; slug: string; reloadKey?: number }) {
+    const [rows, setRows] = useState<AdminCardRow[]>([]);
+    const [mode, setMode] = useState<'channels' | 'legacy'>('channels');
     const [clickSummary, setClickSummary] = useState<AdminLinkClickSummary[]>([]);
     const [loading, setLoading] = useState(true);
-    const [thumbTarget, setThumbTarget] = useState<string | null>(null);
+    const [thumbTarget, setThumbTarget] = useState<number | null>(null);
     const [isSaving, startSaving] = useTransition();
 
     const load = async () => {
         const res = await getOrganizationLinks(organizationId);
         if (res.success) {
-            setRows(res.data.rows.map(withUid));
-            setIsDefault(res.data.isDefault);
+            setRows(res.data.rows);
+            setMode(res.data.mode);
             setClickSummary(res.data.clickSummary);
         } else {
             toast.error(res.error);
@@ -69,9 +60,10 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
     useEffect(() => {
         void load();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [organizationId]);
+    }, [organizationId, reloadKey]);
 
-    const update = (uid: string, patch: Partial<Row>) => setRows((prev) => prev.map((r) => (r.uid === uid ? { ...r, ...patch } : r)));
+    const update = (channelId: number | null, patch: Partial<AdminCardRow>) =>
+        setRows((prev) => prev.map((r) => (r.channelId === channelId ? { ...r, ...patch } : r)));
 
     const move = (index: number, delta: number) =>
         setRows((prev) => {
@@ -82,33 +74,16 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
             return next;
         });
 
-    const add = () => {
-        if (rows.length >= ORG_LINK_MAX) return;
-        setRows((prev) => [
-            ...prev,
-            withUid({ id: null, label: '', url: '', kind: 'custom', display: 'button', subtitle: null, thumbnail_url: null, is_visible: true, clicks30d: 0 }),
-        ]);
-    };
-
-    // 주소 입력 시 SNS면 종류·형태를 자동 제안 (라벨이 비어 있을 때만 형태 변경)
-    const changeUrl = (row: Row, url: string) => {
-        const platform = detectSocialPlatform(url);
-        update(row.uid, platform && row.kind === 'custom' && !row.label ? { url, kind: 'sns', display: 'icon' } : { url });
-    };
-
     const save = () => {
-        const invalid = rows.find((r) => !r.label.trim() || !/^https?:\/\/\S+$/i.test(r.url.trim()));
-        if (invalid) {
-            toast.error('라벨과 http(s) 주소를 모두 입력해 주세요.');
-            return;
-        }
         startSaving(async () => {
-            const res = await saveOrganizationLinks(
+            const res = await saveOrganizationCardItems(
                 organizationId,
-                rows.map(({ uid: _uid, clicks30d: _c, ...rest }) => rest)
+                rows
+                    .filter((r): r is AdminCardRow & { channelId: number } => r.channelId !== null)
+                    .map((r) => ({ channelId: r.channelId, display: r.display, subtitle: r.subtitle, thumbnail_url: r.thumbnail_url, is_visible: r.is_visible }))
             );
             if (res.success) {
-                toast.success(`링크 ${res.count}개를 저장했습니다.`);
+                toast.success('카드 링크 설정을 저장했습니다.');
                 await load();
             } else {
                 toast.error(res.error);
@@ -116,8 +91,9 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
         });
     };
 
-    const autoClicks = clickSummary.filter((c) => !c.key.startsWith('link:') && !c.key.startsWith('auto:'));
+    const autoClicks = clickSummary.filter((c) => !/^(link|auto|ch):/.test(c.key));
     const previewHref = slug ? `/insight-radar/${slug}/links` : `/insight-radar/${organizationId}/links`;
+    const editable = mode === 'channels';
 
     return (
         <Card>
@@ -126,10 +102,10 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
                     <div>
                         <CardTitle className="text-base flex items-center gap-2">
                             <Link2 className="h-4 w-4 text-blue-600" />
-                            링크 페이지 관리
+                            진사이트 카드 링크
                         </CardTitle>
                         <CardDescription>
-                            명함 QR(링크 페이지 모드)·SNS 프로필 링크용 화면입니다. 프로필 카드와 최근 매거진 기사 2개는 자동으로 들어갑니다.
+                            주소·문구는 위 &apos;공식 채널&apos;에서 바꿉니다. 여기서는 카드에 보일 순서·노출·형태만 정합니다. 프로필 카드와 최근 매거진 기사 2개는 자동으로 들어갑니다.
                         </CardDescription>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -157,112 +133,107 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
                     </p>
                 ) : (
                     <>
-                        {isDefault && (
+                        {!editable && (
                             <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                                아직 저장된 링크가 없어 홈페이지·외부 링크·소개자료로 만든 기본 목록을 보여 주고 있습니다. 수정 후 [링크 저장]을 누르면 이 목록으로 고정됩니다.
+                                아직 공식 채널이 저장되지 않아 기존 홈페이지·외부 링크·소개자료로 카드를 보여 주고 있습니다. 위 공식 채널을 확인하고 [저장]을 누르면 여기서 순서·노출·형태를 정할 수 있습니다.
                             </p>
                         )}
 
-                        {rows.length === 0 && <p className="text-sm text-muted-foreground">등록된 링크가 없습니다.</p>}
+                        {rows.length === 0 && <p className="text-sm text-muted-foreground">공식 채널이 없습니다. 위 &apos;공식 채널&apos;에서 추가해 주세요.</p>}
 
                         <ol className="space-y-2">
                             {rows.map((row, index) => (
-                                <li key={row.uid} className={`rounded-lg border p-3 space-y-2 ${row.is_visible ? 'bg-white' : 'bg-slate-50 opacity-70'}`}>
-                                    <div className="flex items-center gap-1.5">
-                                        <div className="flex shrink-0 flex-col">
-                                            <button
-                                                type="button"
-                                                onClick={() => move(index, -1)}
-                                                disabled={index === 0}
-                                                className="rounded p-0.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
-                                                aria-label="위로 이동"
-                                            >
-                                                <ArrowUp className="h-3.5 w-3.5" />
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => move(index, 1)}
-                                                disabled={index === rows.length - 1}
-                                                className="rounded p-0.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
-                                                aria-label="아래로 이동"
-                                            >
-                                                <ArrowDown className="h-3.5 w-3.5" />
-                                            </button>
+                                <li
+                                    key={row.channelId ?? `legacy-${index}`}
+                                    className={`rounded-lg border p-3 space-y-2 ${row.is_visible ? 'bg-white' : 'bg-slate-50 opacity-70'}`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {editable && (
+                                            <div className="flex shrink-0 flex-col">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => move(index, -1)}
+                                                    disabled={index === 0}
+                                                    className="rounded p-0.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                                                    aria-label="위로 이동"
+                                                >
+                                                    <ArrowUp className="h-3.5 w-3.5" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => move(index, 1)}
+                                                    disabled={index === rows.length - 1}
+                                                    className="rounded p-0.5 text-slate-500 hover:bg-slate-100 disabled:opacity-30"
+                                                    aria-label="아래로 이동"
+                                                >
+                                                    <ArrowDown className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        )}
+                                        <BrandIcon type={row.type} className="h-5 w-5 shrink-0" />
+                                        <div className="min-w-0 flex-1">
+                                            <p className="truncate text-sm font-semibold text-slate-900">
+                                                {row.text}
+                                                <span className="ml-1.5 text-[11px] font-normal text-slate-500">{CHANNEL_TYPES[row.type].label}</span>
+                                            </p>
+                                            <p className="truncate text-xs text-slate-500">{shortUrl(row.url)}</p>
                                         </div>
-                                        <Input
-                                            value={row.label}
-                                            onChange={(e) => update(row.uid, { label: e.target.value })}
-                                            placeholder="라벨 (예: 홈페이지 바로가기)"
-                                            maxLength={100}
-                                            className="h-9 flex-1"
-                                            aria-label="라벨"
-                                        />
-                                        <select
-                                            value={row.display}
-                                            onChange={(e) => update(row.uid, { display: e.target.value as OrgLinkDisplay })}
-                                            className={`${SELECT_CLASS} w-20 shrink-0`}
-                                            aria-label="표시 형태"
-                                        >
+                                        {editable && (
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => update(row.channelId, { is_visible: !row.is_visible })}
+                                                className="h-9 w-9 shrink-0 p-0 text-slate-600"
+                                                aria-label={row.is_visible ? '카드에서 숨기기' : '카드에 보이기'}
+                                                aria-pressed={!row.is_visible}
+                                                title={row.is_visible ? '카드에 보임' : '숨김'}
+                                            >
+                                                {row.is_visible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-wrap items-center justify-between gap-2 pl-0 sm:pl-6">
+                                        <div className="inline-flex rounded-md border p-0.5" role="group" aria-label="표시 형태">
                                             {ORG_LINK_DISPLAYS.map((d) => (
-                                                <option key={d} value={d}>
+                                                <button
+                                                    key={d}
+                                                    type="button"
+                                                    disabled={!editable}
+                                                    onClick={() => update(row.channelId, { display: d as OrgLinkDisplay })}
+                                                    aria-pressed={row.display === d}
+                                                    className={`h-7 rounded px-2.5 text-xs font-medium ${row.display === d ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'} disabled:cursor-not-allowed`}
+                                                >
                                                     {ORG_LINK_DISPLAY_LABEL[d]}
-                                                </option>
+                                                </button>
                                             ))}
-                                        </select>
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => setRows((prev) => prev.filter((r) => r.uid !== row.uid))}
-                                            className="h-9 w-9 shrink-0 p-0 text-red-500 hover:bg-red-50 hover:text-red-600"
-                                            aria-label="링크 삭제"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                        </div>
+                                        <span className="text-xs tabular-nums text-muted-foreground">
+                                            {!row.is_visible ? '숨김 · ' : !row.hasSetting && editable ? '기본 설정 · ' : ''}최근 30일 클릭 {row.clicks30d.toLocaleString()}회
+                                        </span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 pl-6">
-                                        <Input
-                                            value={row.url}
-                                            onChange={(e) => changeUrl(row, e.target.value)}
-                                            placeholder="https://..."
-                                            className="h-9 flex-1"
-                                            aria-label="주소"
-                                        />
-                                        <select
-                                            value={row.kind}
-                                            onChange={(e) => update(row.uid, { kind: e.target.value as OrgLinkKind })}
-                                            className={`${SELECT_CLASS} w-24 shrink-0`}
-                                            aria-label="링크 종류"
-                                        >
-                                            {ORG_LINK_KINDS.map((k) => (
-                                                <option key={k} value={k}>
-                                                    {ORG_LINK_KIND_LABEL[k]}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    {row.display === 'card' && (
-                                        <div className="flex items-center gap-1.5 pl-6">
+                                    {editable && row.display === 'card' && (
+                                        <div className="flex flex-wrap items-center gap-1.5 pl-0 sm:pl-6">
                                             <Input
                                                 value={row.subtitle ?? ''}
-                                                onChange={(e) => update(row.uid, { subtitle: e.target.value })}
+                                                onChange={(e) => update(row.channelId, { subtitle: e.target.value })}
                                                 placeholder="보조 문구 (예: 이벤트)"
                                                 maxLength={100}
-                                                className="h-9 w-36 shrink-0"
+                                                className="h-9 w-full sm:w-36"
                                                 aria-label="보조 문구"
                                             />
                                             <Input
                                                 value={row.thumbnail_url ?? ''}
-                                                onChange={(e) => update(row.uid, { thumbnail_url: e.target.value })}
+                                                onChange={(e) => update(row.channelId, { thumbnail_url: e.target.value })}
                                                 placeholder="썸네일 이미지 URL"
-                                                className="h-9 flex-1"
+                                                className="h-9 min-w-0 flex-1"
                                                 aria-label="썸네일 이미지 URL"
                                             />
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => setThumbTarget(row.uid)}
+                                                onClick={() => setThumbTarget(row.channelId)}
                                                 className="h-9 shrink-0 gap-1 px-2.5 text-xs"
                                                 aria-label="썸네일 보관함에서 선택"
                                             >
@@ -271,31 +242,18 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
                                             </Button>
                                         </div>
                                     )}
-                                    <div className="flex items-center justify-between pl-6 text-xs text-muted-foreground">
-                                        <label className="inline-flex items-center gap-1.5">
-                                            <input
-                                                type="checkbox"
-                                                checked={row.is_visible}
-                                                onChange={(e) => update(row.uid, { is_visible: e.target.checked })}
-                                                className="h-3.5 w-3.5"
-                                            />
-                                            노출
-                                        </label>
-                                        <span className="tabular-nums">최근 30일 클릭 {row.clicks30d.toLocaleString()}회</span>
-                                    </div>
                                 </li>
                             ))}
                         </ol>
 
-                        <div className="flex items-center justify-between gap-2">
-                            <Button type="button" variant="outline" size="sm" onClick={add} disabled={rows.length >= ORG_LINK_MAX} className="gap-1">
-                                <Plus className="h-3.5 w-3.5" /> 링크 추가
-                            </Button>
-                            <Button type="button" size="sm" onClick={save} disabled={isSaving} className="gap-1">
-                                {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                                링크 저장
-                            </Button>
-                        </div>
+                        {editable && rows.length > 0 && (
+                            <div className="flex justify-end">
+                                <Button type="button" size="sm" onClick={save} disabled={isSaving} className="gap-1">
+                                    {isSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                                    카드 설정 저장
+                                </Button>
+                            </div>
+                        )}
 
                         {autoClicks.length > 0 && (
                             <div className="border-t pt-3">
@@ -326,7 +284,7 @@ export function OrgLinksManager({ organizationId, slug }: { organizationId: numb
                 accept="image"
                 onClose={() => setThumbTarget(null)}
                 onSelect={(url) => {
-                    if (thumbTarget) update(thumbTarget, { thumbnail_url: url });
+                    if (thumbTarget !== null) update(thumbTarget, { thumbnail_url: url });
                 }}
             />
         </Card>

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { slugifyOrganization } from '@/lib/utils';
 import { isAdminRequest } from '@/lib/admin-auth';
+import { channelsFromLegacy } from '@/lib/org-channels';
+import { saveOrgChannels } from '@/lib/org-channel-store';
 
 export async function POST(request: Request) {
   // proxy 보호에 더한 이중 확인 (경로 매처 변경 시에도 무인증 DB 쓰기 방지)
@@ -82,9 +84,14 @@ export async function POST(request: Request) {
             region_id: region_id,
           },
         });
+        // 홈페이지·외부 링크를 공식 채널로 (종류는 주소로 판별)
+        const created = company;
+        const { channels } = channelsFromLegacy(created);
+        if (channels.length > 0) await prisma.$transaction((tx) => saveOrgChannels(tx, created.id, channels));
         results.addedCompanies++;
       } else {
-        // 기존 기업 정보 업데이트
+        // 기존 기업 정보 업데이트 (공식 채널이 있는 조직은 링크를 덮어쓰지 않음: 채널이 원본)
+        const hasChannels = (await prisma.organizationChannel.count({ where: { organization_id: company.id, deleted_at: null } })) > 0;
         company = await prisma.organization.update({
           where: { id: company.id },
           data: {
@@ -92,7 +99,7 @@ export async function POST(request: Request) {
             hq_location: lead.hq_location || company.hq_location,
             ceo_name: lead.ceo_name || company.ceo_name,
             key_references: lead.key_references || company.key_references,
-            backlinks: lead.backlinks || company.backlinks,
+            ...(hasChannels ? {} : { backlinks: lead.backlinks || company.backlinks }),
             region_id: region_id,
           }
         });

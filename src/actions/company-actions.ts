@@ -6,6 +6,8 @@ import { revalidatePath } from 'next/cache';
 import { slugifyOrganization, safeHttpUrl } from '@/lib/utils';
 import { rateLimitByIp, HOUR } from '@/lib/rate-limit';
 import { normalizeExtraMaterials } from '@/lib/org-materials';
+import { channelsFromLegacy, prepareChannels, type ChannelInput, type PreparedChannel } from '@/lib/org-channels';
+import { ACTIVE_CHANNELS, saveOrgChannels } from '@/lib/org-channel-store';
 
 export async function updateCompany(
   id: number,
@@ -34,47 +36,63 @@ export async function updateCompany(
     aliases?: any;
     backlinks?: any;
     is_featured?: boolean;
+    /** 공식 채널 목록 (화면 순서). 주면 company_url·backlinks·brochure_url·extra_materials도 이 목록 기준으로 저장 */
+    channels?: ChannelInput[];
   }
 ) {
   await requireAdmin();
   try {
-    const { is_featured, slug, video_url, video_poster_url, brochure_url, extra_materials, inquiry_url, contact_email, contact_phone, tagline, ...companyData } = data;
+    const { is_featured, slug, video_url, video_poster_url, brochure_url, extra_materials, inquiry_url, contact_email, contact_phone, tagline, channels, ...companyData } = data;
+
+    let preparedChannels: PreparedChannel[] | null = null;
+    if (channels !== undefined) {
+      const prepared = prepareChannels(channels);
+      if (!prepared.ok) return { success: false, error: prepared.error };
+      preparedChannels = prepared.channels;
+      // 이전 전 컬럼은 채널 저장이 함께 씀
+      delete companyData.company_url;
+      delete companyData.backlinks;
+    }
 
     const formattedSlug = slug && slug.trim() !== ''
       ? slugifyOrganization(slug)
       : null;
 
-    const updatedCompany = await prisma.organization.update({
-      where: { id },
-      data: {
-        ...companyData,
-        slug: formattedSlug,
-        is_featured,
-        region_id: regionId,
-        // 공개 프로필에 링크·미디어로 렌더링되므로 허용 스킴만 저장 (javascript: 등 차단)
-        ...(video_url !== undefined ? { video_url: safeHttpUrl(video_url) ?? null } : {}),
-        ...(video_poster_url !== undefined ? { video_poster_url: safeHttpUrl(video_poster_url) ?? null } : {}),
-        ...(brochure_url !== undefined ? { brochure_url: safeHttpUrl(brochure_url) ?? null } : {}),
-        ...(extra_materials !== undefined ? { extra_materials: normalizeExtraMaterials(extra_materials) } : {}),
-        ...(inquiry_url !== undefined ? { inquiry_url: safeInquiryUrl(inquiry_url) } : {}),
-        ...(contact_email !== undefined ? { contact_email: safeContactEmail(contact_email) } : {}),
-        ...(contact_phone !== undefined ? { contact_phone: safeContactPhone(contact_phone) } : {}),
-        ...(tagline !== undefined ? { tagline: tagline?.trim().slice(0, 60) || null } : {}),
-      },
-      include: {
-        region: true,
-        company_articles: {
-          include: {
-            article: true,
-          },
+    const updatedCompany = await prisma.$transaction(async (tx) => {
+      await tx.organization.update({
+        where: { id },
+        data: {
+          ...companyData,
+          slug: formattedSlug,
+          is_featured,
+          region_id: regionId,
+          // 공개 프로필에 링크·미디어로 렌더링되므로 허용 스킴만 저장 (javascript: 등 차단)
+          ...(video_url !== undefined ? { video_url: safeHttpUrl(video_url) ?? null } : {}),
+          ...(video_poster_url !== undefined ? { video_poster_url: safeHttpUrl(video_poster_url) ?? null } : {}),
+          ...(brochure_url !== undefined && !preparedChannels ? { brochure_url: safeHttpUrl(brochure_url) ?? null } : {}),
+          ...(extra_materials !== undefined && !preparedChannels ? { extra_materials: normalizeExtraMaterials(extra_materials) } : {}),
+          ...(inquiry_url !== undefined ? { inquiry_url: safeInquiryUrl(inquiry_url) } : {}),
+          ...(contact_email !== undefined ? { contact_email: safeContactEmail(contact_email) } : {}),
+          ...(contact_phone !== undefined ? { contact_phone: safeContactPhone(contact_phone) } : {}),
+          ...(tagline !== undefined ? { tagline: tagline?.trim().slice(0, 60) || null } : {}),
         },
-      },
+      });
+      if (preparedChannels) await saveOrgChannels(tx, id, preparedChannels);
+      return tx.organization.findUniqueOrThrow({
+        where: { id },
+        include: {
+          region: true,
+          company_articles: { include: { article: true } },
+          channels: ACTIVE_CHANNELS,
+        },
+      });
     });
 
     revalidatePath('/admin/companies');
     revalidatePath(`/admin/companies/${id}`);
     revalidatePath('/insight-radar');
     revalidatePath(`/insight-radar/${updatedCompany.slug || id}`);
+    revalidatePath(`/insight-radar/${updatedCompany.slug || id}/links`);
     return { success: true, company: updatedCompany };
   } catch (error: any) {
     console.error('Failed to update company:', error);
@@ -157,19 +175,25 @@ export async function createOrganizationInline(data: {
       ? slugifyOrganization(data.slug)
       : slugifyOrganization(data.company_name);
 
-    const newOrg = await prisma.organization.create({
-      data: {
-        company_name: data.company_name,
-        slug: slugValue || null,
-        ceo_name: data.ceo_name || null,
-        founded_year: data.founded_year || null,
-        hq_location: data.hq_location || null,
-        entity_type: data.entity_type || '기업',
-        region_id: data.region_id,
-        backlinks: data.backlinks || null,
-        logo_url: data.logo_url || null,
-        logo_source_url: data.logo_source_url || null,
-      }
+    // 입력한 링크(첫 번째 = 대표 홈페이지)를 공식 채널로 저장
+    const inputLinks = Array.isArray(data.backlinks) ? data.backlinks : [];
+    const { channels } = channelsFromLegacy({ company_url: inputLinks[0]?.url ?? null, backlinks: inputLinks });
+    const newOrg = await prisma.$transaction(async (tx) => {
+      const created = await tx.organization.create({
+        data: {
+          company_name: data.company_name,
+          slug: slugValue || null,
+          ceo_name: data.ceo_name || null,
+          founded_year: data.founded_year || null,
+          hq_location: data.hq_location || null,
+          entity_type: data.entity_type || '기업',
+          region_id: data.region_id,
+          logo_url: data.logo_url || null,
+          logo_source_url: data.logo_source_url || null,
+        }
+      });
+      await saveOrgChannels(tx, created.id, channels);
+      return created;
     });
     revalidatePath('/admin/companies');
     revalidatePath('/insight-radar');
@@ -389,8 +413,10 @@ export async function approveOrganizationSubmission(submissionId: number) {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9\-가-힣]/g, '');
 
-  await prisma.$transaction([
-    prisma.organization.create({
+  // 신청서의 홈페이지·외부 링크를 공식 채널로 (종류는 주소로 판별)
+  const { channels } = channelsFromLegacy({ company_url: submission.company_url, backlinks: submission.backlinks });
+  await prisma.$transaction(async (tx) => {
+    const created = await tx.organization.create({
       data: {
         company_name: submission.company_name,
         slug: slugBase,
@@ -398,20 +424,19 @@ export async function approveOrganizationSubmission(submissionId: number) {
         ceo_name: submission.ceo_name,
         founded_year: submission.founded_year,
         hq_location: submission.hq_location,
-        company_url: submission.company_url,
         logo_url: submission.logo_url,
         logo_source_url: submission.logo_source_url,
         business_summary: submission.business_summary,
-        backlinks: submission.backlinks ?? [],
         core_keywords: submission.core_keywords ?? [],
         region_id: submission.invite.region_id,
       },
-    }),
-    prisma.organizationSubmission.update({
+    });
+    await saveOrgChannels(tx, created.id, channels);
+    await tx.organizationSubmission.update({
       where: { id: submissionId },
       data: { status: 'APPROVED', reviewed_at: new Date() },
-    }),
-  ]);
+    });
+  });
 
   revalidatePath('/admin', 'layout');
   revalidatePath('/admin/companies');

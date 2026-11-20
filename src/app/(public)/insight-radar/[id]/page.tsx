@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, BookOpen, Download, ExternalLink, Globe, MessageSquare } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Download, ExternalLink, MessageSquare } from 'lucide-react';
 import { getRadarCompanyDetail, getRadarRegionPeers } from '@/actions/insight-radar-actions';
 import { OrganizationTracker } from '@/components/public/analytics/ArticleTracker';
 import { CollapsibleTagGroup } from '@/components/public/insight-radar/CollapsibleTagGroup';
@@ -10,7 +10,8 @@ import { ProfileSectionNav } from '@/components/public/insight-radar/profile/Pro
 import { ProfileTimelineList } from '@/components/public/insight-radar/profile/ProfileTimelineList';
 import { ProfileVideo } from '@/components/public/insight-radar/profile/ProfileVideo';
 import { BrandIcon } from '@/components/public/insight-radar/links/BrandIcon';
-import { detectSocialPlatform } from '@/lib/org-links';
+import { siteConfig } from '@/config/site';
+import { channelSameAs, primaryHomepage, profileHeaderChannels, type ChannelType } from '@/lib/org-channels';
 import { sanitizeHref, safeHttpUrl } from '@/lib/utils';
 import {
     buildRadarTimeline,
@@ -170,46 +171,11 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     const pageSlug = company.slug || String(company.id);
     const url = `${SITE_BASE_URL}/insight-radar/${pageSlug}`;
 
-    // 백링크 파싱 및 A2: sameAs (에디터 백링크 2·3번 추출)
-    const rawBacklinks = company.backlinks;
-    let parsedBacklinks: Array<{ title: string; url: string }> = [];
-    if (Array.isArray(rawBacklinks) && rawBacklinks.length > 0) {
-        parsedBacklinks = rawBacklinks;
-    } else if (typeof rawBacklinks === 'string') {
-        try {
-            const parsed = JSON.parse(rawBacklinks);
-            if (Array.isArray(parsed)) {
-                parsedBacklinks = parsed;
-            }
-        } catch {}
-    }
-
-    // 화면 우측 상단 바로가기 버튼용 리스트 (최대 3개)
-    let backlinksList: Array<{ title: string; url: string }> = parsedBacklinks
-        .slice(0, 3)
-        .map((item: any) => ({
-            title: item.title || '바로가기',
-            url: item.url || '',
-        }))
-        .filter((item) => item.url.trim() !== '');
-
-    if (backlinksList.length === 0 && company.company_url) {
-        backlinksList = [{ title: '홈페이지 바로가기', url: company.company_url }];
-    }
-
-    // sameAs: 공식 웹사이트 및 백링크 URL 통합 (중복 제거)
-    const sameAsUrls: string[] = [];
-    if (company.company_url && (company.company_url.startsWith('http://') || company.company_url.startsWith('https://'))) {
-        sameAsUrls.push(company.company_url);
-    }
-    for (const item of parsedBacklinks) {
-        const rawUrl = typeof item?.url === 'string' ? item.url.trim() : '';
-        if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
-            if (!sameAsUrls.includes(rawUrl)) {
-                sameAsUrls.push(rawUrl);
-            }
-        }
-    }
+    // 공식 채널: 헤더 바로가기(대표 홈페이지 포함 상위 N개, 소개자료 제외)와 A2 sameAs(sameAs 포함 종류의 정리된 주소)
+    const channels = company.channels;
+    const headerChannels = profileHeaderChannels(channels, siteConfig.radarProfile.headerChannelCount);
+    const primaryChannel = primaryHomepage(channels);
+    const sameAsUrls = channelSameAs(channels);
 
     // A3: description
     const orgDescription = company.business_summary || extractFirstParagraph(company.business_summary);
@@ -285,7 +251,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 'name': company.company_name,
                 ...(aliases.length > 0 ? { 'alternateName': aliases } : {}),
                 ...(orgDescription ? { 'description': orgDescription } : {}),
-                'url': company.company_url || url,
+                'url': primaryChannel?.url || url,
                 ...(sameAsUrls.length > 0 ? { 'sameAs': sameAsUrls } : {}),
                 ...(logoUrl ? { 'logo': logoUrl } : {}),
                 ...(company.founded_year ? { 'foundingDate': company.founded_year } : {}),
@@ -330,21 +296,15 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
         (company.contact_email ? `mailto:${company.contact_email}` : null) ||
         (company.contact_phone ? `tel:${company.contact_phone.replace(/[^0-9+]/g, '')}` : null);
     const inquiryIsWeb = !!inquiryHref && /^https?:/i.test(inquiryHref);
-    const brochureHref = safeHttpUrl(company.brochure_url);
-    // 추가 자료(제안서 등): 관리자가 정한 이름으로 소개자료 옆에 표시
-    const extraMaterials = company.extra_materials ?? [];
+    // 소개자료: 공식 채널의 소개자료 종류. 문구를 따로 정하지 않은 첫 항목은 '소개자료' 버튼, 나머지는 각자 문구로
+    const brochureChannels = channels.filter((c) => c.type === 'brochure');
+    const brochureHref = brochureChannels[0] && !brochureChannels[0].label ? brochureChannels[0].url : undefined;
+    const extraMaterials = brochureChannels.slice(brochureHref ? 1 : 0).map((c) => ({ label: c.text, url: c.url }));
     const hasMaterials = !!brochureHref || extraMaterials.length > 0;
-    const homepageHref = safeHttpUrl(company.company_url) ??
-        (company.company_url ? safeHttpUrl(`https://${company.company_url}`) : undefined);
-    const externalLinks = backlinksList
-        .map((link) => ({
-            title: link.title,
-            url: safeHttpUrl(link.url.startsWith('http') ? link.url : `https://${link.url}`),
-        }))
-        .filter((link): link is { title: string; url: string } => !!link.url);
+    const homepageHref = primaryChannel?.url;
+    const externalLinks = headerChannels.map((c) => ({ title: c.text, url: c.url, type: c.type }));
     // 모바일 아이콘 줄: 홈페이지는 CTA 버튼과 중복이라 제외
-    const normalizeUrl = (u: string) => u.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/+$/, '').toLowerCase();
-    const iconLinks = externalLinks.filter((link) => !homepageHref || normalizeUrl(link.url) !== normalizeUrl(homepageHref));
+    const iconLinks = externalLinks.filter((link) => link.url !== homepageHref);
 
     const references = Array.isArray(company.key_references)
         ? (company.key_references as unknown[]).map(String).filter((r) => r.trim())
@@ -496,7 +456,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                                 title={link.title}
                                                 className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition-colors hover:border-zi-blue hover:text-zi-blue"
                                             >
-                                                <ExternalLinkIcon url={link.url} className="h-[18px] w-[18px]" />
+                                                <ExternalLinkIcon type={link.type} className="h-[18px] w-[18px]" />
                                             </a>
                                         </li>
                                 ))}
@@ -689,7 +649,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                                     rel="noopener noreferrer"
                                                     className="flex min-h-11 w-full items-center gap-2.5 text-sm font-semibold text-blue-700 hover:text-zi-blue"
                                                 >
-                                                    <ExternalLinkIcon url={link.url} className="h-4 w-4 shrink-0" />
+                                                    <ExternalLinkIcon type={link.type} className="h-4 w-4 shrink-0" />
                                                     <span className="min-w-0 flex-1">{link.title}</span>
                                                     <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                                                 </a>
@@ -763,16 +723,9 @@ function formatSourceLabel(source: string | null | undefined): string {
     return SOURCE_LABEL[source] ?? source;
 }
 
-/** 외부 링크 아이콘: SNS는 공식 로고, 블로그류는 책, 그 밖은 지구본 */
-function ExternalLinkIcon({ url, className }: { url: string; className: string }) {
-    const platform = detectSocialPlatform(url);
-    if (platform) return <BrandIcon platform={platform} className={className} />;
-    let host = '';
-    try {
-        host = new URL(url).hostname.replace(/^www\./, '');
-    } catch {}
-    const Icon = host.includes('blog.') || host.includes('brunch.co.kr') ? BookOpen : Globe;
-    return <Icon className={`${className} text-slate-500`} aria-hidden="true" />;
+/** 외부 링크 아이콘: 공식 채널 종류별 로고, 홈페이지·기타는 지구본·링크 */
+function ExternalLinkIcon({ type, className }: { type: ChannelType; className: string }) {
+    return <BrandIcon type={type} className={className} />;
 }
 
 function TimelineDate({ label }: { label: string | null }) {

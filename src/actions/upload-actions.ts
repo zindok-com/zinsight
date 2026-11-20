@@ -212,6 +212,8 @@ async function collectStorageUsage(): Promise<Record<string, MediaUsage[]>> {
                 video_poster_url: true,
                 brochure_url: true,
                 extra_materials: true,
+                channels: { where: { deleted_at: null }, select: { url: true, channel_type: true, label: true } },
+                cardItems: { select: { thumbnail_url: true } },
             },
         }),
         prisma.organizationSubmission.findMany({
@@ -252,6 +254,9 @@ async function collectStorageUsage(): Promise<Record<string, MediaUsage[]>> {
         add(org.video_poster_url, { ...base, field: '영상 포스터' });
         add(org.brochure_url, { ...base, field: '소개자료' });
         for (const item of normalizeExtraMaterials(org.extra_materials)) add(item.url, { ...base, field: `추가 자료(${item.label})` });
+        // 공식 채널(소개자료 등)·카드 썸네일
+        for (const ch of org.channels) add(ch.url, { ...base, field: `공식 채널(${ch.label || ch.channel_type})` });
+        for (const item of org.cardItems) add(item.thumbnail_url, { ...base, field: '카드 썸네일' });
     }
 
     for (const sub of submissions) {
@@ -430,7 +435,7 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
             (value && value.includes(oldUrl) ? value.split(oldUrl).join(newUrl) : value) as T;
         const touches = (...values: (string | null)[]) => values.some((v) => v?.includes(oldUrl));
 
-        const [posts, organizations, submissions, authors] = await Promise.all([
+        const [posts, organizations, submissions, authors, channels, cardItems] = await Promise.all([
             prisma.magazinePost.findMany({
                 select: { id: true, thumbnailUrl: true, content: true, structuredData: true },
             }),
@@ -454,6 +459,8 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
                 where: { avatarUrl: { contains: oldUrl } },
                 select: { id: true, avatarUrl: true },
             }),
+            prisma.organizationChannel.findMany({ where: { url: { contains: oldUrl } }, select: { id: true, url: true } }),
+            prisma.organizationCardItem.findMany({ where: { thumbnail_url: { contains: oldUrl } }, select: { id: true, thumbnail_url: true } }),
         ]);
 
         const postsToUpdate = posts.filter((p) =>
@@ -507,6 +514,10 @@ export async function renameBlobTransaction(oldUrl: string, oldPathname: string,
             ),
             ...authors.map((author) =>
                 prisma.author.update({ where: { id: author.id }, data: { avatarUrl: swap(author.avatarUrl) } })
+            ),
+            ...channels.map((ch) => prisma.organizationChannel.update({ where: { id: ch.id }, data: { url: swap(ch.url) } })),
+            ...cardItems.map((item) =>
+                prisma.organizationCardItem.update({ where: { id: item.id }, data: { thumbnail_url: swap(item.thumbnail_url) } })
             ),
         ]);
 

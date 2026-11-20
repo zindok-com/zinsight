@@ -104,6 +104,12 @@ export const siteConfig = {
         displayName: '진사이트 카드',
     },
 
+    /** 인사이트 레이더 프로필 */
+    radarProfile: {
+        /** 헤더에 보일 공식 채널 수 (대표 홈페이지 포함, 소개자료 제외). 저장 개수 제한은 아님 */
+        headerChannelCount: 3,
+    },
+
     /** 인사이트 레이더 목록 (검색어 없는 기본 화면) */
     radarList: {
         title: '안양·광명·의왕 기업·기관 프로필',

@@ -80,7 +80,7 @@ model Organization {
   slug             String?  @unique @db.VarChar(255)
   aliases          Json? // 별칭 리스트 (문자열 배열)
   entity_type      String   @default("기업") @db.VarChar(50)
-  company_url      String?  @db.VarChar(255)
+  company_url      String?  @db.VarChar(255) // 공식 채널의 대표 홈페이지와 같은 값 (채널 저장 시 함께 갱신)
   logo_url         String?  @db.VarChar(512) // 웹 표시용 로고 (PNG, JPG, SVG, WebP)
   logo_source_url  String?  @db.VarChar(512) // 인쇄/제작용 원본 파일 (.ai, .eps, .pdf, .svg)
   business_summary String?  @db.Text
@@ -89,7 +89,7 @@ model Organization {
   hq_location      String?  @db.VarChar(255)
   ceo_name         String?  @db.VarChar(100)
   key_references   Json?
-  backlinks        Json? // 외부 백링크 리스트 (최대 3개: [{ title, url }])
+  backlinks        Json? // (읽기 전용, 공식 채널 이전 전 값) [{ title, url }]. 새 값은 organization_channels
   video_url        String?  @db.VarChar(512) // 소개 영상 (자체 mp4 또는 유튜브 URL)
   video_poster_url String?  @db.VarChar(512) // 영상 포스터 이미지
   brochure_url     String?  @db.VarChar(512) // 소개자료 다운로드 URL
@@ -109,7 +109,9 @@ model Organization {
   ingestions       ArticleIngestion[]
   qrLinks          QrLink[]
   links            OrganizationLink[]
-  linkClicks       OrganizationLinkClickDaily[]
+  channels         OrganizationChannel[]
+  cardItems        OrganizationCardItem[]
+  linkClicks      OrganizationLinkClickDaily[]
   linkPageEvents   LinkPageEvent[]
   linkPageDaily    LinkPageDaily[]
   linkPageLeads    LinkPageLead[]
@@ -453,7 +455,47 @@ model QrScanDaily {
   @@map("qr_scan_daily")
 }
 
-// 조직 링크 페이지(/insight-radar/[slug]/links)에 노출할 관리자 등록 링크
+// 조직 공식 채널 목록 (프로필 헤더·진사이트 카드·JSON-LD sameAs가 함께 사용). 종류 정의는 src/lib/org-channels.ts
+model OrganizationChannel {
+  id              Int       @id @default(autoincrement())
+  organization_id Int
+  channel_type    String    @db.VarChar(30) // CHANNEL_TYPES key (homepage | naver_blog | instagram | ... | brochure | other)
+  url             String    @db.VarChar(512) // 정리된 주소 (추적 파라미터 제거, https, 끝 / 제거)
+  label           String?   @db.VarChar(100) // 비어 있으면 종류의 기본 문구 (other는 필수)
+  is_primary      Boolean   @default(false) // 대표 홈페이지 (조직당 1개, 앱에서 보장)
+  sort_order      Int       @default(0)
+  deleted_at      DateTime? // 소프트 삭제: 지난 클릭(ch:{id})의 종류 집계를 유지
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  organization Organization          @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  cardItem     OrganizationCardItem?
+
+  @@index([organization_id, sort_order])
+  @@map("organization_channels")
+}
+
+// 진사이트 카드(/insight-radar/[slug]/links)의 채널별 표시 설정(형태·노출·순서). 설정이 없는 채널은 기본 형태로 맨 뒤에 노출
+model OrganizationCardItem {
+  id              Int      @id @default(autoincrement())
+  organization_id Int
+  channel_id      Int      @unique
+  display         String   @default("button") @db.VarChar(10) // card | button | icon
+  subtitle        String?  @db.VarChar(100) // 카드형 보조 문구
+  thumbnail_url   String?  @db.VarChar(512) // 카드형 썸네일
+  sort_order      Int      @default(0)
+  is_visible      Boolean  @default(true)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  organization Organization        @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  channel      OrganizationChannel @relation(fields: [channel_id], references: [id], onDelete: Cascade)
+
+  @@index([organization_id, sort_order])
+  @@map("organization_card_items")
+}
+
+// (읽기 전용) 공식 채널 이전 전 링크 페이지 등록 링크. 이전 스크립트가 organization_channels·organization_card_items로 옮김
 model OrganizationLink {
   id              Int      @id @default(autoincrement())
   organization_id Int

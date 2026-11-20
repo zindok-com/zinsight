@@ -1,6 +1,7 @@
 // 서버 전용 (prisma 사용)
 import { prisma } from '@/lib/db';
 import { LINK_PAGE_LINK_KINDS, type LinkPageLinkKind } from '@/lib/org-links';
+import { CHANNEL_GROUP_KEYS, CHANNEL_TYPES, channelTypeOf, type ChannelGroup, type ChannelType } from '@/lib/org-channels';
 
 export interface LinkPageStatsRange {
     from: string;
@@ -255,4 +256,65 @@ export async function loadLinkPageHourlyViews(
         if (h >= 0 && h < 24) hours[h] = Number(r.c);
     }
     return { hours, countedFrom: from };
+}
+
+// ── 공식 채널 집계 그룹별 클릭 (리포트·공유 통계용) ──
+
+export interface ChannelGroupClicks {
+    /** 공식 채널 링크(ch:{id}) 클릭 합계 */
+    total: number;
+    groups: Record<ChannelGroup, number>;
+    /** 종류별 클릭 (클릭이 있는 종류만) */
+    byType: Array<{ type: ChannelType; group: ChannelGroup; clicks: number }>;
+    /** 공식 채널로 옮기기 전 키(auto:{n}·link:{id}·sns:*)로 남은 외부 링크 클릭. 이전 스크립트 실행 후 0이어야 함 */
+    unmapped: number;
+}
+
+/**
+ * 기간 안의 채널 링크 클릭을 집계 그룹(홈페이지·SNS·지도·매장·자료·기타)별로 합산.
+ * 삭제(소프트 삭제)된 채널의 지난 클릭도 그 채널 종류로 센다. 인증 없음: 호출하는 쪽에서 권한 확인
+ */
+export async function getChannelGroupClicks(organizationId: number, range: LinkPageStatsRange): Promise<ChannelGroupClicks> {
+    const rows = await prisma.linkPageDaily.groupBy({
+        by: ['link_key'],
+        where: {
+            organization_id: organizationId,
+            event: 'click',
+            date: { gte: dayStart(range.from), lte: dayStart(range.to) },
+            OR: [{ link_key: { startsWith: 'ch:' } }, { link_key: { startsWith: 'auto:' } }, { link_key: { startsWith: 'link:' } }, { link_key: { startsWith: 'sns:' } }],
+        },
+        _sum: { count: true },
+    });
+
+    const channelIds = rows.flatMap((r) => (r.link_key.startsWith('ch:') ? [Number(r.link_key.slice(3))] : []));
+    const channels = channelIds.length
+        ? await prisma.organizationChannel.findMany({
+              where: { organization_id: organizationId, id: { in: channelIds } },
+              select: { id: true, channel_type: true },
+          })
+        : [];
+    const typeOf = new Map(channels.map((c) => [c.id, channelTypeOf(c.channel_type)]));
+
+    const result: ChannelGroupClicks = {
+        total: 0,
+        groups: Object.fromEntries(CHANNEL_GROUP_KEYS.map((g) => [g, 0])) as Record<ChannelGroup, number>,
+        byType: [],
+        unmapped: 0,
+    };
+    const byType = new Map<ChannelType, number>();
+    for (const r of rows) {
+        const count = r._sum.count ?? 0;
+        if (!r.link_key.startsWith('ch:')) {
+            result.unmapped += count;
+            continue;
+        }
+        const type = typeOf.get(Number(r.link_key.slice(3))) ?? 'other';
+        result.total += count;
+        result.groups[CHANNEL_TYPES[type].group] += count;
+        byType.set(type, (byType.get(type) ?? 0) + count);
+    }
+    result.byType = [...byType.entries()]
+        .map(([type, clicks]) => ({ type, group: CHANNEL_TYPES[type].group, clicks }))
+        .sort((a, b) => b.clicks - a.clicks);
+    return result;
 }

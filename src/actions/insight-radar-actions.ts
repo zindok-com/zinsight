@@ -3,6 +3,8 @@
 import { prisma } from '@/lib/db';
 import { type RadarSort } from '@/lib/radar';
 import { normalizeExtraMaterials } from '@/lib/org-materials';
+import { resolveOrgChannels } from '@/lib/org-channels';
+import { ACTIVE_CHANNELS } from '@/lib/org-channel-store';
 
 // ─────────────────────────────────────────────
 // 타입 정의
@@ -337,6 +339,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
 
     const commonInclude = {
         region: { select: { id: true, name: true, slug: true } },
+        channels: ACTIVE_CHANNELS,
         company_articles: {
             include: {
                 article: {
@@ -488,6 +491,8 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         ceo_name: company.ceo_name,
         key_references: company.key_references,
         backlinks: company.backlinks,
+        // 공식 채널 (채널 이전 전 조직은 company_url·backlinks·소개자료로 만든 목록, id null)
+        channels: resolveOrgChannels(company.channels, company),
         video_url: company.video_url ?? null,
         video_poster_url: company.video_poster_url ?? null,
         brochure_url: company.brochure_url ?? null,

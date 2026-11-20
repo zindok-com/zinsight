@@ -1,7 +1,10 @@
-import { safeHttpUrl } from '@/lib/utils';
-import { normalizeExtraMaterials } from '@/lib/org-materials';
+import { safeHttpUrl } from './utils';
+import { normalizeExtraMaterials } from './org-materials';
+import { CHANNEL_TYPES, detectChannelType } from './org-channels';
 
-// 조직 링크 페이지(/insight-radar/[slug]/links) 공용 정의. 서버·관리자 화면에서 함께 사용
+// 조직 링크 페이지(/insight-radar/[slug]/links) 공용 정의. 서버·관리자 화면에서 함께 사용.
+// 링크 원본은 공식 채널(src/lib/org-channels.ts). 아래 OrgLinkKind·deriveDefaultOrgLinks·normalizeOrgLinks는
+// 공식 채널로 옮기기 전 조직의 화면 표시와 이전 스크립트(auto:{n} 클릭 매핑)용으로만 남긴다
 
 export const ORG_LINK_KINDS = ['homepage', 'sns', 'brochure', 'shop', 'event', 'custom'] as const;
 export type OrgLinkKind = (typeof ORG_LINK_KINDS)[number];
@@ -36,54 +39,12 @@ export interface OrgLinkInput {
     is_visible: boolean;
 }
 
-export type SocialPlatform =
-    | 'instagram'
-    | 'youtube'
-    | 'x'
-    | 'threads'
-    | 'naver-blog'
-    | 'facebook'
-    | 'linkedin'
-    | 'kakao'
-    | 'tiktok'
-    | 'tistory';
-
-export const SOCIAL_PLATFORM_LABEL: Record<SocialPlatform, string> = {
-    instagram: '인스타그램',
-    youtube: '유튜브',
-    x: 'X',
-    threads: '스레드',
-    'naver-blog': '네이버 블로그',
-    facebook: '페이스북',
-    linkedin: '링크드인',
-    kakao: '카카오톡 채널',
-    tiktok: '틱톡',
-    tistory: '티스토리',
-};
-
 function hostOf(url: string): string {
     try {
         return new URL(url).hostname.toLowerCase().replace(/^(www|m)\./, '');
     } catch {
         return '';
     }
-}
-
-/** 주소로 SNS 플랫폼 판별 (해당 없으면 null) */
-export function detectSocialPlatform(url: string): SocialPlatform | null {
-    const host = hostOf(url);
-    if (!host) return null;
-    if (host.endsWith('instagram.com')) return 'instagram';
-    if (host.endsWith('youtube.com') || host === 'youtu.be') return 'youtube';
-    if (host === 'x.com' || host.endsWith('twitter.com')) return 'x';
-    if (host.endsWith('threads.net') || host.endsWith('threads.com')) return 'threads';
-    if (host === 'blog.naver.com') return 'naver-blog';
-    if (host.endsWith('facebook.com')) return 'facebook';
-    if (host.endsWith('linkedin.com')) return 'linkedin';
-    if (host === 'pf.kakao.com') return 'kakao';
-    if (host.endsWith('tiktok.com')) return 'tiktok';
-    if (host.endsWith('tistory.com')) return 'tistory';
-    return null;
 }
 
 function sameUrl(a: string, b: string): boolean {
@@ -106,8 +67,20 @@ function parseBacklinks(raw: unknown): Array<{ title: string; url: string }> {
         .filter((item) => !!safeHttpUrl(item.url));
 }
 
+// 이전 규칙의 SNS 판별(틱톡·티스토리 포함). 공식 채널 이전 전 기본 목록의 순서를 그대로 재현하기 위해서만 쓴다
+const LEGACY_SOCIAL_HOSTS: Array<[RegExp, string]> = [
+    [/(^|\.)tiktok\.com$/, '틱톡'],
+    [/(^|\.)tistory\.com$/, '티스토리'],
+];
+function legacySocialLabel(url: string): string | null {
+    const type = detectChannelType(url);
+    if (type && CHANNEL_TYPES[type].group === 'sns') return type === 'naver_blog' ? '네이버 블로그' : CHANNEL_TYPES[type].label;
+    const host = hostOf(url);
+    return LEGACY_SOCIAL_HOSTS.find(([re]) => re.test(host))?.[1] ?? null;
+}
+
 /**
- * 관리자가 링크를 등록하기 전의 기본 링크 목록.
+ * (공식 채널 이전 전) 관리자가 링크를 등록하기 전의 기본 링크 목록.
  * 기존 외부 링크(backlinks)·홈페이지·소개자료에서 만들며, SNS는 아이콘, 나머지는 버튼으로 둔다.
  */
 export function deriveDefaultOrgLinks(org: {
@@ -126,8 +99,9 @@ export function deriveDefaultOrgLinks(org: {
     if (homepage) push('홈페이지 바로가기', homepage, 'homepage', 'button');
 
     for (const item of parseBacklinks(org.backlinks)) {
-        const platform = detectSocialPlatform(item.url);
-        if (platform) push(SOCIAL_PLATFORM_LABEL[platform], item.url, 'sns', 'icon');
+        // 이전 판별 규칙 유지 (auto:{n} 순서가 바뀌지 않도록): SNS 종류만 아이콘
+        const detected = legacySocialLabel(item.url);
+        if (detected) push(detected, item.url, 'sns', 'icon');
         else if (homepage && sameUrl(item.url, homepage)) continue;
         else push(item.title || '바로가기', item.url, /smartstore|shop/i.test(item.url) ? 'shop' : 'custom', 'button');
     }
@@ -190,5 +164,6 @@ export function linkPageKindOf(link: { url: string; display: OrgLinkDisplay }): 
     return host === 'zinsight.co.kr' || host.endsWith('.zinsight.co.kr') ? 'internal' : 'external';
 }
 
-// 클릭 집계 키: profile | inquiry(문의 주 동작) | inquiry_alt(보조 메일·문의 페이지) | lead(연락처 남기기 열기) | home | article:{id} | link:{id} | auto:{n} | sns:{platform}
-export const LINK_KEY_PATTERN = /^(profile|inquiry|inquiry_alt|lead|home|(article|link|auto):\d{1,10}|sns:[a-z-]{1,20})$/;
+// 클릭 집계 키: profile | inquiry(문의 주 동작) | inquiry_alt(보조 메일·문의 페이지) | lead(연락처 남기기 열기) | home | article:{id}
+// | ch:{공식 채널 id} | (이전 전) link:{id} | auto:{n} | sns:{platform}
+export const LINK_KEY_PATTERN = /^(profile|inquiry|inquiry_alt|lead|home|(article|link|auto|ch):\d{1,10}|sns:[a-z-]{1,20})$/;

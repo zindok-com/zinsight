@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db';
+import { ACTIVE_CHANNELS } from '@/lib/org-channel-store';
 import { notFound } from 'next/navigation';
 import { CompanyEditClient } from './CompanyEditClient';
 
@@ -21,6 +22,7 @@ export default async function CompanyDetailPage({ params }: PageProps) {
             where: { id },
             include: {
                 region: true,
+                channels: ACTIVE_CHANNELS,
                 company_articles: {
                     include: {
                         article: true,

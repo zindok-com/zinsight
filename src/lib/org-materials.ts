@@ -1,4 +1,4 @@
-import { safeHttpUrl } from '@/lib/utils';
+import { safeHttpUrl } from './utils';
 
 /** 소개자료 외 추가 자료 버튼 (제안서·카탈로그 등). 버튼 이름은 관리자가 정한다. */
 export type ExtraMaterial = {

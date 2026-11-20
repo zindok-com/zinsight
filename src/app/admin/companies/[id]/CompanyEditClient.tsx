@@ -12,9 +12,6 @@ import {
     ExternalLink,
     Newspaper,
     Search,
-    Plus,
-    Trash2,
-    Globe,
     Sparkles,
     X,
     RefreshCw,
@@ -27,9 +24,11 @@ import {
     ChevronDown,
     FolderOpen,
 } from 'lucide-react';
-import { StorageImageSelectorModal, type SelectableMedia } from '@/components/admin/storage/StorageImageSelectorModal';
+import { StorageImageSelectorModal } from '@/components/admin/storage/StorageImageSelectorModal';
 import { OrgLinksManager } from './OrgLinksManager';
-import { EXTRA_MATERIALS_MAX, EXTRA_MATERIAL_LABEL_MAX, normalizeExtraMaterials, type ExtraMaterial } from '@/lib/org-materials';
+import { prepareChannels, resolveOrgChannels, type ChannelRow } from '@/lib/org-channels';
+import { siteConfig } from '@/config/site';
+import { OfficialChannelsEditor, channelInputsOf, channelRowsFrom, type ChannelEditorRow } from './OfficialChannelsEditor';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -131,6 +130,7 @@ interface CompanyData {
     key_references: any;
     aliases: any;
     backlinks: any;
+    channels?: ChannelRow[];
     is_featured: boolean;
     region_id: number;
     region: Region | null;
@@ -149,30 +149,6 @@ interface Props {
     company: CompanyData;
     regions: Region[];
     matchedArticles?: Article[];
-}
-
-function parseBacklinks(rawBacklinks: any, companyUrl?: string | null): Array<{ title: string; url: string }> {
-    if (Array.isArray(rawBacklinks) && rawBacklinks.length > 0) {
-        return rawBacklinks.slice(0, 3).map((item: any) => ({
-            title: item.title || '홈페이지 바로가기',
-            url: item.url || '',
-        }));
-    }
-    if (typeof rawBacklinks === 'string') {
-        try {
-            const parsed = JSON.parse(rawBacklinks);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-                return parsed.slice(0, 3).map((item: any) => ({
-                    title: item.title || '홈페이지 바로가기',
-                    url: item.url || '',
-                }));
-            }
-        } catch { }
-    }
-    if (companyUrl) {
-        return [{ title: '홈페이지 바로가기', url: companyUrl }];
-    }
-    return [{ title: '홈페이지 바로가기', url: '' }];
 }
 
 function parseKeywords(keywords: any) {
@@ -236,21 +212,18 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [kwProducts, setKwProducts] = useState(kw.products);
     const [kwTechnology, setKwTechnology] = useState(kw.technology);
     const [kwTargetMarket, setKwTargetMarket] = useState(kw.target_market);
-    const [backlinks, setBacklinks] = useState<Array<{ title: string; url: string }>>(
-        parseBacklinks(initialCompany.backlinks, initialCompany.company_url)
+    // 공식 채널: 저장된 채널이 없으면(이전 전) 홈페이지·외부 링크·소개자료로 만든 목록을 보여 주고, 저장하면 채널로 옮겨짐
+    const [channelRows, setChannelRows] = useState<ChannelEditorRow[]>(() =>
+        channelRowsFrom(resolveOrgChannels(initialCompany.channels, initialCompany))
     );
+    const [cardReloadKey, setCardReloadKey] = useState(0);
     const [isFeatured, setIsFeatured] = useState(initialCompany.is_featured);
     const [logoUrl, setLogoUrl] = useState(initialCompany.logo_url || '');
     const [logoSourceUrl, setLogoSourceUrl] = useState(initialCompany.logo_source_url || '');
     const [videoUrl, setVideoUrl] = useState(initialCompany.video_url || '');
     const [videoPosterUrl, setVideoPosterUrl] = useState(initialCompany.video_poster_url || '');
-    const [brochureUrl, setBrochureUrl] = useState(initialCompany.brochure_url || '');
-    // 보관함 선택 모달: 어느 칸에 넣을지
-    // 추가 자료(제안서 등): 편집 중에는 빈 칸도 두고, 저장할 때 서버에서 정리
-    const [extraMaterials, setExtraMaterials] = useState<ExtraMaterial[]>(() => normalizeExtraMaterials(initialCompany.extra_materials));
-    const [libraryTarget, setLibraryTarget] = useState<'video' | 'poster' | 'brochure' | `extra-${number}` | null>(null);
-    const updateExtraMaterial = (index: number, patch: Partial<ExtraMaterial>) =>
-        setExtraMaterials((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+    // 보관함 선택 모달: 어느 칸에 넣을지 (소개자료는 공식 채널 섹션에서 따로 선택)
+    const [libraryTarget, setLibraryTarget] = useState<'video' | 'poster' | null>(null);
     const [inquiryUrl, setInquiryUrl] = useState(initialCompany.inquiry_url || '');
     const [contactEmail, setContactEmail] = useState(initialCompany.contact_email || '');
     const [contactPhone, setContactPhone] = useState(initialCompany.contact_phone || '');
@@ -410,50 +383,18 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
         }, 0);
     };
 
-    // 백링크 관리 함수
-    const addBacklink = () => {
-        if (backlinks.length < 3) {
-            setBacklinks([...backlinks, { title: '', url: '' }]);
-        }
-    };
-
-    const updateBacklink = (index: number, field: 'title' | 'url', value: string) => {
-        const next = [...backlinks];
-        next[index] = { ...next[index], [field]: value };
-        setBacklinks(next);
-    };
-
-    const removeBacklink = (index: number) => {
-        if (backlinks.length === 1) {
-            setBacklinks([{ title: '홈페이지 바로가기', url: '' }]);
-            return;
-        }
-        setBacklinks(backlinks.filter((_, i) => i !== index));
-    };
-
     // 저장 함수
     const handleSave = () => {
         if (!companyName.trim()) {
             toast.error('조직명은 필수입니다.');
             return;
         }
-        const halfFilled = extraMaterials.findIndex((m) => !!m.label.trim() !== !!m.url.trim());
-        if (halfFilled !== -1) {
-            toast.error(`추가 자료 ${halfFilled + 1}번의 버튼 이름과 주소를 모두 입력하거나 행을 삭제해 주세요.`);
+        const preparedChannels = prepareChannels(channelInputsOf(channelRows));
+        if (!preparedChannels.ok) {
+            toast.error(preparedChannels.error);
             return;
         }
-
         startTransition(async () => {
-            const cleanBacklinks = backlinks
-                .filter(b => b.url.trim() !== '')
-                .map(b => ({
-                    title: b.title.trim() || '홈페이지 바로가기',
-                    url: b.url.trim(),
-                }))
-                .slice(0, 3);
-
-            const primaryUrl = cleanBacklinks[0]?.url || undefined;
-
             const core_keywords = {
                 products: kwProducts.split(',').map((s: string) => s.trim()).filter(Boolean),
                 technology: kwTechnology.split(',').map((s: string) => s.trim()).filter(Boolean),
@@ -473,8 +414,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 company_name: companyName.trim(),
                 slug: slug.trim(),
                 entity_type: entityType,
-                company_url: primaryUrl,
-                backlinks: cleanBacklinks,
+                channels: channelInputsOf(channelRows),
                 business_summary: businessSummary.trim(),
                 founded_year: foundedYear.trim(),
                 hq_location: hqLocation.trim(),
@@ -487,8 +427,6 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                 logo_source_url: logoSourceUrl.trim() || null,
                 video_url: videoUrl.trim() || null,
                 video_poster_url: videoPosterUrl.trim() || null,
-                brochure_url: brochureUrl.trim() || null,
-                extra_materials: extraMaterials.filter((m) => m.label.trim() && m.url.trim()),
                 inquiry_url: inquiryUrl.trim() || null,
                 contact_email: contactEmail.trim() || null,
                 contact_phone: contactPhone.trim() || null,
@@ -502,6 +440,9 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                     ...res.company,
                     region: regions.find(r => r.id === regionId) || prev.region,
                 }));
+                // 저장된 채널 id·정리된 주소로 다시 채우고, 카드 링크 목록도 새로 불러옴
+                setChannelRows(channelRowsFrom(resolveOrgChannels(res.company.channels, res.company)));
+                setCardReloadKey((k) => k + 1);
                 router.refresh();
             } else {
                 toast.error(res.error || '저장에 실패했습니다.');
@@ -905,29 +846,6 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                     </div>
                                 </div>
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="org-brochure" className="text-xs font-semibold">소개자료 다운로드 URL</Label>
-                                    <div className="flex gap-1.5">
-                                        <Input
-                                            id="org-brochure"
-                                            value={brochureUrl}
-                                            onChange={e => setBrochureUrl(e.target.value)}
-                                            placeholder="https://...pdf"
-                                            className="h-9"
-                                        />
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => setLibraryTarget('brochure')}
-                                            className="h-9 shrink-0 gap-1 px-2.5 text-xs"
-                                            aria-label="소개자료 보관함에서 선택"
-                                        >
-                                            <FolderOpen className="h-3.5 w-3.5" />
-                                            보관함
-                                        </Button>
-                                    </div>
-                                </div>
-                                <div className="space-y-1.5">
                                     <Label htmlFor="org-inquiry" className="text-xs font-semibold">문의하기 연결처</Label>
                                     <Input
                                         id="org-inquiry"
@@ -966,163 +884,27 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                                 </p>
                             </div>
 
-                            {/* 추가 자료: 제안서·카탈로그 등 버튼 이름을 직접 정하는 다운로드 버튼 */}
-                            <div className="mt-5 space-y-2.5 border-t pt-4">
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <div>
-                                        <p className="text-xs font-semibold">추가 자료</p>
-                                        <p className="text-[11px] text-muted-foreground">
-                                            제안서·카탈로그처럼 소개자료 외에 더 올릴 자료입니다. 입력한 버튼 이름으로 공개 프로필의 소개자료 옆에 표시됩니다. (최대 {EXTRA_MATERIALS_MAX}개)
-                                        </p>
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-9 gap-1 text-xs"
-                                        disabled={extraMaterials.length >= EXTRA_MATERIALS_MAX}
-                                        onClick={() => setExtraMaterials((prev) => [...prev, { label: '', url: '' }])}
-                                    >
-                                        <Plus className="h-3.5 w-3.5" />
-                                        자료 추가
-                                    </Button>
-                                </div>
-                                {extraMaterials.length === 0 ? (
-                                    <p className="rounded-lg border border-dashed px-3 py-3 text-center text-xs text-muted-foreground">
-                                        등록된 추가 자료가 없습니다. [자료 추가]를 눌러 제안서 등을 올려 보세요.
-                                    </p>
-                                ) : (
-                                    <ul className="space-y-2">
-                                        {extraMaterials.map((item, index) => (
-                                            <li key={index} className="grid grid-cols-1 gap-1.5 rounded-lg bg-slate-50 p-2.5 sm:grid-cols-[180px_minmax(0,1fr)_auto_auto] sm:items-center sm:bg-transparent sm:p-0">
-                                                <Input
-                                                    value={item.label}
-                                                    maxLength={EXTRA_MATERIAL_LABEL_MAX}
-                                                    onChange={(e) => updateExtraMaterial(index, { label: e.target.value })}
-                                                    placeholder="버튼 이름 (예: 제안서)"
-                                                    aria-label={`추가 자료 ${index + 1} 버튼 이름`}
-                                                    className="h-9"
-                                                />
-                                                <Input
-                                                    value={item.url}
-                                                    onChange={(e) => updateExtraMaterial(index, { url: e.target.value })}
-                                                    placeholder="https://...pdf"
-                                                    aria-label={`추가 자료 ${index + 1} 주소`}
-                                                    className="h-9"
-                                                />
-                                                <div className="flex gap-1.5 sm:contents">
-                                                    <Button
-                                                        type="button"
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => setLibraryTarget(`extra-${index}`)}
-                                                        className="h-9 flex-1 gap-1 px-2.5 text-xs sm:flex-none"
-                                                        aria-label={`추가 자료 ${index + 1} 보관함에서 선택`}
-                                                    >
-                                                        <FolderOpen className="h-3.5 w-3.5" />
-                                                        보관함
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setExtraMaterials((prev) => prev.filter((_, i) => i !== index))}
-                                                        className="h-9 w-9 shrink-0 p-0 text-slate-500 hover:text-rose-600"
-                                                        aria-label={`추가 자료 ${index + 1} 삭제`}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                )}
-                            </div>
                         </CardContent>
                     </Card>
 
                     <StorageImageSelectorModal
                         isOpen={libraryTarget !== null}
-                        accept={libraryTarget?.startsWith('extra-') ? 'document' : ({ video: 'video', poster: 'image', brochure: 'document' } as const satisfies Record<string, SelectableMedia>)[(libraryTarget as 'video' | 'poster' | 'brochure' | null) ?? 'video']}
+                        accept={libraryTarget === 'poster' ? 'image' : 'video'}
                         onClose={() => setLibraryTarget(null)}
                         onSelect={(url) => {
                             if (libraryTarget === 'video') setVideoUrl(url);
                             else if (libraryTarget === 'poster') setVideoPosterUrl(url);
-                            else if (libraryTarget === 'brochure') setBrochureUrl(url);
-                            else if (libraryTarget?.startsWith('extra-')) {
-                                const index = Number(libraryTarget.slice('extra-'.length));
-                                const current = extraMaterials[index];
-                                // 버튼 이름이 비어 있으면 파일명(확장자 제외)으로 채움
-                                const fileName = decodeURIComponent(url.split('/').pop() || '');
-                                const fallbackLabel = fileName.replace(/\.[^.]+$/, '').slice(0, EXTRA_MATERIAL_LABEL_MAX);
-                                updateExtraMaterial(index, { url, ...(current && !current.label.trim() ? { label: fallbackLabel } : {}) });
-                            }
                         }}
                     />
 
-                    <OrgLinksManager organizationId={company.id} slug={company.slug || ''} />
+                    <OfficialChannelsEditor
+                        rows={channelRows}
+                        onChange={setChannelRows}
+                        headerCount={siteConfig.radarProfile.headerChannelCount}
+                    />
 
-                    {/* 백링크 설정 카드 */}
-                    <Card>
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <CardTitle className="text-base flex items-center gap-2">
-                                        <Globe className="h-4 w-4 text-emerald-600" />
-                                        웹사이트 및 외부 백링크 (최대 3개)
-                                    </CardTitle>
-                                    <CardDescription>
-                                        공개 프로필 헤더에 버튼으로 노출될 링크와 표시 텍스트를 입력합니다. (첫 번째 링크는 대표 홈페이지로 지정됨)
-                                    </CardDescription>
-                                </div>
-                                {backlinks.length < 3 && (
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={addBacklink}
-                                        className="h-8 text-xs gap-1"
-                                    >
-                                        <Plus className="h-3.5 w-3.5" /> 링크 추가
-                                    </Button>
-                                )}
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            {backlinks.map((link, idx) => (
-                                <div key={idx} className="flex items-center gap-2 p-2.5 rounded-lg border bg-muted/20">
-                                    <div className="w-1/3 space-y-1">
-                                        <span className="text-[10px] text-muted-foreground font-semibold">버튼 문구 {idx + 1}</span>
-                                        <Input
-                                            value={link.title}
-                                            onChange={e => updateBacklink(idx, 'title', e.target.value)}
-                                            placeholder={idx === 0 ? "홈페이지 바로가기" : "블로그 / IR 자료"}
-                                            className="h-8 text-xs bg-background"
-                                        />
-                                    </div>
-                                    <div className="flex-1 space-y-1">
-                                        <span className="text-[10px] text-muted-foreground font-semibold">연결 주소 (URL)</span>
-                                        <Input
-                                            value={link.url}
-                                            onChange={e => updateBacklink(idx, 'url', e.target.value)}
-                                            placeholder="https://example.com"
-                                            className="h-8 text-xs bg-background font-mono"
-                                        />
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => removeBacklink(idx)}
-                                        className="h-8 w-8 text-muted-foreground hover:text-red-500 mt-5"
-                                        title="링크 삭제"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                    <OrgLinksManager organizationId={company.id} slug={company.slug || ''} reloadKey={cardReloadKey} />
+
 
                     {/* 사업 요약 및 키워드 카드 */}
                     <Card>
