@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ExternalLink, MessageSquare, NotebookPen } from 'lucide-react';
 import { getLinkPageStats, type LinkPageStatsRange } from '@/actions/admin/link-page-stats-actions';
+import { VIDEO_WATCH_SINCE } from '@/lib/link-page-stats';
 import { LINK_PAGE_LINK_KIND_LABEL, type LinkPageLinkKind } from '@/lib/org-links';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -145,7 +146,18 @@ export default async function LinkAnalyticsPage({ params, searchParams }: PagePr
                     text={stats.hasData ? formatPercent(stats.views > 0 ? stats.clicks / stats.views : null) : NO_DATA}
                     sub={stats.hasData ? `직전 ${formatPercent(stats.previous.views > 0 ? stats.previous.clicks / stats.previous.views : null)}` : undefined}
                 />
-                <SummaryCard label="영상 재생" value={stats.hasData ? stats.videoPlays : null} sub={stats.hasData ? `방문 대비 ${formatPercent(stats.views > 0 ? stats.videoPlays / stats.views : null)}` : undefined} delta={stats.hasData ? [stats.videoPlays, stats.previous.videoPlays] : undefined} />
+                <SummaryCard
+                    label="영상 시청"
+                    value={stats.hasData ? stats.videoPlays : null}
+                    sub={
+                        stats.hasData
+                            ? `방문 대비 ${formatPercent(stats.views > 0 ? stats.videoPlays / stats.views : null)} · 자동재생 ${stats.videoAutoStarts.toLocaleString()}회${
+                                  stats.range.from < VIDEO_WATCH_SINCE ? ` · ${VIDEO_WATCH_SINCE.slice(5).replace('-', '/')} 이전은 자동재생 포함` : ''
+                              }`
+                            : undefined
+                    }
+                    delta={stats.hasData ? [stats.videoPlays, stats.previous.videoPlays] : undefined}
+                />
             </div>
 
             {/* 일별 추이 */}

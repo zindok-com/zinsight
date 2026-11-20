@@ -29,7 +29,7 @@ export function KpiGrid({ stats, variant = 'page' }: { stats: SharedLinkStats; v
         { label: '방문 수', value: n(stats.views), sub: `순방문 ${n(stats.uniqueViews)}명` },
         { label: '링크 클릭 수', value: n(stats.clicks), sub: `방문 대비 ${formatPercent(stats.views > 0 ? stats.clicks / stats.views : null)}` },
         { label: '외부 이동 비율', value: formatPercent(stats.outboundRate), sub: `홈페이지·SNS·자료 등 ${n(stats.outboundClicks)}회` },
-        { label: '영상 재생 수', value: n(stats.videoPlays) },
+        { label: '영상 시청 수', value: n(stats.videoPlays) },
         { label: '문의하기 클릭 수', value: n(stats.inquiryClicks), accent: true },
     ];
     const grid = variant === 'report' ? 'grid-cols-2 sm:grid-cols-5 print:grid-cols-5' : 'grid-cols-2 lg:grid-cols-5';

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Play } from 'lucide-react';
 import { getYoutubeId } from '@/lib/radar';
-import { isInternalTraffic, trackLinkPageVideoPlay } from '@/components/public/insight-radar/links/LinkPageTracker';
+import { isInternalTraffic, trackLinkPageVideoAuto, trackLinkPageVideoPlay } from '@/components/public/insight-radar/links/LinkPageTracker';
+import { useVideoWatch, type VideoWatchTrigger } from '@/components/public/insight-radar/video-watch';
 
 interface LinkPageVideoProps {
     videoUrl: string;
@@ -15,23 +16,36 @@ interface LinkPageVideoProps {
 // lg(1024px) 미만을 모바일로 간주 (프로필 영상과 동일 기준)
 const MOBILE_QUERY = '(max-width: 1023px)';
 
-function sendPlayEvent(slug: string, provider: string, autoplay: boolean) {
+/** 시청(직접 재생·소리 켬·전체화면·10초 시청). autoplay: 자동재생으로 시작한 영상이었는지 */
+function sendPlayEvent(slug: string, provider: string, trigger: VideoWatchTrigger, autoplay: boolean) {
     trackLinkPageVideoPlay(slug);
     if (isInternalTraffic()) return;
-    window.gtag?.('event', 'video_play', { organization_slug: slug, video_provider: provider, page_type: 'links', autoplay });
+    window.gtag?.('event', 'video_play', { organization_slug: slug, video_provider: provider, page_type: 'links', autoplay, watch_trigger: trigger });
+}
+
+/** 자동재생 시작 (노출일 뿐 시청으로 세지 않음) */
+function sendAutoplayEvent(slug: string, provider: string) {
+    trackLinkPageVideoAuto(slug);
+    if (isInternalTraffic()) return;
+    window.gtag?.('event', 'video_autoplay', { organization_slug: slug, video_provider: provider, page_type: 'links' });
 }
 
 /**
  * 링크 페이지 소개 영상. 처음에는 높이 0으로 접어 두어 아래 링크·버튼이 먼저 보이게 하고,
  * 영상이 재생 가능해지면 펼치며 나타남. 모바일은 무음 자동재생, 데스크톱은 클릭 재생.
+ * 통계: 자동재생 시작은 노출(video_auto)로만, 시청(video)은 직접 재생·소리 켬·전체화면·화면에 보인 채 10초일 때만 기록.
  * 불러오지 못한 영상은 끝까지 접힌 상태로 둠.
  * 박스 비율은 영상 실제 크기(videoWidth·videoHeight)를 따르고, 세로 영상은 폭을 280px로 제한해 가운데 정렬.
  * 포스터가 없으면 첫 장면이 그려진 뒤에 펼쳐 빈 검은 화면이 보이지 않게 함.
  */
 export function LinkPageVideo({ videoUrl, posterUrl, orgName, slug }: LinkPageVideoProps) {
     const youtubeId = getYoutubeId(videoUrl);
+    const sectionRef = useRef<HTMLElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const playedRef = useRef(false);
+    // 다음 play 이벤트가 자동재생 시도에서 온 것인지 / 자동재생으로 시작된 적이 있는지
+    const autoStartingRef = useRef(false);
+    const autoStartedRef = useRef(false);
     // 자동재생 중이면 첫 장면(loadeddata)까지, 클릭 재생이면 포스터·메타데이터(loadedmetadata)만 준비되면 펼침
     const waitFirstFrameRef = useRef(false);
     const [isMobile, setIsMobile] = useState<boolean | null>(null);
@@ -66,7 +80,9 @@ export function LinkPageVideo({ videoUrl, posterUrl, orgName, slug }: LinkPageVi
         if (mobile) {
             waitFirstFrameRef.current = true;
             video.muted = true;
+            autoStartingRef.current = true;
             video.play().catch(() => {
+                autoStartingRef.current = false;
                 // 저전력 모드 등으로 자동재생이 막히면 포스터와 재생 버튼으로 표시
                 waitFirstFrameRef.current = !posterUrl;
                 setAutoplayBlocked(true);
@@ -88,16 +104,32 @@ export function LinkPageVideo({ videoUrl, posterUrl, orgName, slug }: LinkPageVi
         img.src = posterUrl;
     }, [youtubeId, posterUrl]);
 
+    const markWatched = useVideoWatch({
+        containerRef: sectionRef,
+        videoRef: youtubeId ? undefined : videoRef,
+        youtubeAutoplaying: !!youtubeId && youtubeActive && !!isMobile,
+        onWatch: (trigger) => {
+            if (playedRef.current) return;
+            playedRef.current = true;
+            sendPlayEvent(slug, youtubeId ? 'youtube' : 'file', trigger, autoStartedRef.current);
+        },
+    });
+
     const handleNativePlay = () => {
         setAutoplayBlocked(false);
-        if (playedRef.current) return;
-        playedRef.current = true;
-        sendPlayEvent(slug, 'file', !!videoRef.current?.muted && !!isMobile);
+        if (autoStartingRef.current) {
+            // 무음 자동재생 시작: 노출만 기록, 시청 판정은 useVideoWatch가 이어서 함
+            autoStartingRef.current = false;
+            autoStartedRef.current = true;
+            sendAutoplayEvent(slug, 'file');
+            return;
+        }
+        markWatched('click');
     };
 
     const startYoutube = () => {
         setYoutubeActive(true);
-        sendPlayEvent(slug, 'youtube', false);
+        markWatched('click');
     };
 
     const youtubePoster = youtubeId ? `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg` : null;
@@ -109,6 +141,7 @@ export function LinkPageVideo({ videoUrl, posterUrl, orgName, slug }: LinkPageVi
 
     return (
         <section
+            ref={sectionRef}
             aria-label={`${orgName} 소개 영상`}
             aria-hidden={!revealed}
             className={`grid transition-[grid-template-rows,opacity,margin] duration-700 ease-out motion-reduce:transition-none ${
@@ -132,9 +165,9 @@ export function LinkPageVideo({ videoUrl, posterUrl, orgName, slug }: LinkPageVi
                                 allowFullScreen
                                 onLoad={() => {
                                     setRevealed(true);
-                                    if (youtubeMuted && !playedRef.current) {
-                                        playedRef.current = true;
-                                        sendPlayEvent(slug, 'youtube', true);
+                                    if (youtubeMuted && !autoStartedRef.current) {
+                                        autoStartedRef.current = true;
+                                        sendAutoplayEvent(slug, 'youtube');
                                     }
                                 }}
                             />

@@ -520,7 +520,7 @@ model OrganizationLink {
 model LinkPageEvent {
   id              BigInt   @id @default(autoincrement())
   organization_id Int
-  event           String   @db.VarChar(10) // view | click | video
+  event           String   @db.VarChar(10) // view | click | video(시청) | video_auto(자동재생 시작)
   link_key        String?  @db.VarChar(64) // click만: profile | article:{id} | link:{id} | auto:{n} | inquiry | home
   link_kind       String?  @db.VarChar(10) // click만: external | internal | cta | social
   source_code     String   @default("direct") @db.VarChar(50) // /go 코드 또는 direct
@@ -542,7 +542,7 @@ model LinkPageDaily {
   organization_id Int
   date            DateTime @db.Date // KST 기준 일자
   source_code     String   @db.VarChar(50)
-  event           String   @db.VarChar(10) // view | click | video
+  event           String   @db.VarChar(10) // view | click | video(시청) | video_auto(자동재생 시작)
   link_key        String   @default("") @db.VarChar(64)
   link_kind       String   @default("") @db.VarChar(10)
   label           String   @default("") @db.VarChar(100) // 마지막 클릭 시점의 표시 라벨

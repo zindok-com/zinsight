@@ -28,7 +28,8 @@ function isAdminSession(request: NextRequest): boolean {
     }
 }
 const KINDS = new Set<string>(LINK_PAGE_LINK_KINDS);
-const EVENTS = new Set<unknown>(['view', 'click', 'video']);
+const EVENTS = new Set<unknown>(['view', 'click', 'video', 'video_auto']);
+type TrackEvent = 'view' | 'click' | 'video' | 'video_auto';
 
 // KST 기준 오늘 (DATE 컬럼 저장용 UTC 자정 값, 그날 시작 시각, 해시용 문자열)
 function kstDay() {
@@ -73,8 +74,8 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = typeof payload?.slug === 'string' ? payload.slug.slice(0, 255) : '';
-    // view: 페이지 방문, click: 링크·버튼 클릭, video: 소개 영상 첫 재생
-    const event = EVENTS.has(payload?.event) ? (payload.event as 'view' | 'click' | 'video') : null;
+    // view: 페이지 방문, click: 링크·버튼 클릭, video: 소개 영상 시청(직접 재생·소리 켬·전체화면·10초), video_auto: 자동재생 시작(노출)
+    const event = EVENTS.has(payload?.event) ? (payload.event as TrackEvent) : null;
     const src = typeof payload?.src === 'string' ? payload.src.trim().toLowerCase() : '';
     if (!slug || !event) return NO_CONTENT();
 

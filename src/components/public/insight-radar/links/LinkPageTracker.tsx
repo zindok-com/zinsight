@@ -47,12 +47,20 @@ export function getLinkPageSource(slug: string): string {
     return storageGet(`zi_links_src_${slug}`) ?? 'direct';
 }
 
-/** 소개 영상 재생: 탭당 1회만 자체 통계에 기록 */
+/** 소개 영상 시청(직접 재생·소리 켬·전체화면·10초 시청): 탭당 1회만 자체 통계에 기록 */
 export function trackLinkPageVideoPlay(slug: string) {
     const key = `zi_links_video_${slug}`;
     if (storageGet(key)) return;
     storageSet(key, '1');
     send({ event: 'video', slug, src: getLinkPageSource(slug) });
+}
+
+/** 소개 영상 자동재생 시작(노출, 시청 아님): 탭당 1회만 자체 통계에 기록 */
+export function trackLinkPageVideoAuto(slug: string) {
+    const key = `zi_links_video_auto_${slug}`;
+    if (storageGet(key)) return;
+    storageSet(key, '1');
+    send({ event: 'video_auto', slug, src: getLinkPageSource(slug) });
 }
 
 // 서버가 관리자 세션으로 판정하면(X-Zi-Internal) 이 탭에서는 더 보내지 않음 (판정은 서버가 기준, 이건 보조)

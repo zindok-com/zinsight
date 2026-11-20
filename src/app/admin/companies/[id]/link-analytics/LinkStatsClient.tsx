@@ -13,7 +13,7 @@ const SERIES = [
     { key: 'clicks', label: '링크 클릭', color: '#0ea5e9' },
     { key: 'inquiryClicks', label: '문의하기', color: '#f59e0b' },
     { key: 'leads', label: '연락처 접수', color: '#10b981' },
-    { key: 'videoPlays', label: '영상 재생', color: '#e11d48' },
+    { key: 'videoPlays', label: '영상 시청', color: '#e11d48' },
 ] as const;
 
 type SeriesKey = (typeof SERIES)[number]['key'];
@@ -92,15 +92,16 @@ export function LinkStatsCsvButton({ stats }: { stats: LinkPageStats }) {
             ['문의하기 클릭', stats.inquiryClicks, stats.previous.inquiryClicks],
             ['연락처 남기기 열기', stats.leadFormOpens, stats.previous.leadFormOpens],
             ['연락처 접수', stats.leads, stats.previous.leads],
-            ['영상 재생', stats.videoPlays, stats.previous.videoPlays],
+            ['영상 시청', stats.videoPlays, stats.previous.videoPlays],
+            ['영상 자동재생 시작', stats.videoAutoStarts, stats.previous.videoAutoStarts],
             ['클릭률', pct(stats.clicks, stats.views), pct(stats.previous.clicks, stats.previous.views)],
             [],
             ['기기(방문)', `${stats.devices.countedFrom}부터 집계`],
             ['모바일', stats.devices.mobile],
             ['PC', stats.devices.desktop],
             [],
-            ['날짜', '방문', '순방문', '링크 클릭', '문의하기', '연락처 남기기 열기', '연락처 접수', '영상 재생'],
-            ...stats.daily.map((d) => [d.date, d.views, d.uniqueViews, d.clicks, d.inquiryClicks, d.leadFormOpens, d.leads, d.videoPlays]),
+            ['날짜', '방문', '순방문', '링크 클릭', '문의하기', '연락처 남기기 열기', '연락처 접수', '영상 시청', '영상 자동재생'],
+            ...stats.daily.map((d) => [d.date, d.views, d.uniqueViews, d.clicks, d.inquiryClicks, d.leadFormOpens, d.leads, d.videoPlays, d.videoAutoStarts]),
             [],
             ['유입 경로', '용도', '방문', '순방문', '클릭', '연락처 접수'],
             ...stats.sources.map((s) => [

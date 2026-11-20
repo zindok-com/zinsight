@@ -38,8 +38,11 @@ export interface LinkPageTotals {
     leadFormOpens: number;
     /** 실제 접수된 연락처 수 (보관 기간 1년이 지나 삭제된 접수는 빠짐) */
     leads: number;
+    /** 영상 시청: 직접 재생·소리 켬·전체화면·화면에 보인 채 10초 (VIDEO_WATCH_SINCE 이전 기록은 자동재생 시작 포함) */
     videoPlays: number;
     uniqueVideoPlays: number;
+    /** 영상 자동재생 시작 (노출, 시청 아님) */
+    videoAutoStarts: number;
 }
 
 export interface LinkPageDailyRow extends LinkPageTotals {
@@ -74,7 +77,11 @@ const emptyTotals = (): LinkPageTotals => ({
     leads: 0,
     videoPlays: 0,
     uniqueVideoPlays: 0,
+    videoAutoStarts: 0,
 });
+
+/** 이 날짜(KST)부터 영상 '시청'과 '자동재생 시작'을 나눠 집계. 이전의 video 기록은 자동재생 시작이 섞여 있음 */
+export const VIDEO_WATCH_SINCE = '2026-11-20';
 
 // link_page_daily.date는 KST 일자를 UTC 자정 값으로 저장
 const dayStart = (ymd: string) => new Date(`${ymd}T00:00:00.000Z`);
@@ -96,6 +103,8 @@ function addDailyRow(t: LinkPageTotals, r: { event: string; link_key: string; co
     } else if (r.event === 'video') {
         t.videoPlays += r.count;
         t.uniqueVideoPlays += r.unique_count;
+    } else if (r.event === 'video_auto') {
+        t.videoAutoStarts += r.count;
     }
 }
 
