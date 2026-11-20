@@ -1,5 +1,5 @@
 # HANDOFF — zinsight
-갱신: 2026-11-19 17:35 (KST) · PC: desktop-d7ttin2 · 브랜치: main
+갱신: 2026-11-20 09:15 (KST) · PC: desktop-d7ttin2 · 브랜치: main
 
 ## 목표
 진사이트 정체성 정비: "AEO 중심 + 고려·전환 단계 + 숫자로 측정", 대표 슬로건 "AI가 가장 먼저 찾는 기업으로 만듭니다".
@@ -7,7 +7,7 @@
 (이전 목표였던 전시회 참가사 패키지의 배포 후 확인·P1은 아래 '이전 작업'에 그대로 남김)
 
 ## 현재 상태
-- 완료: 정체성·문구·메뉴 1차 (커밋 60c20a3, 푸시 안 함)
+- 완료: 정체성·문구·메뉴 1차 (커밋 60c20a3, origin/main 푸시함 2026-11-19, 운영 화면은 아직 확인 안 함)
   - src/config/site.ts 한 파일: 회사 정보 6개(주소는 기존 값), 정체성 문구, 문의 연결(기본 zindok.com), 테크·마케팅 저널 노출, 현황 숫자 블록 노출, AI 노출 진단 버튼(꺼짐), 카드 이름 '진사이트 카드', 레이더 목록 제목·설명, /about·/services 공개 여부(false), 서비스 예시 2개, AI 인용 사례(빈 배열)
   - 메인: 영문 장식 문구 제거, 슬로건 h1, 버튼 [인사이트 레이더 둘러보기][진사이트 매거진 읽기], 사례 블록(비면 숨김)
   - 매거진 슬라이드: 서버 HTML에 원본 1벌, 복제본은 마운트 후 inert+aria-hidden (로컬 12개 → SSR 12, 화면 36 중 24 inert)
@@ -20,7 +20,7 @@
 - 미커밋(의도적): next-env.d.ts, tsconfig.tsbuildinfo, AGENTS.md, .claude/, docs/screenshots/identity-2026-11-19/ (스크린샷 20장, 커밋 여부 미정)
 
 ## 다음 할 일 (우선순위 순)
-1. 푸시 여부 사용자 확인 후 git push (Vercel 배포 → 운영에서 메인·헤더·푸터·JSON-LD 확인)
+1. 운영 배포 확인(사람): Vercel 배포 성공(스키마 변경 없음) → 메인 제목·영문 문구 없음, 헤더 '매거진 / 인사이트 레이더 / 문의', 푸터 사업자 정보, /about·/services robots 'noindex, nofollow', 메인 JSON-LD parentOrganization
 2. 운영 DB에서 진독 slug가 'zindok'인지 확인 (아니면 site.ts company.radarSlug 수정)
 3. 한 줄 소개 통일 SQL 승인·실행(사람): tagline 열 채우기 11건, 설계안은 이 세션 보고 기준
    - 확인: SELECT id, company_name, tagline FROM companies WHERE id IN (233..243);
