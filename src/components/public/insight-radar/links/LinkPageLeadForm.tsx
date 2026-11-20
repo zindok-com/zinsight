@@ -102,11 +102,11 @@ export function LinkPageLeadForm({ slug, orgName, primary }: LinkPageLeadFormPro
                 className={
                     primary
                         ? 'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-zi-blue text-[15px] font-bold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue'
-                        : 'flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-zi-blue bg-white text-[15px] font-bold text-zi-blue transition-colors hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-zi-blue'
+                        : 'mx-auto flex min-h-11 items-center justify-center gap-1.5 px-3 text-sm font-semibold text-slate-600 underline-offset-4 transition-colors hover:text-zi-blue hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zi-blue rounded-lg'
                 }
             >
-                <NotebookPen className="h-4 w-4" aria-hidden="true" />
-                연락처 남기기
+                <NotebookPen className={primary ? 'h-4 w-4' : 'h-3.5 w-3.5'} aria-hidden="true" />
+                {primary ? '연락처 남기기' : '연락처 남기기 →'}
             </button>
 
             <dialog

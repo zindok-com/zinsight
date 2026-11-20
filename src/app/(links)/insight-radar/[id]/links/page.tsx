@@ -116,7 +116,7 @@ export default async function OrgLinksPage({ params }: PageProps) {
                     )}
                 </header>
 
-                <div className="flex-1 px-4 pb-28">
+                <div className={`flex-1 px-4 ${inquiry ? 'pb-36' : 'pb-28'}`}>
                     {/* 소개 영상: 불러오기 전에는 접혀 있다가 준비되면 펼쳐짐 (모바일 무음 자동재생) */}
                     {data.videoUrl && (
                         <LinkPageVideo videoUrl={data.videoUrl} posterUrl={data.videoPosterUrl} orgName={data.name} slug={data.slug} />
@@ -211,10 +211,11 @@ export default async function OrgLinksPage({ params }: PageProps) {
                     </p>
                 </div>
 
-                {/* ⑤ 하단 고정 바: 문의하기(연락 수단이 있을 때) + 연락처 남기기 */}
-                <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur">
-                    {/* [문의하기(전화 우선, 없으면 문의 URL·메일) | 연락처 남기기] */}
-                    <div className={inquiry ? 'grid grid-cols-2 gap-2' : ''}>
+                {/* ⑤ 하단 고정 바: 주 버튼 하나 + 보조 글자 링크 (통계 키 inquiry·lead 유지)
+                    연락 수단이 있으면 [문의하기(전화 우선, 없으면 문의 URL·메일)] 아래에 '연락처 남기기' 글자 링크,
+                    없으면 [연락처 남기기]가 주 버튼 */}
+                <div className="fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] border-t border-slate-200 bg-white/95 px-4 pt-3 pb-[calc(0.25rem+env(safe-area-inset-bottom))] backdrop-blur">
+                    <div className={inquiry ? 'flex flex-col' : 'pb-2'}>
                         {inquiry && (
                             <a
                                 href={inquiry.href}
