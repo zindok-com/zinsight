@@ -15,3 +15,6 @@ next-env.d.ts
 # Google Cloud Service Account Key
 zinsight-analytics-*.json
 zinsight-analytics-2026-9897decb4585.json
+
+# 작업 결과 스크린샷 (로컬 보관, 커밋 제외)
+docs/screenshots/

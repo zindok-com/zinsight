@@ -6,7 +6,8 @@
 (이전 목표: 진사이트 정체성 1차 — 커밋 60c20a3 푸시, 운영 확인 항목은 아래 '이전 작업')
 
 ## 현재 상태
-- 완료: 공식 채널 구현 1차 (커밋 d2bd155, 푸시 안 함). tsc 통과, 검증용 DB에서 이전·화면·클릭 흐름 확인
+- 완료: 공식 채널 구현 1차 (커밋 d2bd155, origin/main 푸시 2026-11-20). tsc 통과
+- 완료: 개발 DB(터널)에 마이그레이션 적용 + 이전 스크립트 --apply (클릭 합계 전후 동일, auto 3건 → ch:, 기타 5건)
   - 스키마: organization_channels(채널), organization_card_items(카드 표시 설정) 새 테이블. 기존 organization_links는 읽기 전용으로 유지
   - 마이그레이션 파일 prisma/migrations/20261120000000_add_organization_channels (운영 반영은 Vercel 빌드 migrate)
   - 채널 종류 14개 코드 상수(src/lib/org-channels.ts). 틱톡·티스토리는 '기타'(사용자 결정)
@@ -17,16 +18,15 @@
   - JSON-LD sameAs = sameAs 포함 종류의 정리된 주소. 진독: zindok.com, 블로그, 스레드(?hl=ko 제거)
   - 채널 저장 시 company_url·backlinks·brochure_url·extra_materials에도 같은 값 기록(기존 코드 호환)
   - 채널 없는 조직(이전 전)은 기존 방식 그대로 표시(auto:{n} 키)
-- 스크린샷(미커밋, 로컬): docs/screenshots/official-channels-2026-11-20/ (4화면 × 375/390/1440/1920 = 16장 + 붙여넣기 흐름 1장), 가로 넘침 0
+- 스크린샷(로컬, docs/screenshots/는 .gitignore): docs/screenshots/official-channels-2026-11-20/ (4화면 × 375/390/1440/1920 = 16장 + 붙여넣기 흐름 1장), 가로 넘침 0
 
 ## 다음 할 일 (우선순위 순)
-1. 사용자 검토 후 푸시 → Vercel 배포(마이그레이션 자동 적용)
-2. 배포 후 사람이 운영 DB에서: 검증 쿼리(docs/migrations/org-channels-verify.sql) 실행 → 이전 스크립트 계획 출력 확인 → --apply → 검증 쿼리 재실행 비교
+1. Vercel 배포 성공 확인(마이그레이션 20261120000000 자동 적용)
+2. 배포 후 운영 DB에서 (운영은 터널 DB와 다른 서버, 에이전트 접속 미확인): 검증 쿼리(docs/migrations/org-channels-verify.sql) 실행 → 이전 스크립트 계획 출력 확인 → --apply → 검증 쿼리 재실행 비교
    - 실행: npx ts-node -T -O '{"module":"commonjs","moduleResolution":"node"}' scripts/migrate-org-channels.ts [--apply] [--org 233]
-3. 개발 DB(터널 zinsight_db)에도 마이그레이션 적용 필요(사용자 승인 후). 미적용 상태로 터널 DB에 pnpm dev 하면 새 테이블이 없어 프로필·카드가 오류
-4. 공유 통계 화면에 getChannelGroupClicks 연결(별도 작업)
-5. backlinks·organization_links 열/테이블 삭제는 운영 이전 확인 후 다음 작업
-6. (이전) 링크 페이지 '문의하기'/'연락처 남기기' 통합안 결정, 대표 확정 후 site.ts 교체
+3. 공유 통계 화면에 getChannelGroupClicks 연결(별도 작업)
+4. backlinks·organization_links 열/테이블 삭제는 운영 이전 확인 후 다음 작업
+5. (이전) 링크 페이지 '문의하기'/'연락처 남기기' 통합안 결정, 대표 확정 후 site.ts 교체
 
 ## 결정 사항
 - 채널 종류는 DB 마스터가 아니라 코드 상수 — 이유: 아이콘·판별 규칙이 코드에 있어야 함, 추가는 항목 하나
@@ -39,8 +39,7 @@
 - '기타' 판별 5건: 브라보캠프 네이버 카페, 나리보 narrivo.io·biz.narrivo.io, 예스넷 aicodai.com·qnector.kr
 
 ## 주의 · 막힌 점
-- 터널 DB(zinsight_db)는 .env 주석상 'Dev DB'. 이번 세션 분포 조회는 이 DB 기준(조직 12, 카드 저장 링크 0, 채널 클릭 3). 운영 분포는 미확인
-- 로컬 검증: Docker 컨테이너 zinsight-verify-db(MariaDB 10.6, 127.0.0.1:3317, 개발 DB 덤프+새 마이그레이션). .env.development.local이 pnpm dev를 이 DB로 돌림(.git/info/exclude 처리). 터널 DB로 돌아가려면 그 파일 삭제
+- 터널 DB(zinsight_db)는 ssh zinsight-db → 집 서버 MariaDB = 개발 DB. 운영 DB는 다른 호스트(.env 주석 'Real DB'). 분포 조회는 개발 DB 기준(조직 12, 카드 저장 링크 0, 채널 클릭 3)
 - 개발 DB에 스키마 드리프트 있음(organization_invites·submissions 인덱스·FK 이름). 이번 마이그레이션에는 넣지 않음
 - 이전 스크립트는 기존 열을 지우거나 바꾸지 않음(되돌리기용). auto:{n}은 당시 문구가 맞을 때만 매핑, 안 맞으면 보고만
 - 등록 폼·조직 추가 버튼은 입력 화면 그대로(제목+URL), 서버에서 채널로 변환
