@@ -1,7 +1,7 @@
 // 서버 전용: 링크 페이지 방문 통계 외부 공유 링크 (토큰 생성·조회, 공개용 통계 변환)
 import { createCipheriv, createDecipheriv, createHash, hkdfSync, randomBytes } from 'node:crypto';
 import { prisma } from '@/lib/db';
-import { getTokenSecret } from '@/lib/token-config';
+import { getLinkStatsSecret } from '@/lib/link-stats-secret';
 import type { LinkPageStats } from '@/lib/link-page-stats';
 
 /** base64url 43자 (32바이트 무작위) */
@@ -17,7 +17,7 @@ export function hashShareToken(token: string): string {
 
 // 관리자 '복사'용 원문 암호화 키: 서버 비밀값에서 용도별로 따로 파생 (DB만으로는 복호화 불가)
 function shareKey(): Buffer {
-    const secret = process.env.LINK_STATS_SECRET || getTokenSecret();
+    const secret = getLinkStatsSecret();
     return Buffer.from(hkdfSync('sha256', secret, 'zinsight-stats-share', 'token-enc:v1', 32));
 }
 

@@ -3,6 +3,7 @@
 import crypto from 'crypto';
 import { headers } from 'next/headers';
 import { prisma } from '@/lib/db';
+import { getLinkStatsSecret } from '@/lib/link-stats-secret';
 import { requireAdmin } from '@/lib/admin-auth';
 import { rateLimit, MINUTE } from '@/lib/rate-limit';
 
@@ -302,9 +303,8 @@ export async function recordVisitorNetworkPing(payload: {
             return { ok: false };
         }
 
-        // 비밀 키로 HMAC 처리해야 해시만 보고 IP를 대입해 되찾을 수 없음. 키가 없으면 기록하지 않음
-        const secret = process.env.LINK_STATS_SECRET || process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET;
-        if (!secret) return { ok: false };
+        // 비밀 키로 HMAC 처리해야 해시만 보고 IP를 대입해 되찾을 수 없음
+        const secret = getLinkStatsSecret();
         const ipHash = crypto.createHmac('sha256', `${secret}:visitor-org`).update(rawIp).digest('hex').slice(0, 24);
 
         const pagePath = (payload.pagePath || '/').slice(0, 512);

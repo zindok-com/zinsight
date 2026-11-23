@@ -1,6 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { NextResponse, after, type NextRequest } from 'next/server';
 import { prisma } from '@/lib/db';
+import { getLinkStatsSecret } from '@/lib/link-stats-secret';
 import { deviceFromUserAgent, isBotUserAgent } from '@/lib/bot-ua';
 import { LINK_KEY_PATTERN, LINK_PAGE_LINK_KINDS } from '@/lib/org-links';
 import { QR_CODE_PATTERN } from '@/lib/qr-link';
@@ -39,8 +40,8 @@ function kstDay() {
 
 // 날짜가 바뀌면 같은 사람도 다른 값이 되도록 날짜를 섞은 HMAC (비밀값은 환경변수, DB에 남기지 않음)
 function visitorHash(ip: string, ua: string, ymd: string): string | null {
-    const secret = process.env.LINK_STATS_SECRET || process.env.NEXTAUTH_SECRET || process.env.JWT_SECRET;
-    if (!ip || !secret) return null;
+    if (!ip) return null;
+    const secret = getLinkStatsSecret();
     return createHmac('sha256', `${secret}:${ymd}`).update(`${ip}|${ua}`).digest('hex').slice(0, 32);
 }
 
