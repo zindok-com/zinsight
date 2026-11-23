@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.*.local)",
+      "Read(./.env.development)",
+      "Read(./.env.production)",
+      "Read(./.env.test)",
+      "Read(./zinsight-analytics-*.json)",
+      "Bash(cat .env*)",
+      "Bash(head .env*)",
+      "Bash(tail .env*)",
+      "Bash(less .env*)",
+      "Bash(more .env*)",
+      "Bash(type .env*)",
+      "Bash(cat zinsight-analytics-*)",
+      "PowerShell(Get-Content .env*)",
+      "PowerShell(gc .env*)",
+      "PowerShell(cat .env*)",
+      "PowerShell(type .env*)",
+      "PowerShell(Get-Content zinsight-analytics-*)"
+    ]
+  }
+}
