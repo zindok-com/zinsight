@@ -6,6 +6,7 @@ coverage/
 npm-debug.log
 data/raw/
 .env
+.env*.local
 .next/
 
 /src/generated/prisma
