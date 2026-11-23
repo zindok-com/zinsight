@@ -1,5 +1,5 @@
 # HANDOFF — zinsight
-갱신: 2026-11-23 01:47 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (origin/main보다 6커밋 앞섬, push 안 함)
+갱신: 2026-11-23 06:22 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main
 
 ## 목표
 AI 활용 리포트 점검 항목 정리 — 비밀값·env·패스키·저장소 위생(1~5) 구현 완료, organization_links 단일화(6)·레이트 리밋(7)은 계획·보고만
@@ -13,13 +13,12 @@ AI 활용 리포트 점검 항목 정리 — 비밀값·env·패스키·저장�
 - 완료: .env.example 갱신 (커밋 7886844) — 코드가 읽는 키 전부(VERCEL_ENV 제외). NEXTAUTH_SECRET은 코드에서 안 읽어 미추가
 - 완료: 저장소 정리 (커밋 5a915aa) — tsconfig.tsbuildinfo·next-env.d.ts 추적 해제(Next 16 문서 권장 ignore), .claude/settings.local.json ignore, 루트 AGENTS.md 제거 + next.config.js agentRules: false(next dev가 다시 만들지 않음, 확인함)
 - 완료: 비밀값 노출 방지 (커밋 981e98a) — .claude/settings.json deny(env·서비스 계정 키 Read, cat/Get-Content), .agents/AGENTS.md 0-3 규칙
+- 완료: Google 서비스 계정 인증은 GOOGLE_SERVICE_ACCOUNT_JSON만 사용 — loadGoogleCredentials(src/lib/analytics/google-credentials.ts)의 키 파일 경로 분기·기본 파일명·GOOGLE_SERVICE_ACCOUNT_JSON_PATH 제거, .gitignore에 .env*.local 추가. 로컬은 .env.local
 - 확인: pnpm exec tsc --noEmit 통과, dev에서 패스키 옵션 rpId=localhost, 운영·개발 환경값별 동작은 함수 단위 실행으로 확인. 실제 운영 배포·패스키 로그인은 미확인
 
 ## 다음 할 일 (우선순위 순)
-1. (사용자, push 전 필수) Vercel 환경변수
-   - Production에 WEBAUTHN_RP_ID=www.zinsight.co.kr 추가 (없으면 운영 패스키 로그인 503)
-   - Preview에 LINK_STATS_SECRET 추가 (현재 Production만 → 없으면 프리뷰 배포가 시작 시 중단). 운영과 다른 값 권장, 단 프리뷰도 운영 DB를 쓰므로 프리뷰에서는 운영 공유 링크 '복사'가 안 됨
-2. push 후 운영에서 패스키 로그인 확인. 프리뷰 주소에서 등록한 패스키가 있으면 더는 안 됨 — 확인 쿼리(사용자 실행): admin_passkeys JOIN admins로 username·device_name·created_at·last_used_at 조회 (rpId 열은 없음, 기기에만 저장)
+1. (사용자) 각 PC의 zinsight/.env.local에 GOOGLE_SERVICE_ACCOUNT_JSON(키 JSON 한 줄 또는 Base64) 추가 — 없으면 로컬 GA4·GSC 통계가 비어 있음. 옮긴 뒤 루트 키 파일은 삭제 가능(운영은 Vercel 변수라 영향 없음)
+2. Vercel 환경변수(WEBAUTHN_RP_ID 운영, LINK_STATS_SECRET 프리뷰)는 사용자가 추가 완료, 9c9024e까지 push함. 배포 후 운영 패스키 로그인 확인. 프리뷰 주소에서 등록한 패스키가 있으면 더는 안 됨 — 확인 쿼리(사용자 실행): admin_passkeys JOIN admins로 username·device_name·created_at·last_used_at 조회 (rpId 열은 없음, 기기에만 저장)
 3. organization_links 단일화 (목표: 전시회 파일럿 참가사 등록 전, 단계마다 승인)
    - ① 채널 없는데 옛 값 있는 조직 조회(읽기 쿼리) → ② scripts/migrate-org-channels.ts 미리보기 후 사용자 --apply
    - ③ 읽기 전환: analytics-actions.ts(398), aeo-actions.ts(411·583), company-list-table.tsx(222), insight-radar-actions.ts(486), org-links.ts deriveDefaultOrgLinks, org-link-actions.ts legacy 모드, org-link-page.ts legacyCardLinks, org-channels.ts resolveOrgChannels 대신 쓰기 경로
