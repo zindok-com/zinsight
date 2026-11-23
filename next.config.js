@@ -25,6 +25,8 @@ const contentSecurityPolicy = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     reactStrictMode: true,
+    // next dev가 루트 AGENTS.md를 만들지 않도록 함 (에이전트 규칙은 .agents/AGENTS.md 한 곳에서 관리)
+    agentRules: false,
     // Ensure we can import files from outside if needed, though usually not recommended
     experimental: {
         serverActions: {

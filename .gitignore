@@ -18,3 +18,10 @@ zinsight-analytics-2026-9897decb4585.json
 
 # 작업 결과 스크린샷 (로컬 보관, 커밋 제외)
 docs/screenshots/
+
+# TypeScript 증분 빌드 캐시
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+
+# Claude Code 개인 설정 (공유 설정은 .claude/settings.json만 커밋)
+.claude/settings.local.json
