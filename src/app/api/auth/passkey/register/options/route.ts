@@ -3,7 +3,7 @@ import { generateRegistrationOptions } from '@simplewebauthn/server';
 import { prisma } from '@/lib/db';
 import { verifyTOTP } from '@/lib/totp';
 import { clientIpFromHeaders, rateLimit, MINUTE } from '@/lib/rate-limit';
-import { MAX_PASSKEYS_PER_ADMIN, PASSKEY_RP_NAME, currentAdmin, parseTransports, relyingParty, saveChallenge } from '@/lib/passkey';
+import { MAX_PASSKEYS_PER_ADMIN, PASSKEY_RP_NAME, PASSKEY_UNAVAILABLE, currentAdmin, parseTransports, relyingParty, saveChallenge } from '@/lib/passkey';
 
 /**
  * 패스키 등록 1단계: 로그인한 관리자에게 등록 옵션 발급.
@@ -11,6 +11,9 @@ import { MAX_PASSKEYS_PER_ADMIN, PASSKEY_RP_NAME, currentAdmin, parseTransports,
  */
 export async function POST(request: Request) {
     try {
+        const rp = relyingParty();
+        if (!rp) return NextResponse.json({ success: false, error: PASSKEY_UNAVAILABLE }, { status: 503 });
+
         const admin = await currentAdmin().catch(() => null);
         if (!admin) return NextResponse.json({ success: false, error: '로그인이 필요합니다.' }, { status: 401 });
 
@@ -28,10 +31,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: `기기는 최대 ${MAX_PASSKEYS_PER_ADMIN}대까지 등록할 수 있습니다.` }, { status: 400 });
         }
 
-        const { rpID } = relyingParty(request);
         const options = await generateRegistrationOptions({
             rpName: PASSKEY_RP_NAME,
-            rpID,
+            rpID: rp.rpID,
             userName: admin.username,
             userID: new TextEncoder().encode(`admin:${admin.id}`),
             attestationType: 'none',

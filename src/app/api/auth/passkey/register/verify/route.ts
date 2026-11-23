@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
 import { verifyRegistrationResponse } from '@simplewebauthn/server';
 import { prisma } from '@/lib/db';
-import { MAX_PASSKEYS_PER_ADMIN, cleanDeviceName, currentAdmin, relyingParty, takeChallenge } from '@/lib/passkey';
+import { MAX_PASSKEYS_PER_ADMIN, PASSKEY_UNAVAILABLE, cleanDeviceName, currentAdmin, relyingParty, takeChallenge } from '@/lib/passkey';
 
 /** 패스키 등록 2단계: 기기가 만든 응답을 검증하고 공개키 저장 */
 export async function POST(request: Request) {
     try {
+        const rp = relyingParty();
+        if (!rp) return NextResponse.json({ success: false, error: PASSKEY_UNAVAILABLE }, { status: 503 });
+
         const admin = await currentAdmin().catch(() => null);
         if (!admin) return NextResponse.json({ success: false, error: '로그인이 필요합니다.' }, { status: 401 });
 
@@ -17,14 +20,13 @@ export async function POST(request: Request) {
         const body = await request.json().catch(() => null);
         if (!body?.response) return NextResponse.json({ success: false, error: '잘못된 요청입니다.' }, { status: 400 });
 
-        const { rpID, origin } = relyingParty(request);
         let verification;
         try {
             verification = await verifyRegistrationResponse({
                 response: body.response,
                 expectedChallenge: challenge.challenge,
-                expectedOrigin: origin,
-                expectedRPID: rpID,
+                expectedOrigin: rp.origins,
+                expectedRPID: rp.rpID,
                 requireUserVerification: true,
             });
         } catch (error) {

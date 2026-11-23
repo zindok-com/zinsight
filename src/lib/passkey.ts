@@ -15,10 +15,37 @@ const CHALLENGE_COOKIE = 'passkey_challenge';
 const CHALLENGE_TTL_SECONDS = 300;
 const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7;
 
-/** RP ID·origin은 요청 주소 기준 (운영 www, 프리뷰, localhost 각각 따로 등록됨) */
-export function relyingParty(request: Request): { rpID: string; origin: string } {
-    const url = new URL(request.url);
-    return { rpID: url.hostname, origin: url.origin };
+export const PASSKEY_UNAVAILABLE = '이 환경에는 패스키가 설정되어 있지 않습니다. 비밀번호로 로그인해 주세요.';
+
+/**
+ * RP ID·허용 origin은 환경변수로 고정 (요청 Host 헤더를 믿지 않음).
+ * - WEBAUTHN_RP_ID: 예) www.zinsight.co.kr. 바꾸면 기존 패스키는 모두 다시 등록해야 함
+ * - WEBAUTHN_ORIGINS: 쉼표 구분 (생략 시 https://{RP ID}). RP ID와 같거나 그 하위 호스트만 인정
+ * 개발 환경은 값이 없으면 localhost / http://localhost:3000. 그 밖의 환경(프리뷰 등)에서 값이 없으면 null → 패스키 사용 불가
+ */
+export function relyingParty(): { rpID: string; origins: string[] } | null {
+    const rpID = process.env.WEBAUTHN_RP_ID?.trim().toLowerCase() || (isDevMode() ? 'localhost' : '');
+    if (!rpID) {
+        console.error('[passkey] WEBAUTHN_RP_ID 환경 변수가 설정되지 않았습니다.');
+        return null;
+    }
+    const raw = process.env.WEBAUTHN_ORIGINS?.trim() || (isDevMode() && rpID === 'localhost' ? 'http://localhost:3000' : `https://${rpID}`);
+    const origins = raw
+        .split(',')
+        .map((o) => o.trim())
+        .filter((o) => {
+            try {
+                const { hostname, origin } = new URL(o);
+                return origin === o && (hostname === rpID || hostname.endsWith(`.${rpID}`));
+            } catch {
+                return false;
+            }
+        });
+    if (origins.length === 0) {
+        console.error('[passkey] WEBAUTHN_ORIGINS에 RP ID와 맞는 origin이 없습니다.');
+        return null;
+    }
+    return { rpID, origins };
 }
 
 type ChallengePurpose = 'register' | 'login';

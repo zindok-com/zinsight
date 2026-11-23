@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import { prisma } from '@/lib/db';
 import { clientIpFromHeaders, rateLimit, MINUTE } from '@/lib/rate-limit';
-import { issueAdminSession, parseTransports, relyingParty, takeChallenge } from '@/lib/passkey';
+import { PASSKEY_UNAVAILABLE, issueAdminSession, parseTransports, relyingParty, takeChallenge } from '@/lib/passkey';
 
 const FAIL = '패스키 로그인에 실패했습니다. 이 기기가 등록되어 있는지 확인해 주세요.';
 
@@ -16,6 +16,9 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, error: '로그인 시도가 너무 많습니다. 15분 후 다시 시도해 주세요.' }, { status: 429 });
         }
 
+        const rp = relyingParty();
+        if (!rp) return NextResponse.json({ success: false, error: PASSKEY_UNAVAILABLE }, { status: 503 });
+
         const challenge = await takeChallenge('login');
         if (!challenge) return NextResponse.json({ success: false, error: '로그인 시간이 지났습니다. 다시 시도해 주세요.' }, { status: 400 });
 
@@ -28,14 +31,13 @@ export async function POST(request: Request) {
         const passkey = await prisma.adminPasskey.findUnique({ where: { credential_id: credentialId }, include: { admin: { select: { username: true } } } });
         if (!passkey) return NextResponse.json({ success: false, error: FAIL }, { status: 401 });
 
-        const { rpID, origin } = relyingParty(request);
         let verification;
         try {
             verification = await verifyAuthenticationResponse({
                 response: body.response,
                 expectedChallenge: challenge.challenge,
-                expectedOrigin: origin,
-                expectedRPID: rpID,
+                expectedOrigin: rp.origins,
+                expectedRPID: rp.rpID,
                 requireUserVerification: true,
                 credential: {
                     id: passkey.credential_id,
