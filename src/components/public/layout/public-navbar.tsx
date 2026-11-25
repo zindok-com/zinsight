@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronDown, ChevronUp, MapPin, Newspaper } from 'lucide-react';
+import { Menu, X, ChevronDown, ChevronUp, CornerDownRight, MapPin, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
 import { getContactLink, getHeaderLinks, getMagazineSubLinks, type NavLink } from '@/config/navigation';
@@ -16,6 +16,8 @@ interface PublicNavbarProps {
 const magazineLinks = getMagazineSubLinks();
 const headerLinks = getHeaderLinks();
 const contactLink = getContactLink();
+/** 지역 지면(/magazine/local/{slug})의 상위 메뉴 */
+const LOCAL_HUB_HREF = '/magazine/local';
 
 function externalProps(link: NavLink) {
     return link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
@@ -108,7 +110,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                                     {/* 지자체별 지면 */}
                                     <div className="space-y-3.5 border-l border-zi-divider pl-6">
                                         <span className="text-[11px] font-bold tracking-widest text-slate-400 block border-b border-zi-divider pb-1 flex items-center gap-1">
-                                            <MapPin className="w-3 h-3 text-rose-500" /> 지역 지면
+                                            <MapPin className="w-3 h-3 text-rose-500" /> 로컬 허브 · 지역 지면
                                         </span>
                                         <div className="flex flex-col gap-2">
                                             {regions.length > 0 ? (
@@ -230,32 +232,42 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             {mobileMagazineOpen && (
                                 <div className="mt-1 ml-4 pl-4 border-l-2 border-indigo-100 flex flex-col gap-1">
                                     {magazineLinks.map((link) => (
-                                        <Link
-                                            key={link.href}
-                                            href={link.href}
-                                            aria-current={pathname === link.href ? 'page' : undefined}
-                                            className={cn('text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === link.href ? 'text-indigo-600' : 'text-slate-700')}
-                                        >
-                                            • {link.label}
-                                        </Link>
-                                    ))}
+                                        <div key={link.href}>
+                                            <Link
+                                                href={link.href}
+                                                aria-current={pathname === link.href ? 'page' : undefined}
+                                                className={cn('block text-sm font-semibold py-2.5 hover:text-indigo-600', pathname === link.href ? 'text-indigo-600' : 'text-slate-700')}
+                                            >
+                                                {link.label}
+                                            </Link>
 
-                                    {/* 지자체 목록 */}
-                                    {regions.length > 0 && (
-                                        <div className="mt-2 pt-2 border-t border-slate-100">
-                                            <span className="text-[11px] text-slate-400 font-bold block mb-1">지역 지면</span>
-                                            {regions.map((reg) => (
-                                                <Link
-                                                    key={reg.id}
-                                                    href={`/magazine/local/${reg.slug}`}
-                                                    aria-current={pathname.startsWith(`/magazine/local/${reg.slug}`) ? 'page' : undefined}
-                                                    className={cn('text-sm font-medium py-2 block hover:text-indigo-600', pathname.startsWith(`/magazine/local/${reg.slug}`) ? 'text-indigo-600' : 'text-slate-500')}
-                                                >
-                                                    - {reg.name} 지면
-                                                </Link>
-                                            ))}
+                                            {/* 지역 지면: 로컬 비즈니스 허브의 하위 메뉴로 들여 표시 */}
+                                            {link.href === LOCAL_HUB_HREF && regions.length > 0 && (
+                                                <ul aria-label={`${link.label} 지역 지면`} className="mb-1.5 ml-1 rounded-lg bg-slate-50 py-1">
+                                                    {regions.map((reg) => {
+                                                        const href = `${LOCAL_HUB_HREF}/${reg.slug}`;
+                                                        const current = pathname.startsWith(href);
+                                                        return (
+                                                            <li key={reg.id}>
+                                                                <Link
+                                                                    href={href}
+                                                                    aria-current={current ? 'page' : undefined}
+                                                                    className={cn(
+                                                                        'flex min-h-10 items-center gap-2 px-3 text-[13px] hover:text-indigo-600',
+                                                                        current ? 'font-semibold text-indigo-600' : 'font-medium text-slate-500'
+                                                                    )}
+                                                                >
+                                                                    <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-slate-300" aria-hidden="true" />
+                                                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-rose-400" aria-hidden="true" />
+                                                                    {reg.name} 지면
+                                                                </Link>
+                                                            </li>
+                                                        );
+                                                    })}
+                                                </ul>
+                                            )}
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
                             )}
                         </div>
