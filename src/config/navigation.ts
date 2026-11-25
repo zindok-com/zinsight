@@ -26,7 +26,7 @@ export function getMagazineSubLinks(): NavLink[] {
 /** 헤더 매거진 다음의 일반 메뉴 (공개 전 페이지는 숨김) */
 export function getHeaderLinks(): NavLink[] {
     const links: NavLink[] = [{ label: '인사이트 레이더', href: '/insight-radar', external: false }];
-    if (isPagePublished('services')) links.push({ label: '서비스', href: '/services', external: false });
+    if (isPagePublished('services')) links.push({ label: '이용 안내', href: '/services', external: false });
     if (isPagePublished('about')) links.push({ label: '진사이트 소개', href: '/about', external: false });
     return links;
 }
