@@ -1,4 +1,4 @@
--- 진사이트 이용 문의 저장 테이블 (쿼리안, 승인 전 — 실행하지 않음)
+-- 진사이트 이용 문의 저장 테이블 — 승인됨(2026-11-26). 실제 마이그레이션: prisma/migrations/20261126000000_add_inquiries
 -- 승인 후: schema.prisma에 Inquiry 모델(@@map("inquiries")) 추가 → prisma/migrations에 마이그레이션 생성
 --          → 개발 DB에 migrate deploy, 운영 DB는 Vercel 배포 시 자동 적용 (수동 실행 금지)
 -- 코드: src/lib/inquiry-store.ts가 이 열 이름으로 원시 SQL 저장 (테이블이 없으면 메일만 보냄)

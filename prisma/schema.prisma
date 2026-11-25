@@ -111,7 +111,7 @@ model Organization {
   links            OrganizationLink[]
   channels         OrganizationChannel[]
   cardItems        OrganizationCardItem[]
-  linkClicks      OrganizationLinkClickDaily[]
+  linkClicks       OrganizationLinkClickDaily[]
   linkPageEvents   LinkPageEvent[]
   linkPageDaily    LinkPageDaily[]
   linkPageLeads    LinkPageLead[]
@@ -299,14 +299,14 @@ model Author {
 
 // ─── 관리자 ──────────────────────────────────────────────────────────
 model Admin {
-  id                 Int      @id @default(autoincrement())
-  username           String   @unique @db.VarChar(100)
-  password_hash      String   @db.VarChar(255)
-  two_factor_enabled Boolean  @default(false)
-  two_factor_secret  String?  @db.VarChar(100)
-  two_factor_temp    String?  @db.VarChar(100)
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  id                 Int            @id @default(autoincrement())
+  username           String         @unique @db.VarChar(100)
+  password_hash      String         @db.VarChar(255)
+  two_factor_enabled Boolean        @default(false)
+  two_factor_secret  String?        @db.VarChar(100)
+  two_factor_temp    String?        @db.VarChar(100)
+  created_at         DateTime       @default(now())
+  updated_at         DateTime       @updatedAt
   passkeys           AdminPasskey[]
 
   @@map("admins")
@@ -612,4 +612,30 @@ model StatsShareLink {
 
   @@index([organization_id])
   @@map("stats_share_links")
+}
+
+// 진사이트 자체 이용 문의 (/services 폼, 이후 zindok.com/quote). 고객사 링크 페이지 문의(link_page_leads)와 별개
+// 개인정보: 접수일로부터 1년 보관
+model Inquiry {
+  id           Int       @id @default(autoincrement())
+  source       String    @db.VarChar(20) // zinsight | zindok (서버가 Origin으로 결정)
+  company_name String    @db.VarChar(200)
+  contact_name String    @db.VarChar(50)
+  phone        String?   @db.VarChar(30)
+  email        String?   @db.VarChar(255)
+  products     Json? // 관심 상품 id 배열 (siteConfig.pricing.items)
+  message      String?   @db.VarChar(2000)
+  page_path    String?   @db.VarChar(500) // 문의로 들어오기 직전 페이지
+  utm          Json?
+  ip_hash      String?   @db.Char(32) // 요청 제한용 일자별 HMAC (원문 IP 저장 안 함)
+  consent_at   DateTime
+  notified_at  DateTime? // 알림 메일 발송 시각
+  status       String    @default("new") @db.VarChar(20)
+  read_at      DateTime?
+  created_at   DateTime  @default(now())
+
+  @@index([source, created_at])
+  @@index([ip_hash, created_at])
+  @@index([created_at])
+  @@map("inquiries")
 }

@@ -5,11 +5,8 @@ import { inquiryProductOptions, type InquiryInput, type InquirySource, type UtmV
 import { siteConfig } from '@/config/site';
 
 /**
- * 진사이트 이용 문의 저장·알림 (서버 전용).
- *
- * 저장 테이블 inquiries는 아직 schema.prisma에 없습니다 (스키마 변경은 승인 후, 쿼리안: docs/migrations/inquiries.sql).
- * 그 전까지는 원시 SQL로 저장을 시도하고, 테이블이 없으면 저장 실패로 처리합니다.
- * 승인 후 Prisma 모델(Inquiry)이 생기면 이 파일의 SQL만 prisma.inquiry 호출로 바꿉니다.
+ * 진사이트 이용 문의 저장·알림 (서버 전용). 테이블: inquiries (prisma Inquiry 모델)
+ * 저장 실패 시 null을 돌려주고, 호출 쪽(api/inquiries)이 메일만이라도 보냄
  */
 
 export interface InquiryRecord {
@@ -34,34 +31,38 @@ export function inquiryIpHash(ip: string): string | null {
     return createHmac('sha256', `${secret}:${ymd}`).update(ip).digest('hex').slice(0, 32);
 }
 
-/** 같은 IP 해시의 최근 접수 수 (서버 인스턴스와 무관하게 DB 기준). 테이블이 없으면 null */
+/** 같은 IP 해시의 최근 접수 수 (서버 인스턴스와 무관하게 DB 기준). 조회 실패 시 null */
 export async function countRecentInquiries(ipHash: string, windowMs: number): Promise<number | null> {
     try {
-        const since = new Date(Date.now() - windowMs);
-        const rows = await prisma.$queryRaw<Array<{ n: bigint | number }>>`
-            SELECT COUNT(*) AS n FROM inquiries WHERE ip_hash = ${ipHash} AND created_at >= ${since}`;
-        return Number(rows[0]?.n ?? 0);
+        return await prisma.inquiry.count({
+            where: { ip_hash: ipHash, created_at: { gte: new Date(Date.now() - windowMs) } },
+        });
     } catch {
         return null;
     }
 }
 
-/** 저장 후 새 id. 실패(테이블 없음 등)하면 null */
+/** 저장 후 새 id. 실패하면 null */
 export async function saveInquiry(record: InquiryRecord): Promise<number | null> {
     const { source, input, pagePath, utm, ipHash } = record;
     try {
-        const rows = await prisma.$transaction(async (tx) => {
-            await tx.$executeRaw`
-                INSERT INTO inquiries
-                    (source, company_name, contact_name, phone, email, products, message, page_path, utm, ip_hash, consent_at)
-                VALUES
-                    (${source}, ${input.companyName}, ${input.contactName}, ${input.phone || null}, ${input.email || null},
-                     ${JSON.stringify(input.products)}, ${input.message || null}, ${pagePath}, ${utm ? JSON.stringify(utm) : null},
-                     ${ipHash}, ${new Date()})`;
-            return tx.$queryRaw<Array<{ id: bigint | number }>>`SELECT LAST_INSERT_ID() AS id`;
+        const row = await prisma.inquiry.create({
+            data: {
+                source,
+                company_name: input.companyName,
+                contact_name: input.contactName,
+                phone: input.phone || null,
+                email: input.email || null,
+                products: input.products,
+                message: input.message || null,
+                page_path: pagePath,
+                utm: utm ?? undefined,
+                ip_hash: ipHash,
+                consent_at: new Date(),
+            },
+            select: { id: true },
         });
-        const id = Number(rows[0]?.id ?? 0);
-        return id > 0 ? id : null;
+        return row.id;
     } catch (error) {
         console.error('[inquiry] 저장 실패:', error instanceof Error ? error.message : error);
         return null;
@@ -70,7 +71,7 @@ export async function saveInquiry(record: InquiryRecord): Promise<number | null>
 
 export async function markInquiryNotified(id: number): Promise<void> {
     try {
-        await prisma.$executeRaw`UPDATE inquiries SET notified_at = ${new Date()} WHERE id = ${id}`;
+        await prisma.inquiry.update({ where: { id }, data: { notified_at: new Date() } });
     } catch {}
 }
 
