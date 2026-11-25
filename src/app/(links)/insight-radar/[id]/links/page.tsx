@@ -209,6 +209,16 @@ export default async function OrgLinksPage({ params }: PageProps) {
                             {siteConfig.brand.name}
                         </a>
                     </p>
+                    {/* 진사이트 자체 등록 안내: 고객사 문의·통계와 분리 (data-link-key 없음 → 카드 통계에 안 잡힘, GA는 zinsight_register_cta_click) */}
+                    <p className="mt-1 text-center text-[11px] text-slate-400">
+                        <a
+                            href={siteConfig.contact.href}
+                            data-zi-cta="card_footer"
+                            className="inline-flex min-h-11 items-center px-2 underline-offset-2 hover:text-slate-600 hover:underline"
+                        >
+                            {siteConfig.contact.registerLabel} →
+                        </a>
+                    </p>
                 </div>
 
                 {/* ⑤ 하단 고정 바: 주 버튼 하나 + 보조 글자 링크 (통계 키 inquiry·lead 유지)

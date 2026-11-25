@@ -704,6 +704,17 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                         </div>
                     </aside>
                 </div>
+
+                {/* 진사이트 자체 등록 안내: 이 조직의 '문의하기'(cta_inquiry_click)와 구분되는 작은 글자 링크 */}
+                <p className="mt-10 border-t border-slate-200 pt-6 text-center text-xs text-slate-400">
+                    <Link
+                        href={siteConfig.contact.href}
+                        data-zi-cta="profile_footer"
+                        className="inline-flex min-h-11 items-center px-2 underline-offset-2 hover:text-slate-600 hover:underline"
+                    >
+                        {siteConfig.contact.registerLabel} →
+                    </Link>
+                </p>
             </div>
         </div>
     );

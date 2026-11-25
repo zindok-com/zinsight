@@ -150,6 +150,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         <Link
                             href={contactLink.href}
                             {...externalProps(contactLink)}
+                            data-zi-cta="header"
                             className="rounded-zi-btn border border-zi-primary bg-transparent px-5 py-2 text-ui-label font-ui-label text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
                         >
                             {contactLink.label}
@@ -281,6 +282,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         <Link
                             href={contactLink.href}
                             {...externalProps(contactLink)}
+                            data-zi-cta="header_drawer"
                             className="flex w-full items-center justify-center rounded-zi-btn border border-zi-primary bg-transparent px-5 py-3 text-sm font-semibold text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
                         >
                             {contactLink.label}
