@@ -4,6 +4,7 @@ import Script from 'next/script';
 import { usePathname } from 'next/navigation';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { ZinsightCtaTracker } from '@/components/public/analytics/ZinsightCtaTracker';
 
 /**
  * 전 페이지 공통 외부 스크립트 (GA4, Google 선호 출처 버튼, Vercel 분석).
@@ -33,6 +34,7 @@ export function RootScripts({ gaId }: { gaId: string | null }) {
             )}
             {/* Google 선호하는 출처(Preferred Source) 버튼 초기화 스크립트 */}
             <Script src="https://news.google.com/swg/js/v1/publisher.js" strategy="afterInteractive" />
+            <ZinsightCtaTracker />
             <Analytics />
             <SpeedInsights />
         </>
