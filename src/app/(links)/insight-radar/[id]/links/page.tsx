@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     if (!data) return { title: '링크를 찾을 수 없습니다', robots: { index: false, follow: false } };
     // 브라우저 제목: '{조직명} {카드 표시 이름} | 진사이트' (카드 이름은 src/config/site.ts card)
     const title = `${data.name} ${siteConfig.card.displayName}`;
-    const description = data.tagline ?? `${data.name}의 홈페이지·SNS·소식을 한 곳에서 확인하세요.`;
+    const description = data.tagline ?? `${data.name}의 홈페이지·SNS·소식을 한곳에 모은 ${siteConfig.card.displayName}입니다.`;
     return {
         title,
         description,

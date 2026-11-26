@@ -1,4 +1,4 @@
-import { sponsoredBadgeLabel } from '@/config/site';
+import { magazineCategoryLabel, sponsoredBadgeLabel } from '@/config/site';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
@@ -6,19 +6,6 @@ import { prisma } from '@/lib/db';
 import MagazinePostDetail from '@/components/public/magazine/MagazinePostDetail';
 import { buildArticlePublisherJsonLd, SITE_BASE_URL } from '@/lib/site';
 
-// MagazinePostDetail과 동일한 카테고리 레이블 매핑 (메타데이터 일치)
-function getCategoryLabel(category: { name?: string; slug: string } | null | undefined): string {
-    if (!category) return '뉴스레터';
-    if (category.name) return category.name;
-    switch (category.slug) {
-        case 'tech-marketing': return '테크 · 마케팅';
-        case 'spotlight': return '기업 스포트라이트';
-        case 'briefing': return '관내 소식';
-        case 'newsletter': return '뉴스레터';
-        default:
-            return category.slug || '뉴스레터';
-    }
-}
 
 export const revalidate = 3600; // 1시간마다 ISR 재생성
 export const dynamicParams = true;
@@ -103,7 +90,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         permanentRedirect(`/magazine/local/${post.region.slug}/${post.slug}`);
     }
 
-    const categoryLabel = getCategoryLabel(post.category);
+    const categoryLabel = magazineCategoryLabel(post.category);
     // 기사 제목만 사용 (분류명을 ' - '로 붙이면 제목 속 하이픈과 겹쳐 구분자가 반복됨).
     // <title>은 루트 template이 '| 진사이트'를 붙이고, template이 적용되지 않는 OG/트위터에는 직접 붙임
     const title = post.title;
@@ -220,7 +207,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
 
     const baseUrl = SITE_BASE_URL;
 
-    const ldCategoryLabel = getCategoryLabel(post.category);
+    const ldCategoryLabel = magazineCategoryLabel(post.category);
     const ldKeywords = [
         ldCategoryLabel,
         post.region?.name || '로컬',

@@ -11,7 +11,7 @@
                 </p>
                 <div className="pt-2 p-4 bg-blue-50 rounded-xl text-xs text-blue-700 text-left space-y-1">
                     <p className="font-semibold">📌 안내사항</p>
-                    <p>• 등록 완료 후 지인사이트 레이더 서비스에서 조직 프로필을 확인할 수 있습니다.</p>
+                    <p>• 등록 완료 후 인사이트 레이더에서 조직 프로필을 확인할 수 있습니다.</p>
                     <p>• 정보 수정이 필요하면 담당자에게 직접 문의해 주세요.</p>
                 </div>
             </div>

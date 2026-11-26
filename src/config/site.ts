@@ -107,7 +107,7 @@ export const siteConfig = {
         ogTitle: '진사이트 | AI가 가장 먼저 찾는 기업으로 만듭니다',
         ogDescription:
             '진사이트는 지역 기업을 취재하고 소개하는 기업 미디어 플랫폼입니다. 기사와 기업 프로필로 검색과 AI 답변에 회사가 정확히 소개되도록 돕습니다. 진독(ZINDOK)이 운영합니다.',
-        footerIntro: 'AI가 가장 먼저 찾는 기업으로 만듭니다. SEO·AEO·GEO 통합 기업 미디어 플랫폼, 진독(ZINDOK)이 운영합니다.',
+        footerIntro: '진사이트는 지역 기업을 취재하고 소개하는 기업 미디어 플랫폼입니다. 진독(ZINDOK)이 운영합니다.',
         magazineIntro: '지역 기업과 기관의 이야기를 기사로 정리해 전합니다.',
         keywords: ['진사이트', 'zinsight', '진독', 'zindok', '인사이트 레이더', '지역 기업', '기업 프로필', '기업 미디어', 'AEO', 'SEO', 'GEO'],
     },
@@ -299,6 +299,11 @@ export const siteConfig = {
 };
 
 /** 후원 기사 배지 문구: 교육·공공 협력 분류는 '협력 기관', 그 외 '협찬' */
+/** 기사 분류 표시 이름: DB 분류 이름 그대로, 없으면 '매거진' (배지·article:tag·JSON-LD keywords 공통) */
+export function magazineCategoryLabel(category?: { name?: string | null } | null): string {
+    return category?.name?.trim() || '매거진';
+}
+
 export function sponsoredBadgeLabel(categorySlug?: string | null): string {
     return categorySlug === 'edu-collab' ? siteConfig.sponsorship.eduBadge : siteConfig.sponsorship.badge;
 }

@@ -85,7 +85,7 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
                                 </h1>
                             </div>
                             <p className="text-zi-on-surface-variant font-body-md text-base leading-relaxed max-w-2xl">
-                                {author.bio || '안녕하세요. 진사이트 매거진 에디터입니다. 깊이 있는 비즈니스 분석과 마켓 인사이트를 전해드립니다.'}
+                                {author.bio || '진사이트 매거진 에디터입니다. 지역 기업과 기관을 취재해 소개합니다.'}
                             </p>
                         </div>
                     </div>

@@ -4,7 +4,7 @@ import { Building2, ArrowRight } from 'lucide-react';
 import { PreferredSourceButton } from '@/components/public/magazine/PreferredSourceButton';
 import { ArticleTracker } from '@/components/public/analytics/ArticleTracker';
 import { serializeJsonLd } from '@/lib/site';
-import { siteConfig, sponsoredBadgeLabel } from '@/config/site';
+import { magazineCategoryLabel, siteConfig, sponsoredBadgeLabel } from '@/config/site';
 import { sanitizeHref } from '@/lib/utils';
 import { extractYouTubeId, isDirectVideoUrl } from '@/lib/video';
 
@@ -242,18 +242,6 @@ function HighlightedText({ text, sponsoredLinks = false }: { text: string; spons
     );
 }
 
-function getCategoryLabel(category: any) {
-    if (!category) return '뉴스레터';
-    if (category.name) return category.name;
-    switch (category.slug) {
-        case 'tech-marketing': return '테크 · 마케팅';
-        case 'spotlight': return '기업 스포트라이트';
-        case 'briefing': return '관내 소식';
-        case 'newsletter': return '뉴스레터';
-        default:
-            return category.slug || '뉴스레터';
-    }
-}
 
 interface MagazinePostDetailProps {
     post: any;
@@ -263,7 +251,7 @@ interface MagazinePostDetailProps {
 }
 
 export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd }: MagazinePostDetailProps) {
-    const categoryLabel = getCategoryLabel(post.category);
+    const categoryLabel = magazineCategoryLabel(post.category);
     const mainIndustry = post.targetKeywords 
         ? post.targetKeywords.split(',')[0].trim() 
         : (post.industries?.[0]?.industry?.name || '인사이트');
@@ -351,7 +339,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                             </h1>
 
                             <div className="flex items-center gap-2.5 sm:gap-4 text-xs sm:text-ui-label font-ui-label text-zi-outline">
-                                <span>발행: {post.author?.name || post.authorName || '진사이트 편집부'}</span>
+                                <span>글 {post.author?.name || post.authorName || '진사이트 편집부'}</span>
                                 <span>•</span>
                                 <time
                                     dateTime={(post.publishedAt || post.createdAt).toISOString()}
@@ -453,7 +441,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
 
 
 
-                        {/* ── 발행자 섹션 ── */}
+                        {/* ── 에디터 섹션 ── */}
                         {(post.author || post.authorName) && (() => {
                             const authorName = post.author?.name || post.authorName || '진사이트 편집부';
                             const authorSlug = post.author?.slug;
@@ -478,7 +466,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                     {/* 텍스트 */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                            <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">발행자</span>
+                                            <span className="text-[11px] font-bold uppercase tracking-widest text-slate-400">에디터</span>
                                         </div>
                                         <p className="mt-0.5 font-bold text-slate-900 text-base leading-snug">{authorName}</p>
                                         {bio && (
@@ -489,7 +477,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                                 href={`/author/${authorSlug}`}
                                                 className="inline-flex items-center gap-1 mt-2.5 text-[12px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
                                             >
-                                                발행자 프로필 보기 →
+                                                에디터 프로필 보기 →
                                             </Link>
                                         )}
                                     </div>
@@ -511,7 +499,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                             <p className="mt-8 text-[11px] text-zi-outline leading-relaxed border-t border-zi-divider pt-5 italic">
                                 {post.category?.slug === 'edu-collab'
                                     ? '본 콘텐츠는 진사이트와 협력 관계에 있는 기관의 의뢰로 제작된 콘텐츠입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.'
-                                    : `본 콘텐츠는 진사이트와 제휴 계약을 체결한 파트너사의 의뢰로 제작된 ${siteConfig.sponsorship.name}입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.`
+                                    : `이 기사는 기업의 의뢰로 제작한 ${siteConfig.sponsorship.name}입니다. 기사의 구성과 표현은 진사이트 편집부가 정했습니다.`
                                 }
                             </p>
                         )}
@@ -547,7 +535,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                             )}
                                             {/* 설명 문구 */}
                                             <p className="text-[11px] text-slate-400 leading-snug">
-                                                최신 기사, 투자 유치, GEO 마케팅 인덱스를 인사이트 레이더에서 확인해보세요.
+                                                사업 소개와 관련 기사를 인사이트 레이더 프로필에서 볼 수 있습니다.
                                             </p>
                                             {/* CTA 버튼 */}
                                             <Link

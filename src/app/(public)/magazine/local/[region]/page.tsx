@@ -90,7 +90,7 @@ export default async function LocalRegionPage({ params }: PageProps) {
             <div className="mx-auto max-w-zi-container px-4 sm:px-6 py-8 sm:py-12">
                 {/* 브레드크럼 */}
                 <div className="mb-4 text-xs text-zi-outline font-ui-label flex items-center gap-1.5">
-                    <Link href="/magazine" className="hover:text-zi-secondary transition-colors">Magazine</Link>
+                    <Link href="/magazine" className="hover:text-zi-secondary transition-colors">매거진</Link>
                     <span>&gt;</span>
                     <span className="text-zi-on-surface-variant">{region.name}</span>
                 </div>
@@ -98,16 +98,16 @@ export default async function LocalRegionPage({ params }: PageProps) {
                 <div className="mb-12 flex flex-col md:flex-row items-start sm:items-end justify-between border-b border-zi-divider pb-5 gap-3">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest flex items-center gap-1.5">
-                            <Building2 className="w-4 h-4" /> {region.name} 관내 기업 소식 & 지원 정보
+                            <Building2 className="w-4 h-4" /> {region.name} 기업·기관 소식과 지원 정보
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
-                            {region.name} 비즈니스 허브
+                            {region.name} 지면
                         </h1>
                     </div>
                     <div className="max-w-md text-right hidden md:block">
                         <p className="text-xs text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
-                            {region.name} 관내 기업·스타트업 소식과 지원 정보를 요약 전달하는<br />
-                            진사이트 기획 파트너 미디어 코너입니다.
+                            진사이트 매거진이 {region.name} 기업과 기관을<br />
+                            취재해 전하는 지면입니다.
                         </p>
                     </div>
                 </div>

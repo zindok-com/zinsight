@@ -1,4 +1,4 @@
-import { sponsoredBadgeLabel } from '@/config/site';
+import { siteConfig, sponsoredBadgeLabel } from '@/config/site';
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import Image from 'next/image';
@@ -121,8 +121,7 @@ export default async function TagArchivePage({ params }: PageProps) {
                     ) : (
                         <div className="hidden text-right md:block">
                             <p className="max-w-sm text-body-md font-body-md text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
-                                데이터의 깊이와 저널리즘의 통찰이 만난 곳,<br />
-                                마케팅의 격을 높이는 프리미엄 미디어
+                                {siteConfig.identity.magazineIntro}
                             </p>
                         </div>
                     )}
