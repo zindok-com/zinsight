@@ -1,10 +1,16 @@
 # HANDOFF — zinsight
-갱신: 2026-11-26 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (/about 커밋은 push 안 함)
+갱신: 2026-11-26 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (388f0bc 이후 커밋 push 안 함)
 
 ## 목표
 진사이트 = "지역 기업을 취재하고 소개하는 기업 미디어 플랫폼". 독자에게는 미디어로, 기업 등록·제휴는 언론사 '광고·제휴 문의'처럼 눈에 띄지 않는 별도 경로(/services)로. 진사이트에는 가격을 싣지 않음(상담·진독에서 안내)
 
 ## 현재 상태
+- 완료: 문구 점검(docs/copy-audit-2026-11.md) 상 H1~H13 반영 (이번 커밋, push 안 함)
+  - 메타·OG·Organization·WebSite 설명을 새 정체성 문장으로, keywords '지역 기업'·'기업 미디어', 히어로·'이렇게 작동합니다' 문구
+  - 프로필 제목 꼬리 '기업 프로필'(siteConfig.radarProfile.titleSuffix), ArticleTracker 정규식은 옛/새 꼬리 모두 처리, RSS 항목·채널 설명
+  - 지역 지면 제목·설명, 테크 기사 설명·article:section·articleSection을 분류 이름으로, 이동 경로에서 'Tech & Marketing'·'Local Hub' 제거(진사이트 소식만 /magazine/news 단계)
+  - 유료 기사 JSON-LD keywords '파트너' → 배지 이름('협찬'), 'Sponsored Content'는 C5 결정 전까지 유지
+  - 스크린샷 docs/screenshots/copy-high-2026-11-26 (메인 4종)
 - 완료: /about 공개 (이번 커밋, push 안 함)
   - 구성: 정체성 한 문장 → 매거진·인사이트 레이더 → (숨김) 편집 원칙·후원 표기 정책 → 운영사 진독 → 걸어온 길 → '기업 등록·제휴 문의' 글자 링크(about_footer)
   - 값은 siteConfig.about(문구·timeline·showEditorial=false), 운영사·정정 이메일은 company(correctionEmail). 걸어온 길 기사 링크는 postSlug로 DB에서 공개 기사 주소를 찾음(getPublishedPostPaths), NCP 그린하우스는 날짜 확인 중이라 visible:false
@@ -23,10 +29,11 @@
 - 이전 완료: inquiries 테이블·Resend 메일, 메인 화면 정비, 매거진 메뉴 정리(71a1786)
 
 ## 다음 할 일 (우선순위 순)
+- (사용자) H14: 관리자 '발행자' 화면에서 authors.bio(id 1·2) 수정 — 제안 문구는 audit 문서 H14
+- 문구 점검 중·하 항목, 확인 필요 C1~C12(대표와 결정). tagline·footerIntro의 'SEO·AEO·GEO 통합'은 중 항목으로 남음
 0. push (사용자 요청 시). 대표 확정 후 about.showEditorial=true + Organization publishingPrinciples(/about#editorial) 추가. NCP 그린하우스 날짜 받으면 timeline visible:true. 진독 당사자 기사 이해관계 고지는 정책 초안에만 있음(기사 고지 기능 없음)
 1. (사용자) 운영 배포 후 테크 기사 2편 분류를 '진사이트 소식'으로, 두 번째 기사 제목·본문 첫 'zinsight' → '진사이트(Zinsight)'
 2. (사용자) Vercel Production 환경변수: RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET
-4. (승인 대기) 매거진 JSON-LD: Local Hub 이동 경로 항목 제거, articleSection을 분류 이름으로
 5. 대림대·텔링 AI 인용 사례 데이터 받으면 aiCitations 채우고 consented=true
 6. /services 공개 결정 시 pages.services.published=true (지금 noindex·사이트맵 제외)
 
