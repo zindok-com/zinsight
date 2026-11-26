@@ -1,5 +1,5 @@
 # HANDOFF — zinsight
-갱신: 2026-11-26 19:07 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (origin/main과 같음, 모두 push)
+갱신: 2026-11-26 21:30 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (origin/main과 같음, 모두 push)
 
 ## 목표
 네이버 기사 수집을 들어내고 외부 수집 기사 데이터까지 완전히 제거(저작권). 배포 두 번: 배포 1 코드만 → 운영 확인 → 배포 2 테이블 삭제. 계획·현황: docs/plan-naver-ingest-removal.md
@@ -9,13 +9,14 @@
 - 완료·push: 배포 1 — 수집·키워드·기사 관리·내보내기 화면·액션 삭제, 프로필·기사 수·최근 활동일·AEO에서 외부 기사 제외, 관리자 대시보드·사이드바·조직 편집 정리, project_data의 related_articles 삭제, 문서·.env.example 네이버 키 삭제 (ca03c7a)
   - pnpm dev로 메인·/insight-radar·프로필(bethemuse, zindok)·/admin·조직 편집(243, 246) 확인, /admin/articles 404 확인. 스크린샷 docs/screenshots/naver-removal-2026-11-26 (git 추적 안 함)
   - tsc: src 오류 없음(.next/types의 지운 페이지 참조만 남음 — dev 서버가 다시 만들면 사라짐, 추정)
-- 완료·push(2026-11-26, 사용자 승인): 배포 2 — 스키마에서 모델 4개·관계 필드 삭제, 마이그레이션 20261126210000(DROP TABLE IF EXISTS 4개). 개발 DB 적용·화면 200 확인 (8db9dcc). 운영 빌드 결과는 미확인
+- 완료·push(2026-11-26, 사용자 승인): 배포 2 — 스키마에서 모델 4개·관계 필드 삭제, 마이그레이션 20261126210000(DROP TABLE IF EXISTS 4개). 개발 DB 적용·화면 200 확인 (8db9dcc). 운영 배포 정상(사용자 확인 2026-11-26)
 - 개발 DB에는 이번과 무관한 기존 스키마 차이가 있음(organization_invites·organization_submissions의 외래 키·인덱스 이름, 컬럼 정밀도). 손대지 않음
 
 ## 다음 할 일 (우선순위 순)
 1. (완료) 배포 1 운영 정상(사용자 확인 2026-11-26)
-2. (사용자) 배포 2 push함 → Vercel 빌드에서 운영 DB에 20261126210000_drop_external_article_tables 적용 → 배포 성공·화면 확인
-4. (사용자) Vercel 환경변수 NAVER_CLIENT_ID·NAVER_CLIENT_SECRET 삭제, 네이버 개발자센터 앱 삭제
+2. (완료) 배포 2 운영 적용·배포 정상(사용자 확인 2026-11-26)
+3. (완료) Vercel 환경변수 NAVER_CLIENT_ID·NAVER_CLIENT_SECRET 삭제(사용자 2026-11-26)
+4. (사용자) 네이버 개발자센터 앱 삭제 — 완료 여부 미확인
 5. 이전 HANDOFF에서 이어진 사용자 할 일: 문의 메일 환경변수(RESEND_API_KEY 등) 확인, DB 문구 수정(H14·L17·C12), 대표 결정 C1~C12 (docs/copy-audit-2026-11.md)
 
 ## 결정 사항

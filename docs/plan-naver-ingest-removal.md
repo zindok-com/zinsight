@@ -11,7 +11,7 @@
 - 문서: `.env.example`·README·ZINSIGHT_STRUCTURE_GUIDE의 네이버 API·수집·내보내기 항목 삭제
 - 남겨 둔 것: Prisma 모델 `SearchKeyword`·`Article`·`ArticleIngestion`·`CompanyArticle`(배포 2에서 삭제), `axios` 의존성(이제 쓰는 곳 없음), `project_data/keyword_data.json`(옛 수집 키워드 목록, 기사 본문 없음)
 
-## 배포 2 — 테이블 삭제 ✅ 마이그레이션 20261126210000_drop_external_article_tables, 개발 DB 적용함, push함(2026-11-26), 운영 빌드 확인 전
+## 배포 2 — 테이블 삭제 ✅ 마이그레이션 20261126210000_drop_external_article_tables, 개발 DB 적용함, push함, 운영 배포 정상(사용자 확인 2026-11-26)
 - 배포 1 운영 정상 확인(사용자). 행 수·AEO 전후 값 보고는 생략(사용자: AEO는 의미 없는 데이터)
 - Prisma가 만든 SQL(외래 키 이름으로 먼저 삭제)은 운영 키 이름이 다르면 중간 실패 위험 → 참조하는 쪽부터 DROP TABLE IF EXISTS로 작성
 
@@ -39,5 +39,5 @@ mysqldump --single-transaction --no-tablespaces -h <호스트> -P <포트> -u <�
 - 그래서 DROP은 `IF EXISTS`로 쓰고, 참조하는 쪽 테이블부터 지운다
 
 ## 마무리 (사용자)
-- Vercel 환경변수 NAVER_CLIENT_ID·NAVER_CLIENT_SECRET 삭제 (Production·Preview·Development)
+- ✅ Vercel 환경변수 NAVER_CLIENT_ID·NAVER_CLIENT_SECRET 삭제 (2026-11-26)
 - 네이버 개발자센터에서 해당 애플리케이션 삭제
