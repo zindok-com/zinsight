@@ -1,45 +1,60 @@
 # HANDOFF — zinsight
-갱신: 2026-11-26 22:10 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (origin/main과 같음, 모두 push)
+갱신: 2026-11-26 22:24 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (origin/main과 같음, 모두 push)
 
 ## 목표
-네이버 기사 수집을 들어내고 외부 수집 기사 데이터까지 완전히 제거(저작권). 배포 두 번: 배포 1 코드만 → 운영 확인 → 배포 2 테이블 삭제. 계획·현황: docs/plan-naver-ingest-removal.md
+네이버 기사 수집 제거(저작권)는 끝남. 이어서 메인 화면 다듬기. 기록: docs/plan-naver-ingest-removal.md
 
 ## 현재 상태
-- 완료·push: /services 첫 문단 문장마다 한 줄 (a140ee7)
-- 완료·push: 배포 1 — 수집·키워드·기사 관리·내보내기 화면·액션 삭제, 프로필·기사 수·최근 활동일·AEO에서 외부 기사 제외, 관리자 대시보드·사이드바·조직 편집 정리, project_data의 related_articles 삭제, 문서·.env.example 네이버 키 삭제 (ca03c7a)
-  - pnpm dev로 메인·/insight-radar·프로필(bethemuse, zindok)·/admin·조직 편집(243, 246) 확인, /admin/articles 404 확인. 스크린샷 docs/screenshots/naver-removal-2026-11-26 (git 추적 안 함)
-  - tsc: src 오류 없음(.next/types의 지운 페이지 참조만 남음 — dev 서버가 다시 만들면 사라짐, 추정)
-- 완료·push(2026-11-26, 사용자 승인): 배포 2 — 스키마에서 모델 4개·관계 필드 삭제, 마이그레이션 20261126210000(DROP TABLE IF EXISTS 4개). 개발 DB 적용·화면 200 확인 (8db9dcc). 운영 배포 정상(사용자 확인 2026-11-26)
-- 완료·push: 메인 '이렇게 작동합니다' B안 — 단계별 미니 화면 + 화면 진입 시 1회 모션 (src/components/public/home/AiCitationCases.tsx HowItWorks, RevealOnView.tsx, globals.css의 hiw-* 규칙). 데스크톱·모바일 확인, 서버 HTML엔 내용 그대로. 1단계 예시 질문 문구 "우리 동네 방수 업체 추천해줘"는 임시(사용자 확인 필요). 움직임 줄이기 설정 환경은 실제로 켜서 보지는 않음
-- 개발 DB에는 이번과 무관한 기존 스키마 차이가 있음(organization_invites·organization_submissions의 외래 키·인덱스 이름, 컬럼 정밀도). 손대지 않음
+- 완료·운영 정상: 네이버 기사 수집 제거
+  - 배포 1: 코드 제거 (ca03c7a)
+  - 배포 2: 외부 기사 테이블 4개 DROP. 마이그레이션 20261126210000 (8db9dcc)
+  - Vercel의 NAVER_CLIENT_ID·NAVER_CLIENT_SECRET 삭제(사용자)
+- 완료·push, 운영 확인 전: 메인 '이렇게 작동합니다' B안 (c2acd43)
+  - 단계별 미니 화면(검색·AI 답변 → 기업 프로필 → 홈페이지·문의)
+  - 화면에 들어올 때 한 번 재생되는 모션(약 2.5초)
+  - 로컬 데스크톱(1280)·모바일(375)에서 확인. 서버 HTML에는 내용이 그대로 있음(숨김은 스크립트가 처리)
+  - 움직임 줄이기 설정을 실제로 켜서 보지는 않음
+- 완료·push: .agents/AGENTS.md DB 규칙 변경(c7eea6b)
+  - UPDATE·DELETE도 에이전트가 실행
+  - 개발 DB는 바로, 운영 DB는 대상·SQL·행 수를 알리고 승인 후
+  - DROP·TRUNCATE는 덤프 후 승인
+  - 에이전트 메모리도 이 규칙으로 갱신함
 
 ## 다음 할 일 (우선순위 순)
-1. (완료) 배포 1 운영 정상(사용자 확인 2026-11-26)
-2. (완료) 배포 2 운영 적용·배포 정상(사용자 확인 2026-11-26)
-3. (완료) Vercel 환경변수 NAVER_CLIENT_ID·NAVER_CLIENT_SECRET 삭제(사용자 2026-11-26)
-4. (사용자) 네이버 개발자센터 앱 삭제 — 완료 여부 미확인
-5. 이전 HANDOFF에서 이어진 사용자 할 일: 문의 메일 환경변수(RESEND_API_KEY 등) 확인, DB 문구 수정(H14·L17·C12), 대표 결정 C1~C12 (docs/copy-audit-2026-11.md)
+1. (사용자) 운영 메인에서 '이렇게 작동합니다' 모션·모바일 화면 확인
+2. (사용자) 1단계 예시 질문 문구 확정. 지금은 임시 문구 "우리 동네 방수 업체 추천해줘" — AiCitationCases.tsx SearchVisual
+3. (사용자) 네이버 개발자센터 앱 삭제. 완료 여부 미확인
+4. (사용자) 루트 CLAUDE.md에 "DB 작업" 절 추가 여부. AGENTS.md가 이 절을 근거로 가리키지만 현재 루트 CLAUDE.md에는 없음
+5. 이전 HANDOFF에서 이어진 사용자 할 일
+   - 문의 메일 환경변수(RESEND_API_KEY 등) 확인
+   - DB 문구 수정(H14·L17·C12)
+   - 대표 결정 C1~C12 (docs/copy-audit-2026-11.md)
 
 ## 결정 사항
-- C안(외부 기사 데이터까지 삭제), 배포 2회 분리 — 이유: 저작권(사용자 2026-11-26)
-- 배포 2 전 덤프 뜨지 않음 — 이유: 수집 기사 데이터를 보관하지 않기로(사용자 2026-11-26)
-- AEO 조직 점수의 newsArticleCount는 0으로(파라미터는 기사 단위 진단이 써서 남김). AEO 데이터는 의미 없는 값이라 정리는 보류(사용자)
-- 대시보드 카드는 등록 지역·등록 조직·발행 매거진 기사
+- 외부 수집 기사는 데이터까지 삭제, 덤프 없음 — 이유: 저작권, 보관하지 않기로(사용자)
+- AEO 조직 점수의 newsArticleCount는 0으로 둠, AEO 데이터 정리는 보류 — 이유: 의미 없는 값(사용자)
+- '이렇게 작동합니다'는 B안(미니 화면) + 1회 모션
+  - 무한 반복 금지, 새 라이브러리 없이 CSS와 IntersectionObserver만 사용
+  - Lottie 쓰지 않음 — 이유: 메인 무게, 미니 화면과 겹침
 
 ## 주의 · 막힌 점
-- project_data의 수집 기사 제목·요약은 git 이력에 남아 있음(이력 정리는 사용자 판단)
-- axios 의존성은 이제 쓰는 곳 없음(남겨 둠)
-- sed로 고친 파일은 dev 서버 SSR이 변경을 못 잡을 때가 있음(사이드바에서 하이드레이션 불일치) → 에디터/Edit로 다시 저장하면 해결
-- 운영 DB는 접속하지 않음. DROP 마이그레이션은 되돌릴 수 없음(덤프 없이 진행하기로 함)
+- RevealOnView: 마운트 시 섹션 윗부분이 화면 높이 60% 위까지 올라와 있으면 바로 재생, 아니면 숨겼다가 30% 보일 때 재생
+  - 기준을 바꾸면 첫 화면에서 모션이 미리 끝나 버릴 수 있음
+- 개발 DB에는 이번과 무관한 기존 스키마 차이가 있음
+  - organization_invites·organization_submissions의 외래 키·인덱스 이름, 컬럼 정밀도. 손대지 않음
+- git 이력에 project_data의 수집 기사 제목·요약이 남아 있음. 이력 정리는 사용자 판단
+- axios 의존성은 쓰는 곳 없음(남겨 둠)
+- sed로 고친 파일은 dev 서버 SSR이 변경을 못 잡을 때가 있음 → Edit로 다시 저장
 - dev 서버 실행 중 next typegen 금지, pnpm build 금지
 
 ## 핵심 파일
-- docs/plan-naver-ingest-removal.md — 배포 1 내역, 배포 2 대상·순서·덤프 명령·자동 마이그레이션 동작
-- src/actions/insight-radar-actions.ts — 프로필·카드·통계(매거진 기사만)
-- src/actions/aeo-actions.ts — AEO 점수(newsArticleCount)
-- src/app/admin/companies/[id]/CompanyArticlesPanel.tsx — 조직 편집의 연결 매거진 기사
-- prisma/schema.prisma — 배포 2에서 지울 모델 4개와 Region·Organization 관계 필드
+- src/components/public/home/AiCitationCases.tsx — 메인 AI 인용 사례 / 대체 3단계(HowItWorks, 미니 화면 3종)
+- src/components/public/home/RevealOnView.tsx — 화면 진입 시 1회 모션 트리거(data-reveal)
+- src/app/globals.css — hiw-* 모션 규칙, 움직임 줄이기 대응
+- src/config/site.ts — aiCitations(공개 동의된 사례가 생기면 3단계 대신 사례 노출)
+- .agents/AGENTS.md — DB·마이그레이션·커밋 규칙
+- docs/plan-naver-ingest-removal.md — 네이버 수집 제거 기록
 
 ## 확인 방법
-- pnpm exec tsc --noEmit
-- pnpm dev → /, /insight-radar, /insight-radar/bethemuse, /admin, /admin/companies/243, /admin/articles(404)
+- pnpm exec tsc --noEmit (src 오류만 확인)
+- pnpm dev → / 에서 '이렇게 작동합니다'까지 스크롤(모션 한 번), 375px 폭도 확인
