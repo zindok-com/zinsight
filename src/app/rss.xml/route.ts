@@ -71,12 +71,12 @@ export async function GET() {
   const orgItems = organizations.map((org) => {
     const pubDate = new Date(org.updated_at || org.created_at).toUTCString();
     const itemUrl = encodeURI(`${baseUrl}/insight-radar/${org.slug || org.id}`);
-    const desc = org.business_summary || `${org.region?.name || ''} 관내 기업 ${org.company_name} 비즈니스 분석 프로필`;
+    const desc = org.business_summary || `${org.region?.name ? `${org.region.name} ` : ''}${org.company_name} 기업 프로필`;
     return {
       date: new Date(org.updated_at || org.created_at),
       xml: `
       <item>
-        <title>${cdata(`[기업 프로필] ${org.company_name} - ${org.region?.name ? `${org.region.name} ` : ''}기업 분석 정보`)}</title>
+        <title>${cdata(`[기업 프로필] ${org.company_name} - ${org.region?.name ? `${org.region.name} ` : ''}기업 정보`)}</title>
         <link>${itemUrl}</link>
         <description>${cdata(desc)}</description>
         <pubDate>${pubDate}</pubDate>
@@ -96,7 +96,7 @@ export async function GET() {
       <channel>
         <title>진사이트 - 매거진 &amp; 인사이트 레이더</title>
         <link>${baseUrl}</link>
-        <description>진사이트 AEO·SEO·GEO 통합 마케팅 인텔리전스 및 관내 기업 분석 피드</description>
+        <description>진사이트 매거진 기사와 인사이트 레이더 기업 프로필 피드. 진사이트는 지역 기업을 취재하고 소개하는 기업 미디어 플랫폼입니다.</description>
         <language>ko</language>
         <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml"/>
         ${rssItems}

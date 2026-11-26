@@ -224,7 +224,7 @@ export default async function LocalDetailPage({ params }: PageProps) {
     const ldKeywords = [
         ldCategoryLabel,
         post.region?.name || '로컬',
-        ...(post.isPaid ? ['파트너', 'Sponsored Content'] : []),
+        ...(post.isPaid ? [sponsoredBadgeLabel(post.category?.slug), 'Sponsored Content'] : []),
         ...post.organizations.map((po: any) => po.organization.company_name),
         ...(post.targetKeywords
             ? post.targetKeywords.split(',').map((t: string) => t.trim()).filter(Boolean)
@@ -251,21 +251,16 @@ export default async function LocalDetailPage({ params }: PageProps) {
                         'name': 'Magazine',
                         'item': `${baseUrl}/magazine`
                     },
+                    // 옛 '/magazine/local'(301) 단계는 뺌
                     {
                         '@type': 'ListItem',
                         'position': 3,
-                        'name': 'Local Hub',
-                        'item': `${baseUrl}/magazine/local`
-                    },
-                    {
-                        '@type': 'ListItem',
-                        'position': 4,
                         'name': post.region?.name || 'Local Region',
                         'item': `${baseUrl}/magazine/local/${regionSlug}`
                     },
                     {
                         '@type': 'ListItem',
-                        'position': 5,
+                        'position': 4,
                         'name': post.title,
                         'item': `${baseUrl}/magazine/local/${regionSlug}/${post.slug}`
                     }

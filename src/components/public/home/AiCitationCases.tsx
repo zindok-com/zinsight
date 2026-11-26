@@ -72,8 +72,8 @@ export function AiCitationCases({ cases }: { cases: AiCitationCase[] }) {
 
 const STEPS = [
     { icon: MessageSquareText, title: '검색·AI 질문', body: '고객이 검색창이나 AI 서비스에 업체·제품을 물어봅니다.' },
-    { icon: Newspaper, title: '진사이트 기사·기업 프로필', body: '정리된 기사와 기업 프로필이 답변의 근거 자료가 됩니다.' },
-    { icon: Building2, title: '우리 회사 홈페이지·문의', body: '프로필과 카드에서 홈페이지 방문과 문의로 이어집니다.' },
+    { icon: Newspaper, title: '진사이트 기사·기업 프로필', body: '기사와 기업 프로필을 답변의 근거로 쓰기 좋게 정리합니다.' },
+    { icon: Building2, title: '우리 회사 홈페이지·문의', body: '프로필과 카드에서 홈페이지와 문의로 바로 갈 수 있게 합니다.' },
 ];
 
 /** 공개 가능한 인용 사례가 없을 때 대신 보여 주는 3단계 설명 */
@@ -86,7 +86,7 @@ function HowItWorks() {
                         이렇게 작동합니다
                     </h2>
                     <p className="mx-auto max-w-2xl text-zi-body-md text-slate-500 break-keep">
-                        기업 이야기를 검색과 AI가 읽기 쉬운 기사·프로필로 정리해, 찾아온 고객이 우리 회사까지 오게 합니다.
+                        기업 이야기를 검색과 AI가 읽기 쉬운 기사·프로필로 정리해, 찾아온 고객이 우리 회사를 쉽게 찾도록 돕습니다.
                     </p>
                 </div>
 

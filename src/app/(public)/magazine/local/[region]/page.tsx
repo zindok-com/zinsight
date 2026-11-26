@@ -51,8 +51,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         };
     }
 
-    const title = `${region.name} 비즈니스 허브: 관내 기업·지원사업 소식`;
-    const description = `${region.name} 관내 혁신 스타트업 성공 사례 및 소상공인 그로스 스토리, 진흥원 자금 혜택을 한데 모은 지자체 전용 지면입니다.`;
+    const title = `${region.name} 지면: 지역 기업·기관 소식`;
+    const description = `진사이트 매거진 ${region.name} 지면입니다. ${region.name} 기업과 기관을 취재한 기사와 지원사업 소식을 모았습니다.`;
     const path = `/magazine/local/${regionSlug}`;
 
     return {

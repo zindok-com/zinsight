@@ -100,7 +100,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         if (!description && !post.content.trim().startsWith('{')) {
             description = post.content.slice(0, 160).trim();
         }
-        if (!description) description = `${post.title} — 진사이트 매거진 리서치 콘텐츠`;
+        if (!description) description = `${post.title} — 진사이트 매거진 기사`;
     }
     description = description.replace(/\*\*/g, '').replace(/\*\{.*?\}\*/g, '').slice(0, 160);
 
@@ -134,7 +134,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             url: `${baseUrl}/magazine/tech-marketing/${post.slug}`,
             publishedTime: (post.publishedAt || post.createdAt).toISOString(),
             modifiedTime: post.updatedAt.toISOString(),
-            section: 'Tech & Marketing',
+            section: post.category?.name || '매거진',
             authors: [post.author?.name || post.authorName || '진사이트 편집부'],
             tags: tags.length > 0 ? tags : undefined,
             locale: 'ko_KR',
@@ -192,7 +192,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
     const ldCategoryLabel = getCategoryLabel(post.category);
     const ldKeywords = [
         ldCategoryLabel,
-        ...(post.isPaid ? ['파트너', 'Sponsored Content'] : []),
+        ...(post.isPaid ? [sponsoredBadgeLabel(post.category?.slug), 'Sponsored Content'] : []),
         ...post.organizations.map((po: any) => po.organization.company_name),
         ...(post.targetKeywords
             ? post.targetKeywords.split(',').map((t: string) => t.trim()).filter(Boolean)
@@ -219,15 +219,13 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
                         'name': 'Magazine',
                         'item': `${baseUrl}/magazine`
                     },
+                    // 3단계: 목록 페이지가 있는 분류(진사이트 소식)만. 옛 /magazine/tech-marketing은 301이라 넣지 않음
+                    ...(post.category?.slug === ZINSIGHT_NEWS_CATEGORY
+                        ? [{ '@type': 'ListItem', 'position': 3, 'name': post.category.name, 'item': `${baseUrl}/magazine/news` }]
+                        : []),
                     {
                         '@type': 'ListItem',
-                        'position': 3,
-                        'name': 'Tech & Marketing',
-                        'item': `${baseUrl}/magazine/tech-marketing`
-                    },
-                    {
-                        '@type': 'ListItem',
-                        'position': 4,
+                        'position': post.category?.slug === ZINSIGHT_NEWS_CATEGORY ? 4 : 3,
                         'name': post.title,
                         'item': `${baseUrl}/magazine/tech-marketing/${post.slug}`
                     }
@@ -250,7 +248,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
                 'dateCreated': post.createdAt.toISOString(),
                 'datePublished': (post.publishedAt || post.createdAt).toISOString(),
                 'dateModified': post.updatedAt.toISOString(),
-                'articleSection': '테크 · 마케팅',
+                'articleSection': post.category?.name || '매거진',
                 'keywords': ldKeywords.join(', '),
                 ...(post.organizations && post.organizations.length > 0 ? {
                     'about': post.organizations.map((po: any) => ({

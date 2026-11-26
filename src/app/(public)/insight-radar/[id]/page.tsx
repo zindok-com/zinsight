@@ -54,10 +54,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const keyFeature = coreKw?.technology?.[0] || coreKw?.products?.[0] || '';
     const regionName = company.region?.name ? `${company.region.name} ` : '';
 
-    // 검색 최적화(SEO) 맞춤 타이틀 (회사명 + 대표 별칭 1개: 지역 + 핵심키워드 기업 분석 프로필)
+    // 검색 최적화(SEO) 맞춤 타이틀 (회사명 + 대표 별칭 1개: 지역 + 핵심키워드 + radarProfile.titleSuffix)
     // 구분자는 ':' 하나만 쓴다 (루트 template의 '| 진사이트'와 ' - '가 겹치지 않도록)
     const head = `${company.company_name}${pickTitleAlias(company.company_name, aliases)}`;
-    const tail = `${regionName}${keyFeature ? keyFeature + ' ' : ''}기업 분석 프로필`;
+    const tail = `${regionName}${keyFeature ? keyFeature + ' ' : ''}${siteConfig.radarProfile.titleSuffix}`;
     const title = `${head}: ${tail}`;
     // <title>에는 루트 template이 '| 진사이트'를 붙이므로, template이 적용되지 않는 OG/트위터에만 직접 붙임
     const socialTitle = `${title} | 진사이트`;
@@ -66,7 +66,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     if (!description) {
         const products = coreKw?.products?.slice(0, 3).join(', ') || '';
         const tech = coreKw?.technology?.slice(0, 3).join(', ') || '';
-        description = `${regionName ? regionName + '소재 ' : ''}${company.company_name}의 ${products ? products + ' 및 ' : ''}${tech ? tech + ' ' : ''}비즈니스 전문 프로필과 시장 인사이트를 확인하세요.`;
+        description = `${regionName ? regionName + '소재 ' : ''}${company.company_name}의 사업 소개${products ? `(${products})` : ''}, 제품·서비스, 관련 기사를 정리한 기업 프로필입니다.`;
     } else if (description.length > 150) {
         description = description.slice(0, 150) + '...';
     }
@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         ...(coreKw?.technology || []),
         ...(coreKw?.products || []),
         ...(coreKw?.target_market || []),
-        '기업 분석',
+        '기업 프로필',
         '인사이트 레이더',
         '진사이트'
     ].filter(Boolean) as string[];
@@ -220,8 +220,8 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                 '@type': 'ProfilePage',
                 '@id': buildWebPageId(url),
                 'url': url,
-                'name': `${company.company_name} 기업 분석 프로필`,
-                'description': orgDescription || `${company.company_name}의 비즈니스 프로필 및 기술 분석`,
+                'name': `${company.company_name} ${siteConfig.radarProfile.titleSuffix}`,
+                'description': orgDescription || `${company.company_name}의 사업 소개와 관련 기사를 정리한 기업 프로필`,
                 'isPartOf': {
                     '@type': 'WebSite',
                     '@id': `${SITE_BASE_URL}/#website`,

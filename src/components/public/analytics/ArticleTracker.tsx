@@ -123,7 +123,7 @@ export function OrganizationTracker({ orgId, slug, region }: OrganizationTracker
                 pagePath: window.location.pathname,
                 pageType: 'radar',
                 targetId: orgId,
-                targetName: document.title.replace(/\s*기업 분석 프로필.*$/i, '').replace(/\s*\|\s*진사이트.*$/i, '').trim() || slug || String(orgId),
+                targetName: document.title.replace(/\s*기업 (?:분석 )?프로필.*$/i, '').replace(/\s*\|\s*진사이트.*$/i, '').trim() || slug || String(orgId),
                 referrer: document.referrer || null,
             }).catch(() => {});
         }
