@@ -883,7 +883,7 @@ export function MagazineForm({
                                 <FileText className="w-4.5 h-4.5 text-slate-500" />
                                 기본 정보 및 메타데이터
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-6">
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                                 <div className="space-y-2">
                                     <Label htmlFor="category" className="text-xs font-semibold text-slate-600">카테고리</Label>
                                     <Select
@@ -901,7 +901,7 @@ export function MagazineForm({
                                         <SelectContent>
                                             {categories.map((cat: any) => (
                                                 <SelectItem key={cat.id} value={String(cat.id)}>
-                                                    {cat.name} ({cat.isLocal ? '로컬' : 'Tech/Mkt'})
+                                                    {cat.name}{cat.isLocal ? ' (지역)' : ''}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -1160,7 +1160,7 @@ export function MagazineForm({
                                             </Label>
                                             <p className="text-[11px] text-slate-500 mt-0.5">
                                                 활성화 시 기사 상단·카드에 배지 표시.
-                                                ‘산학협력·교육’ 카테고리는 ‘협력 기관’, 나머지 카테고리는 ‘파트너’ 배지로 자동 적용됩니다.
+                                                ‘산학협력·교육’ 카테고리는 ‘협력 기관’, 나머지 카테고리는 ‘협찬’ 배지로 자동 적용됩니다.
                                             </p>
                                         </div>
                                         <button
