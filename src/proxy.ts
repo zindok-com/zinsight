@@ -19,7 +19,7 @@ export async function proxy(request: NextRequest) {
     }
 
     // ── 인증이 필요한 경로: /admin 하위 전체 및 관리자 전용 API ──
-    const isAdminApi = pathname.startsWith('/api/companies') || pathname.startsWith('/api/snapshots');
+    const isAdminApi = pathname.startsWith('/api/companies');
     const isAdminPath = pathname.startsWith('/admin') || isAdminApi;
     const isAuthenticated = authToken ? (await verifyTokenEdge(authToken.value)) !== null : false;
 

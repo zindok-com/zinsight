@@ -3,9 +3,7 @@ import { getDashboardStats } from "@/actions/dashboard-actions";
 import { getDashboardAnalytics } from "@/actions/admin/analytics-actions";
 import {
     Building2,
-    Tags,
-    Newspaper,
-    CalendarDays,
+    Briefcase,
     Eye,
     FileText,
     Users,
@@ -38,7 +36,7 @@ export default async function Home() {
                 <div className="relative z-10">
                     <h1 className="text-3xl font-bold tracking-tight text-white mb-2">진사이트 관리자</h1>
                     <p className="text-indigo-100 max-w-xl text-sm leading-relaxed">
-                        환영합니다. 인사이트 레이더 데이터 수집 현황 및 매거진 성과 지표를 한눈에 파악하고
+                        환영합니다. 인사이트 레이더 현황 및 매거진 성과 지표를 한눈에 파악하고
                         비즈니스 인사이트를 도출해 보세요.
                     </p>
                 </div>
@@ -145,7 +143,7 @@ export default async function Home() {
                         <Building2 className="h-5 w-5 text-slate-600" /> Insight Radar Status
                     </h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Card className="hover:-translate-y-1 hover:shadow-md transition-all duration-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-slate-600">등록 지역</CardTitle>
@@ -159,34 +157,23 @@ export default async function Home() {
 
                     <Card className="hover:-translate-y-1 hover:shadow-md transition-all duration-200">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-600">모니터링 키워드</CardTitle>
-                            <Tags className="h-4 w-4 text-slate-400" />
+                            <CardTitle className="text-sm font-medium text-slate-600">등록 조직</CardTitle>
+                            <Briefcase className="h-4 w-4 text-blue-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-slate-800">{stats.keywordCount}</div>
-                            <p className="text-xs text-muted-foreground mt-1">활성 검색 키워드 수</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="hover:-translate-y-1 hover:shadow-md transition-all duration-200">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-600">총 수집 기사</CardTitle>
-                            <Newspaper className="h-4 w-4 text-blue-500" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-slate-800">{stats.articleCount.toLocaleString()}</div>
-                            <p className="text-xs text-muted-foreground mt-1">전체 기간 누적 데이터</p>
+                            <div className="text-2xl font-bold text-slate-800">{stats.organizationCount.toLocaleString()}</div>
+                            <p className="text-xs text-muted-foreground mt-1">인사이트 레이더 기업·기관 프로필 수</p>
                         </CardContent>
                     </Card>
 
                     <Card className="hover:-translate-y-1 hover:shadow-md transition-all duration-200 border-indigo-100 bg-indigo-50/30">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium text-indigo-700">이번 달 신규 수집</CardTitle>
-                            <CalendarDays className="h-4 w-4 text-indigo-500" />
+                            <CardTitle className="text-sm font-medium text-indigo-700">발행 매거진 기사</CardTitle>
+                            <FileText className="h-4 w-4 text-indigo-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-indigo-700">{stats.thisMonthCount.toLocaleString()}</div>
-                            <p className="text-xs text-indigo-500/80 mt-1">이 달에 새로 수집된 기사</p>
+                            <div className="text-2xl font-bold text-indigo-700">{stats.magazinePostCount.toLocaleString()}</div>
+                            <p className="text-xs text-indigo-500/80 mt-1">공개 중인 진사이트 매거진 기사</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -207,15 +194,15 @@ export default async function Home() {
                         <div className="flex p-4 rounded-xl border bg-slate-50/50 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">2</div>
                             <div>
-                                <h4 className="font-semibold text-sm text-slate-800">키워드 설정</h4>
-                                <p className="text-xs text-muted-foreground mt-1">키워드 관리 메뉴에서 지역별로 핵심 검색 키워드를 추가하세요.</p>
+                                <h4 className="font-semibold text-sm text-slate-800">프로필 정보 채우기</h4>
+                                <p className="text-xs text-muted-foreground mt-1">조직 편집에서 소개·핵심 키워드·공식 채널·소개자료를 채워 프로필을 완성합니다.</p>
                             </div>
                         </div>
                         <div className="flex p-4 rounded-xl border bg-slate-50/50 items-start gap-4 hover:bg-white hover:shadow-sm transition-all duration-200">
                             <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-sm shrink-0">3</div>
                             <div>
-                                <h4 className="font-semibold text-sm text-slate-800">기사 수집 및 조직 연결</h4>
-                                <p className="text-xs text-muted-foreground mt-1">기사 관리에서 수집된 기사를 확인하고 연관 조직과 연결해 인사이트를 확보하세요.</p>
+                                <h4 className="font-semibold text-sm text-slate-800">매거진 기사와 연결</h4>
+                                <p className="text-xs text-muted-foreground mt-1">매거진 에디터에서 기사에 조직을 연결하면 해당 프로필의 기사 목록에 나타납니다.</p>
                             </div>
                         </div>
                     </div>

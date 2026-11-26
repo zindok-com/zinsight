@@ -383,7 +383,6 @@ export async function getOrRunAeoAuditForOrganization(
             region: { select: { name: true } },
             _count: {
                 select: {
-                    company_articles: true,
                     magazinePosts: {
                         where: {
                             magazinePost: { status: 'PUBLISHED', deletedAt: null },
@@ -423,7 +422,7 @@ export async function getOrRunAeoAuditForOrganization(
         faqCount: org._count.magazinePosts > 0 ? 2 : 0,
         backlinkCount: backlinks.length + (org.company_url ? 1 : 0),
         magazineArticleCount: org._count.magazinePosts,
-        newsArticleCount: org._count.company_articles,
+        newsArticleCount: 0, // 외부 수집 기사는 쓰지 않음(저작권). 매거진 기사는 magazineArticleCount로 반영
         hasLogo: Boolean((org as any).logo_url),
         isRegisteredInZinsight: true,
         previousLogs,
@@ -567,7 +566,6 @@ export async function diagnoseCompanyForLeadMagnet(
             region: { select: { name: true } },
             _count: {
                 select: {
-                    company_articles: true,
                     magazinePosts: {
                         where: {
                             magazinePost: { status: 'PUBLISHED', deletedAt: null },
@@ -594,7 +592,7 @@ export async function diagnoseCompanyForLeadMagnet(
             faqCount: existingOrg._count.magazinePosts > 0 ? 2 : 0,
             backlinkCount: backlinks.length + (existingOrg.company_url ? 1 : 0),
             magazineArticleCount: existingOrg._count.magazinePosts,
-            newsArticleCount: existingOrg._count.company_articles,
+            newsArticleCount: 0, // 외부 수집 기사는 쓰지 않음(저작권). 매거진 기사는 magazineArticleCount로 반영
             hasLogo: Boolean((existingOrg as any).logo_url),
             isRegisteredInZinsight: true,
         });

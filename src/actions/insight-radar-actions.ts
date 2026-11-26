@@ -121,14 +121,13 @@ export async function getRadarRegions(): Promise<RadarRegionWithStats[]> {
 // ─────────────────────────────────────────────
 
 export async function getRadarTotalStats() {
-    const [totalCompanies, totalArticles, totalRegions, totalMagazinePosts] = await Promise.all([
+    const [totalCompanies, totalRegions, totalMagazinePosts] = await Promise.all([
         prisma.organization.count(),
-        prisma.article.count(),
         prisma.region.count({ where: { isActive: true } }),
         prisma.magazinePost.count({ where: { status: 'PUBLISHED', deletedAt: null } })
     ]);
 
-    return { totalCompanies, totalArticles, totalRegions, totalMagazinePosts };
+    return { totalCompanies, totalRegions, totalMagazinePosts };
 }
 
 // ─────────────────────────────────────────────
@@ -182,30 +181,21 @@ export async function getRadarCompanies(
             is_featured: true,
             created_at: true,
             region: { select: { id: true, name: true, slug: true } },
-            company_articles: {
-                select: { article: { select: { pub_date: true } } },
-                orderBy: { article: { pub_date: 'desc' } },
-                take: 1,
-            },
             magazinePosts: {
                 where: publishedPost,
                 select: { magazinePost: { select: { publishedAt: true, createdAt: true } } },
                 orderBy: { magazinePost: { publishedAt: 'desc' } },
                 take: 1,
             },
-            _count: { select: { company_articles: true, magazinePosts: { where: publishedPost } } },
+            _count: { select: { magazinePosts: { where: publishedPost } } },
         },
         orderBy: [{ is_featured: 'desc' }, { created_at: 'desc' }],
         take: 500,
     });
 
     const all: RadarCompanyCard[] = rawCompanies.map((c) => {
-        const externalDate = c.company_articles[0]?.article?.pub_date ?? null;
         const post = c.magazinePosts[0]?.magazinePost;
-        const magazineDate = post ? post.publishedAt ?? post.createdAt : null;
-        const latest = [externalDate, magazineDate]
-            .filter((d): d is Date => !!d)
-            .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+        const latest = post ? post.publishedAt ?? post.createdAt : null;
         return {
             id: c.id,
             company_name: c.company_name,
@@ -219,7 +209,7 @@ export async function getRadarCompanies(
             logo_source_url: c.logo_source_url ?? null,
             founded_year: c.founded_year ?? null,
             tagline: c.tagline ?? null,
-            articleCount: c._count.company_articles + c._count.magazinePosts,
+            articleCount: c._count.magazinePosts,
             latestArticleDate: latest,
         };
     });
@@ -244,91 +234,6 @@ export async function getRadarCompanies(
 }
 
 // ─────────────────────────────────────────────
-// 최신 기사 목록 조회 (뉴스 피드용)
-// ─────────────────────────────────────────────
-
-export async function getRadarLatestArticles(
-    filter: RadarFilterOptions = {},
-    limit = 10
-): Promise<RadarArticleItem[]> {
-    limit = clampInt(limit, 1, 50, 10);
-    const { regionId } = filter;
-    const searchQuery = filter.searchQuery?.slice(0, 100);
-
-    const where: any = {
-        ...(regionId
-            ? { ingestions: { some: { region_id: regionId } } }
-            : {}),
-        ...(searchQuery
-            ? {
-                  OR: [
-                      { title: { contains: searchQuery } },
-                      { description: { contains: searchQuery } },
-                  ],
-              }
-            : {}),
-    };
-
-    const articles = await prisma.article.findMany({
-        where,
-        include: {
-            ingestions: {
-                where: regionId ? { region_id: regionId } : {},
-                include: {
-                    keyword: { select: { id: true, keyword_text: true } },
-                },
-                take: 3,
-            },
-        },
-        orderBy: { pub_date: 'desc' },
-        take: limit,
-    });
-
-    return articles.map((a: any) => ({
-        id: a.id,
-        title: a.title,
-        source: a.source,
-        pub_date: a.pub_date,
-        url: a.link,
-        summary: a.description,
-        keywords: a.ingestions
-            .map((ing: any) => ing.keyword)
-            .filter((k: any): k is { id: number; keyword_text: string } => k !== null),
-    }));
-}
-
-// ─────────────────────────────────────────────
-// 트렌드 키워드 Top N (기사 수 기준)
-// ─────────────────────────────────────────────
-
-export async function getRadarTrendingKeywords(
-    regionId?: number,
-    limit = 20
-): Promise<{ id: number; keyword_text: string; count: number; regionName: string }[]> {
-    limit = clampInt(limit, 1, 50, 20);
-    const keywords = await prisma.searchKeyword.findMany({
-        where: {
-            deleted_at: null,
-            is_active: true,
-            ...(regionId ? { region_id: regionId } : {}),
-        },
-        include: {
-            _count: { select: { ingestions: true } },
-            region: { select: { name: true } },
-        },
-        orderBy: { ingestions: { _count: 'desc' } },
-        take: limit,
-    });
-
-    return keywords.map((k: any) => ({
-        id: k.id,
-        keyword_text: k.keyword_text,
-        count: k._count.ingestions,
-        regionName: k.region?.name ?? '기타',
-    }));
-}
-
-// ─────────────────────────────────────────────
 // 개별 기업 상세 조회
 // ─────────────────────────────────────────────
 
@@ -340,22 +245,6 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
     const commonInclude = {
         region: { select: { id: true, name: true, slug: true } },
         channels: ACTIVE_CHANNELS,
-        company_articles: {
-            include: {
-                article: {
-                    select: {
-                        id: true,
-                        title: true,
-                        pub_date: true,
-                        source: true,
-                        link: true,
-                        description: true,
-                    },
-                },
-            },
-            orderBy: { article: { pub_date: 'desc' as const } },
-            take: 10,
-        },
         magazinePosts: {
             where: {
                 magazinePost: {
@@ -376,7 +265,6 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         },
         _count: {
             select: {
-                company_articles: true,
                 magazinePosts: {
                     where: {
                         magazinePost: {
@@ -411,20 +299,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
 
     if (!company) return null;
 
-    // 1. 관리자가 명시적으로 연결한 외부 기사 (CompanyArticle)
-    const externalArticles = company.company_articles.map((ca: any) => ({
-        id: ca.article.id,
-        title: ca.article.title,
-        pub_date: ca.article.pub_date,
-        source: ca.article.source || 'NAVER_NEWS',
-        url: ca.article.link,
-        summary: ca.article.description,
-        keywords: [],
-        isMagazine: false,
-        thumbnailUrl: null,
-    }));
-
-    // 2. 자체 매거진 포스트 기사 (MagazinePostOrganization)
+    // 자체 매거진 포스트 기사 (MagazinePostOrganization)
     const magazineArticles = company.magazinePosts.map((mp: any) => {
         const post = mp.magazinePost;
         const regionSlug = post.region?.slug || '';
@@ -457,14 +332,8 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         };
     });
 
-    // 중복 제거 후 최신순 정렬
-    const seenIds = new Set<number>();
-    const combinedArticles = [...magazineArticles, ...externalArticles]
-        .filter((a) => {
-            if (seenIds.has(a.id)) return false;
-            seenIds.add(a.id);
-            return true;
-        })
+    // 최신순 정렬
+    const combinedArticles = [...magazineArticles]
         .sort((a, b) => {
             const dateA = a.pub_date ? new Date(a.pub_date).getTime() : 0;
             const dateB = b.pub_date ? new Date(b.pub_date).getTime() : 0;
@@ -482,7 +351,7 @@ export async function getRadarCompanyDetail(companyIdOrSlug: number | string) {
         core_keywords: company.core_keywords,
         region: company.region ?? null,
         recentArticles: combinedArticles,
-        articleCount: company._count.company_articles + company._count.magazinePosts,
+        articleCount: company._count.magazinePosts,
         company_url: company.company_url,
         logo_url: company.logo_url ?? null,
         logo_source_url: company.logo_source_url ?? null,
@@ -524,11 +393,6 @@ export async function getRadarRegionPeers(
             slug: true,
             entity_type: true,
             logo_url: true,
-            company_articles: {
-                select: { article: { select: { pub_date: true } } },
-                orderBy: { article: { pub_date: 'desc' } },
-                take: 1,
-            },
             magazinePosts: {
                 where: publishedPost,
                 select: { magazinePost: { select: { publishedAt: true, createdAt: true } } },
@@ -542,12 +406,8 @@ export async function getRadarRegionPeers(
 
     return peers
         .map((c) => {
-            const externalDate = c.company_articles[0]?.article?.pub_date ?? null;
             const post = c.magazinePosts[0]?.magazinePost;
-            const magazineDate = post ? post.publishedAt ?? post.createdAt : null;
-            const latest = [externalDate, magazineDate]
-                .filter((d): d is Date => !!d)
-                .sort((a, b) => b.getTime() - a.getTime())[0] ?? null;
+            const latest = post ? post.publishedAt ?? post.createdAt : null;
             return {
                 id: c.id,
                 company_name: c.company_name,

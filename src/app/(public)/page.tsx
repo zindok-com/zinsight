@@ -1,10 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-    getRadarLatestArticles,
-    getRadarTrendingKeywords,
-    getRadarCompanies,
-} from '@/actions/insight-radar-actions';
+import { getRadarCompanies } from '@/actions/insight-radar-actions';
 import { getHeadlineMagazinePosts } from '@/actions/public/magazine-actions';
 import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 import { AiCitationCases } from '@/components/public/home/AiCitationCases';
@@ -33,13 +29,10 @@ export const metadata: Metadata = {
 export default async function PublicHomePage() {
     const { identity, home } = siteConfig;
     // 홈 페이지에 필요한 데이터를 병렬로 조회
-    const [{ companies: featuredCompanies }, latestArticles, trendingKeywords, headlinePosts] =
-        await Promise.all([
-            getRadarCompanies({}, 1, 3),
-            getRadarLatestArticles({}, 3),
-            getRadarTrendingKeywords(undefined, 8),
-            getHeadlineMagazinePosts(),
-        ]);
+    const [{ companies: featuredCompanies }, headlinePosts] = await Promise.all([
+        getRadarCompanies({}, 1, 3),
+        getHeadlineMagazinePosts(),
+    ]);
 
     // WebSite + Organization + Navigation JSON-LD 구조화 데이터
     const jsonLd = {

@@ -6,9 +6,7 @@ import { cn } from '@/lib/utils';
 import {
     LayoutDashboard,
     Building2,
-    Tags,
     Newspaper,
-    Download,
     Menu,
     Briefcase,
     ShieldCheck,
@@ -67,6 +65,7 @@ export function Sidebar({ pendingSubmissionsCount = 0 }: { pendingSubmissionsCou
     const searchParams = useSearchParams();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+    // 키워드·기사 관리·데이터 내보내기는 네이버 기사 수집 제거와 함께 삭제(2026-11)
     const dataItems: NavItem[] = [
         { name: '조직 관리', href: '/admin/companies', icon: Briefcase },
         {
@@ -76,10 +75,7 @@ export function Sidebar({ pendingSubmissionsCount = 0 }: { pendingSubmissionsCou
             badge: pendingSubmissionsCount > 0 ? pendingSubmissionsCount : undefined,
         },
         { name: '지역(지자체) 관리', href: '/admin/magazine/regions', icon: Building2 },
-        { name: '키워드 관리', href: '/admin/keywords', icon: Tags },
-        { name: '기사 관리', href: '/admin/articles', icon: Newspaper },
         { name: '미디어 보관함', href: '/admin/storage', icon: Image },
-        { name: '데이터 내보내기', href: '/admin/export', icon: Download },
     ];
 
     // 모바일 메뉴가 열려 있을 때 배경 스크롤 잠금 및 Esc로 닫기

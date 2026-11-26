@@ -42,9 +42,6 @@ function revalidateAllRegionConsumers() {
         revalidatePath('/admin/magazine/headlines');
         revalidatePath('/admin/companies');
         revalidatePath('/admin/companies', 'layout');
-        revalidatePath('/admin/articles');
-        revalidatePath('/admin/keywords');
-        revalidatePath('/admin/export');
         revalidatePath('/admin/seo-monitoring');
     } catch (e) {
         console.error('Failed to revalidate region consumers:', e);

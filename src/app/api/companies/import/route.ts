@@ -27,7 +27,6 @@ export async function POST(request: Request) {
     const results = {
       addedCompanies: 0,
       updatedCompanies: 0,
-      addedArticles: 0,
     };
 
     for (const lead of allLeads) {
@@ -39,7 +38,6 @@ export async function POST(request: Request) {
       }
 
       const company_name = lead.company_name;
-      const articleIds = lead.related_articles?.map((a: any) => a.id) || [];
 
       // 기업 조회 (중복 확인)
       // 1. 정확한 조직명으로 검색
@@ -104,32 +102,6 @@ export async function POST(request: Request) {
           }
         });
         results.updatedCompanies++;
-      }
-
-      // 기사 연결 (기사 테이블에 이미 존재하는 기사 ID들)
-      for (const articleId of articleIds) {
-        const existingLink = await prisma.companyArticle.findUnique({
-          where: {
-            company_id_article_id: {
-              company_id: company.id,
-              article_id: articleId,
-            },
-          },
-        });
-
-        if (!existingLink) {
-          try {
-            await prisma.companyArticle.create({
-              data: {
-                company_id: company.id,
-                article_id: articleId,
-              },
-            });
-            results.addedArticles++;
-          } catch (err) {
-            console.warn(`기사 아이디 ${articleId} 매핑 실패: DB에 기사가 존재하지 않을 수 있습니다.`, err);
-          }
-        }
       }
     }
 

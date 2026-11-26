@@ -15,8 +15,7 @@
 | **Storage** | [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) |
 | **Styling & UI** | Tailwind CSS, [shadcn/ui](https://ui.shadcn.com/) (Radix UI), Lucide Icons |
 | **Charts** | Recharts |
-| **Data APIs** | Naver Search News API, Google Analytics Data API (GA4), Google Search Console API |
-| **Excel Export**| SheetJS (`xlsx`) |
+| **Data APIs** | Google Analytics Data API (GA4), Google Search Console API |
 
 ---
 
@@ -35,14 +34,12 @@ zinsight/
 │   │   │   ├── analytics-actions.ts    # GA4/GSC 통계 및 리포트 생성 액션
 │   │   │   ├── author-actions.ts       # 기명 필진(저자) 관리 CRUD
 │   │   │   ├── company-actions.ts      # 관내 기업/기관 관리 CRUD
-│   │   │   ├── export-actions.ts       # 월간 엑셀 스냅샷 생성 및 다운로드
 │   │   │   ├── headline-actions.ts     # 포털/테크/로컬 피처드 헤드라인 우선순위
 │   │   │   ├── magazine-actions.ts     # 매거진 포스트 CRUD, 본문 파싱, 슬러그 생성
 │   │   │   └── region-actions.ts       # 활성 지자체(Region) 관리
 │   │   ├── public/               # 일반 사용자 공개 페이지용 서버 액션
 │   │   │   └── magazine-actions.ts     # 매거진 공개 목록 및 태그별 조회
 │   │   ├── dashboard-actions.ts  # 관리자 대시보드 요약 지표 집계
-│   │   ├── ingest-actions.ts     # 네이버 뉴스 자동 크롤링 및 중복 필터링
 │   │   └── insight-radar-actions.ts # 관내 기업 프로필 및 레이더 검색/필터 액션
 │   ├── app/
 │   │   ├── (public)/             # 공개 프론트엔드 라우트 그룹 (URL에 노출되지 않음)
@@ -80,17 +77,13 @@ zinsight/
 │   │   │   ├── companies/        # 관내 기업/기관 관리
 │   │   │   │   ├── page.tsx
 │   │   │   │   └── [id]/analytics/page.tsx # 기업 프로필 성과 분석
-│   │   │   ├── keywords/page.tsx # 수집 키워드 관리
-│   │   │   ├── articles/page.tsx # 수집 뉴스 기사 관리
 │   │   │   ├── analytics/reports/ # 성과 리포트 스냅샷 관리 (F-11-A)
 │   │   │   ├── storage/page.tsx  # Vercel Blob 이미지 스토리지 관리
-│   │   │   ├── export/page.tsx   # 엑셀 데이터 스냅샷 추출
 │   │   │   ├── settings/redirects/ # 301 URL 리다이렉트 관리
 │   │   │   └── layout.tsx        # 관리자 전용 사이드바 레이아웃 (색인 방지 메타태그)
 │   │   ├── api/                  # 서버리스 API 엔드포인트
 │   │   │   ├── auth/             # 관리자 로그인 및 개별 2FA 인증 (TOTP/QR)
-│   │   │   ├── companies/import/ # 기업 대량 엑셀/JSON 임포트
-│   │   │   └── snapshots/        # 스냅샷 다운로드
+│   │   │   └── companies/import/ # 기업 대량 엑셀/JSON 임포트
 │   │   ├── robots.txt/route.ts   # 동적 robots.txt (/admin 차단 및 sitemap 명시)
 │   │   ├── rss.xml/route.ts      # 매거진 RSS 2.0 표준 피드
 │   │   ├── sitemap.ts            # 동적 sitemap.xml (발행 기사, 기업, 지역 자동 반영)
@@ -124,15 +117,11 @@ zinsight/
 ```mermaid
 erDiagram
     Region ||--o{ Organization : "contains"
-    Region ||--o{ SearchKeyword : "targets"
     Region ||--o{ MagazinePost : "locates"
     Organization ||--o{ MagazinePostOrganization : "references"
     MagazinePost ||--o{ MagazinePostOrganization : "tagged"
     MagazineCategory ||--o{ MagazinePost : "categorizes"
     Author ||--o{ MagazinePost : "writes"
-    Article ||--o{ ArticleIngestion : "ingests"
-    SearchKeyword ||--o{ ArticleIngestion : "matches"
-    Organization ||--o{ ArticleIngestion : "mentions"
 
     Region {
         int id PK
@@ -167,14 +156,6 @@ erDiagram
         boolean isPortalFeatured
         boolean isTechFeatured
         boolean isLocalFeatured
-    }
-
-    Article {
-        int id PK
-        string canonical_link UK
-        string title
-        string description
-        datetime pub_date
     }
 ```
 

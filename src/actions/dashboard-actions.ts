@@ -5,22 +5,15 @@ import { prisma } from '@/lib/db';
 
 export async function getDashboardStats() {
     await requireAdmin();
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
     const [
         regionCount,
-        keywordCount,
-        articleCount,
-        thisMonthCount,
+        organizationCount,
         magazinePostCount,
         viewStats
     ] = await Promise.all([
         prisma.region.count({ where: { isActive: true } }),
-        prisma.searchKeyword.count({ where: { deleted_at: null, is_active: true } }),
-        prisma.article.count(),
-        prisma.article.count({ where: { created_at: { gte: startOfMonth } } }),
-        prisma.magazinePost.count(),
+        prisma.organization.count(),
+        prisma.magazinePost.count({ where: { status: 'PUBLISHED', deletedAt: null } }),
         prisma.magazinePost.aggregate({
             _sum: {
                 viewCount: true
@@ -30,9 +23,7 @@ export async function getDashboardStats() {
 
     return {
         regionCount,
-        keywordCount,
-        articleCount,
-        thisMonthCount,
+        organizationCount,
         magazinePostCount,
         totalViewCount: viewStats._sum.viewCount || 0,
     };

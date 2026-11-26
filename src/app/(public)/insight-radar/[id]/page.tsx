@@ -199,7 +199,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
     // A7: seeks - 타겟 시장 배열
     const seeks = parseCleanStringArray(coreKw?.target_market);
 
-    // A8: subjectOf - 연결된 관련 기사
+    // A8: subjectOf - 이 조직을 다룬 진사이트 매거진 기사
     const subjectOf = company.recentArticles
         ?.map((article: any) => ({
             '@type': 'Article',
@@ -319,7 +319,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
             summary: article.summary ?? '',
             url: article.url ?? undefined,
             isMagazine: !!article.isMagazine,
-            category: article.isMagazine ? '진사이트 매거진' : formatSourceLabel(article.source),
+            category: '진사이트 매거진',
             thumbnailUrl: article.thumbnailUrl ?? null,
             pubDate: article.pub_date,
         })
@@ -723,16 +723,6 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
 // ─────────────────────────────────────────────
 // 내부 컴포넌트
 // ─────────────────────────────────────────────
-
-const SOURCE_LABEL: Record<string, string> = {
-    NAVER_NEWS: '뉴스',
-    News: '뉴스',
-};
-
-function formatSourceLabel(source: string | null | undefined): string {
-    if (!source) return '뉴스';
-    return SOURCE_LABEL[source] ?? source;
-}
 
 /** 외부 링크 아이콘: 공식 채널 종류별 로고, 홈페이지·기타는 지구본·링크 */
 function ExternalLinkIcon({ type, className }: { type: ChannelType; className: string }) {

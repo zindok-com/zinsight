@@ -62,8 +62,8 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
             ? a.company_name.localeCompare(b.company_name)
             : b.company_name.localeCompare(a.company_name);
         } else if (sortConfig.key === 'articleCount') {
-          const aCount = (a.company_articles?.length || 0) + (a.magazinePosts?.length || 0);
-          const bCount = (b.company_articles?.length || 0) + (b.magazinePosts?.length || 0);
+          const aCount = (a.magazinePosts?.length || 0);
+          const bCount = (b.magazinePosts?.length || 0);
           return sortConfig.direction === 'asc' ? aCount - bCount : bCount - aCount;
         }
         return 0;
@@ -205,7 +205,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                     </div>
                     {/* 휴대폰: 숨긴 칸(구분·지역·기사수)을 이름 아래 한 줄로 */}
                     <p className="mt-0.5 text-xs text-muted-foreground md:hidden">
-                      {company.entity_type || '기업'} · {company.region?.name || '지역 미지정'} · 기사 {((company.company_articles?.length || 0) + (company.magazinePosts?.length || 0))}건
+                      {company.entity_type || '기업'} · {company.region?.name || '지역 미지정'} · 기사 {(company.magazinePosts?.length || 0)}건
                     </p>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
@@ -235,7 +235,7 @@ export function CompanyListTable({ companies }: { companies: any[] }) {
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <Badge variant="secondary" className="text-xs">
-                      {((company.company_articles?.length || 0) + (company.magazinePosts?.length || 0))}건
+                      {(company.magazinePosts?.length || 0)}건
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>

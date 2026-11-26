@@ -44,7 +44,7 @@ export function ImportButton() {
       const result = await response.json();
 
       if (response.ok) {
-        toast.success('데이터 가져오기 완료', { description: `추가 기업: ${result.results.addedCompanies}건 · 업데이트: ${result.results.updatedCompanies}건 · 기사 연결: ${result.results.addedArticles}건` });
+        toast.success('데이터 가져오기 완료', { description: `추가 기업: ${result.results.addedCompanies}건 · 업데이트: ${result.results.updatedCompanies}건` });
         setOpen(false);
         setJsonText('');
         router.refresh();

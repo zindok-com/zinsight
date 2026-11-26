@@ -15,7 +15,6 @@ export default async function CompaniesPage() {
     prisma.organization.findMany({
       include: {
         region: true,
-        company_articles: { include: { article: true } },
         magazinePosts: {
           where: { magazinePost: { deletedAt: null } },
           include: { magazinePost: true },

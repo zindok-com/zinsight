@@ -12,13 +12,8 @@ Next.js 15(App Router)와 Prisma ORM, MariaDB를 기반으로 구축되었으며
 ### 1. 📡 인사이트 레이더 (Insight Radar & Profiling)
 - **지역(Region) 중심 관내 기업·기관 데이터베이스**:
   - 지자체(안양, 광명, 군포, 시흥, 의왕 등) 단위로 관내 기업, 공공기관, 테크 스타트업을 체계적으로 분류 및 아카이빙합니다.
-- **실시간 뉴스 데이터 수집 엔진 (Naver News API)**:
-  - 지역별 핵심 키워드 및 기업명 기반의 정밀 뉴스 자동 크롤링·수집 엔진을 탑재했습니다.
-  - Canonical Link 기반의 완벽한 중복 방지 및 기사-조직 자동 매핑을 수행합니다.
 - **기업·기관 프로필 허브**:
-  - 사업 분야, 비즈니스 요약, 핵심 레퍼런스 및 관련 실시간 뉴스 기사를 통합 노출합니다.
-- **통합 데이터 스냅샷 내보내기 (Export)**:
-  - 특정 기간(월별) 및 지역별 조직·기사 데이터를 Excel(`.xlsx`) 스냅샷 형식으로 추출합니다.
+  - 사업 분야, 비즈니스 요약, 핵심 레퍼런스와 이 조직을 다룬 진사이트 매거진 기사를 함께 보여줍니다.
 
 ---
 
@@ -68,8 +63,7 @@ Next.js 15(App Router)와 Prisma ORM, MariaDB를 기반으로 구축되었으며
 | **File Storage** | [NCP Object Storage](https://www.ncloud.com/product/storage/objectStorage) (S3 호환, `@aws-sdk/client-s3`) |
 | **Styling & UI** | Tailwind CSS, [shadcn/ui](https://ui.shadcn.com/) (Radix UI), Lucide Icons |
 | **Charts** | Recharts |
-| **Data APIs** | Naver Search News API, Google Analytics Data API (GA4), Google Search Console API |
-| **Excel Export** | SheetJS (`xlsx`) |
+| **Data APIs** | Google Analytics Data API (GA4), Google Search Console API |
 
 ---
 
@@ -87,12 +81,9 @@ src/
 │   │   ├── page.tsx              # 관리자 대시보드
 │   │   ├── magazine/             # 매거진 포스트 작성/편집/헤드라인 관리
 │   │   ├── companies/            # 관내 기업·기관 관리 및 임포트
-│   │   ├── keywords/             # 지역별 수집 키워드 관리
-│   │   ├── articles/             # 수집된 뉴스 기사 관리
-│   │   ├── storage/              # NCP Object Storage 이미지 스토리지 관리 (파일명 변경/삭제)
-│   │   └── export/               # 월간 통합 엑셀 스냅샷 내보내기
+│   │   └── storage/              # NCP Object Storage 이미지 스토리지 관리 (파일명 변경/삭제)
 │   └── api/                      # 서버리스 API 엔드포인트
-├── actions/                      # Server Actions (DB CRUD, 크롤링, 애널리틱스)
+├── actions/                      # Server Actions (DB CRUD, 애널리틱스)
 ├── components/
 │   ├── public/                   # 공개 페이지 UI 컴포넌트
 │   ├── admin/                    # 관리자 전용 UI 컴포넌트
@@ -112,10 +103,6 @@ DATABASE_URL="mysql://username:password@host:port/database"
 
 # Admin Auth
 JWT_SECRET=your_random_jwt_secret
-
-# Naver News Search API
-NAVER_CLIENT_ID=your_naver_client_id
-NAVER_CLIENT_SECRET=your_naver_client_secret
 
 # NCP Object Storage (S3 호환)
 NCP_STORAGE_ACCESS_KEY=your_ncp_access_key

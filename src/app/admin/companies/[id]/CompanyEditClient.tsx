@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useMemo, useRef } from 'react';
+import { useState, useTransition, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -14,7 +14,6 @@ import {
     Search,
     Sparkles,
     X,
-    RefreshCw,
     Edit3,
     BookOpen,
     BarChart3,
@@ -41,13 +40,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    updateCompany,
-    linkArticleToCompany,
-    unlinkArticleFromCompany,
-} from '@/actions/company-actions';
-import { ingestByOrganization } from '@/actions/ingest-actions';
-import { searchArticlesByTitle } from '@/actions/article-actions';
+import { updateCompany } from '@/actions/company-actions';
 import { CompanyLogoUpload } from '@/components/admin/companies/CompanyLogoUpload';
 import { CompanyArticlesPanel } from './CompanyArticlesPanel';
 import { useConfirm } from '@/components/ui/confirm-dialog';
@@ -57,23 +50,6 @@ interface Region {
     id: number;
     name: string;
     slug: string;
-}
-
-interface Article {
-    id: number;
-    title: string;
-    pub_date: Date | string | null;
-    source: string | null;
-    link: string | null;
-    canonical_link?: string | null;
-    description?: string | null;
-    created_at?: Date | string;
-}
-
-interface CompanyArticle {
-    id: number;
-    created_at: Date | string;
-    article: Article;
 }
 
 interface MagazinePostOrganization {
@@ -97,13 +73,6 @@ interface MagazinePostOrganization {
             slug: string;
         } | null;
     };
-}
-
-interface ArticleIngestion {
-    id: number;
-    source: string;
-    fetched_at: Date | string;
-    article: Article | null;
 }
 
 interface CompanyData {
@@ -134,13 +103,9 @@ interface CompanyData {
     is_featured: boolean;
     region_id: number;
     region: Region | null;
-    company_articles: CompanyArticle[];
     magazinePosts?: MagazinePostOrganization[];
-    ingestions: ArticleIngestion[];
     _count?: {
-        company_articles: number;
         magazinePosts?: number;
-        ingestions: number;
         linkPageLeads?: number;
     };
 }
@@ -148,7 +113,6 @@ interface CompanyData {
 interface Props {
     company: CompanyData;
     regions: Region[];
-    matchedArticles?: Article[];
 }
 
 function parseKeywords(keywords: any) {
@@ -191,7 +155,7 @@ function parseLinesArray(val: any): string {
     return '';
 }
 
-export function CompanyEditClient({ company: initialCompany, regions, matchedArticles = [] }: Props) {
+export function CompanyEditClient({ company: initialCompany, regions }: Props) {
     const router = useRouter();
     const confirm = useConfirm();
     const [isPending, startTransition] = useTransition();
@@ -228,15 +192,6 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
     const [contactEmail, setContactEmail] = useState(initialCompany.contact_email || '');
     const [contactPhone, setContactPhone] = useState(initialCompany.contact_phone || '');
     const [tagline, setTagline] = useState(initialCompany.tagline || '');
-
-    // 탭 상태
-    const [activeTab, setActiveTab] = useState<'linked' | 'ingested'>('linked');
-
-    // 기사 검색 & 연결 상태
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<Article[]>([]);
-    const [isSearching, setIsSearching] = useState(false);
-    const [ingesting, setIngesting] = useState(false);
 
     // 에디터 Ref
     const summaryTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -450,136 +405,7 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
         });
     };
 
-    // 기사 검색 함수
-    const handleSearchArticles = async () => {
-        if (!searchQuery.trim()) {
-            toast.info('검색어를 입력해주세요.');
-            return;
-        }
-
-        setIsSearching(true);
-        try {
-            const results = await searchArticlesByTitle(searchQuery.trim());
-            setSearchResults(results);
-            if (results.length === 0) {
-                toast.info('검색된 기사가 없습니다.');
-            }
-        } catch (err) {
-            toast.error('기사 검색 중 오류가 발생했습니다.');
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    // 기사 수기 연결
-    const handleLinkArticle = async (article: Article) => {
-        startTransition(async () => {
-            const res = await linkArticleToCompany(article.id, company.id);
-            if (res.success) {
-                toast.success(`"${article.title.slice(0, 20)}..." 기사가 연결되었습니다.`);
-                setCompany(prev => {
-                    const exists = prev.company_articles.some(ca => ca.article.id === article.id);
-                    if (exists) return prev;
-                    return {
-                        ...prev,
-                        company_articles: [
-                            { id: Date.now(), created_at: new Date(), article },
-                            ...prev.company_articles,
-                        ],
-                    };
-                });
-                router.refresh();
-            } else {
-                toast.error(res.error || '기사 연결에 실패했습니다.');
-            }
-        });
-    };
-
-    // 기사 연결 해제
-    const handleUnlinkArticle = async (articleId: number, title: string) => {
-        const ok = await confirm({
-            title: '기사 연결 해제',
-            description: `"${title.slice(0, 35)}..." 기사의 연관 연결을 해제하시겠습니까?`,
-            confirmText: '연결 해제',
-            variant: 'destructive',
-        });
-        if (!ok) return;
-
-        startTransition(async () => {
-            const res = await unlinkArticleFromCompany(articleId, company.id);
-            if (res.success) {
-                toast.success('기사 연결이 해제되었습니다.');
-                setCompany(prev => ({
-                    ...prev,
-                    company_articles: prev.company_articles.filter(ca => ca.article.id !== articleId),
-                }));
-                router.refresh();
-            } else {
-                toast.error(res.error || '연결 해제에 실패했습니다.');
-            }
-        });
-    };
-
-    // 네이버 뉴스 기사 수집 실행
-    const handleIngestNews = async () => {
-        setIngesting(true);
-        toast.info(`"${company.company_name}" 연관 기사를 수집 중입니다...`);
-        try {
-            const result = await ingestByOrganization(company.id, 10, 'sim');
-            if (result.success) {
-                toast.success(result.message);
-                router.refresh();
-            } else {
-                toast.error(result.message);
-            }
-        } catch (err) {
-            toast.error('수집 중 오류가 발생했습니다.');
-        } finally {
-            setIngesting(false);
-        }
-    };
-
-    const isArticleLinked = (articleId: number) => {
-        return company.company_articles.some(ca => ca.article.id === articleId);
-    };
-
-    // 자동 수집 기사와 조직명으로 매칭된 기사 통합 (중복 제거)
-    const combinedIngestedArticles = useMemo(() => {
-        const map = new Map<number, { article: Article; source: string; date: Date | string }>();
-
-        // 1. Ingestions (조직 전용 크롤링 로그)
-        company.ingestions.forEach(ing => {
-            if (ing.article) {
-                map.set(ing.article.id, {
-                    article: ing.article,
-                    source: ing.source,
-                    date: ing.fetched_at,
-                });
-            }
-        });
-
-        // 2. Matched Articles (조직명/별칭으로 DB에서 검색된 수집 기사)
-        matchedArticles.forEach(art => {
-            if (!map.has(art.id)) {
-                map.set(art.id, {
-                    article: art,
-                    source: art.source || 'DB 키워드 매칭',
-                    date: art.pub_date || art.created_at || new Date(),
-                });
-            }
-        });
-
-        return Array.from(map.values()).sort((a, b) => {
-            const dateA = new Date(a.date).getTime();
-            const dateB = new Date(b.date).getTime();
-            return dateB - dateA;
-        });
-    }, [company.ingestions, matchedArticles]);
-
     const publicUrl = `/insight-radar/${company.slug || company.id}`;
-    const magazineCount = company.magazinePosts?.length || 0;
-    const linkedArticleCount = company.company_articles?.length || 0;
-    const totalRelatedCount = magazineCount + linkedArticleCount;
 
     return (
         <div className="space-y-6">
@@ -628,21 +454,6 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                             공개 프로필 보기
                         </Button>
                     </a>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleIngestNews}
-                        disabled={ingesting}
-                        className="gap-1.5 text-xs text-slate-700 dark:text-slate-200"
-                    >
-                        {ingesting ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
-                        ) : (
-                            <RefreshCw className="h-3.5 w-3.5 text-blue-600" />
-                        )}
-                        연관 기사 수집
-                    </Button>
 
                     <Button
                         size="sm"
@@ -1075,25 +886,8 @@ export function CompanyEditClient({ company: initialCompany, regions, matchedArt
                     </Card>
                 </div>
 
-                {/* 우측: 기사 연결 및 수집 관리 (5컬럼) */}
-                <CompanyArticlesPanel
-                    company={company}
-                    activeTab={activeTab}
-                    setActiveTab={setActiveTab}
-                    totalRelatedCount={totalRelatedCount}
-                    combinedIngestedArticles={combinedIngestedArticles}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    handleSearchArticles={handleSearchArticles}
-                    isSearching={isSearching}
-                    searchResults={searchResults}
-                    isArticleLinked={isArticleLinked}
-                    isPending={isPending}
-                    handleLinkArticle={handleLinkArticle}
-                    handleUnlinkArticle={handleUnlinkArticle}
-                    handleIngestNews={handleIngestNews}
-                    ingesting={ingesting}
-                />
+                {/* 우측: 연결된 매거진 기사 (5컬럼) */}
+                <CompanyArticlesPanel company={company} />
             </div>
         </div>
     );
