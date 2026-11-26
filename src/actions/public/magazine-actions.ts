@@ -1,13 +1,19 @@
 'use server';
 
 import { prisma } from '@/lib/db';
-import { getMagazinePostPath } from '@/lib/site';
+import { getMagazinePostPath, ZINSIGHT_NEWS_CATEGORY } from '@/lib/site';
 
-export async function getPublicMagazinePosts(keyword?: string) {
+/** 메인 슬라이드 기사 수 */
+const HOME_SLIDE_COUNT = 12;
+
+export async function getPublicMagazinePosts(keyword?: string, options: { excludeNews?: boolean } = {}) {
     const where: any = { 
         status: 'PUBLISHED',
         deletedAt: null
     };
+    if (options.excludeNews) {
+        where.category = { slug: { not: ZINSIGHT_NEWS_CATEGORY } };
+    }
 
     if (keyword) {
         where.OR = [
@@ -36,12 +42,16 @@ export async function getPublicMagazinePosts(keyword?: string) {
     });
 }
 
+/**
+ * 메인 매거진 슬라이드: 최신 발행 기사 12편 자동, 관리자 '홈 노출'(isInHomeSection) 체크 기사는 맨 앞에 고정.
+ * 진사이트 소식 분류는 제외
+ */
 export async function getHeadlineMagazinePosts() {
-    const posts = await prisma.magazinePost.findMany({
+    const rows = await prisma.magazinePost.findMany({
         where: { 
             status: 'PUBLISHED',
-            isInHomeSection: true,
-            deletedAt: null
+            deletedAt: null,
+            category: { slug: { not: ZINSIGHT_NEWS_CATEGORY } }
         },
         include: {
             category: true,
@@ -54,10 +64,13 @@ export async function getHeadlineMagazinePosts() {
             region: true
         },
         orderBy: [
+            { isInHomeSection: 'desc' },
             { publishedAt: 'desc' },
             { createdAt: 'desc' }
-        ]
+        ],
+        take: HOME_SLIDE_COUNT
     });
+    const posts = rows; // 정렬: 고정(홈 노출) 먼저, 그다음 최신순
 
     return posts.map(post => ({
         id: post.id,
@@ -77,25 +90,17 @@ export async function getHeadlineMagazinePosts() {
     }));
 }
 
-export async function getTechMarketingPosts() {
+/** 진사이트 소식 목록 (/magazine/news). 기사 주소는 /magazine/tech-marketing/{slug} 그대로 */
+export async function getZinsightNewsPosts() {
     return await prisma.magazinePost.findMany({
         where: { 
             status: 'PUBLISHED',
             deletedAt: null,
-            category: {
-                slug: {
-                    in: ['newsletter', 'tech-marketing']
-                }
-            }
+            category: { slug: ZINSIGHT_NEWS_CATEGORY }
         },
         include: {
             category: true,
             region: true,
-            organizations: {
-                include: {
-                    organization: true
-                }
-            },
             author: true
         },
         orderBy: [

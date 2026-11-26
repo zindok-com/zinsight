@@ -30,17 +30,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'daily',
             priority: 0.9,
         },
+        // /magazine/tech-marketing·/magazine/local 목록은 /magazine으로 301 (사이트맵 제외)
         {
-            url: `${baseUrl}/magazine/tech-marketing`,
+            url: `${baseUrl}/magazine/news`,
             lastModified: new Date(),
-            changeFrequency: 'daily',
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/magazine/local`,
-            lastModified: new Date(),
-            changeFrequency: 'daily',
-            priority: 0.8,
+            changeFrequency: 'weekly',
+            priority: 0.5,
         },
     ];
 

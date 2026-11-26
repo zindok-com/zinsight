@@ -345,10 +345,6 @@ export default async function LocalDetailPage({ params }: PageProps) {
                 매거진
             </Link>
             <span className="text-slate-300">/</span>
-            <Link href="/magazine/local" className="py-1 px-1 rounded text-zi-primary font-medium hover:text-zi-secondary hover:underline transition-colors">
-                로컬 허브
-            </Link>
-            <span className="text-slate-300">/</span>
             <Link href={`/magazine/local/${regionSlug}`} className="py-1 px-1 rounded text-zi-primary font-medium hover:text-zi-secondary hover:underline transition-colors">
                 {post.region?.name || '로컬'}
             </Link>

@@ -1,27 +1,31 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { cardImageSrc } from '@/lib/image-variants';
-import { ArrowRight, Newspaper, Building2 } from 'lucide-react';
+import { ArrowRight, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarRegions } from '@/actions/insight-radar-actions';
 import RadarSocialProof from '@/components/public/RadarSocialProof';
-import { buildSocialMetadata } from '@/lib/site';
+import { buildSocialMetadata, getMagazinePostPath } from '@/lib/site';
+import { formatMagazineDate } from '@/lib/magazine-date';
 
 export const revalidate = 1800; // 30분마다 ISR 재생성
 
 const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
+const MAGAZINE_TITLE = '진사이트 매거진 — 로컬 비즈니스 허브';
+const MAGAZINE_DESCRIPTION = '안양·의왕·광명 등 지역 기업과 기관의 이야기를 기사로 정리해 전하는 진사이트 매거진입니다. 지역 지면별로 최신 기사를 모아 봅니다.';
+
 export const metadata: Metadata = {
-    title: '매거진: 테크·마케팅 저널 & 로컬 비즈니스 허브',
-    description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
+    title: { absolute: MAGAZINE_TITLE },
+    description: MAGAZINE_DESCRIPTION,
     alternates: {
         canonical: `${baseUrl}/magazine`,
     },
     ...buildSocialMetadata({
-        title: '매거진: 테크·마케팅 저널 & 로컬 비즈니스 허브',
-        description: '진사이트 매거진은 파트너사의 비즈니스 인사이트를 저널리즘 기준으로 재구성한 스폰서드 콘텐츠와 독립 리포트를 함께 발행합니다.',
+        title: MAGAZINE_TITLE,
+        description: MAGAZINE_DESCRIPTION,
         path: '/magazine',
     }),
     robots: {
@@ -59,13 +63,7 @@ function HighlightedText({ text }: { text: string }) {
     );
 }
 
-// 기사 카테고리/지역 구성에 맞춰 동적 URL을 가져오는 헬퍼 함수
-const getPostUrl = (post: any) => {
-    if (post.category?.isLocal && post.region?.slug) {
-        return `/magazine/local/${post.region.slug}/${post.slug}`;
-    }
-    return `/magazine/tech-marketing/${post.slug}`;
-};
+const getPostUrl = getMagazinePostPath;
 
 interface PageProps {
     searchParams: Promise<{ q?: string; keyword?: string }>;
@@ -77,7 +75,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
     const isSearchMode = !!keyword;
 
     const [allPosts, regions] = await Promise.all([
-        getPublicMagazinePosts(keyword),
+        getPublicMagazinePosts(keyword, { excludeNews: !isSearchMode }),
         getRadarRegions(),
     ]);
 
@@ -106,6 +104,9 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
                             {isSearchMode ? `"${keyword}" 검색` : '진사이트 매거진'}
                         </h1>
+                        {!isSearchMode && (
+                            <p className="mt-1.5 text-[16px] sm:text-[20px] font-bold text-slate-700">로컬 비즈니스 허브</p>
+                        )}
                     </div>
                     {isSearchMode ? (
                         <Link href="/magazine" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-4">
@@ -114,8 +115,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                     ) : (
                         <div className="hidden text-right md:block">
                             <p className="max-w-sm text-body-md font-body-md text-zi-on-surface-variant leading-relaxed break-keep [text-wrap:balance]">
-                                데이터의 깊이와 저널리즘의 통찰이 만난 곳,<br />
-                                마케팅의 격을 높이는 프리미엄 미디어
+                                지역 기업과 기관의 이야기를 기사로 정리해 전합니다.
                             </p>
                         </div>
                     )}
@@ -131,7 +131,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                 <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
                                     {featuredPost.category?.isLocal && featuredPost.region 
                                         ? `${featuredPost.region.name} ${featuredPost.category.name}` 
-                                        : (featuredPost.category?.slug === 'tech-marketing' ? 'Digital Marketing' : 'Newsletter')}
+                                        : (featuredPost.category?.name || '소식')}
                                 </span>
                             </div>
                             <Link href={getPostUrl(featuredPost)} className="group block cursor-pointer">
@@ -186,41 +186,32 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                 )}
 
                 {/* ─────────────────────────────── */}
-                {/* 섹션 바로가기 네비게이션 */}
+                {/* 지역 지면 바로가기 (검색 모드 제외) */}
                 {/* ─────────────────────────────── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-                    <Link href="/magazine/tech-marketing" className="group p-6 sm:p-8 rounded-zi-card border border-zi-divider bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                            <Newspaper className="w-32 h-32 text-white transform rotate-12 translate-x-8 -translate-y-4" />
+                {!isSearchMode && regions.length > 0 && (
+                    <section aria-labelledby="magazine-regions-title" className="mb-12 sm:mb-16">
+                        <h2 id="magazine-regions-title" className="mb-4 flex items-center gap-2 font-ui-label text-ui-label font-bold uppercase tracking-widest text-zi-outline">
+                            <MapPin className="h-4 w-4 text-rose-500" aria-hidden="true" /> 지역 지면
+                        </h2>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 sm:gap-4">
+                            {regions.map((reg) => (
+                                <Link
+                                    key={reg.id}
+                                    href={`/magazine/local/${reg.slug}`}
+                                    className="group flex items-center justify-between rounded-zi-card border border-zi-divider bg-white p-5 transition-all duration-300 hover:border-indigo-200 hover:shadow-sm"
+                                >
+                                    <div>
+                                        <p className="text-lg font-bold text-slate-800 transition-colors group-hover:text-indigo-600">{reg.name} 지면</p>
+                                        <p className="mt-1 text-xs text-slate-500">{reg.name} 관내 기업·기관 소식</p>
+                                    </div>
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-50 transition-colors group-hover:bg-indigo-50">
+                                        <ArrowRight className="h-4 w-4 text-slate-400 transition-colors group-hover:text-indigo-600" aria-hidden="true" />
+                                    </span>
+                                </Link>
+                            ))}
                         </div>
-                        <div className="relative z-10">
-                            <span className="text-[11px] uppercase font-bold tracking-widest text-indigo-300">CORE JOURNALISM</span>
-                            <h3 className="text-xl sm:text-2xl font-bold mt-2 mb-3">테크 · 마케팅 저널</h3>
-                            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                기업의 테크·마케팅 성공 사례와 전략 인사이트를 파트너십 및 자체 리서치 기반으로 다루는 진사이트의 콘텐츠 코너입니다.
-                            </p>
-                            <span className="mt-6 flex items-center text-xs font-semibold text-indigo-300 group-hover:text-indigo-200 transition-colors">
-                                테크·마케팅 지면 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-                            </span>
-                        </div>
-                    </Link>
-
-                    <Link href="/magazine/local" className="group p-6 sm:p-8 rounded-zi-card border border-indigo-100 bg-gradient-to-tr from-indigo-50/50 to-sky-50/30 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                            <Building2 className="w-32 h-32 text-indigo-900 transform rotate-12 translate-x-8 -translate-y-4" />
-                        </div>
-                        <div className="relative z-10">
-                            <span className="text-[11px] uppercase font-bold tracking-widest text-indigo-600">B2G & SME SYNERGY</span>
-                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-3">로컬 비즈니스 허브</h3>
-                            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                전국 주요 지자체의 육성 사업 소식, 관내 테크 스타트업 성공 사례 및 소상공인과의 디지털 상생 기사를 모아보는 특화 지면입니다.
-                            </p>
-                            <span className="mt-6 flex items-center text-xs font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">
-                                로컬 비즈니스 허브 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-                            </span>
-                        </div>
-                    </Link>
-                </div>
+                    </section>
+                )}
 
                 {/* ─────────────────────────────── */}
                 {/* 서브 섹션 (그리드 + 사이드바) */}
@@ -265,7 +256,9 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                         </div>
                                         <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
                                             <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
-                                            <ArrowRight className="h-4 w-4" />
+                                            <time dateTime={new Date(article.publishedAt || article.createdAt).toISOString()}>
+                                                {formatMagazineDate(article.publishedAt || article.createdAt)}
+                                            </time>
                                         </div>
                                     </Link>
                                 );

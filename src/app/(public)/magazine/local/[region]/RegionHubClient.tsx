@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { cardImageSrc } from '@/lib/image-variants';
+import { formatMagazineDate } from '@/lib/magazine-date';
 import Link from 'next/link';
 import { ArrowRight, Newspaper, Building2, GraduationCap } from 'lucide-react';
 
@@ -196,7 +197,9 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                                 </div>
                                 <div className="mt-4 flex items-center justify-between border-t border-zi-divider pt-3 text-zi-outline text-ui-label">
                                     <span>{article.author?.name || article.authorName || '진사이트 편집부'}</span>
-                                    <ArrowRight className="h-4 w-4" />
+                                    <time dateTime={new Date(article.publishedAt || article.createdAt).toISOString()}>
+                                        {formatMagazineDate(article.publishedAt || article.createdAt)}
+                                    </time>
                                 </div>
                             </Link>
                         );

@@ -11,17 +11,13 @@ export interface NavLink {
     external: boolean;
 }
 
-/** 매거진 하위 메뉴 (지역 지면 제외) */
+/** 매거진 하위 메뉴 (지역 지면은 헤더가 DB 활성 지역으로 붙임). 진사이트 소식은 푸터에만 */
 export function getMagazineSubLinks(): NavLink[] {
-    const links: NavLink[] = [
-        { label: '매거진 홈', href: '/magazine', external: false },
-        { label: '로컬 비즈니스 허브', href: '/magazine/local', external: false },
-    ];
-    if (siteConfig.nav.showTechJournal) {
-        links.push({ label: '테크 · 마케팅 저널', href: '/magazine/tech-marketing', external: false });
-    }
-    return links;
+    return [{ label: '매거진 홈', href: '/magazine', external: false }];
 }
+
+/** 푸터 '진사이트 소식' (공지성 분류, 상단 메뉴에는 넣지 않음) */
+export const ZINSIGHT_NEWS_LINK: NavLink = { label: '진사이트 소식', href: '/magazine/news', external: false };
 
 /** 헤더 매거진 다음의 일반 메뉴 (공개 전 페이지는 숨김) */
 export function getHeaderLinks(): NavLink[] {

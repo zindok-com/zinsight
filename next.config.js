@@ -83,6 +83,13 @@ const nextConfig = {
             },
         ];
     },
+    // 매거진 섹션 목록 정리: 테크·마케팅 저널·로컬 비즈니스 허브 목록은 매거진 홈으로 통합 (기사 주소는 그대로)
+    async redirects() {
+        return [
+            { source: '/magazine/tech-marketing', destination: '/magazine', statusCode: 301 },
+            { source: '/magazine/local', destination: '/magazine', statusCode: 301 },
+        ];
+    },
 };
 
 module.exports = nextConfig;

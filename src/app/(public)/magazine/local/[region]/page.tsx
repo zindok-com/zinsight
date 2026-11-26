@@ -92,8 +92,6 @@ export default async function LocalRegionPage({ params }: PageProps) {
                 <div className="mb-4 text-xs text-zi-outline font-ui-label flex items-center gap-1.5">
                     <Link href="/magazine" className="hover:text-zi-secondary transition-colors">Magazine</Link>
                     <span>&gt;</span>
-                    <Link href="/magazine/local" className="hover:text-zi-secondary transition-colors">Local Hub</Link>
-                    <span>&gt;</span>
                     <span className="text-zi-on-surface-variant">{region.name}</span>
                 </div>
 

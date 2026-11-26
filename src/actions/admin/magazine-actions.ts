@@ -24,8 +24,7 @@ async function revalidateMagazinePostPaths(postId: number, options?: RevalidateO
 
         // 1. Revalidate listing index pages
         revalidatePath('/magazine');
-        revalidatePath('/magazine/tech-marketing');
-        revalidatePath('/magazine/local');
+        revalidatePath('/magazine/news');
         revalidatePath('/');
         revalidatePath('/sitemap.xml');
         revalidatePath('/rss.xml');

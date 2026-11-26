@@ -111,11 +111,6 @@ export const siteConfig = {
         registerLabel: '우리 회사도 진사이트에 등록하기',
     },
 
-    nav: {
-        /** 헤더·푸터 메뉴에 '테크 · 마케팅 저널' 노출 (URL·글은 유지) */
-        showTechJournal: true,
-    },
-
     home: {
         /** 'AI 노출 진단' 버튼 슬롯 (상품 확정 후 켬) */
         aiDiagnosis: {

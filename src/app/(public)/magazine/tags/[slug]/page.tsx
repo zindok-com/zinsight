@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import Image from 'next/image';
 import { cardImageSrc } from '@/lib/image-variants';
-import { ArrowRight, Newspaper, Building2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { getPublicMagazinePosts } from '@/actions/public/magazine-actions';
 import { getRadarRegions } from '@/actions/insight-radar-actions';
@@ -137,7 +137,7 @@ export default async function TagArchivePage({ params }: PageProps) {
                                 <span className="font-ui-label text-[11px] uppercase tracking-widest bg-zi-surface-container-highest px-3 py-1 rounded-full text-zi-primary font-bold">
                                     {featuredPost.category?.isLocal && featuredPost.region 
                                         ? `${featuredPost.region.name} ${featuredPost.category.name}` 
-                                        : (featuredPost.category?.slug === 'tech-marketing' ? 'Digital Marketing' : 'Newsletter')}
+                                        : (featuredPost.category?.name || '소식')}
                                 </span>
                             </div>
                             <Link href={getPostUrl(featuredPost)} className="group block cursor-pointer">
@@ -190,43 +190,6 @@ export default async function TagArchivePage({ params }: PageProps) {
                         </div>
                     </section>
                 )}
-
-                {/* ─────────────────────────────── */}
-                {/* 섹션 바로가기 네비게이션 */}
-                {/* ─────────────────────────────── */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
-                    <Link href="/magazine/tech-marketing" className="group p-6 sm:p-8 rounded-zi-card border border-zi-divider bg-gradient-to-tr from-slate-900 to-indigo-950 text-white shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                            <Newspaper className="w-32 h-32 text-white transform rotate-12 translate-x-8 -translate-y-4" />
-                        </div>
-                        <div className="relative z-10">
-                            <span className="text-[11px] uppercase font-bold tracking-widest text-indigo-300">CORE JOURNALISM</span>
-                            <h3 className="text-xl sm:text-2xl font-bold mt-2 mb-3">테크 · 마케팅 저널</h3>
-                            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                기업의 테크·마케팅 성공 사례와 전략 인사이트를 파트너십 및 자체 리서치 기반으로 다루는 진사이트의 콘텐츠 코너입니다.
-                            </p>
-                            <span className="mt-6 flex items-center text-xs font-semibold text-indigo-300 group-hover:text-indigo-200 transition-colors">
-                                테크·마케팅 지면 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-                            </span>
-                        </div>
-                    </Link>
-
-                    <Link href="/magazine/local" className="group p-6 sm:p-8 rounded-zi-card border border-indigo-100 bg-gradient-to-tr from-indigo-50/50 to-sky-50/30 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-                            <Building2 className="w-32 h-32 text-indigo-900 transform rotate-12 translate-x-8 -translate-y-4" />
-                        </div>
-                        <div className="relative z-10">
-                            <span className="text-[11px] uppercase font-bold tracking-widest text-indigo-600">B2G & SME SYNERGY</span>
-                            <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mt-2 mb-3">로컬 비즈니스 허브</h3>
-                            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed max-w-sm">
-                                전국 주요 지자체의 육성 사업 소식, 관내 테크 스타트업 성공 사례 및 소상공인과의 디지털 상생 기사를 모아보는 특화 지면입니다.
-                            </p>
-                            <span className="mt-6 flex items-center text-xs font-semibold text-indigo-600 group-hover:text-indigo-800 transition-colors">
-                                로컬 비즈니스 허브 바로가기 <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
-                            </span>
-                        </div>
-                    </Link>
-                </div>
 
                 {/* ─────────────────────────────── */}
                 {/* 서브 섹션 (그리드 + 사이드바) */}

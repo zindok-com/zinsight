@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Newspaper, Building2, MapPin, LayoutGrid } from 'lucide-react';
+import { MapPin, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Region {
@@ -25,8 +25,6 @@ export function MagazineSubNavbar({ regions = [] }: MagazineSubNavbarProps) {
 
     // 경로 매칭 활성 판단
     const isHomeActive = pathname === '/magazine';
-    const isTechActive = pathname.startsWith('/magazine/tech-marketing');
-    const isLocalHubActive = pathname === '/magazine/local';
     
     // 현재 접속한 지자체 지면 확인 (/magazine/local/[regionSlug])
     const currentRegionSlug = pathname.startsWith('/magazine/local/') && pathname !== '/magazine/local'
@@ -56,35 +54,7 @@ export function MagazineSubNavbar({ regions = [] }: MagazineSubNavbarProps) {
                         <span>매거진 홈</span>
                     </Link>
 
-                    {/* 2. 테크 · 마케팅 저널 */}
-                    <Link
-                        href="/magazine/tech-marketing"
-                        className={cn(
-                            'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition-all duration-150 active:scale-95 shrink-0 border text-[11px] sm:text-xs',
-                            isTechActive
-                                ? 'bg-indigo-600 border-indigo-600 text-white font-bold shadow-xs'
-                                : 'bg-slate-50 border-slate-200/80 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50/70'
-                        )}
-                    >
-                        <Newspaper className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        <span>테크 · 마케팅 저널</span>
-                    </Link>
-
-                    {/* 3. 로컬 비즈니스 허브 */}
-                    <Link
-                        href="/magazine/local"
-                        className={cn(
-                            'flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-full transition-all duration-150 active:scale-95 shrink-0 border text-[11px] sm:text-xs',
-                            isLocalHubActive
-                                ? 'bg-emerald-600 border-emerald-600 text-white font-bold shadow-xs'
-                                : 'bg-slate-50 border-slate-200/80 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/70'
-                        )}
-                    >
-                        <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        <span>로컬 비즈니스 허브</span>
-                    </Link>
-
-                    {/* 4. 지자체별 지면 탭 칩 직접 나열 (경계선으로 분리) */}
+                    {/* 2. 지역 지면 탭 칩 (경계선으로 분리) */}
                     {regions.length > 0 && (
                         <div className="flex items-center gap-1 sm:gap-1.5 pl-1.5 sm:pl-2 ml-0.5 sm:ml-1 border-l border-slate-200 shrink-0">
                             {regions.map((reg) => {

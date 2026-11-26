@@ -21,7 +21,11 @@
 - 완료: 메인 화면 정비 — 숫자 블록 제거, AI 인용 사례(consented만 노출, 없으면 '이렇게 작동합니다'), 히어로 보조 문구·'우리 회사도 등록하기'(home_hero), 푸터 문구, 명함 주소 (커밋 b902eb5). meta·OG description 교체, title은 기존 유지(사용자 A안)
 - 확인함: 메인 SSR 매거진 기사 제목 각 1회, 375/390/1440/1920 가로 넘침 없음. 스크린샷 docs/screenshots/home-2026-11-26 (git 추적 안 함)
 
+- 완료: 매거진 메뉴 정리 — 메뉴는 매거진 홈+지역 지면, /magazine/tech-marketing·/magazine/local 목록 301→/magazine(next.config redirects, 목록 페이지 삭제), 사이트맵 정리, 매거진 홈 제목 '진사이트 매거진 — 로컬 비즈니스 허브'·지역 카드·목록 작성일, /magazine/news(진사이트 소식, 푸터 링크만), 메인 슬라이드 최신 12편 자동+홈 노출 고정, 분류 zinsight-news 데이터 마이그레이션(개발 DB 적용)
+- 주의: dev 서버 실행 중 next typegen 실행 금지(무한 새로고침 발생, dev 재시작으로 해결)
+
 ## 다음 할 일 (우선순위 순)
+0-1. (사용자) 운영 배포 후 테크 기사 2편 분류를 '진사이트 소식'으로 변경, 두 번째 기사 제목·본문 첫 언급 '진사이트(Zinsight)' 수정. (승인 시) JSON-LD 이동 경로 Local Hub 항목 제거·articleSection을 분류 이름으로
 0. push 전 커밋 있음(9ea3c4a부터). JSON-LD 설명·주소는 새 값으로 맞춤(사용자 승인, siteConfig.jsonLd.address). 대림대·텔링 인용 사례 데이터(질문 원문·날짜·캡처) 받으면 aiCitations 채우고 동의 후 consented=true. 진독 프로필 DB 본사 주소는 관리자에서 사용자 확인
 1. push → Vercel 배포로 운영 DB에 inquiries 생성 확인
 2. (사용자) Vercel Production 환경변수(Resend 도메인 인증은 완료): RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET (zindok 연동 시 INQUIRY_EXTERNAL_ORIGINS)

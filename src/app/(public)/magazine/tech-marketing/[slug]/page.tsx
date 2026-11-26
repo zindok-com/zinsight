@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import MagazinePostDetail from '@/components/public/magazine/MagazinePostDetail';
-import { buildArticlePublisherJsonLd, SITE_BASE_URL } from '@/lib/site';
+import { buildArticlePublisherJsonLd, SITE_BASE_URL, ZINSIGHT_NEWS_CATEGORY } from '@/lib/site';
 
 // MagazinePostDetail과 동일한 카테고리 레이블 매핑 (메타데이터 일치)
 function getCategoryLabel(category: { name?: string; slug: string } | null | undefined): string {
@@ -286,14 +286,19 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
         ]
     };
 
+    // 진사이트 소식은 /magazine/news 목록으로, 그 밖의 비지역 기사는 매거진 홈으로 (/magazine/tech-marketing 목록은 301)
+    const sectionLink = post.category?.slug === ZINSIGHT_NEWS_CATEGORY
+        ? { href: '/magazine/news', label: post.category.name }
+        : { href: '/magazine', label: post.category?.name || '매거진' };
+
     const breadcrumb = (
         <nav aria-label="기사 경로" className="text-[13px] sm:text-sm text-zi-outline font-ui-label flex items-center gap-1 sm:gap-1.5 flex-wrap">
             <Link href="/magazine" className="py-1 px-1 rounded text-zi-primary font-medium hover:text-zi-secondary hover:underline transition-colors">
                 매거진
             </Link>
             <span className="text-slate-300">/</span>
-            <Link href="/magazine/tech-marketing" className="py-1 px-1 rounded text-zi-primary font-medium hover:text-zi-secondary hover:underline transition-colors">
-                테크 · 마케팅
+            <Link href={sectionLink.href} className="py-1 px-1 rounded text-zi-primary font-medium hover:text-zi-secondary hover:underline transition-colors">
+                {sectionLink.label}
             </Link>
             <span className="hidden sm:inline text-slate-300">/</span>
             <span className="text-zi-on-surface-variant font-medium line-clamp-1 hidden sm:inline max-w-sm pl-1">{post.title}</span>
@@ -304,7 +309,7 @@ export default async function TechMarketingDetailPage({ params }: PageProps) {
         <MagazinePostDetail 
             post={post}
             breadcrumb={breadcrumb}
-            backLink="/magazine/tech-marketing"
+            backLink={sectionLink.href}
             jsonLd={jsonLd}
         />
     );

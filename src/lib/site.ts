@@ -49,6 +49,9 @@ export function toAbsoluteUrl(pathOrUrl: string | null | undefined): string {
     return `${SITE_BASE_URL}${cleanPath}`;
 }
 
+/** 진사이트 소식(공지성) 분류 slug: 매거진 홈 목록·메인 슬라이드에서 빼고 /magazine/news에만 노출 */
+export const ZINSIGHT_NEWS_CATEGORY = 'zinsight-news';
+
 /**
  * 매거진 기사의 정규 경로. /magazine/[slug]는 이 경로로 301 리다이렉트만 하므로 내부 링크는 항상 이 함수를 사용합니다.
  */
