@@ -219,24 +219,6 @@ export async function createMagazinePost(data: {
         
         let slug = providedSlug;
 
-        const categoryRecord = await prisma.magazineCategory.findUnique({
-            where: { id: categoryId }
-        });
-
-        // Auto-slug for NEWSLETTER if not provided
-        if (!slug && categoryRecord?.slug === 'newsletter') {
-            const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            slug = `${year}-${month}-newsletter`;
-            
-            // Check if slug exists, if so append random
-            const existing = await prisma.magazinePost.findUnique({ where: { slug } });
-            if (existing) {
-                slug += '-' + Math.random().toString(36).substring(2, 5);
-            }
-        }
-
         // 발행 시 슬러그 서버 검증
         if (postData.status === 'PUBLISHED') {
             if (!slug || slug.trim() === '' || slug === 'post-slug-placeholder') {

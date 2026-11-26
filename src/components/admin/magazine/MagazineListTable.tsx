@@ -357,12 +357,12 @@ export function MagazineListTable({
                                     <Badge 
                                         variant="outline" 
                                         className={
-                                            post.category?.slug === 'tech-marketing' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                            !post.category?.isLocal ? 'bg-purple-50 text-purple-700 border-purple-200' :
                                              post.category?.isLocal ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                                             'bg-blue-50 text-blue-700 border-blue-200'
                                         }
                                     >
-                                        {post.region?.name ? `${post.region.name} ` : ''}{post.category?.name || '뉴스레터'}
+                                        {post.region?.name ? `${post.region.name} ` : ''}{post.category?.name || '미분류'}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="font-medium max-w-xs">
@@ -533,7 +533,7 @@ export function MagazineListTable({
                                                 </Select>
                                             ) : (
                                                 <div className="p-3 bg-white border rounded-md font-medium text-slate-900">
-                                                    {selectedPost.category?.name || '뉴스레터'}
+                                                    {selectedPost.category?.name || '미분류'}
                                                 </div>
                                             )}
                                         </div>
@@ -638,14 +638,11 @@ export function MagazineListTable({
                                                 카테고리 안내 가이드
                                             </p>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                                                <div>
-                                                    <span className="font-bold text-blue-600">뉴스레터</span>: 주간 기술 및 트렌드 분석
-                                                </div>
-                                                <div>
-                                                    <span className="font-bold text-purple-600">디지털 마케팅</span>: SEO, GEO를 활용한 디지털 마케팅 분석
+                                                <div className="sm:col-span-2">
+                                                    <span className="font-bold text-purple-600">진사이트 소식</span>: 진사이트 공지·소식 (/magazine/news 목록, 매거진 홈에는 안 나옴)
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <span className="font-bold text-emerald-600">로컬 3종 (밸리 나우 / SME 그로스 / 마켓 플래시)</span>: 지자체 소식 및 스타트업 인터뷰 (지역 선택 필수)
+                                                    <span className="font-bold text-emerald-600">지역 3종 (기업 스포트라이트 / 지원사업·정책 브리핑 / 산학협력·교육)</span>: 지역 기업·기관 기사 (지역 선택 필수)
                                                 </div>
                                             </div>
                                         </div>

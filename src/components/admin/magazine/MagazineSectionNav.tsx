@@ -216,20 +216,16 @@ export function MagazineRoutingGuide({
             </button>
             {guideOpen && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-200/60">
-                    {/* 테크 & 마케팅 지면 그룹 */}
+                    {/* 진사이트 소식 (지역이 아닌 유일한 분류) */}
                     <div className="p-4 bg-white border border-slate-100 rounded-lg space-y-3 shadow-2xs">
                         <h4 className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
-                            Core 테크 지면 (URL: <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded text-[11px]">/magazine/tech-marketing/*</code>)
+                            진사이트 소식 (URL: <code className="text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded text-[11px]">/magazine/tech-marketing/*</code>)
                         </h4>
                         <div className="space-y-3 pl-3 border-l border-slate-100">
                             <div className="space-y-1">
-                                <span className="font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-[10px]">뉴스레터 (NEWSLETTER)</span>
-                                <p className="text-slate-500">주 단위 기술 트렌드 및 요약 분석 지면</p>
-                            </div>
-                            <div className="space-y-1">
-                                <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[10px]">디지털 마케팅 (INTELLIGENCE_REPORT)</span>
-                                <p className="text-slate-500">SEO, GEO를 활용한 디지털 마케팅 분석 리포트</p>
+                                <span className="font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded text-[10px]">진사이트 소식 (ZINSIGHT_NEWS)</span>
+                                <p className="text-slate-500">진사이트 공지·소식. 목록은 /magazine/news(푸터 링크), 매거진 홈·메인 슬라이드에는 안 나옴. 기사 주소는 /magazine/tech-marketing/* 그대로</p>
                             </div>
                         </div>
                     </div>

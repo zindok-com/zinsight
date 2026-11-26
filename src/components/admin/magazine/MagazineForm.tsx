@@ -344,9 +344,6 @@ export function MagazineForm({
         return [];
     });
 
-    const initialDate = post ? new Date(post.createdAt) : new Date();
-    const [year, setYear] = useState(String(initialDate.getFullYear()));
-    const [month, setMonth] = useState(String(initialDate.getMonth() + 1).padStart(2, '0'));
 
     const [formData, setFormData] = useState<any>({
         title: post?.title || '',
@@ -358,7 +355,8 @@ export function MagazineForm({
         thumbnailUrl: post?.thumbnailUrl || '',
         thumbnailAlt: parsedContent.thumbnailAlt || '',
         thumbnailCaption: parsedContent.thumbnailCaption || '',
-        categoryId: post?.categoryId ? String(post.categoryId) : (categories.find(c => c.slug === 'newsletter')?.id ? String(categories.find(c => c.slug === 'newsletter').id) : ''),
+        // 새 기사 기본 분류: 기업 스포트라이트
+        categoryId: post?.categoryId ? String(post.categoryId) : (categories.find(c => c.slug === 'spotlight')?.id ? String(categories.find(c => c.slug === 'spotlight').id) : ''),
         status: post?.status || 'PUBLISHED',
         authorId: post?.authorId || null,
         authorName: post?.authorName || '진사이트 편집부',
@@ -367,15 +365,6 @@ export function MagazineForm({
         isPaid: post?.isPaid || false
     });
 
-    // Real-time slug generation (Only when creating a new post)
-    useEffect(() => {
-        if (post) return; // Skip automatic slug generation during edit mode to prevent breaking existing URLs
-        const selectedCategory = categories.find(c => String(c.id) === String(formData.categoryId));
-        if (selectedCategory?.slug === 'newsletter') {
-            const autoSlug = `${year}-${month}-newsletter`;
-            setFormData((prev: any) => ({ ...prev, slug: autoSlug }));
-        }
-    }, [formData.categoryId, year, month, post, categories]);
 
     // ── 이탈 방지(뒤로가기 방지) 및 로컬스토리지 자동 임시저장(Auto-draft) 시스템 ──
     const [isDirty, setIsDirty] = useState(false);
@@ -590,26 +579,13 @@ export function MagazineForm({
         });
     };
 
-    const years = Array.from({ length: 5 }, (_, i) => String((post ? new Date(post.createdAt) : new Date()).getFullYear() - 2 + i));
-    const months = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 
     const selectedCategory = categories.find(c => String(c.id) === String(formData.categoryId));
     const isLocal = selectedCategory?.isLocal || false;
     const activeCategorySlug = selectedCategory?.slug;
 
     // Preview Meta Information Helper
-    const categoryLabel = (() => {
-        if (!selectedCategory) return 'Newsletter';
-        switch (selectedCategory.slug) {
-            case 'tech-marketing': return 'Digital Marketing';
-            case 'spotlight': return 'Spotlight';
-            case 'briefing': return 'Briefing';
-            case 'edu-collab': return '산학협력 · 교육';
-            case 'newsletter':
-            default:
-                return 'Newsletter';
-        }
-    })();
+    const categoryLabel = selectedCategory?.name || '매거진';
 
     // 발행 필수 조건 검사
     const hasTitle = formData.title.trim().length > 0;
@@ -1014,39 +990,6 @@ export function MagazineForm({
                         {/* 카테고리 안내 가이드 */}
                         <MagazineRoutingGuide guideOpen={guideOpen} setGuideOpen={setGuideOpen} />
 
-                        {/* Newsletter Specific: Year/Month */}
-                        {activeCategorySlug === 'newsletter' && (
-                            <div className="p-4 bg-blue-50/50 rounded-lg border border-blue-100 flex flex-wrap items-center gap-6">
-                                <div className="flex items-center gap-2">
-                                    <Info className="w-4 h-4 text-blue-500" />
-                                    <span className="text-sm font-semibold text-blue-700">뉴스레터 대상 기간:</span>
-                                </div>
-                                <div className="flex items-center gap-4">
-                                    <div className="flex items-center gap-2">
-                                        <Label className="text-xs text-slate-500">연도</Label>
-                                        <Select value={year} onValueChange={setYear}>
-                                            <SelectTrigger className="w-24 bg-white h-9">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {years.map(y => <SelectItem key={y} value={y}>{y}년</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <Label className="text-xs text-slate-500">월</Label>
-                                        <Select value={month} onValueChange={setMonth}>
-                                            <SelectTrigger className="w-20 bg-white h-9">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {months.map(m => <SelectItem key={m} value={m}>{m}월</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
 
                         <div id="section-org-slug" className="grid grid-cols-1 md:grid-cols-2 gap-8 scroll-mt-24">
                             {/* Left Column: Industry & Slug */}
@@ -1078,16 +1021,9 @@ export function MagazineForm({
                                             onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                                             className="bg-white pr-10 font-mono text-sm border-2 focus-visible:ring-indigo-500"
                                         />
-                                        {activeCategorySlug === 'newsletter' && (
-                                            <div className="absolute right-3 top-2.5">
-                                                <Info className="w-4 h-4 text-indigo-400" />
-                                            </div>
-                                        )}
                                     </div>
                                     <p className="text-[11px] text-slate-500 italic">
-                                        {activeCategorySlug === 'newsletter'
-                                            ? '대상 기간과 산업군에 따라 자동으로 생성됩니다. 직접 수정도 가능합니다.'
-                                            : 'URL에 사용될 고유 식별자입니다.'}
+                                        URL에 사용될 고유 식별자입니다.
                                     </p>
                                 </div>
                             </div>
@@ -1181,7 +1117,7 @@ export function MagazineForm({
                                     </div>
                                     {formData.isPaid && (
                                         <p className="text-[11px] text-amber-700 font-medium pt-1 border-t border-amber-200">
-                                            ✓ {activeCategorySlug === 'edu-collab' ? '협력 기관' : '파트너'} 배지 활성화 — 기사 헤더 및 카드 목록에 표시됩니다.
+                                            ✓ {activeCategorySlug === 'edu-collab' ? '협력 기관' : '협찬'} 배지 활성화 — 기사 헤더 및 카드 목록에 표시됩니다.
                                         </p>
                                     )}
                                 </div>

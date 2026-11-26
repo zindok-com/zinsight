@@ -148,7 +148,7 @@ export function MagazineSidePreview({ preview }: MagazineSidePreviewProps) {
                         <div className="p-3 space-y-2">
                             <div className="flex items-center gap-1.5">
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                    {preview.categoryLabel || 'Newsletter'}
+                                    {preview.categoryLabel || '매거진'}
                                 </span>
                             </div>
                             <p className="text-[13px] font-semibold text-slate-900 line-clamp-2 leading-snug">

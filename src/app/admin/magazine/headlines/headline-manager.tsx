@@ -453,7 +453,7 @@ export function HeadlineManager({ initialPosts }: { initialPosts: any[] }) {
                                                 <Badge 
                                                     variant="outline" 
                                                     className={
-                                                        post.category?.slug === 'tech-marketing' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                                        !post.category?.isLocal ? 'bg-purple-50 text-purple-700 border-purple-200' :
                                                         'bg-blue-50 text-blue-700 border-blue-200'
                                                     }
                                                 >
