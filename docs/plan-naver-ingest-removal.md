@@ -2,7 +2,7 @@
 
 결정(2026-11-26): C안. 배포를 두 번으로 나눈다.
 
-## 배포 1 — 코드 제거만 (DB 변경 없음) ✅ 커밋함, push·운영 확인 전
+## 배포 1 — 코드 제거만 (DB 변경 없음) ✅ push함(2026-11-26), 운영 확인 전
 - 수집 코드 `ingest-actions.ts`, 키워드 `keyword-actions.ts`·`/admin/keywords`, 기사 관리 `/admin/articles`(지역별 포함)·`article-actions.ts`, 내보내기 `/admin/export`·`export-actions.ts`·`/api/snapshots`, 쓰이지 않던 `/api/companies/[id]` 삭제
 - 공개 화면: 기업 프로필 기사 목록·JSON-LD subjectOf·기사 수·최근 활동일을 매거진 기사만으로. `/insight-radar` 통계에서 수집 기사 수 제거. 메인의 쓰지 않던 최신 기사·트렌드 키워드 조회와 그 컴포넌트 2개 삭제
 - AEO 점수: 조직의 `newsArticleCount`를 0으로(외부 기사 가점 −4 또는 −8 사라짐. 기사 단위 진단은 그대로)
@@ -23,7 +23,7 @@
 - 스키마: 위 4개 모델과 `Region.keywords`·`Region.ingestions`, `Organization.company_articles`·`Organization.ingestions` 관계 필드 삭제. 다른 테이블의 컬럼은 바뀌지 않음(외래 키는 모두 지우는 테이블 쪽에 있음)
 - 마이그레이션은 별도 커밋, 개발 DB에서 먼저 `prisma migrate deploy`로 확인
 
-### 운영 적용 전 임시 덤프 (사용자가 실행)
+### 운영 적용 전 임시 덤프 — 하지 않기로 함(사용자 2026-11-26, 데이터 보관 안 함). 참고용으로만 남김
 ```
 mysqldump --single-transaction --no-tablespaces -h <호스트> -P <포트> -u <계정> -p <DB이름> article_ingestions company_articles search_keywords articles > zinsight-ext-articles-<날짜>.sql
 ```
