@@ -76,7 +76,15 @@ export default function ServicesPage() {
             {/* 첫 화면 */}
             <section className="mx-auto max-w-zi-container px-4 sm:px-6 pt-10 pb-8 sm:pt-20 sm:pb-12 text-center">
                 <h1 className="mx-auto mb-4 max-w-4xl font-h1 text-[26px] sm:text-[34px] lg:text-[40px] leading-tight text-zi-primary break-keep">{title}</h1>
-                <p className="mx-auto max-w-2xl text-body-md text-zi-on-surface-variant break-keep">{partnership.intro}</p>
+                {/* 문장마다 한 줄(넓은 화면). 좁은 화면에서는 이어서 흐름 */}
+                <p className="mx-auto max-w-3xl text-body-md text-zi-on-surface-variant break-keep">
+                    {partnership.intro.split(/(?<=\.)\s+/).map((sentence, i) => (
+                        <span key={i} className="sm:block">
+                            {i > 0 && ' '}
+                            {sentence}
+                        </span>
+                    ))}
+                </p>
                 <div className="mt-7 flex flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center">
                     <a
                         href="#inquiry"
