@@ -101,7 +101,7 @@ export const siteConfig = {
     /** 진사이트 자체 이용 문의 (헤더 버튼·푸터). 고객사 '문의하기'와 별개 */
     contact: {
         label: '이용 문의',
-        href: '/services#inquiry',
+        href: '/services', // 상품 표(메뉴판)부터 보이고, 페이지 안 버튼이 #inquiry 폼으로 이동
         /** 카드·프로필 하단 작은 글자 링크 */
         registerLabel: '우리 회사도 진사이트에 등록하기',
     },

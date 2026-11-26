@@ -29,7 +29,7 @@
 ## 결정 사항
 - /services 경로 유지, 당분간 noindex — 사용자 결정(2026-11-25)
 - 메일은 Resend(fetch, 패키지 없음) — 사용자 승인
-- 헤더 "문의"는 zindok.com 대신 /services#inquiry — 사용자 승인. 푸터 '진사이트 소개'는 /about 공개 전까지 zindok.com
+- 헤더 "문의"는 zindok.com 대신 /services — 상품 표(메뉴판)부터 보이게(사용자 요청 2026-11-26), 폼은 페이지 안 버튼(#inquiry). 푸터 '진사이트 소개'는 /about 공개 전까지 zindok.com
 - 자체 문의 GA4 이벤트: zinsight_register_cta_click(cta_placement), zinsight_inquiry_form_start, zinsight_inquiry_submit. generate_lead·cta_inquiry_click·/api/track은 쓰지 않음 — 고객사 통계와 섞지 않기 위해
 - source는 서버가 Origin으로 결정(같은 사이트 zinsight, 허용 외부 origin zindok)
 - IP 해시는 INQUIRY_IP_SECRET 전용(다른 비밀값 재사용 안 함). 없으면 DB 기준 제한 생략
