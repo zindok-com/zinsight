@@ -4,6 +4,7 @@ import { Building2, ArrowRight } from 'lucide-react';
 import { PreferredSourceButton } from '@/components/public/magazine/PreferredSourceButton';
 import { ArticleTracker } from '@/components/public/analytics/ArticleTracker';
 import { serializeJsonLd } from '@/lib/site';
+import { siteConfig, sponsoredBadgeLabel } from '@/config/site';
 import { sanitizeHref } from '@/lib/utils';
 import { extractYouTubeId, isDirectVideoUrl } from '@/lib/video';
 
@@ -15,7 +16,8 @@ function isInternalHref(url: string): boolean {
     return url.startsWith('/') || url.startsWith('#') || /^https?:\/\/(www\.)?zinsight\.co\.kr(\/|$)/i.test(url);
 }
 
-function renderHighlightedParts(text: string) {
+/** sponsoredLinks: 후원(isPaid) 기사면 사이트 밖 링크에 모두 rel="sponsored" */
+function renderHighlightedParts(text: string, sponsoredLinks = false) {
     const parts = text.split(/(\*\*\{.*?\}\*\*|\*\*.*?\*\*|\[.*?\]\(.*?\))/g);
     return parts.map((part, i) => {
         if (part.startsWith('**{') && part.endsWith('}**')) {
@@ -33,9 +35,9 @@ function renderHighlightedParts(text: string) {
                 const url = sanitizeHref(match[2].trim());
                 if (!url) return linkText;
                 const title = match[3];
-                const isSponsored = title === 'sponsored';
                 // 사이트 내부 링크는 같은 탭에서 열고, 외부 링크만 새 탭으로
                 const internal = isInternalHref(url);
+                const isSponsored = title === 'sponsored' || (sponsoredLinks && !internal);
                 const rel = isSponsored ? "sponsored noopener" : "noopener";
                 return (
                     <a 
@@ -63,7 +65,7 @@ type HighlightBlock =
     | { type: 'paragraph'; text: string };
 
 // Inline custom parser for **text** -> zi-blue, **{text}** -> zi-blue + underline, and bullet points
-function HighlightedText({ text }: { text: string }) {
+function HighlightedText({ text, sponsoredLinks = false }: { text: string; sponsoredLinks?: boolean }) {
     if (!text) return null;
     
     const lines = text.split('\n');
@@ -224,7 +226,7 @@ function HighlightedText({ text }: { text: string }) {
                         <span key={idx} className="flex items-start gap-2.5 mb-2.5 pl-1.5 last:mb-0">
                             <span className="font-bold shrink-0 select-none text-zi-blue leading-relaxed">•</span>
                             <span className="flex-1 leading-relaxed">
-                                {renderHighlightedParts(block.text)}
+                                {renderHighlightedParts(block.text, sponsoredLinks)}
                             </span>
                         </span>
                     );
@@ -232,7 +234,7 @@ function HighlightedText({ text }: { text: string }) {
 
                 return (
                     <span key={idx} className="block mb-2.5 last:mb-0 leading-[1.8]">
-                        {renderHighlightedParts(block.text)}
+                        {renderHighlightedParts(block.text, sponsoredLinks)}
                     </span>
                 );
             })}
@@ -329,7 +331,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                 {post.isPaid && (
                                     <span className="text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full flex items-center gap-1">
                                         <span aria-hidden="true">✦</span>
-                                        {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
+                                        {sponsoredBadgeLabel(post.category?.slug)}
                                     </span>
                                 )}
                             </div>
@@ -339,7 +341,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                 <div className="sm:hidden mb-2.5">
                                     <span className="inline-flex text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full items-center gap-1">
                                         <span aria-hidden="true">✦</span>
-                                        {post.category?.slug === 'edu-collab' ? '협력 기관' : '파트너'}
+                                        {sponsoredBadgeLabel(post.category?.slug)}
                                     </span>
                                 </div>
                             )}
@@ -394,7 +396,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                     {/* 리드 섹션 */}
                                     {parsedContent.lead && (
                                         <p className="font-sans m-0 p-6 sm:p-8 bg-zi-surface-container-low rounded-zi-card border border-zi-divider/50 text-[17px] sm:text-[18px] leading-relaxed font-medium text-zi-on-surface-variant italic">
-                                            <HighlightedText text={parsedContent.lead} />
+                                            <HighlightedText text={parsedContent.lead} sponsoredLinks={!!post.isPaid} />
                                         </p>
                                     )}
 
@@ -405,7 +407,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                                 {section.title}
                                             </h3>
                                             <div className="text-[16px] leading-relaxed whitespace-pre-line text-zi-on-surface">
-                                                <HighlightedText text={section.content} />
+                                                <HighlightedText text={section.content} sponsoredLinks={!!post.isPaid} />
                                             </div>
                                         </div>
                                     ))}
@@ -413,14 +415,14 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                                     {/* 클로징 섹션 */}
                                     {parsedContent.closing && (
                                         <div className="pt-8 border-t border-dashed border-zi-divider text-[16px] leading-relaxed">
-                                            <HighlightedText text={parsedContent.closing} />
+                                            <HighlightedText text={parsedContent.closing} sponsoredLinks={!!post.isPaid} />
                                         </div>
                                     )}
                                 </div>
                             ) : (
                                 /* 구형 데이터 포맷 */
                                 <div className="text-[16px]">
-                                    <HighlightedText text={post.content} />
+                                    <HighlightedText text={post.content} sponsoredLinks={!!post.isPaid} />
                                 </div>
                             )}
                         </article>
@@ -509,7 +511,7 @@ export default function MagazinePostDetail({ post, breadcrumb, backLink, jsonLd 
                             <p className="mt-8 text-[11px] text-zi-outline leading-relaxed border-t border-zi-divider pt-5 italic">
                                 {post.category?.slug === 'edu-collab'
                                     ? '본 콘텐츠는 진사이트와 협력 관계에 있는 기관의 의뢰로 제작된 콘텐츠입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.'
-                                    : '본 콘텐츠는 진사이트와 제휴 계약을 체결한 파트너사의 의뢰로 제작된 스폰서드 콘텐츠입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.'
+                                    : `본 콘텐츠는 진사이트와 제휴 계약을 체결한 파트너사의 의뢰로 제작된 ${siteConfig.sponsorship.name}입니다. 콘텐츠의 편집 방향과 서술 방식은 진사이트 편집부가 독립적으로 결정합니다.`
                                 }
                             </p>
                         )}

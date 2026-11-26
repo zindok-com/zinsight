@@ -1,3 +1,4 @@
+import { sponsoredBadgeLabel } from '@/config/site';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
@@ -128,7 +129,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const tags = [
         categoryLabel,
         post.region?.name || '로컬',
-        ...(post.isPaid ? ['파트너'] : []),
+        ...(post.isPaid ? [sponsoredBadgeLabel(post.category?.slug)] : []),
         ...post.organizations.map((po: any) => po.organization.company_name),
         ...(post.targetKeywords
             ? post.targetKeywords.split(',').map((t: string) => t.trim()).filter(Boolean)

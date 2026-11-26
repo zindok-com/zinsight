@@ -1,3 +1,4 @@
+import { sponsoredBadgeLabel } from '@/config/site';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { cardImageSrc } from '@/lib/image-variants';
@@ -239,7 +240,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                             )}
                                             {(article as any).isPaid && (
                                                 <div className="absolute top-2 right-2 z-10 text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/90 backdrop-blur-sm border border-amber-200 px-2 py-0.5 rounded-full">
-                                                    파트너
+                                                    {sponsoredBadgeLabel((article as any).category?.slug)}
                                                 </div>
                                             )}
                                         </div>

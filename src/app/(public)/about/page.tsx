@@ -1,54 +1,62 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { isExternalHref, isPagePublished, siteConfig } from '@/config/site';
-import { buildBreadcrumbId, buildSocialMetadata, buildWebPageId, serializeJsonLd, SITE_BASE_URL, SITE_ORGANIZATION_ID, SITE_WEBSITE_ID } from '@/lib/site';
+import { ArrowRight, ExternalLink, Newspaper, Radar } from 'lucide-react';
+import { isPagePublished, siteConfig } from '@/config/site';
+import { getPublishedPostPaths } from '@/actions/public/magazine-actions';
+import {
+    buildBreadcrumbId,
+    buildSiteOrganizationJsonLd,
+    buildSocialMetadata,
+    buildWebPageId,
+    serializeJsonLd,
+    SITE_BASE_URL,
+    SITE_ORGANIZATION_ID,
+    SITE_WEBSITE_ID,
+} from '@/lib/site';
 
-// 진사이트 소개 (초안). 공개 여부는 src/config/site.ts pages.about.published
+// 진사이트 소개. 상단 메뉴에는 없고 푸터 '진사이트 소개'로만 들어옴.
+// 문구·걸어온 길·편집 원칙은 src/config/site.ts about, 운영사 정보는 company, 공개 여부는 pages.about.published
+export const revalidate = 3600;
+
 const PATH = '/about';
 const PAGE_URL = `${SITE_BASE_URL}${PATH}`;
-const { brand, company, identity, contact } = siteConfig;
+const { brand, company, about, contact } = siteConfig;
 const published = isPagePublished('about');
 
 const title = `${brand.name} 소개`;
-const description = `${brand.name}는 ${company.name}이 운영하는 기업 홍보 플랫폼입니다. ${identity.slogan}.`;
+const description = about.metaDescription;
 
 export const metadata: Metadata = {
     title,
     description,
     alternates: { canonical: PAGE_URL },
-    // 공개 전에는 색인·링크 수집 모두 막음
     robots: published ? { index: true, follow: true } : { index: false, follow: false },
     ...buildSocialMetadata({ title, description, path: PATH }),
 };
 
-const WHAT_WE_DO = [
+const SECTIONS = [
     {
+        icon: Newspaper,
         name: `${brand.name} 매거진`,
         href: '/magazine',
-        body: '기업과 기관의 이야기를 기사로 정리합니다. 검색엔진과 AI가 기업을 설명할 때 근거로 삼을 수 있는 글을 남깁니다.',
+        body: '안양·광명·의왕 등 지역 기업과 기관을 취재해 기사로 소개합니다. 지역별 지면에서 우리 동네 기업 소식을 볼 수 있습니다.',
+        cta: '매거진 보기',
     },
     {
+        icon: Radar,
         name: '인사이트 레이더',
         href: '/insight-radar',
-        body: '기업·기관의 사업 소개, 제품·서비스, 관련 기사를 한 장의 프로필로 모읍니다. 구조화 데이터로 AI가 읽기 쉽게 정리합니다.',
-    },
-    {
-        name: siteConfig.card.displayName,
-        href: null,
-        body: '명함·전시 QR로 여는 기업 링크 페이지입니다. 방문 고객이 전화·문의·연락처 남기기로 바로 연결되고, 방문과 클릭을 숫자로 확인합니다.',
+        body: '지역 기업·기관의 사업 소개, 제품·서비스, 관련 기사를 한 장의 프로필로 정리합니다.',
+        cta: '기업 프로필 보기',
     },
 ];
 
-const FUNNEL = [
-    { stage: '인지', role: '검색·AI 답변에서 기업 이름이 처음 보이는 단계', focus: false },
-    { stage: '관심', role: '기사를 읽고 기업을 알아가는 단계', focus: false },
-    { stage: '고려', role: '프로필에서 제품·서비스·활동을 확인하고 믿을 만한지 판단하는 단계', focus: true },
-    { stage: '전환', role: '진사이트 카드에서 전화·문의·연락처 남기기로 이어지는 단계', focus: true },
-    { stage: '유지', role: '새 소식을 기사로 이어 가며 관계를 지키는 단계', focus: false },
-];
+const sectionTitle = 'mb-6 text-[20px] sm:text-zi-headline-md font-bold text-zi-primary';
 
-export default function AboutPage() {
+export default async function AboutPage() {
+    const timeline = about.timeline.filter((item) => item.visible);
+    const postPaths = await getPublishedPostPaths(timeline.flatMap((item) => (item.postSlug ? [item.postSlug] : [])));
+
     const jsonLd = {
         '@context': 'https://schema.org',
         '@graph': [
@@ -62,8 +70,11 @@ export default function AboutPage() {
                 isPartOf: { '@id': SITE_WEBSITE_ID },
                 about: { '@id': SITE_ORGANIZATION_ID },
                 mainEntity: { '@id': SITE_ORGANIZATION_ID },
+                publisher: { '@id': SITE_ORGANIZATION_ID },
                 breadcrumb: { '@id': buildBreadcrumbId(PAGE_URL) },
             },
+            // 메인과 같은 진사이트 Organization (운영사 진독 parentOrganization 포함)
+            buildSiteOrganizationJsonLd(),
             {
                 '@type': 'BreadcrumbList',
                 '@id': buildBreadcrumbId(PAGE_URL),
@@ -75,131 +86,143 @@ export default function AboutPage() {
         ],
     };
 
-    const contactExternal = isExternalHref(contact.href);
+    const companyInfo: Array<{ label: string; value: string; href?: string; external?: boolean }> = [
+        { label: '상호', value: `${company.name}(${company.englishName})` },
+        { label: '대표', value: company.ceo },
+        { label: '사업자등록번호', value: company.businessNumber },
+        { label: '주소', value: company.address },
+        { label: '전화', value: company.phone, href: `tel:${company.phone.replace(/[^0-9+]/g, '')}` },
+        { label: '이메일', value: company.email, href: `mailto:${company.email}` },
+        { label: '홈페이지', value: company.homepage.replace(/^https?:\/\/(www\.)?/, ''), href: company.homepage, external: true },
+    ];
 
     return (
         <div className="bg-zi-surface">
             <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }} />
 
-            {/* 머리말 */}
-            <section className="mx-auto max-w-zi-container px-4 sm:px-6 pt-10 pb-12 sm:pt-20 sm:pb-16 text-center">
-                <p className="mb-3 text-sm font-semibold text-zi-blue">{company.name}이 운영하는 {brand.name}</p>
-                <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 leading-tight text-zi-primary mb-5 break-keep">
-                    {identity.slogan}
-                </h1>
-                <p className="mx-auto max-w-3xl text-body-md sm:text-body-lg text-zi-on-surface-variant break-keep">
-                    {identity.heroDescription}
-                </p>
+            {/* 정체성 */}
+            <section className="mx-auto max-w-zi-container px-4 sm:px-6 pt-10 pb-10 sm:pt-20 sm:pb-16 text-center">
+                <h1 className="mb-4 font-h1 text-[26px] sm:text-[34px] lg:text-h1 leading-tight text-zi-primary break-keep">{title}</h1>
+                <p className="mx-auto max-w-3xl text-[17px] sm:text-[20px] font-semibold leading-relaxed text-slate-800 break-keep">{about.identity}</p>
             </section>
 
-            {/* 하는 일 */}
-            <section aria-labelledby="about-what" className="border-t border-zi-divider bg-white py-12 sm:py-20">
+            {/* 매거진·인사이트 레이더 */}
+            <section aria-labelledby="about-what" className="border-t border-zi-divider bg-white py-12 sm:py-16">
                 <div className="mx-auto max-w-zi-container px-4 sm:px-6">
-                    <h2 id="about-what" className="mb-8 text-[20px] sm:text-zi-headline-md font-bold text-zi-primary">
+                    <h2 id="about-what" className={sectionTitle}>
                         {brand.name}가 하는 일
                     </h2>
-                    <ul className="grid grid-cols-1 gap-5 md:grid-cols-3">
-                        {WHAT_WE_DO.map((item) => (
+                    <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
+                        {SECTIONS.map(({ icon: Icon, ...item }) => (
                             <li key={item.name} className="flex flex-col rounded-zi-card border border-zi-divider bg-zi-surface p-5 sm:p-6">
-                                <h3 className="mb-2 text-[17px] font-bold text-slate-900">{item.name}</h3>
+                                <h3 className="mb-2 flex items-center gap-2 text-[17px] font-bold text-slate-900">
+                                    <Icon className="h-5 w-5 text-zi-primary" aria-hidden="true" />
+                                    {item.name}
+                                </h3>
                                 <p className="text-[14px] leading-relaxed text-zi-on-surface-variant break-keep">{item.body}</p>
-                                {item.href && (
-                                    <Link href={item.href} className="mt-auto inline-flex items-center gap-1 pt-4 text-[13px] font-semibold text-zi-primary hover:underline">
-                                        둘러보기 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-                                    </Link>
-                                )}
+                                <Link href={item.href} className="mt-auto inline-flex min-h-11 items-center gap-1 self-start pt-3 text-[13px] font-semibold text-zi-primary hover:underline underline-offset-2">
+                                    {item.cta} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                                </Link>
                             </li>
                         ))}
                     </ul>
                 </div>
             </section>
 
-            {/* 고객 퍼널에서의 역할 */}
-            <section aria-labelledby="about-funnel" className="border-t border-zi-divider py-12 sm:py-20">
-                <div className="mx-auto max-w-zi-container px-4 sm:px-6">
-                    <h2 id="about-funnel" className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-zi-primary">
-                        고객이 연락하기까지, {brand.name}의 역할
-                    </h2>
-                    <p className="mb-8 max-w-3xl text-[14px] sm:text-zi-body-md text-zi-on-surface-variant break-keep">
-                        고객은 기업을 알게 되고, 알아보고, 믿을 만한지 따진 뒤에 연락합니다. {brand.name}는 그중 고려와 전환 단계를 맡고,
-                        그 결과를 방문·클릭·문의 숫자로 측정합니다.
-                    </p>
-                    <ol className="grid grid-cols-1 gap-3 sm:grid-cols-5">
-                        {FUNNEL.map((item, i) => (
-                            <li
-                                key={item.stage}
-                                className={
-                                    item.focus
-                                        ? 'rounded-zi-card border-2 border-zi-primary bg-white p-4'
-                                        : 'rounded-zi-card border border-zi-divider bg-white/60 p-4'
-                                }
-                            >
-                                <p className="mb-1 text-[12px] font-semibold text-slate-400">{i + 1}단계</p>
-                                <p className={item.focus ? 'mb-2 text-[16px] font-bold text-zi-primary' : 'mb-2 text-[16px] font-bold text-slate-700'}>
-                                    {item.stage}
-                                    {item.focus && <span className="ml-1.5 align-middle text-[11px] font-semibold text-zi-blue">집중</span>}
-                                </p>
-                                <p className="text-[13px] leading-relaxed text-zi-on-surface-variant break-keep">{item.role}</p>
-                            </li>
-                        ))}
-                    </ol>
-                    <p className="mt-4 text-[13px] text-slate-500 break-keep">
-                        측정: 진사이트 카드의 방문·링크 클릭·문의 클릭·연락처 접수를 기업별 통계로 제공합니다.
-                    </p>
-                </div>
-            </section>
+            {/* 편집 원칙·후원 콘텐츠 표기 정책 (대표 확정 전 about.showEditorial=false로 숨김) */}
+            {about.showEditorial && (
+                <section id="editorial" aria-labelledby="about-editorial" className="scroll-mt-24 border-t border-zi-divider py-12 sm:py-16">
+                    <div className="mx-auto max-w-zi-container px-4 sm:px-6">
+                        <h2 id="about-editorial" className={sectionTitle}>
+                            편집 원칙
+                        </h2>
+                        <ol className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                            {about.editorialPrinciples.map((item, i) => (
+                                <li key={item.title} className="rounded-zi-card border border-zi-divider bg-white p-4 sm:p-5">
+                                    <p className="mb-1 text-[15px] font-bold text-slate-900">
+                                        {i + 1}. {item.title}
+                                    </p>
+                                    <p className="text-[14px] leading-relaxed text-zi-on-surface-variant break-keep">
+                                        {item.body.replace('{correctionEmail}', company.correctionEmail)}
+                                    </p>
+                                </li>
+                            ))}
+                        </ol>
 
-            {/* 운영사 정보 */}
-            <section aria-labelledby="about-company" className="border-t border-zi-divider bg-white py-12 sm:py-20">
+                        <h3 className="mt-10 mb-4 text-[18px] font-bold text-zi-primary">후원 콘텐츠 표기 정책</h3>
+                        <ul className="list-disc space-y-2 pl-5 text-[14px] leading-relaxed text-zi-on-surface-variant break-keep">
+                            {about.sponsorshipPolicy.map((line) => (
+                                <li key={line}>{line}</li>
+                            ))}
+                        </ul>
+                    </div>
+                </section>
+            )}
+
+            {/* 운영사 */}
+            <section aria-labelledby="about-company" className="border-t border-zi-divider bg-white py-12 sm:py-16">
                 <div className="mx-auto max-w-zi-container px-4 sm:px-6">
-                    <h2 id="about-company" className="mb-6 text-[20px] sm:text-zi-headline-md font-bold text-zi-primary">
-                        운영사
+                    <h2 id="about-company" className={sectionTitle}>
+                        운영사 {company.name}({company.englishName.toUpperCase()})
                     </h2>
                     <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-[14px] sm:max-w-2xl">
-                        <dt className="text-slate-400">상호</dt>
-                        <dd className="text-slate-800">
-                            {company.name}({company.englishName})
-                        </dd>
-                        <dt className="text-slate-400">대표</dt>
-                        <dd className="text-slate-800">{company.ceo}</dd>
-                        <dt className="text-slate-400">사업자등록번호</dt>
-                        <dd className="text-slate-800">{company.businessNumber}</dd>
-                        <dt className="text-slate-400">주소</dt>
-                        <dd className="text-slate-800 break-keep">{company.address}</dd>
-                        <dt className="text-slate-400">이메일</dt>
-                        <dd>
-                            <a href={`mailto:${company.email}`} className="text-zi-primary hover:underline">
-                                {company.email}
-                            </a>
-                        </dd>
-                        <dt className="text-slate-400">홈페이지</dt>
-                        <dd>
-                            <a href={company.homepage} target="_blank" rel="noopener noreferrer" className="text-zi-primary hover:underline">
-                                {company.homepage.replace(/^https?:\/\//, '')}
-                            </a>
-                        </dd>
+                        {companyInfo.map(({ label, value, href, external }) => (
+                            <div key={label} className="contents">
+                                <dt className="text-slate-400">{label}</dt>
+                                <dd className="text-slate-800 break-keep">
+                                    {href ? (
+                                        <a
+                                            href={href}
+                                            {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                            className="inline-flex items-center gap-1 text-zi-primary hover:underline underline-offset-2"
+                                        >
+                                            {value}
+                                            {external && <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />}
+                                        </a>
+                                    ) : (
+                                        value
+                                    )}
+                                </dd>
+                            </div>
+                        ))}
                     </dl>
                 </div>
             </section>
 
-            {/* 문의 */}
-            <section aria-labelledby="about-contact" className="border-t border-zi-divider py-12 sm:py-20 text-center">
-                <div className="mx-auto max-w-zi-container px-4 sm:px-6">
-                    <h2 id="about-contact" className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-zi-primary">
-                        문의
-                    </h2>
-                    <p className="mb-6 text-[14px] sm:text-zi-body-md text-zi-on-surface-variant break-keep">
-                        기업 프로필 등록, 기사 발행, 진사이트 카드 도입을 상담해 드립니다.
-                    </p>
-                    <Link
-                        href={contact.href}
-                        {...(contactExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                        className="inline-flex items-center justify-center rounded-zi-btn bg-zi-primary px-8 py-3.5 text-ui-label font-ui-label text-white transition-all hover:bg-zi-primary/90 active:scale-95"
-                    >
-                        {contact.label}
-                    </Link>
-                </div>
-            </section>
+            {/* 걸어온 길 */}
+            {timeline.length > 0 && (
+                <section aria-labelledby="about-history" className="border-t border-zi-divider py-12 sm:py-16">
+                    <div className="mx-auto max-w-zi-container px-4 sm:px-6">
+                        <h2 id="about-history" className={sectionTitle}>
+                            걸어온 길
+                        </h2>
+                        <ol className="relative max-w-2xl border-l-2 border-zi-divider pl-6">
+                            {timeline.map((item) => {
+                                const href = item.postSlug ? postPaths[item.postSlug] : undefined;
+                                return (
+                                    <li key={item.title} className="relative pb-6 last:pb-0">
+                                        <span aria-hidden="true" className="absolute -left-[31px] top-1.5 h-3 w-3 rounded-full border-2 border-white bg-zi-primary" />
+                                        <p className="text-[13px] font-semibold text-zi-blue">{item.date}</p>
+                                        <p className="mt-0.5 text-[15px] font-semibold text-slate-900 break-keep">{item.title}</p>
+                                        {href && (
+                                            <Link href={href} className="mt-1 inline-flex min-h-11 items-center gap-1 text-[13px] font-semibold text-zi-primary hover:underline underline-offset-2">
+                                                관련 기사 <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                                            </Link>
+                                        )}
+                                    </li>
+                                );
+                            })}
+                        </ol>
+                    </div>
+                </section>
+            )}
+
+            {/* 기업 등록·제휴 문의: 눈에 띄지 않는 글자 링크 */}
+            <p className="border-t border-zi-divider py-8 text-center text-[13px] text-slate-500">
+                <Link href={contact.href} data-zi-cta="about_footer" className="inline-flex min-h-11 items-center gap-1 px-2 underline-offset-2 hover:text-zi-primary hover:underline">
+                    {contact.label} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+            </p>
         </div>
     );
 }

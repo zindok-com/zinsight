@@ -7,6 +7,16 @@
  * - 비밀값(키·토큰)은 여기에 두지 않습니다.
  */
 
+/** 진사이트 소개(/about) '걸어온 길' 한 줄 */
+export interface AboutTimelineItem {
+    /** 표시 날짜 (예: '2026.09.28'). 미확정이면 빈 값 + visible: false */
+    date: string;
+    title: string;
+    /** 관련 진사이트 기사 slug (공개 기사면 링크) */
+    postSlug?: string;
+    visible: boolean;
+}
+
 /** 기업 등록·제휴 안내(/services) '무엇을 해 드리는지' 카드 한 장 (가격 없음) */
 export interface PartnershipOffering {
     /** 문의 폼 관심 항목 값·통계에 쓰는 고정 id (이름이 바뀌어도 유지) */
@@ -77,6 +87,8 @@ export const siteConfig = {
         phone: '010-9756-3400',
         // 대표 이메일 하나로 문의·개인정보 문의 공통 사용
         email: 'ceo@zindok.com',
+        /** 기사 정정 요청 받는 주소 (/about 편집 원칙) */
+        correctionEmail: 'ceo@zindok.com',
         homepage: 'https://www.zindok.com',
         /** 인사이트 레이더에 등록된 진독 프로필 slug (JSON-LD 운영사 @id 연결용) */
         radarSlug: 'zindok',
@@ -136,8 +148,55 @@ export const siteConfig = {
 
     /** 새 페이지 공개 여부: false인 동안 noindex·sitemap 제외·메뉴 숨김 */
     pages: {
-        about: { published: false },
+        about: { published: true },
         services: { published: false },
+    },
+
+    /**
+     * 진사이트 소개(/about). 상단 메뉴에는 넣지 않고 푸터 '진사이트 소개'로만 들어옴.
+     * 운영사 정보는 company, 정정 요청 주소는 company.correctionEmail에서 읽음
+     */
+    about: {
+        identity: '진사이트는 지역 기업을 취재하고 소개하는 기업 미디어 플랫폼입니다.',
+        metaDescription: '진사이트는 지역 기업을 취재하고 소개하는 기업 미디어 플랫폼입니다. 진사이트 매거진과 인사이트 레이더, 운영사 진독(ZINDOK)을 소개합니다.',
+        /** 편집 원칙·후원 콘텐츠 표기 정책 블록 노출 (대표 확정 전 false) */
+        showEditorial: false,
+        /** 편집 원칙 (초안). {correctionEmail}은 company.correctionEmail로 바뀜 */
+        editorialPrinciples: [
+            { title: '취재 기반', body: '기업·기관을 직접 취재하거나 공개 자료를 확인해 씁니다. 확인되지 않은 수치나 효과는 쓰지 않습니다.' },
+            { title: '사실 확인', body: '회사 이름, 연락처, 사업 내용은 기업이 준 자료와 공식 채널로 확인합니다. 기사마다 작성일과 수정일을 표시합니다.' },
+            { title: '편집 독립', body: '기사의 구성, 표현, 게재 여부는 진사이트 편집부가 정합니다. 취재 대상은 게재 전 사실 확인을 위해 원고를 볼 수 있으며, 수정 요청은 사실 관계에 한해 반영합니다.' },
+            { title: '정정', body: '사실과 다른 내용이 확인되면 바로 고치고, 고친 날짜를 남깁니다. 정정 요청: {correctionEmail}' },
+            { title: '보장하지 않음', body: '검색 순위나 AI 답변 노출을 약속하지 않습니다.' },
+        ],
+        /** 후원 콘텐츠 표기 정책 (초안) */
+        sponsorshipPolicy: [
+            "기업·기관이 비용을 내거나 제휴 계약으로 의뢰한 기사는 '파트너 콘텐츠(협찬)'로 분류하고 '협찬' 배지를 붙입니다. 교육·공공 기관과의 협력 기사는 '협력 기관'으로 표시합니다.",
+            '표시 위치: 기사 제목 위 배지, 매거진 목록과 메인 카드의 배지, 기사 끝 고지문.',
+            "후원 기사 안의 외부 링크에는 rel=\"sponsored\"를 붙입니다.",
+            "운영사 진독이 당사자인 기사(협약·공동 사업 등)는 기사 끝에 '운영사 진독이 참여한 협약입니다'처럼 이해관계를 밝힙니다.",
+            '후원 여부와 관계없이 편집 원칙을 똑같이 적용합니다.',
+            "운영사 진독의 자체 소식은 '진사이트 소식'으로 따로 분류합니다.",
+        ],
+        /**
+         * 걸어온 길. postSlug가 있으면 공개 기사로 링크 (없거나 비공개면 글자만).
+         * 날짜 미확정 항목은 visible: false로 숨김
+         */
+        timeline: [
+            { date: '2026.05', title: '진사이트 첫 소개', postSlug: 'zindok-b2b-seo-marketing-ai-sales-intelligence', visible: true },
+            { date: '2026.09', title: '1기 검증 파트너 모집 (약 20개사)', visible: true },
+            { date: '2026.09.28', title: '광명 G-SMART HUB 오픈랩 PoC 워크숍 IR 발표', visible: true },
+            { date: '', title: '네이버클라우드 스타트업 파트너십(NCP 그린하우스) 합류', visible: false }, // 날짜 확인 중
+            { date: '2026.10.19', title: '안양산업진흥원·대림대학교·진독 산학협력 협약', postSlug: 'industry-academia-zindok-mou', visible: true },
+        ] as AboutTimelineItem[],
+    },
+
+    /** 후원(유료) 기사 표기. 기사 isPaid 기준 */
+    sponsorship: {
+        name: '파트너 콘텐츠(협찬)',
+        badge: '협찬',
+        /** 교육·공공 협력(분류 edu-collab) 배지 */
+        eduBadge: '협력 기관',
     },
 
     /**
@@ -236,6 +295,11 @@ export const siteConfig = {
         },
     ] as AiCitationCase[],
 };
+
+/** 후원 기사 배지 문구: 교육·공공 협력 분류는 '협력 기관', 그 외 '협찬' */
+export function sponsoredBadgeLabel(categorySlug?: string | null): string {
+    return categorySlug === 'edu-collab' ? siteConfig.sponsorship.eduBadge : siteConfig.sponsorship.badge;
+}
 
 /** 헤더·푸터의 새 페이지 링크는 공개 후에만 노출 */
 export function isPagePublished(page: keyof typeof siteConfig.pages): boolean {

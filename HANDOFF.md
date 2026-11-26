@@ -1,10 +1,17 @@
 # HANDOFF — zinsight
-갱신: 2026-11-26 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (push 완료)
+갱신: 2026-11-26 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (/about 커밋은 push 안 함)
 
 ## 목표
 진사이트 = "지역 기업을 취재하고 소개하는 기업 미디어 플랫폼". 독자에게는 미디어로, 기업 등록·제휴는 언론사 '광고·제휴 문의'처럼 눈에 띄지 않는 별도 경로(/services)로. 진사이트에는 가격을 싣지 않음(상담·진독에서 안내)
 
 ## 현재 상태
+- 완료: /about 공개 (이번 커밋, push 안 함)
+  - 구성: 정체성 한 문장 → 매거진·인사이트 레이더 → (숨김) 편집 원칙·후원 표기 정책 → 운영사 진독 → 걸어온 길 → '기업 등록·제휴 문의' 글자 링크(about_footer)
+  - 값은 siteConfig.about(문구·timeline·showEditorial=false), 운영사·정정 이메일은 company(correctionEmail). 걸어온 길 기사 링크는 postSlug로 DB에서 공개 기사 주소를 찾음(getPublishedPostPaths), NCP 그린하우스는 날짜 확인 중이라 visible:false
+  - pages.about.published=true(색인·사이트맵), 상단 메뉴 자동 추가 코드 제거, 푸터 '진사이트 소개' → /about
+  - JSON-LD: AboutPage에 publisher(@id), 메인과 같은 Organization(진독 parentOrganization) 블록 추가. publishingPrinciples는 편집 원칙 게시 후, NewsMediaOrganization은 보류
+  - 후원 기사: 배지 '파트너' → '협찬'(edu-collab은 '협력 기관', sponsoredBadgeLabel), 메인 슬라이드 배지 추가, isPaid 기사의 외부 링크는 렌더링에서 모두 rel="sponsored noopener"(DB 본문은 그대로), 기사 끝 고지 '파트너 콘텐츠(협찬)'. article:tag도 배지와 같게, JSON-LD keywords('파트너','Sponsored Content')는 그대로
+  - 스크린샷 docs/screenshots/about-2026-11-26 (editorial-draft-preview-1440은 숨김 블록을 잠시 켠 미리보기)
 - 완료: 기업 등록·제휴 개편 (이번 커밋)
   - /services 제목 '기업 등록·제휴 안내', 가격표·프로모션·VAT·결제 수단 제거, '무엇을 해 드리나요' 카드 8개(siteConfig.partnership.offerings), 진행 안내 4단계, 진독 교차 문구
   - 가격 값(siteConfig.pricing, isPromoActive·formatWon)은 삭제하지 않고 아무 데서도 안 읽음 — 진독 견적 페이지 재사용용
@@ -16,9 +23,9 @@
 - 이전 완료: inquiries 테이블·Resend 메일, 메인 화면 정비, 매거진 메뉴 정리(71a1786)
 
 ## 다음 할 일 (우선순위 순)
+0. push (사용자 요청 시). 대표 확정 후 about.showEditorial=true + Organization publishingPrinciples(/about#editorial) 추가. NCP 그린하우스 날짜 받으면 timeline visible:true. 진독 당사자 기사 이해관계 고지는 정책 초안에만 있음(기사 고지 기능 없음)
 1. (사용자) 운영 배포 후 테크 기사 2편 분류를 '진사이트 소식'으로, 두 번째 기사 제목·본문 첫 'zinsight' → '진사이트(Zinsight)'
 2. (사용자) Vercel Production 환경변수: RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET
-3. (보고만) 유료 기사 외부 링크 rel="sponsored": 개발 DB 유료 8편의 외부 링크 7개 모두 sponsored 없음. 메인 슬라이드에는 '파트너' 배지 없음. 처리 방향 사용자 결정 필요
 4. (승인 대기) 매거진 JSON-LD: Local Hub 이동 경로 항목 제거, articleSection을 분류 이름으로
 5. 대림대·텔링 AI 인용 사례 데이터 받으면 aiCitations 채우고 consented=true
 6. /services 공개 결정 시 pages.services.published=true (지금 noindex·사이트맵 제외)

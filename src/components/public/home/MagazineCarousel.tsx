@@ -14,6 +14,8 @@ interface MagazinePost {
     href: string;
     thumbnailUrl: string | null;
     industryName: string;
+    /** 후원 기사 배지 문구 (없으면 null) */
+    sponsoredBadge?: string | null;
     authorName: string | null;
     author?: {
         name: string;
@@ -249,6 +251,11 @@ export function MagazineCarousel({ posts }: MagazineCarouselProps) {
                                         </>
                                     ) : (
                                         <div className="h-full w-full transition-all duration-500 group-hover/card:scale-105" />
+                                    )}
+                                    {post.sponsoredBadge && (
+                                        <span className="absolute top-2 right-2 z-10 rounded-full border border-amber-200 bg-amber-50/90 px-2 py-0.5 text-[11px] font-bold tracking-wider text-amber-700 backdrop-blur-sm">
+                                            {post.sponsoredBadge}
+                                        </span>
                                     )}
                                 </div>
 

@@ -19,11 +19,9 @@ export function getMagazineSubLinks(): NavLink[] {
 /** 푸터 '진사이트 소식' (공지성 분류, 상단 메뉴에는 넣지 않음) */
 export const ZINSIGHT_NEWS_LINK: NavLink = { label: '진사이트 소식', href: '/magazine/news', external: false };
 
-/** 헤더 매거진 다음의 일반 메뉴 (공개 전 페이지는 숨김). 기업 등록·제휴(/services)는 상단 메뉴에 두지 않음 */
+/** 헤더 매거진 다음의 일반 메뉴. 진사이트 소개(/about)·기업 등록·제휴(/services)는 상단 메뉴에 두지 않고 푸터에만 */
 export function getHeaderLinks(): NavLink[] {
-    const links: NavLink[] = [{ label: '인사이트 레이더', href: '/insight-radar', external: false }];
-    if (isPagePublished('about')) links.push({ label: '진사이트 소개', href: '/about', external: false });
-    return links;
+    return [{ label: '인사이트 레이더', href: '/insight-radar', external: false }];
 }
 
 /** 푸터 '기업 등록·제휴 문의' (/services) */

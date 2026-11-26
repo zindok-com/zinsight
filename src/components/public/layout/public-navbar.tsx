@@ -70,7 +70,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         {siteConfig.brand.name}
                     </Link>
 
-                    {/* 데스크탑 네비게이션: 매거진 / 인사이트 레이더 / 진사이트 소개. 기업 등록·제휴 문의는 푸터·프로필·카드 하단에만 */}
+                    {/* 데스크탑 네비게이션: 매거진 / 인사이트 레이더. 진사이트 소개·기업 등록·제휴 문의는 푸터(·프로필·카드 하단)에만 */}
                     <nav className="hidden items-center gap-6 lg:gap-10 md:flex">
                         {/* 매거진 드롭다운 메뉴 (Hover Trigger) */}
                         <div className="relative group py-2">
