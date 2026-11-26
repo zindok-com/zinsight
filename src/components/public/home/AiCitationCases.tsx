@@ -1,7 +1,9 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Building2, MessageSquareText, Newspaper } from 'lucide-react';
+import type { CSSProperties } from 'react';
+import { ArrowRight, Building2, Globe, Mail, Newspaper, Search, Sparkles } from 'lucide-react';
 import type { AiCitationCase } from '@/config/site';
+import { RevealOnView } from './RevealOnView';
 
 /**
  * 메인 'AI가 진사이트를 인용한 사례' 블록 (데이터: src/config/site.ts aiCitations).
@@ -70,13 +72,70 @@ export function AiCitationCases({ cases }: { cases: AiCitationCase[] }) {
     );
 }
 
+/** 모션 지연(초). globals.css의 hiw-* 애니메이션이 --d로 읽는다 */
+const d = (s: number) => ({ '--d': `${s}s` }) as CSSProperties;
+
+/** 단계별 미니 화면 (장식, 스크린리더에는 숨김). 예시 문구는 실제 서비스 화면이 아님 */
+function SearchVisual() {
+    return (
+        <div className="flex h-full flex-col justify-center gap-2.5">
+            <div className="flex items-center gap-2 overflow-hidden rounded-full border border-zi-blue/30 bg-white px-3.5 py-2 text-[12px] text-zi-primary shadow-sm">
+                <Search className="h-3.5 w-3.5 shrink-0 text-zi-blue" />
+                <span className="hiw-type whitespace-nowrap" style={d(0.55)}>우리 동네 방수 업체 추천해줘</span>
+            </div>
+            <div className="hiw-pop flex items-start gap-2 self-start rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[12px] text-zi-primary shadow-sm" style={d(1.55)}>
+                <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zi-blue" />
+                <span>진사이트 기사에 따르면…</span>
+            </div>
+        </div>
+    );
+}
+
+function ProfileVisual() {
+    return (
+        <div className="flex h-full flex-col justify-center gap-2">
+            <div className="flex gap-3 rounded-xl bg-white p-3 shadow-sm">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zi-blue/10 text-zi-blue">
+                    <Building2 className="h-4 w-4" />
+                </span>
+                <div className="flex-1 space-y-1.5 pt-0.5">
+                    <div className="hiw-line h-2 w-4/5 rounded-full bg-zi-primary" style={d(0.85)} />
+                    <div className="hiw-line h-1.5 rounded-full bg-zi-blue/25" style={d(1.0)} />
+                    <div className="hiw-line h-1.5 w-3/5 rounded-full bg-zi-blue/25" style={d(1.15)} />
+                </div>
+            </div>
+            <div className="hiw-pop flex items-center gap-1.5 text-[12px] font-semibold text-zi-primary" style={d(1.3)}>
+                <Newspaper className="h-3.5 w-3.5 text-zi-blue" />
+                기업 프로필 · 매거진 기사
+            </div>
+        </div>
+    );
+}
+
+function ContactVisual() {
+    return (
+        <div className="flex h-full flex-col justify-center gap-2">
+            <div className="hiw-pop flex items-center justify-center gap-1.5 rounded-lg bg-zi-primary px-3 py-2 text-[12px] font-semibold text-white" style={d(1.1)}>
+                <Globe className="h-3.5 w-3.5" />
+                홈페이지 방문
+            </div>
+            <div className="hiw-pop rounded-lg" style={d(1.2)}>
+                <div className="hiw-ring flex items-center justify-center gap-1.5 rounded-lg border border-zi-blue/40 bg-white px-3 py-2 text-[12px] font-semibold text-zi-primary" style={d(1.7)}>
+                    <Mail className="h-3.5 w-3.5 text-zi-blue" />
+                    문의하기
+                </div>
+            </div>
+        </div>
+    );
+}
+
 const STEPS = [
-    { icon: MessageSquareText, title: '검색·AI 질문', body: '고객이 검색창이나 AI 서비스에 업체·제품을 물어봅니다.' },
-    { icon: Newspaper, title: '진사이트 기사·기업 프로필', body: '기사와 기업 프로필을 답변의 근거로 쓰기 좋게 정리합니다.' },
-    { icon: Building2, title: '우리 회사 홈페이지·문의', body: '프로필과 카드에서 홈페이지와 문의로 바로 갈 수 있게 합니다.' },
+    { visual: SearchVisual, title: '검색·AI 질문', body: '고객이 검색창이나 AI 서비스에 업체·제품을 물어봅니다.' },
+    { visual: ProfileVisual, title: '진사이트 기사·기업 프로필', body: '기사와 기업 프로필을 답변의 근거로 쓰기 좋게 정리합니다.' },
+    { visual: ContactVisual, title: '우리 회사 홈페이지·문의', body: '프로필과 카드에서 홈페이지와 문의로 바로 갈 수 있게 합니다.' },
 ];
 
-/** 공개 가능한 인용 사례가 없을 때 대신 보여 주는 3단계 설명 */
+/** 공개 가능한 인용 사례가 없을 때 대신 보여 주는 3단계 설명 (화면에 들어올 때 한 번 모션) */
 function HowItWorks() {
     return (
         <section aria-labelledby="how-it-works-title" className="border-y border-zi-divider bg-white py-10 sm:py-16">
@@ -90,28 +149,34 @@ function HowItWorks() {
                     </p>
                 </div>
 
-                <ol className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-6">
-                    {STEPS.map(({ icon: Icon, title, body }, i) => (
-                        <li key={title} className="relative">
-                            <div className="flex h-full items-start gap-4 rounded-zi-card border border-zi-divider bg-zi-surface p-5 md:flex-col md:gap-3 md:p-6">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-zi-primary/5 text-zi-primary">
-                                    <Icon className="h-5 w-5" aria-hidden="true" />
-                                </span>
-                                <div>
-                                    <p className="mb-1 text-[12px] font-bold tracking-wider text-zi-blue">STEP {i + 1}</p>
-                                    <h3 className="mb-1.5 text-[16px] font-bold text-slate-900 break-keep">{title}</h3>
-                                    <p className="text-[14px] leading-relaxed text-slate-600 break-keep">{body}</p>
+                <RevealOnView>
+                    <ol className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
+                        {STEPS.map(({ visual: Visual, title, body }, i) => (
+                            <li key={title} className="relative">
+                                <div className="hiw-card flex h-full flex-col overflow-hidden rounded-zi-card border border-zi-divider bg-white" style={d(i * 0.2)}>
+                                    <div aria-hidden="true" className="h-32 bg-zi-blue/[0.06] px-5 py-4 sm:h-36">
+                                        <Visual />
+                                    </div>
+                                    <div className="flex-1 p-5 md:p-6">
+                                        <p className="mb-1 text-[12px] font-bold tracking-wider text-zi-blue">STEP {i + 1}</p>
+                                        <h3 className="mb-1.5 text-[16px] font-bold text-slate-900 break-keep">{title}</h3>
+                                        <p className="text-[14px] leading-relaxed text-slate-600 break-keep">{body}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            {i < STEPS.length - 1 && (
-                                <ArrowRight
-                                    aria-hidden="true"
-                                    className="absolute left-1/2 -bottom-3 z-10 h-5 w-5 -translate-x-1/2 rotate-90 rounded-full bg-white text-slate-300 md:left-auto md:-right-[18px] md:top-1/2 md:bottom-auto md:translate-x-0 md:-translate-y-1/2 md:rotate-0"
-                                />
-                            )}
-                        </li>
-                    ))}
-                </ol>
+                                {i < STEPS.length - 1 && (
+                                    <span
+                                        aria-hidden="true"
+                                        className="absolute left-1/2 -bottom-[18px] z-10 -translate-x-1/2 md:left-auto md:-right-[22px] md:top-14 md:bottom-auto md:translate-x-0"
+                                    >
+                                        <span className="hiw-arrow flex h-8 w-8 items-center justify-center rounded-full border border-zi-blue/30 bg-white text-zi-blue shadow-sm" style={d(0.35 + i * 0.2)}>
+                                            <ArrowRight className="h-4 w-4 rotate-90 md:rotate-0" />
+                                        </span>
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ol>
+                </RevealOnView>
             </div>
         </section>
     );

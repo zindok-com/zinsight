@@ -1,5 +1,5 @@
 # HANDOFF — zinsight
-갱신: 2026-11-26 21:30 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (origin/main과 같음, 모두 push)
+갱신: 2026-11-26 22:10 (KST) · PC: DESKTOP-D7TTIN2 · 브랜치: main (로컬 커밋 1개 push 전)
 
 ## 목표
 네이버 기사 수집을 들어내고 외부 수집 기사 데이터까지 완전히 제거(저작권). 배포 두 번: 배포 1 코드만 → 운영 확인 → 배포 2 테이블 삭제. 계획·현황: docs/plan-naver-ingest-removal.md
@@ -10,6 +10,7 @@
   - pnpm dev로 메인·/insight-radar·프로필(bethemuse, zindok)·/admin·조직 편집(243, 246) 확인, /admin/articles 404 확인. 스크린샷 docs/screenshots/naver-removal-2026-11-26 (git 추적 안 함)
   - tsc: src 오류 없음(.next/types의 지운 페이지 참조만 남음 — dev 서버가 다시 만들면 사라짐, 추정)
 - 완료·push(2026-11-26, 사용자 승인): 배포 2 — 스키마에서 모델 4개·관계 필드 삭제, 마이그레이션 20261126210000(DROP TABLE IF EXISTS 4개). 개발 DB 적용·화면 200 확인 (8db9dcc). 운영 배포 정상(사용자 확인 2026-11-26)
+- 완료(커밋, push 전): 메인 '이렇게 작동합니다' B안 — 단계별 미니 화면 + 화면 진입 시 1회 모션 (src/components/public/home/AiCitationCases.tsx HowItWorks, RevealOnView.tsx, globals.css의 hiw-* 규칙). 데스크톱·모바일 확인, 서버 HTML엔 내용 그대로. 1단계 예시 질문 문구 "우리 동네 방수 업체 추천해줘"는 임시(사용자 확인 필요). 움직임 줄이기 설정 환경은 실제로 켜서 보지는 않음
 - 개발 DB에는 이번과 무관한 기존 스키마 차이가 있음(organization_invites·organization_submissions의 외래 키·인덱스 이름, 컬럼 정밀도). 손대지 않음
 
 ## 다음 할 일 (우선순위 순)

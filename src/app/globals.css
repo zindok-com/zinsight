@@ -137,6 +137,38 @@
   }
 }
 
+/*
+ * 메인 '이렇게 작동합니다' 모션 (AiCitationCases.tsx HowItWorks, RevealOnView.tsx)
+ * 서버 HTML은 최종 화면 그대로. 스크립트가 화면 밖일 때만 data-reveal="armed"로 숨기고,
+ * 화면에 들어오면 "play"로 한 번 재생. 움직임 줄이기 사용자는 armed 자체를 하지 않음
+ */
+[data-reveal="armed"] .hiw-card,
+[data-reveal="armed"] .hiw-arrow,
+[data-reveal="armed"] .hiw-pop,
+[data-reveal="armed"] .hiw-type { opacity: 0; }
+[data-reveal="armed"] .hiw-line { transform: scaleX(0); }
+
+[data-reveal="play"] .hiw-card { animation: hiw-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both; }
+[data-reveal="play"] .hiw-arrow { animation: hiw-arrow 0.4s ease-out var(--d, 0s) both; }
+[data-reveal="play"] .hiw-type { animation: hiw-type 0.9s steps(14, end) var(--d, 0s) both; }
+[data-reveal="play"] .hiw-pop { animation: hiw-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both; }
+[data-reveal="play"] .hiw-line { transform-origin: left; animation: hiw-line 0.45s ease-out var(--d, 0s) both; }
+[data-reveal="play"] .hiw-ring { animation: hiw-ring 0.9s ease-out var(--d, 0s) 1 both; }
+
+@keyframes hiw-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes hiw-arrow { from { opacity: 0; translate: -6px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes hiw-type { from { opacity: 1; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+@keyframes hiw-pop { from { opacity: 0; transform: translateY(6px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes hiw-line { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes hiw-ring {
+  0% { box-shadow: 0 0 0 0 hsl(var(--zi-blue) / 0.45); }
+  100% { box-shadow: 0 0 0 10px hsl(var(--zi-blue) / 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] * { animation: none !important; opacity: 1 !important; transform: none !important; clip-path: none !important; }
+}
+
 /* 인쇄할 때도 막대 그래프 배경색 유지 (공유 통계 요약 리포트) */
 .print-exact {
     -webkit-print-color-adjust: exact;
