@@ -14,12 +14,13 @@
 - 확인함: tsc 통과, dev에서 SSR 본문·noindex·canonical, API 403(외부 origin)·422·함정/빠른 제출 200, 테이블 없을 때 503(메일 설정 없음 로그), 375/390/1440/1920 가로 넘침 없음. 스크린샷 docs/screenshots/services-2026-11-25 (git 추적 안 함)
 - 완료: inquiries 테이블 — Inquiry 모델·마이그레이션 20261126000000_add_inquiries, 개발 DB에 migrate deploy 적용, inquiry-store를 prisma.inquiry로 교체 (커밋 0b3caf0). 운영 DB는 push 후 Vercel 배포 시 자동 적용
 - 완료: 모바일 메뉴 지역 지면을 '로컬 비즈니스 허브' 하위로 들여 표시, PC 드롭다운 제목 '로컬 허브 · 지역 지면' (커밋 852a2fa)
-- 확인함: 개발 DB 실제 저장(출처·관심 상품·UTM·ip_hash 저장 확인). 개발 DB에 테스트 행 id 1·2 남음(1은 셸 인코딩으로 글자 깨짐) — 삭제는 사용자 판단
-- 미확인: 메일 발송(키 없음), GA4 이벤트 수신
+- 확인함: 개발 DB 실제 저장(출처·관심 상품·UTM·ip_hash 저장 확인). 개발 DB에 테스트 행 id 1~3 남음(1은 셸 인코딩으로 글자 깨짐) — 삭제는 사용자 판단
+- 확인함: 알림 메일 — Resend 도메인 send.zinsight.co.kr 인증, 로컬 .env.local에 키 설정, 시험 문의(id 3) 메일 수신·notified_at 기록 확인 (2026-11-26)
+- 미확인: GA4 이벤트 수신, 운영 환경변수
 
 ## 다음 할 일 (우선순위 순)
 1. push → Vercel 배포로 운영 DB에 inquiries 생성 확인
-2. (사용자) Resend 도메인 인증 후 Vercel 환경변수: RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET (zindok 연동 시 INQUIRY_EXTERNAL_ORIGINS)
+2. (사용자) Vercel Production 환경변수(Resend 도메인 인증은 완료): RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET (zindok 연동 시 INQUIRY_EXTERNAL_ORIGINS)
 3. 공개 결정 시 pages.services.published=true → index·sitemap·헤더/푸터 "이용 안내" 메뉴 노출
 4. (승인 후) Service/Offer JSON-LD — 지금은 기존 services 배열 기반 ItemList 그대로. 안: Service마다 offers{Offer, price, priceCurrency KRW, valueAddedTaxIncluded false, validThrough promo.endsAt}, 상담 후 안내는 offers 생략
 5. (시안만) 관리자 /admin/inquiries 목록 메뉴: 접수일·출처·회사·담당자·연락처·관심 상품·상태, 출처·상태 필터
