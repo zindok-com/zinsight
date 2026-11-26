@@ -5,6 +5,12 @@
 진사이트 = "지역 기업을 취재하고 소개하는 기업 미디어 플랫폼". 독자에게는 미디어로, 기업 등록·제휴는 언론사 '광고·제휴 문의'처럼 눈에 띄지 않는 별도 경로(/services)로. 진사이트에는 가격을 싣지 않음(상담·진독에서 안내)
 
 ## 현재 상태
+- 완료: 문구 점검 하 항목 반영 (이번 커밋, push 안 함)
+  - 매거진·태그 '최신 기사'·빈 목록 문구, 지역 탭 빈 문구, 푸터 '매거진 홈', 태그·레이더 검색 meta, 레이더 검색창 안내, 프로필 '핵심 기술'·'주요 고객·시장'·'회사 소개', 통계 보고서 '진사이트 카드 방문 요약', 문의 폼·알림 메일 출처 이름
+  - 지역 표기 '안양·광명·의왕' 한 순서(site.ts SERVICE_AREAS / identity.serviceAreas)
+  - 메인 page.tsx의 주석 처리된 옛 '마켓 인텔리전스' 예시 블록과 안 쓰는 아이콘 import 삭제
+  - 보류: L14 AeoLeadMagnetBanner·L15 MagazineAeoCTA 파일 삭제(C11), L17 DB 분류 이름·설명(관리자에서)
+  - 스크린샷 docs/screenshots/copy-low-2026-11-26
 - 완료: 문구 점검 중 항목 반영 (이번 커밋, push 안 함)
   - 푸터 소개를 정체성 문장으로(C3 결정 시 site.ts footerIntro만 고치면 됨), 루트 404 한글 안내(src/app/not-found.tsx, noindex)
   - 기사 분류 표시는 magazineCategoryLabel(config/site.ts) 하나로: DB 이름, 없으면 '매거진' (중복 getCategoryLabel 3곳 제거)
@@ -36,7 +42,7 @@
 
 ## 다음 할 일 (우선순위 순)
 - (사용자) H14: 관리자 '발행자' 화면에서 authors.bio(id 1·2) 수정 — 제안 문구는 audit 문서 H14
-- 문구 점검 하 항목, 확인 필요 C1~C12(대표와 결정). 히어로 위 tagline 'SEO·AEO·GEO 통합 기업 미디어 플랫폼'(site.ts tagline)은 점검표에 없음 — 유지할지 사용자 확인
+- 문구 점검 확인 필요 C1~C12(대표와 결정) → 결정 나면 M10·M14·L14·L15 반영. (사용자) L17 DB magazine_categories 이름·설명 수정. 히어로 위 tagline 'SEO·AEO·GEO 통합 기업 미디어 플랫폼'(site.ts tagline)은 점검표에 없음 — 유지할지 사용자 확인
 0. push (사용자 요청 시). 대표 확정 후 about.showEditorial=true + Organization publishingPrinciples(/about#editorial) 추가. NCP 그린하우스 날짜 받으면 timeline visible:true. 진독 당사자 기사 이해관계 고지는 정책 초안에만 있음(기사 고지 기능 없음)
 1. (사용자) 운영 배포 후 테크 기사 2편 분류를 '진사이트 소식'으로, 두 번째 기사 제목·본문 첫 'zinsight' → '진사이트(Zinsight)'
 2. (사용자) Vercel Production 환경변수: RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET
