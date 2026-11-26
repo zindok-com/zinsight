@@ -5,6 +5,12 @@
 진사이트 = "지역 기업을 취재하고 소개하는 기업 미디어 플랫폼". 독자에게는 미디어로, 기업 등록·제휴는 언론사 '광고·제휴 문의'처럼 눈에 띄지 않는 별도 경로(/services)로. 진사이트에는 가격을 싣지 않음(상담·진독에서 안내)
 
 ## 현재 상태
+- 완료: 문구 점검 중 항목 반영 (이번 커밋, push 안 함)
+  - 푸터 소개를 정체성 문장으로(C3 결정 시 site.ts footerIntro만 고치면 됨), 루트 404 한글 안내(src/app/not-found.tsx, noindex)
+  - 기사 분류 표시는 magazineCategoryLabel(config/site.ts) 하나로: DB 이름, 없으면 '매거진' (중복 getCategoryLabel 3곳 제거)
+  - 기사 바이라인 '글 {이름}', 하단 '에디터'(C7 결정 전 잠정), 협찬 고지 문구, 연관 기업 카드 문구, 지역 지면 머리 '{지역} 지면', 태그 머리말 magazineIntro, 에디터 기본 소개, 진사이트 카드 설명, 처리방침 2곳, 등록 완료 오타
+  - 보류: M10(/services 메타, C1), M14(약관, 법무 C10)
+  - 스크린샷 docs/screenshots/copy-mid-2026-11-26
 - 완료: 문구 점검(docs/copy-audit-2026-11.md) 상 H1~H13 반영 (이번 커밋, push 안 함)
   - 메타·OG·Organization·WebSite 설명을 새 정체성 문장으로, keywords '지역 기업'·'기업 미디어', 히어로·'이렇게 작동합니다' 문구
   - 프로필 제목 꼬리 '기업 프로필'(siteConfig.radarProfile.titleSuffix), ArticleTracker 정규식은 옛/새 꼬리 모두 처리, RSS 항목·채널 설명
@@ -30,7 +36,7 @@
 
 ## 다음 할 일 (우선순위 순)
 - (사용자) H14: 관리자 '발행자' 화면에서 authors.bio(id 1·2) 수정 — 제안 문구는 audit 문서 H14
-- 문구 점검 중·하 항목, 확인 필요 C1~C12(대표와 결정). tagline·footerIntro의 'SEO·AEO·GEO 통합'은 중 항목으로 남음
+- 문구 점검 하 항목, 확인 필요 C1~C12(대표와 결정). 히어로 위 tagline 'SEO·AEO·GEO 통합 기업 미디어 플랫폼'(site.ts tagline)은 점검표에 없음 — 유지할지 사용자 확인
 0. push (사용자 요청 시). 대표 확정 후 about.showEditorial=true + Organization publishingPrinciples(/about#editorial) 추가. NCP 그린하우스 날짜 받으면 timeline visible:true. 진독 당사자 기사 이해관계 고지는 정책 초안에만 있음(기사 고지 기능 없음)
 1. (사용자) 운영 배포 후 테크 기사 2편 분류를 '진사이트 소식'으로, 두 번째 기사 제목·본문 첫 'zinsight' → '진사이트(Zinsight)'
 2. (사용자) Vercel Production 환경변수: RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET
