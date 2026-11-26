@@ -11,8 +11,11 @@
 - 문서: `.env.example`·README·ZINSIGHT_STRUCTURE_GUIDE의 네이버 API·수집·내보내기 항목 삭제
 - 남겨 둔 것: Prisma 모델 `SearchKeyword`·`Article`·`ArticleIngestion`·`CompanyArticle`(배포 2에서 삭제), `axios` 의존성(이제 쓰는 곳 없음), `project_data/keyword_data.json`(옛 수집 키워드 목록, 기사 본문 없음)
 
-## 배포 2 — 테이블 삭제 (배포 1이 운영에서 정상 확인된 뒤)
-지울 대상(스키마 기준, 행 수는 DB 조회 후 채움)
+## 배포 2 — 테이블 삭제 ✅ 마이그레이션 20261126210000_drop_external_article_tables, 개발 DB 적용함(2026-11-26), push 전
+- 배포 1 운영 정상 확인(사용자). 행 수·AEO 전후 값 보고는 생략(사용자: AEO는 의미 없는 데이터)
+- Prisma가 만든 SQL(외래 키 이름으로 먼저 삭제)은 운영 키 이름이 다르면 중간 실패 위험 → 참조하는 쪽부터 DROP TABLE IF EXISTS로 작성
+
+지울 대상(스키마 기준)
 | 테이블 | 외래 키 (나가는 쪽) | 들어오는 외래 키 |
 |---|---|---|
 | article_ingestions | article_id→articles, region_id→regions, keyword_id→search_keywords, organization_id→organizations | 없음 |
