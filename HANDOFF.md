@@ -22,7 +22,7 @@
 - 확인함: 메인 SSR 매거진 기사 제목 각 1회, 375/390/1440/1920 가로 넘침 없음. 스크린샷 docs/screenshots/home-2026-11-26 (git 추적 안 함)
 
 ## 다음 할 일 (우선순위 순)
-0. push 전 커밋 있음(9ea3c4a·b902eb5·이후). (승인 후) siteConfig.jsonLd — description을 identity.metaDescription과 같게, address를 PostalAddress(경기도/안양시 동안구/시민대로327번길 11-41 9층 26-4호)로. 대림대·텔링 인용 사례 데이터(질문 원문·날짜·캡처) 받으면 aiCitations 채우고 동의 후 consented=true. 진독 프로필 DB 본사 주소는 관리자에서 사용자 확인
+0. push 전 커밋 있음(9ea3c4a부터). JSON-LD 설명·주소는 새 값으로 맞춤(사용자 승인, siteConfig.jsonLd.address). 대림대·텔링 인용 사례 데이터(질문 원문·날짜·캡처) 받으면 aiCitations 채우고 동의 후 consented=true. 진독 프로필 DB 본사 주소는 관리자에서 사용자 확인
 1. push → Vercel 배포로 운영 DB에 inquiries 생성 확인
 2. (사용자) Vercel Production 환경변수(Resend 도메인 인증은 완료): RESEND_API_KEY, INQUIRY_MAIL_FROM, INQUIRY_NOTIFY_TO, INQUIRY_IP_SECRET (zindok 연동 시 INQUIRY_EXTERNAL_ORIGINS)
 3. 공개 결정 시 pages.services.published=true → index·sitemap·헤더/푸터 "이용 안내" 메뉴 노출

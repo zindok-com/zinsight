@@ -208,14 +208,13 @@ export const siteConfig = {
         href: 'https://www.zindok.com',
     },
 
-    /**
-     * 구조화 데이터(JSON-LD) 전용 값. 화면 문구·주소와 따로 두어, JSON-LD 변경은 승인 후에만 반영
-     * 변경안(보고만): description = identity.metaDescription, address = 경기도 / 안양시 동안구 / 시민대로327번길 11-41 9층 26-4호
-     */
+    /** 구조화 데이터(JSON-LD) 운영사 주소 (PostalAddress로 나눔, company.address와 같은 주소). 설명은 identity.metaDescription 사용 */
     jsonLd: {
-        description:
-            '진사이트는 기업 기사와 프로필로 검색·AI 답변에 노출되고, 방문 고객을 문의로 연결하는 진독의 기업 홍보 플랫폼입니다.',
-        address: '경기도 안양시 동안구 관양1744, 9층 안양창업지원센터',
+        address: {
+            addressRegion: '경기도',
+            addressLocality: '안양시 동안구',
+            streetAddress: '시민대로327번길 11-41 9층 26-4호',
+        },
     },
 
     /**
