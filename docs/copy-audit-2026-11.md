@@ -1,6 +1,6 @@
 # 진사이트 문구 점검 보고 (2026-11-26)
 
-점검 보고입니다. **상 H1~H13은 2026-11-26 코드에 반영함**(H10은 '협찬'+'Sponsored Content' 유지, C5 결정 대기). H14는 DB라 사용자 수정 대기. **중 M1~M9·M11~M13·M15도 반영함**(M1은 정체성 문장만 — C3, M6은 '에디터' — C7. 되돌리기 쉬움). M10(C1)·M14(약관, C10)은 결정 대기. 하는 미반영.
+점검 보고입니다. **상 H1~H13은 2026-11-26 코드에 반영함**(H10은 '협찬'+'Sponsored Content' 유지, C5 결정 대기). H14는 DB라 사용자 수정 대기. **중 M1~M9·M11~M13·M15도 반영함**(M1은 정체성 문장만 — C3, M6은 '에디터' — C7. 되돌리기 쉬움). M10(C1)·M14(약관, C10)은 결정 대기. **하 L1~L13·L16도 반영함**(L16 주석 블록 삭제). L14·L15(파일 삭제 여부 C11)는 결정 대기, L17은 DB라 위치만.
 
 처음 점검 때는 코드·DB를 바꾸지 않았습니다. DB는 개발 DB를 읽기만 했고 운영 DB는 보지 않았습니다.
 줄 번호는 커밋 `388f0bc` 기준입니다. 기준 번호는 요청서의 1~5입니다.
@@ -103,23 +103,23 @@
 
 | ID | 위치 | 현재 문구 | 유형 | 제안 문구 | 우선순위 |
 |---|---|---|---|---|---|
-| L1 | `magazine/page.tsx:103·114`, `tags/[slug]/page.tsx:111·119` | 최신 에디션 / 전체 에디션 보기 | 4 | 최신 기사 / 전체 기사 보기 | 하 |
-| L2 | `magazine/page.tsx:273`, `tags/[slug]/page.tsx:249` | 독자 여러분을 위한 새로운 에디션과 깊이 있는 리포트를 준비 중입니다. 조금만 기다려 주세요! | 4 | 새 기사를 준비하고 있습니다. | 하 |
-| L3 | `magazine/page.tsx:310`, `tags/[slug]/page.tsx:286` | 추가적인 주요 헤드라인을 준비 중입니다. | 4 | 다른 기사를 준비하고 있습니다. | 하 |
-| L4 | `RegionHubClient.tsx:211` | 이 탭에 등록된 소식이 없습니다. 조만간 새로운 소식을 전해드리겠습니다! | 4 | 이 분류에는 아직 기사가 없습니다. | 하 |
-| L5 | `src/components/public/layout/public-footer.tsx:52` vs 헤더 '매거진 홈' | 매거진 아카이브 | 4 | 매거진 (또는 헤더와 같게 '매거진 홈') | 하 |
-| L6 | `magazine/tags/[slug]/page.tsx:34` (태그 meta) | …관련 기사 {n}건을 모아 보세요. | 4 | …관련 기사 {n}건을 모았습니다. | 하 |
-| L7 | `src/app/(public)/insight-radar/page.tsx:46-47` (검색 결과 meta, noindex) | "{q}" 관련 기업 및 기술 동향 / …관내 기업, 비즈니스 포지셔닝, 핵심 기술 및 최신 뉴스 타임라인을 확인하세요. | 3·4 | "{q}" 관련 기업 / 진사이트 인사이트 레이더에서 "{q}"와 관련된 지역 기업·기관 프로필을 모았습니다. | 하 |
-| L8 | `src/components/public/insight-radar/RadarSearchBar.tsx:74` | 관심 있는 조직과 기술 트렌드를 탐색하세요 | 3 | 지역 기업·기관 프로필을 찾아보세요 | 하 |
-| L9 | `insight-radar/[id]/page.tsx:555`, `:560`, `:537`, `CollapsibleBusinessSummary.tsx:69` | 핵심 기술 (Tech) / 타겟 시장 (Market) / 등록된 비즈니스 요약이 없습니다. / 비즈니스 요약 더보기 | 4 | 핵심 기술 / 주요 고객·시장 / 등록된 회사 소개가 없습니다. / 회사 소개 더보기 | 하 |
-| L10 | `src/app/share/stats/[token]/report/page.tsx:57` vs 통계 화면 `page.tsx:48` | 링크 페이지 방문 요약 / 진사이트 카드(링크 페이지) 방문 통계 | 4 | 진사이트 카드 방문 요약 (이름 통일) | 하 |
-| L11 | `src/components/public/services/InquiryForm.tsx:114` | …로 메일 주세요. | 4 | …로 메일을 보내 주세요. | 하 |
-| L12 | `src/lib/inquiry-store.ts:105` (알림 메일 본문) | 출처: zinsight | 4 | 출처: 진사이트(/services) — 내부 코드값 대신 이름 | 하 |
-| L13 | `src/config/site.ts:145`(radarList.title), `:146`, `about/page.tsx:42`, `magazine/page.tsx:19` | 안양·광명·의왕 / 안양·의왕·광명 (순서 불일치) | 4 | 한 순서로 통일 (설정 `serviceAreas`) | 하 |
-| L14 | `src/components/public/aeo/AeoLeadMagnetBanner.tsx:91-312` (지금 숨김, `insight-radar/page.tsx:123`에서 주석 처리) | 리빙 프로필·매거진 발행 시 예상 상승률 / AI 인용률을 {n}% 수준까지 끌어올릴 수 있습니다 / AI 인용률 상승 전략 / 4대 생성형 AI 엔진 / 리빙 프로필 | 5 | 다시 켤 계획이 없으면 파일 삭제. 켠다면 효과 수치·'리빙 프로필'(내부 용어)을 빼고 전면 재작성 (C11) | 하 |
-| L15 | `src/components/public/MagazineAeoCTA.tsx:19-25` (어디서도 쓰지 않는 파일) | 진사이트 레이더 / 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 통해 비즈니스 가치를 입증하는 혁신 기업 리스트입니다. | 3 | 파일 삭제 권장 | 하 |
-| L16 | `src/app/(public)/page.tsx:171-281` (주석 처리된 예시 블록) | 반도체 HBM 시장…, Replicate AI, Signal Strength, 글로벌 투자 심리 지수, Bullish Neutral | 3 | 화면에는 안 나옴. 옛 '마켓 인텔리전스' 시안이라 삭제 권장 | 하 |
-| L17 | DB `magazine_categories` name·description (아래 DB 절) | 디지털 마케팅 / AEO/GEO 최적화 디지털 마케팅 리포트 및 지면 / 비즈니스 테크 & 디지털 마케팅 뉴스레터 피드 | 3 | 아래 DB 절 참고 | 하 |
+| L1 | `magazine/page.tsx:103·114`, `tags/[slug]/page.tsx:111·119` | 최신 에디션 / 전체 에디션 보기 | 4 | 최신 기사 / 전체 기사 보기 | 하 ✅ 반영 |
+| L2 | `magazine/page.tsx:273`, `tags/[slug]/page.tsx:249` | 독자 여러분을 위한 새로운 에디션과 깊이 있는 리포트를 준비 중입니다. 조금만 기다려 주세요! | 4 | 새 기사를 준비하고 있습니다. | 하 ✅ 반영 |
+| L3 | `magazine/page.tsx:310`, `tags/[slug]/page.tsx:286` | 추가적인 주요 헤드라인을 준비 중입니다. | 4 | 다른 기사를 준비하고 있습니다. | 하 ✅ 반영 |
+| L4 | `RegionHubClient.tsx:211` | 이 탭에 등록된 소식이 없습니다. 조만간 새로운 소식을 전해드리겠습니다! | 4 | 이 분류에는 아직 기사가 없습니다. | 하 ✅ 반영 |
+| L5 | `src/components/public/layout/public-footer.tsx:52` vs 헤더 '매거진 홈' | 매거진 아카이브 | 4 | 매거진 (또는 헤더와 같게 '매거진 홈') | 하 ✅ 반영 |
+| L6 | `magazine/tags/[slug]/page.tsx:34` (태그 meta) | …관련 기사 {n}건을 모아 보세요. | 4 | …관련 기사 {n}건을 모았습니다. | 하 ✅ 반영 |
+| L7 | `src/app/(public)/insight-radar/page.tsx:46-47` (검색 결과 meta, noindex) | "{q}" 관련 기업 및 기술 동향 / …관내 기업, 비즈니스 포지셔닝, 핵심 기술 및 최신 뉴스 타임라인을 확인하세요. | 3·4 | "{q}" 관련 기업 / 진사이트 인사이트 레이더에서 "{q}"와 관련된 지역 기업·기관 프로필을 모았습니다. | 하 ✅ 반영 |
+| L8 | `src/components/public/insight-radar/RadarSearchBar.tsx:74` | 관심 있는 조직과 기술 트렌드를 탐색하세요 | 3 | 지역 기업·기관 프로필을 찾아보세요 | 하 ✅ 반영 |
+| L9 | `insight-radar/[id]/page.tsx:555`, `:560`, `:537`, `CollapsibleBusinessSummary.tsx:69` | 핵심 기술 (Tech) / 타겟 시장 (Market) / 등록된 비즈니스 요약이 없습니다. / 비즈니스 요약 더보기 | 4 | 핵심 기술 / 주요 고객·시장 / 등록된 회사 소개가 없습니다. / 회사 소개 더보기 | 하 ✅ 반영 |
+| L10 | `src/app/share/stats/[token]/report/page.tsx:57` vs 통계 화면 `page.tsx:48` | 링크 페이지 방문 요약 / 진사이트 카드(링크 페이지) 방문 통계 | 4 | 진사이트 카드 방문 요약 (이름 통일) | 하 ✅ 반영 |
+| L11 | `src/components/public/services/InquiryForm.tsx:114` | …로 메일 주세요. | 4 | …로 메일을 보내 주세요. | 하 ✅ 반영 |
+| L12 | `src/lib/inquiry-store.ts:105` (알림 메일 본문) | 출처: zinsight | 4 | 출처: 진사이트(/services) — 내부 코드값 대신 이름 | 하 ✅ 반영 |
+| L13 | `src/config/site.ts:145`(radarList.title), `:146`, `about/page.tsx:42`, `magazine/page.tsx:19` | 안양·광명·의왕 / 안양·의왕·광명 (순서 불일치) | 4 | 한 순서로 통일 (설정 `serviceAreas`) | 하 ✅ 반영 |
+| L14 | `src/components/public/aeo/AeoLeadMagnetBanner.tsx:91-312` (지금 숨김, `insight-radar/page.tsx:123`에서 주석 처리) | 리빙 프로필·매거진 발행 시 예상 상승률 / AI 인용률을 {n}% 수준까지 끌어올릴 수 있습니다 / AI 인용률 상승 전략 / 4대 생성형 AI 엔진 / 리빙 프로필 | 5 | 다시 켤 계획이 없으면 파일 삭제. 켠다면 효과 수치·'리빙 프로필'(내부 용어)을 빼고 전면 재작성 (C11) | 하 ⏳ 결정 대기 |
+| L15 | `src/components/public/MagazineAeoCTA.tsx:19-25` (어디서도 쓰지 않는 파일) | 진사이트 레이더 / 차세대 AI 검색 최적화(GEO)와 웹 표준 SEO를 통해 비즈니스 가치를 입증하는 혁신 기업 리스트입니다. | 3 | 파일 삭제 권장 | 하 ⏳ 결정 대기 |
+| L16 | `src/app/(public)/page.tsx:171-281` (주석 처리된 예시 블록) | 반도체 HBM 시장…, Replicate AI, Signal Strength, 글로벌 투자 심리 지수, Bullish Neutral | 3 | 화면에는 안 나옴. 옛 '마켓 인텔리전스' 시안이라 삭제 권장 | 하 ✅ 반영 |
+| L17 | DB `magazine_categories` name·description (아래 DB 절) | 디지털 마케팅 / AEO/GEO 최적화 디지털 마케팅 리포트 및 지면 / 비즈니스 테크 & 디지털 마케팅 뉴스레터 피드 | 3 | 아래 DB 절 참고 | 하 ⏳ DB(사용자) |
 
 ---
 

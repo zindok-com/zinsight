@@ -208,7 +208,7 @@ export default function RegionHubClient({ regionName, regionSlug, posts, localHe
                 ) : (
                     <div className="col-span-full py-20 border border-dashed border-zi-divider rounded-zi-card bg-zi-surface-container-low flex flex-col items-center justify-center text-center">
                         <p className="text-body-md text-zi-on-surface-variant max-w-sm">
-                            이 탭에 등록된 소식이 없습니다. 조만간 새로운 소식을 전해드리겠습니다!
+                            이 분류에는 아직 기사가 없습니다.
                         </p>
                     </div>
                 )}

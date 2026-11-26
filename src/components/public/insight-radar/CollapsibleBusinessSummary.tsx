@@ -66,7 +66,7 @@ export function CollapsibleBusinessSummary({
                         className="relative z-10 inline-flex items-center gap-1 text-[13px] font-bold text-zi-blue hover:text-blue-700 py-1 transition-colors"
                         aria-expanded={isExpanded}
                     >
-                        <span>{isExpanded ? '간략히 접기' : '비즈니스 요약 더보기'}</span>
+                        <span>{isExpanded ? '간략히 접기' : '회사 소개 더보기'}</span>
                         {isExpanded ? (
                             <ChevronUp className="w-3.5 h-3.5" />
                         ) : (

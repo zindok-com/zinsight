@@ -1,4 +1,4 @@
-import { sponsoredBadgeLabel } from '@/config/site';
+import { siteConfig, sponsoredBadgeLabel } from '@/config/site';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import { cardImageSrc } from '@/lib/image-variants';
@@ -16,7 +16,7 @@ const domain = "www.zinsight.co.kr";
 const baseUrl = `https://${domain}`;
 
 const MAGAZINE_TITLE = '진사이트 매거진 — 로컬 비즈니스 허브';
-const MAGAZINE_DESCRIPTION = '안양·의왕·광명 등 지역 기업과 기관의 이야기를 기사로 정리해 전하는 진사이트 매거진입니다. 지역 지면별로 최신 기사를 모아 봅니다.';
+const MAGAZINE_DESCRIPTION = `${siteConfig.identity.serviceAreas} 등 지역 기업과 기관의 이야기를 기사로 정리해 전하는 진사이트 매거진입니다. 지역 지면별로 최신 기사를 모아 봅니다.`;
 
 export const metadata: Metadata = {
     title: { absolute: MAGAZINE_TITLE },
@@ -100,7 +100,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                 <div className="mb-8 sm:mb-16 flex flex-col md:flex-row items-start sm:items-end justify-between border-b border-zi-divider pb-5 sm:pb-8 gap-3 sm:gap-0">
                     <div>
                         <span className="mb-2 block text-ui-label font-ui-label font-semibold text-zi-secondary uppercase tracking-widest">
-                            {isSearchMode ? `키워드 검색 결과 (${allPosts.length}건)` : '최신 에디션'}
+                            {isSearchMode ? `키워드 검색 결과 (${allPosts.length}건)` : '최신 기사'}
                         </span>
                         <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 text-zi-primary uppercase tracking-tighter">
                             {isSearchMode ? `"${keyword}" 검색` : '진사이트 매거진'}
@@ -111,7 +111,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                     </div>
                     {isSearchMode ? (
                         <Link href="/magazine" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 underline underline-offset-4">
-                            전체 에디션 보기
+                            전체 기사 보기
                         </Link>
                     ) : (
                         <div className="hidden text-right md:block">
@@ -270,7 +270,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                     등록된 기사가 없습니다.
                                 </h3>
                                 <p className="text-body-md text-zi-on-surface-variant max-w-sm">
-                                    독자 여러분을 위한 새로운 에디션과 깊이 있는 리포트를 준비 중입니다. 조금만 기다려 주세요!
+                                    새 기사를 준비하고 있습니다.
                                 </p>
                             </div>
                         )}
@@ -307,7 +307,7 @@ export default async function MagazinePage({ searchParams }: PageProps) {
                                     More Headlines
                                 </h4>
                                 <p className="text-[13px] text-zi-on-surface-variant italic">
-                                    추가적인 주요 헤드라인을 준비 중입니다.
+                                    다른 기사를 준비하고 있습니다.
                                 </p>
                             </div>
                         )}

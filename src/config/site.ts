@@ -67,6 +67,9 @@ export interface AiCitationCase {
     links: Array<{ label: string; href: string }>;
 }
 
+/** 서비스 지역 표기 순서 (메타·소개 문구 공통) */
+const SERVICE_AREAS = '안양·광명·의왕';
+
 export const siteConfig = {
     brand: {
         name: '진사이트',
@@ -96,6 +99,8 @@ export const siteConfig = {
 
     /** 정체성 문구 (제안 문구, 확정 시 교체) */
     identity: {
+        /** 서비스 지역 표기 (한 순서로 통일) */
+        serviceAreas: SERVICE_AREAS,
         slogan: 'AI가 가장 먼저 찾는 기업으로 만듭니다',
         /** 보조 문구 (히어로 슬로건 위·푸터) */
         tagline: 'SEO·AEO·GEO 통합 기업 미디어 플랫폼',
@@ -144,8 +149,8 @@ export const siteConfig = {
 
     /** 인사이트 레이더 목록 (검색어 없는 기본 화면) */
     radarList: {
-        title: '안양·광명·의왕 기업·기관 프로필',
-        description: '안양·광명·의왕 기업과 기관의 사업 소개, 제품·서비스, 최근 기사를 프로필로 정리했습니다.',
+        title: `${SERVICE_AREAS} 기업·기관 프로필`,
+        description: `${SERVICE_AREAS} 기업과 기관의 사업 소개, 제품·서비스, 최근 기사를 프로필로 정리했습니다.`,
     },
 
     /** 새 페이지 공개 여부: false인 동안 noindex·sitemap 제외·메뉴 숨김 */

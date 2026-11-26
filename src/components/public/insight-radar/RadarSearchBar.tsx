@@ -71,7 +71,7 @@ export function RadarSearchBar({
         <div className="mb-5 sm:mb-6">
             <div className="mb-4">
                 <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-zi-primary break-keep">
-                    관심 있는 조직과 기술 트렌드를 탐색하세요
+                    지역 기업·기관 프로필을 찾아보세요
                 </h1>
                 <p className="mt-1 text-sm text-slate-600">관내 기업·기관을 지역별로 탐색하세요</p>
             </div>

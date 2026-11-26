@@ -97,12 +97,14 @@ export async function sendInquiryNotification(record: InquiryRecord, savedId: nu
     }
 
     const { input, source, pagePath, utm } = record;
+    // 알림 메일에는 내부 코드값 대신 이름으로
+    const SOURCE_LABELS: Record<string, string> = { zinsight: `${siteConfig.brand.name}(/services)`, zindok: `운영사 ${siteConfig.company.name} 사이트` };
     const names = new Map(inquiryProductOptions().map((p) => [p.id, p.name]));
     const products = input.products.map((id) => names.get(id) ?? id).join(', ') || '(선택 없음)';
     const lines = [
         `새 ${siteConfig.brand.name} 기업 등록·제휴 문의가 접수됐습니다.${savedId ? ` (접수 번호 ${savedId})` : ' (DB 저장 실패 — 이 메일이 유일한 기록입니다)'}`,
         '',
-        `출처: ${source}`,
+        `출처: ${SOURCE_LABELS[source] ?? source}`,
         `회사명: ${input.companyName}`,
         `담당자: ${input.contactName}`,
         `전화: ${input.phone || '-'}`,

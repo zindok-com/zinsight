@@ -39,7 +39,7 @@ const SECTIONS = [
         icon: Newspaper,
         name: `${brand.name} 매거진`,
         href: '/magazine',
-        body: '안양·광명·의왕 등 지역 기업과 기관을 취재해 기사로 소개합니다. 지역별 지면에서 우리 동네 기업 소식을 볼 수 있습니다.',
+        body: `${siteConfig.identity.serviceAreas} 등 지역 기업과 기관을 취재해 기사로 소개합니다. 지역별 지면에서 우리 동네 기업 소식을 볼 수 있습니다.`,
         cta: '매거진 보기',
     },
     {

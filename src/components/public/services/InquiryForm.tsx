@@ -111,7 +111,7 @@ export function InquiryForm({ products, retentionNote, contactEmail }: Props) {
                 <p className="text-[14px] leading-relaxed text-slate-600 break-keep">
                     영업일 기준 1~2일 안에 연락드립니다. 무료 진단 결과와 함께 맞춤 제안을 드립니다.
                     <br />
-                    급하신 경우 <a href={`mailto:${contactEmail}`} className="font-semibold text-zi-blue underline-offset-2 hover:underline">{contactEmail}</a>로 메일 주세요.
+                    급하신 경우 <a href={`mailto:${contactEmail}`} className="font-semibold text-zi-blue underline-offset-2 hover:underline">{contactEmail}</a>로 메일을 보내 주세요.
                 </p>
             </div>
         );

@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, TrendingUp } from 'lucide-react';
 import {
     getRadarLatestArticles,
     getRadarTrendingKeywords,
@@ -164,121 +163,6 @@ export default async function PublicHomePage() {
             {/* AI 인용 사례 (aiCitations, 공개 동의된 사례만) — 없으면 '이렇게 작동합니다' 3단계 */}
             {/* ─────────────────────────────── */}
             <AiCitationCases cases={siteConfig.aiCitations} />
-
-            {/* ─────────────────────────────── */}
-            {/* 실시간 인사이트 레이더 섹션 (추후 기능 추가 시 사용을 위해 주석 처리) */}
-            {/* ─────────────────────────────── */}
-            {/* 
-            <section className="mx-auto max-w-zi-container border-t border-zi-divider px-6 py-24">
-                <div className="mb-12 flex items-end justify-between">
-                    <div>
-                        <h2 className="mb-2 text-zi-headline-md font-bold text-zi-primary">
-                            실시간 인사이트 레이더
-                        </h2>
-                        <p className="text-zi-body-md text-zi-on-surface-variant">
-                            현재 시장에서 가장 주목받는 섹터와 기술 지표입니다.
-                        </p>
-                    </div>
-                    <Link
-                        href="/insight-radar"
-                        className="group flex items-center gap-2 text-zi-label font-semibold text-zi-blue"
-                    >
-                        전체 지표 보기
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                    </Link>
-                </div>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
-                    <div className="flex flex-col justify-between border border-zi-divider bg-white p-8 md:col-span-8">
-                        <div>
-                            <div className="mb-8 flex items-start justify-between">
-                                <span className="bg-zi-primary px-3 py-1 text-zi-label font-semibold tracking-wider text-white uppercase">
-                                    Trending Sector
-                                </span>
-                                <span className="flex items-center gap-1 text-zi-label font-semibold text-zi-error">
-                                    <TrendingUp className="h-4 w-4" />
-                                    +12.4%
-                                </span>
-                            </div>
-                            {featuredCompanies[0] ? (
-                                <>
-                                    <h3 className="font-serif mb-4 text-zi-headline-lg font-semibold leading-tight">
-                                        {featuredCompanies[0].company_name}
-                                    </h3>
-                                    <p className="max-w-xl text-zi-body-md text-zi-on-surface-variant">
-                                        {featuredCompanies[0].business_summary ?? '비즈니스 요약 정보가 없습니다.'}
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <h3 className="font-serif mb-4 text-zi-headline-lg font-semibold leading-tight">
-                                        반도체 HBM 시장의 구조적 성장과 차세대 패키징 솔루션 분석
-                                    </h3>
-                                    <p className="max-w-xl text-zi-body-md text-zi-on-surface-variant">
-                                        SK하이닉스와 삼성전자의 기술 로드맵을 중심으로 살펴본 차세대 메모리 시장의 주도권 변화.
-                                    </p>
-                                </>
-                            )}
-                        </div>
-
-                        <div className="mt-12 flex h-32 items-end gap-2">
-                            {[20, 35, 50, 45, 70, 85, 100].map((h, i) => (
-                                <div
-                                    key={i}
-                                    className="flex-1 transition-all"
-                                    style={{
-                                        height: `${h}%`,
-                                        backgroundColor: i < 4 ? '#e5e2e1' : i < 6 ? '#005eb2' : '#001F3F',
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-6 md:col-span-4">
-                        <div className="border border-zi-divider bg-zi-surface-low p-6">
-                            <h4 className="mb-4 text-zi-label font-semibold uppercase tracking-wider text-slate-500">
-                                Emerging Entity
-                            </h4>
-                            {featuredCompanies[1] ? (
-                                <>
-                                    <p className="mb-2 text-zi-headline-md font-bold text-zi-primary">
-                                        {featuredCompanies[1].company_name}
-                                    </p>
-                                    <p className="text-zi-caption text-zi-on-surface-variant">
-                                        {featuredCompanies[1].business_summary?.slice(0, 50) ?? '업종 정보 없음'}
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <p className="mb-2 text-zi-headline-md font-bold text-zi-primary">Replicate AI</p>
-                                    <p className="text-zi-caption text-zi-on-surface-variant">오픈소스 모델 서빙 시장의 파괴적 혁신자</p>
-                                </>
-                            )}
-                            <div className="mt-6 flex items-center justify-between border-t border-zi-divider pt-4">
-                                <span className="text-zi-label font-semibold">Signal Strength</span>
-                                <span className="font-bold text-zi-blue">Strong</span>
-                            </div>
-                        </div>
-
-                        <div className="relative overflow-hidden border border-zi-divider bg-white p-6">
-                            <h4 className="mb-4 text-zi-label font-semibold uppercase tracking-wider text-slate-500">
-                                Market Sentiment
-                            </h4>
-                            <p className="text-zi-headline-md font-bold text-zi-primary">Bullish Neutral</p>
-                            <p className="mt-1 text-zi-caption text-zi-on-surface-variant">
-                                글로벌 투자 심리 지수: {totalStats.totalArticles > 100 ? '68' : '72'}/100
-                            </p>
-                            <div className="absolute -bottom-4 -right-4 opacity-5">
-                                <svg className="h-24 w-24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            */}
 
             {/* ─────────────────────────────── */}
             {/* 매거진 프리뷰 섹션 */}

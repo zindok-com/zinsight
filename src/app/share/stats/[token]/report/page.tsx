@@ -54,7 +54,7 @@ export default async function SharedStatsReportPage({ params, searchParams }: Pa
                 <header className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-3">
                     <div>
                         <ShareBrand />
-                        <h1 className="mt-2 text-lg font-bold leading-snug sm:text-xl">{stats.orgName} · 링크 페이지 방문 요약</h1>
+                        <h1 className="mt-2 text-lg font-bold leading-snug sm:text-xl">{stats.orgName} · 진사이트 카드 방문 요약</h1>
                         <p className="mt-0.5 text-xs text-slate-600 tabular-nums">
                             기간 {stats.range.from} ~ {stats.range.to} (KST) · 작성 {generated}
                         </p>

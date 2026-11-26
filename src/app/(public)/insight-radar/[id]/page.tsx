@@ -534,7 +534,7 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                 {company.business_summary?.trim() ? (
                                     <ProfileOverview text={company.business_summary} />
                                 ) : (
-                                    <p className="text-slate-400 italic">등록된 비즈니스 요약이 없습니다.</p>
+                                    <p className="text-slate-400 italic">등록된 회사 소개가 없습니다.</p>
                                 )}
                             </div>
                         </section>
@@ -552,12 +552,12 @@ export default async function InsightRadarDetailPage({ params }: PageProps) {
                                         badgeStyle={{ bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100' }}
                                     />
                                     <CollapsibleTagGroup
-                                        title="핵심 기술 (Tech)"
+                                        title="핵심 기술"
                                         items={coreKw?.technology}
                                         badgeStyle={{ bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-100' }}
                                     />
                                     <CollapsibleTagGroup
-                                        title="타겟 시장 (Market)"
+                                        title="주요 고객·시장"
                                         items={coreKw?.target_market}
                                         badgeStyle={{ bg: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-100' }}
                                     />

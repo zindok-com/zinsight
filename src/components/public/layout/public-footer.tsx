@@ -49,7 +49,7 @@ export function PublicFooter() {
                         <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">탐색</span>
                             <Link href="/insight-radar" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">인사이트 레이더</Link>
-                            <Link href="/magazine" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">매거진 아카이브</Link>
+                            <Link href="/magazine" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">매거진 홈</Link>
                             <FooterLink link={ZINSIGHT_NEWS_LINK} />
                         </div>
                         <div className="flex flex-col gap-1 sm:gap-2">
