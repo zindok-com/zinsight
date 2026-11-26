@@ -136,14 +136,13 @@ export default async function PublicHomePage() {
                             인사이트 레이더 둘러보기
                         </Link>
                         <Link
-                            href={siteConfig.contact.href}
-                            data-zi-cta="home_hero"
+                            href="/magazine"
                             className="inline-flex items-center justify-center rounded-zi-btn border border-zi-outline-variant bg-transparent px-8 py-3.5 text-ui-label font-ui-label text-zi-on-surface transition-all active:scale-95 hover:bg-zi-surface-container-low gap-2"
                         >
                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
                             </svg>
-                            우리 회사도 등록하기
+                            진사이트 매거진 읽기
                         </Link>
                         {/* AI 노출 진단 버튼 슬롯: 상품 확정 후 설정에서 켬 */}
                         {home.aiDiagnosis.enabled && home.aiDiagnosis.href && (

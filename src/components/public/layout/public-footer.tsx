@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { isPagePublished, siteConfig } from '@/config/site';
+import { siteConfig } from '@/config/site';
 import { getAboutLink, getContactLink, ZINSIGHT_NEWS_LINK, type NavLink } from '@/config/navigation';
 
 const { brand, company, identity } = siteConfig;
@@ -51,12 +51,11 @@ export function PublicFooter() {
                             <Link href="/insight-radar" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">인사이트 레이더</Link>
                             <Link href="/magazine" className="py-1 text-[13px] sm:text-zi-body-md text-slate-500 hover:underline decoration-1 leading-snug">매거진 아카이브</Link>
                             <FooterLink link={ZINSIGHT_NEWS_LINK} />
-                            {isPagePublished('services') && <FooterLink link={{ label: '이용 안내', href: '/services', external: false }} />}
                         </div>
                         <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">정보</span>
                             <FooterLink link={getAboutLink()} />
-                            <FooterLink link={{ ...getContactLink(), label: `${brand.name} 이용 문의` }} cta="footer" />
+                            <FooterLink link={getContactLink()} cta="footer" />
                         </div>
                         <div className="flex flex-col gap-1 sm:gap-2">
                             <span className="text-[11px] sm:text-zi-label font-bold uppercase text-zi-primary tracking-wider">법령</span>

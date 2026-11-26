@@ -7,21 +7,18 @@
  * - 비밀값(키·토큰)은 여기에 두지 않습니다.
  */
 
-export type FunnelStage = '인지' | '관심' | '고려' | '전환' | '유지' | '측정';
-
-export interface ServiceItem {
-    /** 메뉴 이름 */
+/** 기업 등록·제휴 안내(/services) '무엇을 해 드리는지' 카드 한 장 (가격 없음) */
+export interface PartnershipOffering {
+    /** 문의 폼 관심 항목 값·통계에 쓰는 고정 id (이름이 바뀌어도 유지) */
+    id: string;
     name: string;
-    /** 고객 퍼널에서 맡는 단계 */
-    funnelStage: FunnelStage;
-    /** 고객이 받는 것 */
-    deliverables: string[];
-    /** 가격 표기 (예: '월 30만 원', '상담 후 안내') */
-    price: string;
-    status: '지금 가능' | '준비 중';
+    /** 해 드리는 일 한 줄 */
+    summary: string;
+    /** 이름 옆 작은 표시 (예: '무료') */
+    badge?: string;
 }
 
-/** 진사이트 이용 안내(/services) 상품 표 한 줄. 가격은 모두 VAT 별도 원 단위 정수 */
+/** 가격표 한 줄 (진사이트에는 표시하지 않음, 진독 견적 페이지 재사용용). 가격은 모두 VAT 별도 원 단위 정수 */
 export interface PricingItem {
     /** 문의 폼 관심 상품 값·통계에 쓰는 고정 id (이름이 바뀌어도 유지) */
     id: string;
@@ -103,12 +100,12 @@ export const siteConfig = {
         keywords: ['진사이트', 'zinsight', '진독', 'zindok', '인사이트 레이더', '기업 홍보', '기업 프로필', 'AI 검색 노출', 'AEO', 'SEO', 'GEO'],
     },
 
-    /** 진사이트 자체 이용 문의 (헤더 버튼·푸터). 고객사 '문의하기'와 별개 */
+    /** 진사이트 자체 기업 등록·제휴 문의 (푸터·프로필·카드 하단). 고객사 '문의하기'와 별개 */
     contact: {
-        label: '이용 문의',
-        href: '/services', // 상품 표(메뉴판)부터 보이고, 페이지 안 버튼이 #inquiry 폼으로 이동
+        label: '기업 등록·제휴 문의',
+        href: '/services', // 기업 등록·제휴 안내. 상단 메뉴에는 두지 않고 푸터·프로필·카드 하단 글자 링크로만 들어옴
         /** 카드·프로필 하단 작은 글자 링크 */
-        registerLabel: '우리 회사도 진사이트에 등록하기',
+        registerLabel: '우리 회사도 진사이트에 소개되고 싶다면',
     },
 
     home: {
@@ -143,31 +140,36 @@ export const siteConfig = {
         services: { published: false },
     },
 
-    /** 서비스 메뉴판 (예시, 실제 메뉴·가격은 확정 후 입력) */
-    services: [
-        {
-            name: '기업 프로필 등록',
-            funnelStage: '고려' as const,
-            deliverables: ['인사이트 레이더 기업 프로필', '검색·AI가 읽는 구조화 데이터', '진사이트 카드(링크 페이지)'],
-            price: '상담 후 안내',
-            status: '지금 가능' as const,
-        },
-        {
-            name: '기업 기사 발행',
-            funnelStage: '관심' as const,
-            deliverables: ['진사이트 매거진 기사', '프로필 연결', '방문 통계 리포트'],
-            price: '상담 후 안내',
-            status: '준비 중' as const,
-        },
-    ] satisfies ServiceItem[],
+    /**
+     * 기업 등록·제휴 안내(/services). 진사이트에는 가격을 싣지 않음 (가격은 상담·진독에서 안내)
+     * - 효과(검색 순위·AI 노출)를 약속하는 문구, '기사 판매'·'기사 1건' 같은 표현은 넣지 않습니다.
+     * - offerings가 카드·문의 폼 관심 항목·JSON-LD(Service 목록)에 함께 쓰입니다.
+     */
+    partnership: {
+        pageTitle: '기업 등록·제휴 안내',
+        intro: '진사이트는 지역 기업을 취재하고 소개하는 기업 미디어 플랫폼입니다. 기업 프로필 등록과 취재·제휴 문의를 받습니다.',
+        metaDescription: '진사이트 기업 프로필·진사이트 카드 등록과 기업 취재·제휴 문의 안내. 무료 마케팅 기본 진단부터 맞춤 제안까지 상담해 드립니다.',
+        offerings: [
+            { id: 'basic-diagnosis', name: '마케팅 기본 진단', badge: '무료', summary: '홈페이지·검색·채널 현황을 점검합니다.' },
+            { id: 'ai-diagnosis', name: 'AI 노출 진단', summary: 'AI 답변·검색에서 회사가 어떻게 소개되는지 점검합니다.' },
+            { id: 'profile', name: '기업 프로필', summary: '인사이트 레이더에 등록하고, 검색·AI가 읽는 회사 정보를 정리합니다.' },
+            { id: 'card', name: '진사이트 카드', summary: '연락처·채널·소개 영상을 모은 모바일 카드, 명함 QR, 방문 통계를 제공합니다.' },
+            { id: 'article', name: '기업 스포트라이트 취재', summary: '진사이트 매거진이 기업을 취재해 기사로 소개합니다.' },
+            { id: 'video', name: '회사 소개 영상', summary: '60~80초 세로형 모션그래픽. 촬영 없이 회사 자료로 만듭니다.' },
+            { id: 'channels', name: '공식 채널 정리', summary: '구글 비즈니스 프로필·네이버 스마트플레이스·SNS를 개설하고 정리합니다.' },
+            { id: 'ongoing-care', name: '꾸준한 관리', summary: '회차마다 프로필·기사를 갱신하고 AI 답변 노출을 다시 측정해 월간 리포트로 드립니다.' },
+        ] satisfies PartnershipOffering[],
+        steps: ['문의', '무료 진단', '맞춤 제안·견적', '진행'],
+        disclaimer: '검색 순위나 AI 답변 노출을 보장하지 않습니다. 기업 정보를 검색과 AI가 읽기 쉬운 형태로 정리해 드립니다.',
+        /** 문의 접수 개인정보 보관 기간 (처리방침과 같게) */
+        retentionNote: '접수일로부터 1년 보관 후 파기 (삭제 요청 시 즉시 파기)',
+    },
 
     /**
-     * 진사이트 이용 안내(/services) 상품·가격 (제안가, 대표 확정 전이라 자주 바뀜. 값만 바꾸면 표·문의 폼이 함께 바뀜)
-     * - 가격은 VAT 별도. 효과(검색 순위·AI 노출)를 약속하는 문구는 넣지 않습니다.
-     * - JSON-LD는 아직 위 services 배열을 씁니다 (Offer 반영은 승인 후)
+     * 상품·가격 보관용 (제안가). 진사이트 화면에는 표시하지 않음 — 진독 견적 페이지에서 재사용 예정.
+     * 지금 어디에서도 읽지 않습니다 (isPromoActive·formatWon도 보관). 지우지 마세요.
      */
     pricing: {
-        pageTitle: '진사이트 이용 안내 — 기업 프로필·카드 등록',
         vatNote: '가격은 모두 VAT 별도입니다.',
         /** 프로모션: endsAt(한국 시간 그날 끝)이 지나면 프로모션 열·문구가 자동으로 숨겨짐 */
         promo: {
@@ -191,14 +193,11 @@ export const siteConfig = {
         ] satisfies PricingItem[],
         paymentSteps: ['문의', '견적', '세금계산서 발행', '계좌이체'],
         paymentNote: '카드 결제는 받지 않습니다.',
-        disclaimer: '검색 순위나 AI 답변 노출을 보장하지 않습니다. 기업 정보를 검색과 AI가 읽기 쉬운 형태로 정리해 드립니다.',
-        /** 문의 접수 개인정보 보관 기간 (처리방침과 같게) */
-        retentionNote: '접수일로부터 1년 보관 후 파기 (삭제 요청 시 즉시 파기)',
     },
 
     /** 하단 교차 링크: 진독 홈페이지·콘텐츠 마케팅 (리뉴얼 전까지 주소 관리, 비우면 숨김) */
     crossLink: {
-        label: '홈페이지·콘텐츠 마케팅도 필요하세요?',
+        label: '운영사 진독(ZINDOK)에서 홈페이지·콘텐츠 마케팅도 함께 안내해 드립니다',
         cta: '진독 알아보기',
         href: 'https://www.zindok.com',
     },

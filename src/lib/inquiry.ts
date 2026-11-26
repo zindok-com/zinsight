@@ -11,8 +11,11 @@ export const INQUIRY_EMAIL_MAX = 254;
 export const INQUIRY_MESSAGE_MAX = 2000;
 /** 폼을 연 뒤 이 시간 안에 보내면 자동 입력으로 보고 저장하지 않음 */
 export const INQUIRY_MIN_FILL_MS = 3000;
-/** 숨김 함정 필드 이름 (사람에게는 보이지 않음, 값이 있으면 저장하지 않음) */
-export const INQUIRY_HONEYPOT_FIELD = 'website';
+/**
+ * 숨김 함정 필드 이름 (사람에게는 보이지 않음, 값이 있으면 저장하지 않음).
+ * 'website'·'url'·'company'처럼 브라우저 자동 완성이 채우는 이름은 쓰지 않음 (진짜 문의가 버려짐)
+ */
+export const INQUIRY_HONEYPOT_FIELD = 'zi_hp_check';
 
 export const INQUIRY_SOURCES = ['zinsight', 'zindok'] as const;
 export type InquirySource = (typeof INQUIRY_SOURCES)[number];
@@ -23,9 +26,9 @@ export type UtmValues = Partial<Record<(typeof UTM_KEYS)[number], string>>;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_PATTERN = /^[0-9+\-() ]+$/;
 
-/** 관심 상품 선택지: 상품 표와 같은 목록 */
+/** 관심 항목 선택지: /services '무엇을 해 드리나요' 카드와 같은 목록 (가격 없음) */
 export function inquiryProductOptions(): Array<{ id: string; name: string }> {
-    return siteConfig.pricing.items.map(({ id, name }) => ({ id, name }));
+    return siteConfig.partnership.offerings.map(({ id, name }) => ({ id, name }));
 }
 
 export interface InquiryInput {
@@ -43,7 +46,7 @@ export type InquiryField = 'companyName' | 'contactName' | 'contact' | 'phone' |
 const text = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 export function normalizeInquiryInput(raw: Record<string, unknown>): InquiryInput {
-    const validIds = new Set(siteConfig.pricing.items.map((i) => i.id));
+    const validIds = new Set(siteConfig.partnership.offerings.map((i) => i.id));
     const products = Array.isArray(raw.products)
         ? Array.from(new Set(raw.products.filter((p): p is string => typeof p === 'string' && validIds.has(p))))
         : [];

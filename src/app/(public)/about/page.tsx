@@ -196,7 +196,7 @@ export default function AboutPage() {
                         {...(contactExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                         className="inline-flex items-center justify-center rounded-zi-btn bg-zi-primary px-8 py-3.5 text-ui-label font-ui-label text-white transition-all hover:bg-zi-primary/90 active:scale-95"
                     >
-                        {contact.label}하기
+                        {contact.label}
                     </Link>
                 </div>
             </section>

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 /**
  * 진사이트 자체 이용 문의 GA4 이벤트 (고객사 '문의하기'의 cta_inquiry_click·generate_lead, 링크 페이지 자체 통계와 섞지 않음).
- * - zinsight_register_cta_click: data-zi-cta="위치"가 붙은 링크 클릭 (header·header_drawer·footer·card_footer·profile_footer·services_hero·home_hero)
+ * - zinsight_register_cta_click: data-zi-cta="위치"가 붙은 링크 클릭 (footer·card_footer·profile_footer·services_hero. header·header_drawer·home_hero는 2026-11-26 제거)
  * - zinsight_inquiry_form_start / zinsight_inquiry_submit: /services 문의 폼에서 직접 보냄
  * 관리자로 확인된 탭(링크 페이지 추적이 표시한 내부 트래픽)은 보내지 않음
  */

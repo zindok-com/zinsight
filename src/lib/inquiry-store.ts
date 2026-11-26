@@ -100,14 +100,14 @@ export async function sendInquiryNotification(record: InquiryRecord, savedId: nu
     const names = new Map(inquiryProductOptions().map((p) => [p.id, p.name]));
     const products = input.products.map((id) => names.get(id) ?? id).join(', ') || '(선택 없음)';
     const lines = [
-        `새 ${siteConfig.brand.name} 이용 문의가 접수됐습니다.${savedId ? ` (접수 번호 ${savedId})` : ' (DB 저장 실패 — 이 메일이 유일한 기록입니다)'}`,
+        `새 ${siteConfig.brand.name} 기업 등록·제휴 문의가 접수됐습니다.${savedId ? ` (접수 번호 ${savedId})` : ' (DB 저장 실패 — 이 메일이 유일한 기록입니다)'}`,
         '',
         `출처: ${source}`,
         `회사명: ${input.companyName}`,
         `담당자: ${input.contactName}`,
         `전화: ${input.phone || '-'}`,
         `이메일: ${input.email || '-'}`,
-        `관심 상품: ${products}`,
+        `관심 항목: ${products}`,
         '',
         '메시지:',
         input.message || '(없음)',
@@ -123,7 +123,7 @@ export async function sendInquiryNotification(record: InquiryRecord, savedId: nu
             body: JSON.stringify({
                 from,
                 to,
-                subject: `[${siteConfig.brand.name} 이용 문의] ${oneLine(input.companyName)} · ${oneLine(input.contactName, 30)}`,
+                subject: `[${siteConfig.brand.name} 제휴 문의] ${oneLine(input.companyName)} · ${oneLine(input.contactName, 30)}`,
                 text: lines.join('\n'),
                 ...(input.email ? { reply_to: input.email } : {}),
             }),

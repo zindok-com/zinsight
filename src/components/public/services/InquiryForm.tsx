@@ -27,8 +27,8 @@ const inputClass =
     'w-full rounded-lg border border-slate-300 bg-white px-3.5 py-3 text-[15px] text-slate-900 placeholder:text-slate-400 focus:border-zi-blue focus:outline-none focus:ring-2 focus:ring-zi-blue/20';
 
 /**
- * 진사이트 이용 문의 폼 (/services#inquiry). 고객사 링크 페이지 '연락처 남기기'와 별개.
- * 상품 표의 버튼(data-zi-product)을 누르면 해당 관심 상품이 미리 체크됨
+ * 진사이트 기업 등록·제휴 문의 폼 (/services#inquiry). 고객사 링크 페이지 '연락처 남기기'와 별개.
+ * 카드의 '문의하기'(data-zi-product)를 누르면 해당 관심 항목이 미리 체크됨
  */
 export function InquiryForm({ products, retentionNote, contactEmail }: Props) {
     const [values, setValues] = useState({ companyName: '', contactName: '', phone: '', email: '', message: '' });
@@ -109,7 +109,7 @@ export function InquiryForm({ products, retentionNote, contactEmail }: Props) {
                 <CheckCircle2 className="mx-auto mb-3 h-10 w-10 text-emerald-600" aria-hidden="true" />
                 <p className="mb-2 text-[18px] font-bold text-slate-900">문의가 접수됐습니다</p>
                 <p className="text-[14px] leading-relaxed text-slate-600 break-keep">
-                    남겨 주신 연락처로 영업일 기준 1~2일 안에 연락드리겠습니다.
+                    영업일 기준 1~2일 안에 연락드립니다. 무료 진단 결과와 함께 맞춤 제안을 드립니다.
                     <br />
                     급하신 경우 <a href={`mailto:${contactEmail}`} className="font-semibold text-zi-blue underline-offset-2 hover:underline">{contactEmail}</a>로 메일 주세요.
                 </p>
@@ -125,7 +125,7 @@ export function InquiryForm({ products, retentionNote, contactEmail }: Props) {
         ) : null;
 
     return (
-        <form onSubmit={onSubmit} noValidate className="rounded-zi-card border border-zi-divider bg-white p-5 sm:p-8">
+        <form onSubmit={onSubmit} noValidate className="relative rounded-zi-card border border-zi-divider bg-white p-5 sm:p-8">
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 <div>
                     <label htmlFor="inq-company" className="mb-1.5 block text-[14px] font-semibold text-slate-800">
@@ -161,7 +161,7 @@ export function InquiryForm({ products, retentionNote, contactEmail }: Props) {
             </p>
 
             <fieldset className="mt-6">
-                <legend className="mb-2.5 text-[14px] font-semibold text-slate-800">관심 상품 (여러 개 선택 가능)</legend>
+                <legend className="mb-2.5 text-[14px] font-semibold text-slate-800">관심 항목 (여러 개 선택 가능)</legend>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {products.map((p) => {
                         const checked = selected.includes(p.id);
@@ -189,17 +189,27 @@ export function InquiryForm({ products, retentionNote, contactEmail }: Props) {
                 {fieldError('message')}
             </div>
 
-            {/* 사람에게는 보이지 않는 함정 필드 (자동 입력 봇 차단) */}
-            <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
-                <label htmlFor="inq-website">웹사이트</label>
-                <input id="inq-website" name={INQUIRY_HONEYPOT_FIELD} tabIndex={-1} autoComplete="off" value={honeypot} onChange={(e) => setHoneypot(e.target.value)} />
+            {/* 사람에게는 보이지 않는 함정 필드 (자동 입력 봇 차단). 화면·스크린리더·탭 이동·자동 완성 모두 제외, 라벨 없음 */}
+            <div aria-hidden="true" className="pointer-events-none absolute -left-[9999px] top-0 h-px w-px overflow-hidden opacity-0">
+                <input
+                    id="inq-hp"
+                    type="text"
+                    name={INQUIRY_HONEYPOT_FIELD}
+                    tabIndex={-1}
+                    autoComplete="off"
+                    data-1p-ignore=""
+                    data-lpignore="true"
+                    aria-hidden="true"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                />
             </div>
 
             <div className="mt-6 rounded-lg bg-slate-50 p-4 text-[13px] leading-relaxed text-slate-600">
                 <p className="mb-1.5 font-semibold text-slate-700">개인정보 수집·이용 안내</p>
                 <ul className="list-disc space-y-0.5 pl-4">
-                    <li>수집 항목: 회사명, 담당자명, 전화번호·이메일, 관심 상품, 메시지</li>
-                    <li>이용 목적: 이용 문의 응대, 견적 안내</li>
+                    <li>수집 항목: 회사명, 담당자명, 전화번호·이메일, 관심 항목, 메시지</li>
+                    <li>이용 목적: 기업 등록·제휴 문의 응대, 진단 결과·제안 안내</li>
                     <li>보유 기간: {retentionNote}</li>
                 </ul>
                 <p className="mt-1.5">동의하지 않으실 수 있으며, 이 경우 문의를 접수할 수 없습니다.</p>

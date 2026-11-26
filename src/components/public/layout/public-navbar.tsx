@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ChevronDown, ChevronUp, MapPin, Newspaper } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { siteConfig } from '@/config/site';
-import { getContactLink, getHeaderLinks, getMagazineSubLinks, type NavLink } from '@/config/navigation';
+import { getHeaderLinks, getMagazineSubLinks, type NavLink } from '@/config/navigation';
 
 interface PublicNavbarProps {
     regions?: Array<{ id: number | string; name: string; slug: string }>;
@@ -15,7 +15,6 @@ interface PublicNavbarProps {
 // 메뉴 정의는 src/config/navigation.ts (노출 여부는 src/config/site.ts)
 const magazineLinks = getMagazineSubLinks();
 const headerLinks = getHeaderLinks();
-const contactLink = getContactLink();
 
 function externalProps(link: NavLink) {
     return link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
@@ -71,7 +70,7 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         {siteConfig.brand.name}
                     </Link>
 
-                    {/* 데스크탑 네비게이션: 매거진 / 인사이트 레이더 / 서비스 / 진사이트 소개 / 문의 */}
+                    {/* 데스크탑 네비게이션: 매거진 / 인사이트 레이더 / 진사이트 소개. 기업 등록·제휴 문의는 푸터·프로필·카드 하단에만 */}
                     <nav className="hidden items-center gap-6 lg:gap-10 md:flex">
                         {/* 매거진 드롭다운 메뉴 (Hover Trigger) */}
                         <div className="relative group py-2">
@@ -135,15 +134,6 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                             </Link>
                         ))}
 
-                        {/* 문의 CTA (연결 대상은 설정 contact) */}
-                        <Link
-                            href={contactLink.href}
-                            {...externalProps(contactLink)}
-                            data-zi-cta="header"
-                            className="rounded-zi-btn border border-zi-primary bg-transparent px-5 py-2 text-ui-label font-ui-label text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
-                        >
-                            {contactLink.label}
-                        </Link>
                     </nav>
 
                     {/* 모바일 햄버거 버튼 */}
@@ -274,17 +264,6 @@ export function PublicNavbar({ regions = [] }: PublicNavbarProps) {
                         ))}
                     </nav>
 
-                    {/* 드로어 하단 CTA: 문의 */}
-                    <div className="mt-auto border-t border-zi-divider px-4 py-6">
-                        <Link
-                            href={contactLink.href}
-                            {...externalProps(contactLink)}
-                            data-zi-cta="header_drawer"
-                            className="flex w-full items-center justify-center rounded-zi-btn border border-zi-primary bg-transparent px-5 py-3 text-sm font-semibold text-zi-primary transition-all hover:bg-zi-primary hover:text-white active:scale-95"
-                        >
-                            {contactLink.label}
-                        </Link>
-                    </div>
                 </div>
             )}
         </>

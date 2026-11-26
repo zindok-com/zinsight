@@ -86,7 +86,11 @@ export async function POST(request: NextRequest) {
     // 함정 필드에 값이 있거나 너무 빨리 보낸 요청: 저장하지 않고 성공처럼 응답 (봇이 우회 방법을 알지 못하게)
     const honeypot = typeof payload[INQUIRY_HONEYPOT_FIELD] === 'string' && (payload[INQUIRY_HONEYPOT_FIELD] as string).trim() !== '';
     const elapsed = typeof payload.elapsedMs === 'number' ? payload.elapsedMs : 0;
-    if (honeypot || elapsed < INQUIRY_MIN_FILL_MS) return json({ ok: true }, 200, corsOrigin);
+    if (honeypot || elapsed < INQUIRY_MIN_FILL_MS) {
+        // 버린 건수를 서버 기록으로 셀 수 있게 이유만 남김 (입력 내용·IP는 남기지 않음)
+        console.warn(`[inquiry] 저장하지 않음: ${honeypot ? '함정 필드' : '작성 시간 부족'} (source=${source})`);
+        return json({ ok: true }, 200, corsOrigin);
+    }
 
     const ip = clientIpFromHeaders(request.headers);
     if (!rateLimit(`inquiry:${ip}`, LIMIT_PER_HOUR, HOUR)) {
