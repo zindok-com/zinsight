@@ -1,17 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight, TrendingUp } from 'lucide-react';
-import { HomeStats } from '@/components/public/home/HomeStats';
 import {
     getRadarLatestArticles,
     getRadarTrendingKeywords,
-    getRadarTotalStats,
     getRadarCompanies,
 } from '@/actions/insight-radar-actions';
 import { getHeadlineMagazinePosts } from '@/actions/public/magazine-actions';
 import { MagazineCarousel } from '@/components/public/home/MagazineCarousel';
 import { AiCitationCases } from '@/components/public/home/AiCitationCases';
-import { buildSiteOrganizationJsonLd, serializeJsonLd, SITE_BASE_URL, SITE_DESCRIPTION, SITE_NAME, SITE_ORGANIZATION_ID, SITE_WEBSITE_ID } from '@/lib/site';
+import { buildSiteOrganizationJsonLd, serializeJsonLd, SITE_BASE_URL, SITE_NAME, SITE_ORGANIZATION_ID, SITE_WEBSITE_ID } from '@/lib/site';
 import { siteConfig } from '@/config/site';
 
 export const revalidate = 3600; // 1시간마다 ISR 재생성 (force-dynamic 제거 → 구글봇이 안정적으로 캐시된 HTML 수집 가능)
@@ -36,9 +34,8 @@ export const metadata: Metadata = {
 export default async function PublicHomePage() {
     const { identity, home } = siteConfig;
     // 홈 페이지에 필요한 데이터를 병렬로 조회
-    const [totalStats, { companies: featuredCompanies }, latestArticles, trendingKeywords, headlinePosts] =
+    const [{ companies: featuredCompanies }, latestArticles, trendingKeywords, headlinePosts] =
         await Promise.all([
-            getRadarTotalStats(),
             getRadarCompanies({}, 1, 3),
             getRadarLatestArticles({}, 3),
             getRadarTrendingKeywords(undefined, 8),
@@ -56,7 +53,7 @@ export default async function PublicHomePage() {
                 'url': SITE_BASE_URL,
                 'name': SITE_NAME,
                 'alternateName': [siteConfig.brand.alternateName],
-                'description': SITE_DESCRIPTION,
+                'description': siteConfig.jsonLd.description,
                 'inLanguage': 'ko-KR',
                 'publisher': {
                     '@id': SITE_ORGANIZATION_ID,
@@ -95,7 +92,8 @@ export default async function PublicHomePage() {
             {/* ─────────────────────────────── */}
             <section className="relative overflow-hidden pb-16 pt-10 sm:pb-32 sm:pt-20">
                 <div className="relative z-10 mx-auto max-w-zi-container px-4 sm:px-6 text-center">
-                    {/* 헤드라인: 슬로건·설명은 src/config/site.ts identity */}
+                    {/* 헤드라인: 보조 문구·슬로건·설명은 src/config/site.ts identity */}
+                    <p className="mb-3 sm:mb-4 text-[13px] sm:text-[15px] font-semibold tracking-wide text-zi-blue break-keep">{identity.tagline}</p>
                     <h1 className="font-h1 text-[26px] sm:text-[34px] lg:text-h1 leading-tight text-zi-primary mb-5 sm:mb-8 break-keep">
                         {identity.slogan}
                     </h1>
@@ -138,13 +136,14 @@ export default async function PublicHomePage() {
                             인사이트 레이더 둘러보기
                         </Link>
                         <Link
-                            href="/magazine"
+                            href={siteConfig.contact.href}
+                            data-zi-cta="home_hero"
                             className="inline-flex items-center justify-center rounded-zi-btn border border-zi-outline-variant bg-transparent px-8 py-3.5 text-ui-label font-ui-label text-zi-on-surface transition-all active:scale-95 hover:bg-zi-surface-container-low gap-2"
                         >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                             </svg>
-                            진사이트 매거진 읽기
+                            우리 회사도 등록하기
                         </Link>
                         {/* AI 노출 진단 버튼 슬롯: 상품 확정 후 설정에서 켬 */}
                         {home.aiDiagnosis.enabled && home.aiDiagnosis.href && (
@@ -163,31 +162,9 @@ export default async function PublicHomePage() {
             </section>
 
             {/* ─────────────────────────────── */}
-            {/* AI 답변에 인용된 사례 (src/config/site.ts aiCitations, 비어 있으면 숨김) */}
+            {/* AI 인용 사례 (aiCitations, 공개 동의된 사례만) — 없으면 '이렇게 작동합니다' 3단계 */}
             {/* ─────────────────────────────── */}
             <AiCitationCases cases={siteConfig.aiCitations} />
-
-            {/* ─────────────────────────────── */}
-            {/* 진사이트 현황 섹션: 인사이트 레이더 + 매거진 통계 (설정 home.showStats) */}
-            {/* ─────────────────────────────── */}
-            {home.showStats && (
-            <section className="bg-[#0B0F19] border-y border-[#30363D] py-10 sm:py-16 relative overflow-hidden">
-                <div className="mx-auto max-w-zi-container px-4 sm:px-6">
-                    <div className="mb-8 sm:mb-12 text-center flex flex-col items-center">
-                        <h2 className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-white">
-                            진사이트 현황
-                        </h2>
-                        <p className="mx-auto max-w-2xl text-zi-body-md text-slate-400 break-keep">
-                            인사이트 레이더가 분석한 관내 기업과 수집 기사, <br className="hidden sm:inline" />
-                            그리고 진사이트 매거진이 발행한 기사를 한눈에 확인하세요.
-                        </p>
-                    </div>
-
-                    {/* 통계 바 (클라이언트 컴포넌트로 교체) */}
-                    <HomeStats totalStats={totalStats} />
-                </div>
-            </section>
-            )}
 
             {/* ─────────────────────────────── */}
             {/* 실시간 인사이트 레이더 섹션 (추후 기능 추가 시 사용을 위해 주석 처리) */}

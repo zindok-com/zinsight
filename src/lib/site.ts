@@ -107,14 +107,14 @@ export function buildSocialMetadata({
  * @id는 인사이트 레이더의 진독 프로필 Organization과 같게 맞춰 두 그래프가 이어지게 합니다.
  */
 export function buildSiteOrganizationJsonLd() {
-    const { brand, company, identity } = siteConfig;
+    const { brand, company, jsonLd } = siteConfig;
     return {
         '@type': 'Organization',
         '@id': SITE_ORGANIZATION_ID,
         'name': brand.name,
         'alternateName': [brand.alternateName],
         'url': SITE_BASE_URL,
-        'description': identity.metaDescription,
+        'description': jsonLd.description,
         'logo': {
             '@type': 'ImageObject',
             'url': toAbsoluteUrl(brand.logoPath),
@@ -128,7 +128,7 @@ export function buildSiteOrganizationJsonLd() {
             'address': {
                 '@type': 'PostalAddress',
                 'addressCountry': 'KR',
-                'streetAddress': company.address,
+                'streetAddress': jsonLd.address,
             },
             'telephone': company.phone,
             'email': company.email,

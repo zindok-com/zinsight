@@ -43,18 +43,21 @@ export interface PricingItem {
 }
 
 export interface AiCitationCase {
-    /** 사례 제목 (예: '○○ 기업, 구글 AI 개요에 소개') */
-    title: string;
-    /** 확인한 곳 (예: '구글 AI 개요', 'Gemini', 'ChatGPT') */
-    source: string;
+    /** 고정 id (예: 'daelim') */
+    id: string;
+    /** 공개 동의 여부. true인 사례만 메인에 노출 */
+    consented: boolean;
+    /** AI 서비스 이름 (예: 'ChatGPT', 'Gemini', '구글 AI 개요') */
+    aiService: string;
+    /** 물어본 질문 원문 */
+    question: string;
     /** 확인 날짜 YYYY-MM-DD */
     checkedAt: string;
-    /** 캡처 이미지 주소 (/img/... 또는 스토리지 주소) */
+    /** 답변 캡처 이미지 주소 (/img/... 또는 스토리지 주소) */
     imageUrl: string;
     imageAlt?: string;
-    /** 관련 기사 경로 (/magazine/...) */
-    articleHref?: string;
-    articleTitle?: string;
+    /** 답변에 인용된 진사이트 기사·프로필 */
+    links: Array<{ label: string; href: string }>;
 }
 
 export const siteConfig = {
@@ -72,8 +75,8 @@ export const siteConfig = {
         englishName: 'Zindok',
         ceo: '이태경',
         businessNumber: '346-15-02742',
-        // 주소 확정 전: 현재 푸터 값 유지. 이 한 줄만 바꾸면 푸터·JSON-LD가 함께 바뀜
-        address: '경기도 안양시 동안구 관양1744, 9층 안양창업지원센터',
+        // 명함 기준 주소 (푸터·소개 페이지). JSON-LD 주소는 아래 jsonLd.address (승인 후 맞춤)
+        address: '경기도 안양시 동안구 시민대로327번길 11-41 9층 26-4호',
         phone: '010-9756-3400',
         // 대표 이메일 하나로 문의·개인정보 문의 공통 사용
         email: 'ceo@zindok.com',
@@ -85,6 +88,8 @@ export const siteConfig = {
     /** 정체성 문구 (제안 문구, 확정 시 교체) */
     identity: {
         slogan: 'AI가 가장 먼저 찾는 기업으로 만듭니다',
+        /** 보조 문구 (히어로 슬로건 위·푸터) */
+        tagline: 'SEO·AEO·GEO 통합 기업 미디어 플랫폼',
         heroDescription:
             '기업 이야기를 기사와 프로필로 정리해 검색과 AI 답변에 남기고, 찾아온 고객이 연락까지 이어지게 합니다.',
         metaDescription:
@@ -93,7 +98,7 @@ export const siteConfig = {
         ogTitle: '진사이트 | AI가 가장 먼저 찾는 기업으로 만듭니다',
         ogDescription:
             '진사이트는 기업 기사와 프로필로 검색·AI 답변에 노출되고, 방문 고객을 문의로 연결하는 진독의 기업 홍보 플랫폼입니다.',
-        footerIntro: '진독이 운영하는 기업 홍보 플랫폼. 기사와 프로필로 AI가 먼저 찾는 기업을 만듭니다.',
+        footerIntro: 'AI가 가장 먼저 찾는 기업으로 만듭니다. SEO·AEO·GEO 통합 기업 미디어 플랫폼, 진독(ZINDOK)이 운영합니다.',
         magazineIntro: '지역 기업과 기관의 이야기를 기사로 정리해 전합니다.',
         keywords: ['진사이트', 'zinsight', '진독', 'zindok', '인사이트 레이더', '기업 홍보', '기업 프로필', 'AI 검색 노출', 'AEO', 'SEO', 'GEO'],
     },
@@ -112,8 +117,6 @@ export const siteConfig = {
     },
 
     home: {
-        /** '진사이트 현황' 숫자 블록 노출 */
-        showStats: true,
         /** 'AI 노출 진단' 버튼 슬롯 (상품 확정 후 켬) */
         aiDiagnosis: {
             enabled: false,
@@ -205,8 +208,40 @@ export const siteConfig = {
         href: 'https://www.zindok.com',
     },
 
-    /** 메인 'AI 답변에 인용된 사례' (비어 있으면 블록 숨김, 공개 여부·캡처는 확정 후 입력) */
-    aiCitations: [] as AiCitationCase[],
+    /**
+     * 구조화 데이터(JSON-LD) 전용 값. 화면 문구·주소와 따로 두어, JSON-LD 변경은 승인 후에만 반영
+     * 변경안(보고만): description = identity.metaDescription, address = 경기도 / 안양시 동안구 / 시민대로327번길 11-41 9층 26-4호
+     */
+    jsonLd: {
+        description:
+            '진사이트는 기업 기사와 프로필로 검색·AI 답변에 노출되고, 방문 고객을 문의로 연결하는 진독의 기업 홍보 플랫폼입니다.',
+        address: '경기도 안양시 동안구 관양1744, 9층 안양창업지원센터',
+    },
+
+    /**
+     * 메인 'AI가 진사이트를 인용한 사례'. consented가 true인 사례만 노출,
+     * 노출할 사례가 없으면 '이렇게 작동합니다' 3단계로 대체
+     */
+    aiCitations: [
+        {
+            id: 'daelim',
+            consented: false, // 공개 동의 전
+            aiService: '',
+            question: '',
+            checkedAt: '',
+            imageUrl: '',
+            links: [],
+        },
+        {
+            id: 'telling',
+            consented: false, // 공개 동의 전
+            aiService: '',
+            question: '',
+            checkedAt: '',
+            imageUrl: '',
+            links: [],
+        },
+    ] as AiCitationCase[],
 };
 
 /** 헤더·푸터의 새 페이지 링크는 공개 후에만 노출 */
