@@ -81,9 +81,9 @@ function SearchVisual() {
         <div className="flex h-full flex-col justify-center gap-2.5">
             <div className="flex items-center gap-2 overflow-hidden rounded-full border border-zi-blue/30 bg-white px-3.5 py-2 text-[12px] text-zi-primary shadow-sm">
                 <Search className="h-3.5 w-3.5 shrink-0 text-zi-blue" />
-                <span className="hiw-type whitespace-nowrap" style={d(0.55)}>우리 동네 방수 업체 추천해줘</span>
+                <span className="hiw-type whitespace-nowrap" style={d(0.7)}>우리 동네 방수 업체 추천해줘</span>
             </div>
-            <div className="hiw-pop flex items-start gap-2 self-start rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[12px] text-zi-primary shadow-sm" style={d(1.55)}>
+            <div className="hiw-pop flex items-start gap-2 self-start rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[12px] text-zi-primary shadow-sm" style={d(2.0)}>
                 <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zi-blue" />
                 <span>진사이트 기사에 따르면…</span>
             </div>
@@ -99,12 +99,12 @@ function ProfileVisual() {
                     <Building2 className="h-4 w-4" />
                 </span>
                 <div className="flex-1 space-y-1.5 pt-0.5">
-                    <div className="hiw-line h-2 w-4/5 rounded-full bg-zi-primary" style={d(0.85)} />
-                    <div className="hiw-line h-1.5 rounded-full bg-zi-blue/25" style={d(1.0)} />
-                    <div className="hiw-line h-1.5 w-3/5 rounded-full bg-zi-blue/25" style={d(1.15)} />
+                    <div className="hiw-line h-2 w-4/5 rounded-full bg-zi-primary" style={d(1.05)} />
+                    <div className="hiw-line h-1.5 rounded-full bg-zi-blue/25" style={d(1.25)} />
+                    <div className="hiw-line h-1.5 w-3/5 rounded-full bg-zi-blue/25" style={d(1.45)} />
                 </div>
             </div>
-            <div className="hiw-pop flex items-center gap-1.5 text-[12px] font-semibold text-zi-primary" style={d(1.3)}>
+            <div className="hiw-pop flex items-center gap-1.5 text-[12px] font-semibold text-zi-primary" style={d(1.7)}>
                 <Newspaper className="h-3.5 w-3.5 text-zi-blue" />
                 기업 프로필 · 매거진 기사
             </div>
@@ -115,12 +115,12 @@ function ProfileVisual() {
 function ContactVisual() {
     return (
         <div className="flex h-full flex-col justify-center gap-2">
-            <div className="hiw-pop flex items-center justify-center gap-1.5 rounded-lg bg-zi-primary px-3 py-2 text-[12px] font-semibold text-white" style={d(1.1)}>
+            <div className="hiw-pop flex items-center justify-center gap-1.5 rounded-lg bg-zi-primary px-3 py-2 text-[12px] font-semibold text-white" style={d(1.6)}>
                 <Globe className="h-3.5 w-3.5" />
                 홈페이지 방문
             </div>
-            <div className="hiw-pop rounded-lg" style={d(1.2)}>
-                <div className="hiw-ring flex items-center justify-center gap-1.5 rounded-lg border border-zi-blue/40 bg-white px-3 py-2 text-[12px] font-semibold text-zi-primary" style={d(1.7)}>
+            <div className="hiw-pop rounded-lg" style={d(1.8)}>
+                <div className="hiw-ring flex items-center justify-center gap-1.5 rounded-lg border border-zi-blue/40 bg-white px-3 py-2 text-[12px] font-semibold text-zi-primary" style={d(2.3)}>
                     <Mail className="h-3.5 w-3.5 text-zi-blue" />
                     문의하기
                 </div>
@@ -144,8 +144,9 @@ function HowItWorks() {
                     <h2 id="how-it-works-title" className="mb-3 text-[20px] sm:text-zi-headline-md font-bold text-zi-primary">
                         이렇게 작동합니다
                     </h2>
-                    <p className="mx-auto max-w-2xl text-zi-body-md text-slate-500 break-keep">
-                        기업 이야기를 검색과 AI가 읽기 쉬운 기사·프로필로 정리해, 찾아온 고객이 우리 회사를 쉽게 찾도록 돕습니다.
+                    <p className="mx-auto max-w-2xl text-zi-body-md text-slate-500 break-keep text-balance">
+                        기업 이야기를 검색과 AI가 읽기 쉬운 기사·프로필로 정리해,
+                        <br className="hidden sm:block" /> 찾아온 고객이 우리 회사를 쉽게 찾도록 돕습니다.
                     </p>
                 </div>
 
@@ -153,7 +154,7 @@ function HowItWorks() {
                     <ol className="grid grid-cols-1 gap-5 md:grid-cols-3 md:gap-6">
                         {STEPS.map(({ visual: Visual, title, body }, i) => (
                             <li key={title} className="relative">
-                                <div className="hiw-card flex h-full flex-col overflow-hidden rounded-zi-card border border-zi-divider bg-white" style={d(i * 0.2)}>
+                                <div className="hiw-card flex h-full flex-col overflow-hidden rounded-zi-card border border-zi-divider bg-white" style={d(i * 0.25)}>
                                     <div aria-hidden="true" className="h-32 bg-zi-blue/[0.06] px-5 py-4 sm:h-36">
                                         <Visual />
                                     </div>
@@ -168,7 +169,7 @@ function HowItWorks() {
                                         aria-hidden="true"
                                         className="absolute left-1/2 -bottom-[18px] z-10 -translate-x-1/2 md:left-auto md:-right-[22px] md:top-14 md:bottom-auto md:translate-x-0"
                                     >
-                                        <span className="hiw-arrow flex h-8 w-8 items-center justify-center rounded-full border border-zi-blue/30 bg-white text-zi-blue shadow-sm" style={d(0.35 + i * 0.2)}>
+                                        <span className="hiw-arrow flex h-8 w-8 items-center justify-center rounded-full border border-zi-blue/30 bg-white text-zi-blue shadow-sm" style={d(0.45 + i * 0.25)}>
                                             <ArrowRight className="h-4 w-4 rotate-90 md:rotate-0" />
                                         </span>
                                     </span>

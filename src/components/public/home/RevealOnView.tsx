@@ -29,7 +29,8 @@ export function RevealOnView({ children, className }: { children: ReactNode; cla
                     io.disconnect();
                 }
             },
-            { threshold: 0.3 },
+            // 화면 아래 끝에 걸치자마자가 아니라, 위쪽 75% 선까지 올라왔을 때 재생 (시선이 닿은 뒤 움직이도록)
+            { threshold: 0, rootMargin: '0px 0px -25% 0px' },
         );
         io.observe(el);
         return () => io.disconnect();

@@ -148,17 +148,17 @@
 [data-reveal="armed"] .hiw-type { opacity: 0; }
 [data-reveal="armed"] .hiw-line { transform: scaleX(0); }
 
-[data-reveal="play"] .hiw-card { animation: hiw-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both; }
-[data-reveal="play"] .hiw-arrow { animation: hiw-arrow 0.4s ease-out var(--d, 0s) both; }
-[data-reveal="play"] .hiw-type { animation: hiw-type 0.9s steps(14, end) var(--d, 0s) both; }
-[data-reveal="play"] .hiw-pop { animation: hiw-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both; }
-[data-reveal="play"] .hiw-line { transform-origin: left; animation: hiw-line 0.45s ease-out var(--d, 0s) both; }
-[data-reveal="play"] .hiw-ring { animation: hiw-ring 0.9s ease-out var(--d, 0s) 1 both; }
+[data-reveal="play"] .hiw-card { animation: hiw-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0s) both; }
+[data-reveal="play"] .hiw-arrow { animation: hiw-arrow 0.5s ease-out var(--d, 0s) both; }
+[data-reveal="play"] .hiw-type { animation: hiw-type 1.2s steps(14, end) var(--d, 0s) both; }
+[data-reveal="play"] .hiw-pop { animation: hiw-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d, 0s) both; }
+[data-reveal="play"] .hiw-line { transform-origin: left; animation: hiw-line 0.5s ease-out var(--d, 0s) both; }
+[data-reveal="play"] .hiw-ring { animation: hiw-ring 0.9s ease-out var(--d, 0s) 2 both; }
 
-@keyframes hiw-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-@keyframes hiw-arrow { from { opacity: 0; translate: -6px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes hiw-up { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+@keyframes hiw-arrow { from { opacity: 0; translate: -12px 0; } to { opacity: 1; translate: 0 0; } }
 @keyframes hiw-type { from { opacity: 1; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
-@keyframes hiw-pop { from { opacity: 0; transform: translateY(6px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes hiw-pop { from { opacity: 0; transform: translateY(10px) scale(0.9); } to { opacity: 1; transform: none; } }
 @keyframes hiw-line { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes hiw-ring {
   0% { box-shadow: 0 0 0 0 hsl(var(--zi-blue) / 0.45); }
